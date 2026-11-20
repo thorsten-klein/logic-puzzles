@@ -192,7 +192,10 @@
     const hintSet = new Set(hint ? hint.pairs : []);
     pairs.forEach((q, j) => {
       const [x1, y1] = xy(isl[q.a].k), [x2, y2] = xy(isl[q.b].k);
-      const v = result ? solution[j] : state[j];
+      // Result view: the answer, but a wrong bridge of the player is drawn
+      // as the player built it (red), so it does not just disappear.
+      const wrong = result && state[j] && state[j] !== solution[j];
+      const v = result && !wrong ? solution[j] : state[j];
       let cls = '';
       if (result && state[j]) cls = state[j] === solution[j] ? ' ok' : ' bad';
       else if (result && solution[j]) cls = ' miss'; // not entered yet
