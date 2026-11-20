@@ -1,0 +1,4 @@
+/* No Four in a Row board. Shared styles live in ../css/style.css. */
+.nf-board .cell.x { color: #c62828; }
+.nf-board .cell.o { color: #1565c0; }
+.nf-board .cell.fixed { background: #eceff1; }

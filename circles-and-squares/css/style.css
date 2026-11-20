@@ -1,0 +1,3 @@
+/* Circles and Squares board. Shared styles live in ../css/style.css. */
+.cs-board .cs-circle { width: 56%; height: 56%; border-radius: 50%; box-sizing: border-box; border: 2px solid #37474f; background: #fff; pointer-events: none; }
+.cs-board .cs-circle.black { background: #37474f; border-color: #fff; }

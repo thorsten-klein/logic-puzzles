@@ -1,0 +1,6 @@
+/* Kazoku board. Shared styles live in ../css/style.css. */
+.rc-board .cell.kz-circle::before {
+  content: ''; position: absolute; width: 56%; height: 56%; border-radius: 50%; background: #37474f; z-index: 0;
+}
+.rc-board .cell.kz-circle { color: #fff; }
+.rc-board .cell { z-index: 0; }

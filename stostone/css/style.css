@@ -1,0 +1,6 @@
+/* Stostone board. Shared styles live in ../css/style.css. */
+.ck-board .room-clue {
+  position: absolute; top: 2px; left: 4px;
+  font-size: calc(var(--cell) * 0.32); font-weight: 700; color: #333;
+}
+.ck-board .cell.shaded .room-clue { color: #ccc; }

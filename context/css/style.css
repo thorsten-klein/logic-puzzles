@@ -1,0 +1,4 @@
+/* Context board. Shared styles live in ../css/style.css. */
+.cx-board .cell.shaded { color: #fff; }
+.cx-board .cell.numbered.dot::after { display: none; }
+.cx-board .cell.numbered.dot { background: #e8f5e9; }

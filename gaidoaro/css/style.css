@@ -1,0 +1,3 @@
+/* Gaidoaro board. Shared styles live in ../css/style.css. */
+.ga-board .cell { color: #37474f; }
+.ga-board .cell.ga-star { color: #f9a825; font-size: calc(var(--cell) * 0.6); }

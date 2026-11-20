@@ -1,0 +1,4 @@
+/* Nanro board. Shared styles live in ../css/style.css. */
+.nr-board .cell { font-weight: 700; font-size: calc(var(--cell) * 0.45); }
+.nr-board .cell.nr-num { background: #e3f2fd; color: var(--accent); }
+.nr-board .cell.fixed.nr-num { color: #263238; background: #fff; }

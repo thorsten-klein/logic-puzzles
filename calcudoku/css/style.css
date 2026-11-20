@@ -1,0 +1,12 @@
+/* Calcudoku board. Shared styles live in ../css/style.css. */
+.cd-board { gap: 0; background: #fff; border: 2px solid #333; padding: 0; }
+.cd-board .cell { border: 1px solid #ddd; }
+.cd-board .cell.bt { border-top: 2px solid #333; }
+.cd-board .cell.bb { border-bottom: 2px solid #333; }
+.cd-board .cell.bl { border-left: 2px solid #333; }
+.cd-board .cell.br { border-right: 2px solid #333; }
+.cd-board .cage-label {
+  position: absolute; top: 2px; left: 3px;
+  font-size: calc(var(--cell) * 0.22); font-weight: 600; color: #333; pointer-events: none;
+}
+.cd-board .cell .digit-input, .cd-board .cell.entry { color: var(--accent); padding-top: 8%; }

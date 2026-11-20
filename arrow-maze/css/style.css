@@ -1,0 +1,6 @@
+/* Arrow Maze board. Shared styles live in ../css/style.css. */
+.am-board .cell { position: relative; }
+.am-board .am-arrow { position: absolute; left: 4%; top: 4%; width: 34%; height: 34%; color: #90a4ae; }
+.am-board .am-num { position: relative; font-size: calc(var(--cell) * 0.4); }
+.am-board .cell.given .am-num { color: var(--fg); }
+.am-board .am-input { position: absolute; inset: 0; color: var(--accent); font-size: calc(var(--cell) * 0.4); padding-top: 8%; }

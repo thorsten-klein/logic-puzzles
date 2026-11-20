@@ -1,0 +1,11 @@
+/* Gokigen Naname board. Shared styles live in ../css/style.css. */
+.gn-board { display: block; margin: 0 auto; user-select: none; }
+.gn-cell { fill: #fff; stroke: #ccc; cursor: pointer; }
+.gn-board.readonly .gn-cell { cursor: default; }
+.gn-cell.hint { fill: #fff3e0; stroke: #ff9800; stroke-width: 3; }
+.gn-cell.ok { fill: #e8f5e9; }
+.gn-cell.bad { fill: #ffebee; }
+.gn-line { stroke: #263238; stroke-width: 3; stroke-linecap: round; pointer-events: none; }
+.gn-clue { fill: #fff; stroke: #333; stroke-width: 1.5; pointer-events: none; }
+.gn-clue.hint { stroke: #ff9800; stroke-width: 3; }
+.gn-num { text-anchor: middle; dominant-baseline: central; font-weight: 700; pointer-events: none; }

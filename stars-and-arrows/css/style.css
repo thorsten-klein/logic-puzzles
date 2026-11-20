@@ -1,0 +1,3 @@
+/* Stars and Arrows board. Shared styles live in ../css/style.css. */
+.sa-board .cell.arrow { color: #37474f; background: #eceff1; font-size: calc(var(--cell) * 0.55); }
+.sa-board .cell.star::after { content: '★'; color: #f9a825; font-size: calc(var(--cell) * 0.6); }

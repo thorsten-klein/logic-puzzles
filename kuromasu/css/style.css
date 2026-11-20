@@ -1,0 +1,3 @@
+/* Kuromasu board. Shared styles live in ../css/style.css. */
+.km-board .cell.numbered { cursor: default; }
+.km-board .cell.hint-clue { box-shadow: inset 0 0 0 3px #1976d2; }

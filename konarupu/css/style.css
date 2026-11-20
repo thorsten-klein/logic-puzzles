@@ -1,0 +1,4 @@
+/* Konarupu board. Shared styles live in ../css/style.css. */
+.loop-board .lp-grid { stroke: transparent; }
+.loop-board .lp-bg { stroke: transparent; }
+.kn-num { text-anchor: middle; dominant-baseline: central; font-weight: 700; fill: #455a64; pointer-events: none; }

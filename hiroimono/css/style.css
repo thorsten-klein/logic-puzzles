@@ -1,0 +1,8 @@
+/* Hiroimono board. Shared styles live in ../css/style.css. */
+.hr-board .cell { position: relative; }
+.hr-board .cell.hr-stone::before {
+  content: ''; position: absolute; inset: 14%; border-radius: 50%; background: #eceff1; border: 2px solid #37474f; z-index: 0;
+}
+.hr-board .cell.hr-stone > * , .hr-board .cell.hr-stone { z-index: 1; font-weight: 700; }
+.hr-board .cell .digit-input { position: relative; z-index: 1; background: transparent; color: var(--accent); }
+.hr-board .hr-num { position: relative; z-index: 1; }

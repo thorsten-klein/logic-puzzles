@@ -1,0 +1,7 @@
+/* Yin-Yang board. Shared styles live in ../css/style.css. */
+.yy-board .cell.black::after, .yy-board .cell.white::after {
+  content: ''; width: 70%; height: 70%; border-radius: 50%; border: 2px solid #333; box-sizing: border-box;
+}
+.yy-board .cell.black::after { background: #333; }
+.yy-board .cell.white::after { background: #fff; }
+.yy-board .cell.fixed { background: #eceff1; }

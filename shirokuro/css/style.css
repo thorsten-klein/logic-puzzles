@@ -1,0 +1,14 @@
+/* Shirokuro board. Shared styles live in ../css/style.css. */
+.sk-board { display: block; margin: 0 auto; user-select: none; }
+.sk-bg { fill: #fff; stroke: #888; }
+.sk-grid { stroke: #eee; }
+.sk-line { stroke: #37474f; stroke-width: 4; stroke-linecap: round; }
+.sk-line.ok { stroke: #43a047; }
+.sk-line.bad { stroke: #e53935; }
+.sk-line.hint { stroke: #ff9800; }
+.sk-line.ghost { stroke-dasharray: 4 3; }
+.sk-hit { stroke: transparent; cursor: pointer; }
+.sk-hit:hover { stroke: rgba(25, 118, 210, 0.15); }
+.sk-board.readonly .sk-hit { cursor: default; }
+.sk-white { fill: #fff; stroke: #333; stroke-width: 2; pointer-events: none; }
+.sk-black { fill: #333; pointer-events: none; }

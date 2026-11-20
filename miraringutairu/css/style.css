@@ -1,0 +1,2 @@
+/* Miraringutairu board. Shared styles live in ../css/style.css. */
+.mr-board .cell.mr-given { background: #263238 !important; color: #fff; font-weight: 700; }

@@ -1,0 +1,4 @@
+/* Roma board. Shared styles live in ../css/style.css. */
+.rm-board .cell { color: var(--accent); font-size: calc(var(--cell) * 0.55); }
+.rm-board .cell.given { color: var(--fg); }
+.rm-board .cell.goal::after { content: ''; width: 56%; height: 56%; border-radius: 50%; background: #333; }

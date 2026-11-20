@@ -1,0 +1,6 @@
+/* Hamusando board. Shared styles live in ../css/style.css. */
+.hm-wrap { display: flex; flex-direction: column; align-items: center; gap: 8px; }
+.hm-count { margin: 0; font-weight: 600; color: var(--fg); }
+.hm-board .cell { color: #37474f; }
+.hm-board .cell.hm-empty::after { content: ''; width: 16%; height: 16%; border-radius: 50%; background: #90a4ae; }
+.hm-board .clue { font-weight: 700; }

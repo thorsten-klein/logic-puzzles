@@ -1,0 +1,5 @@
+/* Arrow Web board. Shared styles live in ../css/style.css. */
+.aw-board .cell { color: #37474f; font-size: calc(var(--cell) * 0.5); }
+.aw-board .cell.shaded { color: #fff; }
+.aw-board .cell.dot::after { display: none; }
+.aw-board .cell.dot { background: #e8f5e9; }

@@ -1,0 +1,4 @@
+/* Easy as ABC board. Shared styles live in ../css/style.css. */
+.abc-board .clue { font-weight: 700; color: #555; }
+.abc-board .cell { color: var(--accent); }
+.abc-board .cell.blank::after { content: '×'; color: #9e9e9e; }

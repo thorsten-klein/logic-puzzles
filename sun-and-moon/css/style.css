@@ -1,0 +1,8 @@
+/* Sun and Moon board. Shared styles live in ../css/style.css. */
+.sm-board .sm-planet { width: 72%; height: 72%; pointer-events: none; }
+.sm-planet .sm-dark { fill: #546e7a; }
+.sm-planet .sm-lit { fill: #ffd54f; }
+.sm-planet .sm-ring { fill: none; stroke: #263238; stroke-width: 1.5; }
+.sm-board .sm-star { color: #f9a825; font-size: calc(var(--cell) * 0.6); line-height: 1; pointer-events: none; }
+.sm-board .cell.sm-cloud { background: #455a64; }
+.sm-board .cell.sm-empty::after { content: ''; width: 16%; height: 16%; border-radius: 50%; background: #90a4ae; }

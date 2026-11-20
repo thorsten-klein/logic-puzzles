@@ -1,0 +1,5 @@
+/* Tents board. Shared styles live in ../css/style.css. */
+.te-board .clue { background: var(--bg); font-weight: 700; color: #555; }
+.te-board .cell { font-size: calc(var(--cell) * 0.6); }
+.te-board .cell.tree { background: #e8f5e9; cursor: default; }
+.te-board .cell.grass { background: #c8e6c9; }

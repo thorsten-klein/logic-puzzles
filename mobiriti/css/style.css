@@ -1,0 +1,6 @@
+/* Mobiriti board. Shared styles live in ../css/style.css. */
+.nm-board .nm-circle {
+  width: 76%; height: 76%; border: 2px solid #37474f; border-radius: 50%;
+  display: flex; align-items: center; justify-content: center; box-sizing: border-box;
+  font-size: calc(var(--cell) * 0.4); font-weight: 600;
+}

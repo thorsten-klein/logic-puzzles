@@ -1,0 +1,9 @@
+/* Yagit board. Shared styles live in ../css/style.css. */
+.bb-wall { stroke: #263238; stroke-width: 4; stroke-linecap: round; }
+.bb-wall.ok { stroke: #43a047; }
+.bb-wall.bad { stroke: #e53935; }
+.bb-wall.hint { stroke: #ff9800; }
+.bb-dot { fill: #263238; }
+.pt-board .lp-cross { stroke: #90a4ae; stroke-width: 2; }
+.yg-goat { fill: #fff; stroke: #37474f; stroke-width: 2; }
+.yg-wolf { fill: #37474f; }

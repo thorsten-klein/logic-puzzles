@@ -1,0 +1,9 @@
+/* Kohi Gyunyu board. Shared styles live in ../css/style.css. */
+.kg-line { stroke: var(--accent); stroke-width: 4; stroke-linecap: round; }
+.kg-line.ok { stroke: #43a047; }
+.kg-line.bad { stroke: #e53935; }
+.kg-line.hint { stroke: #ff9800; }
+.kg-c1 { fill: #fff; stroke: #37474f; stroke-width: 2; }
+.kg-c2 { fill: #37474f; stroke: #37474f; stroke-width: 2; }
+.kg-c3 { fill: #b0bec5; stroke: #37474f; stroke-width: 2; }
+.pt-board .lp-cross { stroke: #90a4ae; stroke-width: 2; }

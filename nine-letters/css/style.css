@@ -1,0 +1,8 @@
+/* Nine Letters board. Shared styles live in ../css/style.css. */
+.wf-board .cell { font-weight: 700; font-size: calc(var(--cell) * 0.5); cursor: pointer; user-select: none; }
+.wf-board .cell.wf-sel { background: #ffe082 !important; }
+.wf-list { display: flex; flex-wrap: wrap; gap: 6px 14px; justify-content: center; max-width: 520px; margin: 12px auto 0; font-weight: 600; letter-spacing: 0.04em; }
+.wf-list .done { text-decoration: line-through; color: #90a4ae; }
+.wf-wrap { display: inline-flex; flex-direction: column; align-items: center; }
+.wf-wrap > .pz-board { flex: none; }
+.wf-board .cell.nl-r { border-right: 3px solid #37474f; } .wf-board .cell.nl-b { border-bottom: 3px solid #37474f; }

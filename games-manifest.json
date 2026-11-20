@@ -1,0 +1,2194 @@
+[
+ {
+  "name": "Kakuro",
+  "slug": "kakuro",
+  "description": "Kakuro (also known as \"Cross Sums\", \"Kakro\") is a logic puzzle, a mathematical equivalent of crosswords. The puzzle consists of a playing area of filled and empty cells similar to a crossword puzzle. Some black cells contain a diagonal slash from top left to bottom right with numbers in them, called \"the clues\". A number in the top right corner relates to an \"across\" clue and one in the bottom left a \"down\" clue.",
+  "status": "available",
+  "tags": [
+   "Numbers",
+   "Math"
+  ]
+ },
+ {
+  "name": "Hitori",
+  "slug": "hitori",
+  "description": "Hitori (from Japanese \"Hitori ni shite kure\"; literally \"let me alone\") is played on a grid of squares. At the beginning, each cell contains a number. The goal is to paint out some cells so that there are no duplicate numbers in any row or column, similar to the solved state of a Sudoku puzzle (except with black squares added to the grid).",
+  "status": "available",
+  "tags": [
+   "Shading"
+  ]
+ },
+ {
+  "name": "Slitherlink",
+  "slug": "slitherlink",
+  "description": "Slitherlink (also known as \"Fences\", \"Loop the Loop\", \"Dotty Dilemma\", \"Sli-Lin\", \"Great Wall of China\") is a logic puzzle. It was invented by Nikoli Puzzles in Japan.",
+  "status": "available",
+  "tags": [
+   "Loop"
+  ]
+ },
+ {
+  "name": "Link-a-Pix",
+  "slug": "link-a-pix",
+  "description": "Link-a-Pix (also known as \"Paint by Pairs\") consists of a grid, with numbers filling some squares; pairs of numbers must be located correctly and connected with a line filling a total of squares equal to that number. Squares containing '1' represent paths that are 1-square long. Paths may follow any horizontal or vertical direction. Paths are not allowed to cross other paths.",
+  "status": "available",
+  "tags": [
+   "Lines"
+  ]
+ },
+ {
+  "name": "Fill-a-Pix",
+  "slug": "fill-a-pix",
+  "description": "Fill-a-Pix (also known as \"Mosaic\", \"Magipic\", \"Nurie Puzzle\", \"Fill-In\") consists of a grid with number clues scattered in various places. Each number shows how many of the nine squares - the one with the number plus the eight around it - should be filled in.",
+  "status": "available",
+  "tags": [
+   "Shading"
+  ]
+ },
+ {
+  "name": "Battleships",
+  "slug": "battleships",
+  "description": "Battleships (also known as \"Solitaire Battleships\", \"Battleship Solitaire\") is a logic puzzle based on the Battleships guessing game. In a square grid of 10 x 10 small squares, an armada of battleships is located. There is one battleship of 4 squares, two cruisers of 3 squares, three destroyers of 2 squares, and four submarines of 1 square. Each ship occupies a number of contiguous squares on the grid, arranged either horizontally or vertically. The boats are placed so that no boat touches any other boat, not even diagonally.",
+  "status": "available",
+  "tags": [
+   "Objects"
+  ]
+ },
+ {
+  "name": "Hashiwokakero",
+  "slug": "hashiwokakero",
+  "description": "Hashiwokakero (from Japanese \"Hashi o kakero\"; literally \"build bridges\"; also known as \"Hashi\", \"Bridges\", \"Chopsticks\", or \"Ai-Ki-Ai\") is a type of logic puzzle. It is played on a rectangular grid with no standard size, although the grid itself is not usually drawn. Some cells start out with (usually encircled) numbers from 1 to 8 inclusive; these are the islands. The rest of the cells are empty.",
+  "status": "available",
+  "tags": [
+   "Lines"
+  ]
+ },
+ {
+  "name": "Masyu",
+  "slug": "masyu",
+  "description": "Masyu (also known as \"Shiroshinju Kuroshinju\", \"White Pearls and Black Pearls\") is a type of logic puzzle. It is played on a rectangular grid of squares, some of which contain circles; each circle is either \"white\" (empty) or \"black\" (filled). The goal is to draw a single continuous non-intersecting loop that properly passes through all circled cells. The loop must \"enter\" each cell it passes through from the center of one of its four sides and \"exit\" from a different side; all turns are therefore 90 degrees.",
+  "status": "available",
+  "tags": [
+   "Loop"
+  ]
+ },
+ {
+  "name": "Light Up",
+  "slug": "light-up",
+  "description": "Light Up (also known as \"Akari\", \"Bijutsukan\") is a logical puzzle. It is played on a rectangular grid of white and black cells. The player places light bulbs in white cells such that no two bulbs shine on each other, until the entire grid is lit up. A bulb sends rays of light horizontally and vertically, illuminating its entire row and column unless its light is blocked by a black cell. A black cell may have a number on it from 0 to 4, indicating how many bulbs must be placed adjacent to its four sides; for example, a cell with a 4 must have four bulbs around it, one on each side, and a cell with a 0 cannot have a bulb next to any of its sides. An unnumbered black cell may have any number of light bulbs adjacent to it, or none. Bulbs placed diagonally adjacent to a numbered cell do not contribute to the bulb count.",
+  "status": "available",
+  "tags": [
+   "Objects"
+  ]
+ },
+ {
+  "name": "Fillomino",
+  "slug": "fillomino",
+  "description": "Fillomino (also known as \"Polyominous\") is a type of logic puzzle. It is played on a rectangular grid of squares. Some cells of the grid start containing numbers, referred to as \"givens\". The goal is to divide the grid into blocks. The block must contain the number of cells indicated by the number in the cells of the block. The block cannot touch a similarly sized block, horizontally or vertically. Cells without numbers may form blocks necessary to complete the puzzle.",
+  "status": "available",
+  "tags": [
+   "Regions",
+   "Numbers"
+  ]
+ },
+ {
+  "name": "Futoshiki",
+  "slug": "futoshiki",
+  "description": "Futoshiki (from Japanese, literally \"not equal\"; also known as \"Hutoshiki\", \"Unequal\") is a logic puzzle. The puzzle is played on a square grid, such as 9 x 9. The objective is to place the numbers 1 to 9 (or whatever the dimensions are) in each row, ensuring that each column also only contains the digits 1 to 9. Some digits may be given at the start. In addition, inequality constraints are also initially specifed between some of the squares, such that one must be higher or lower than its neighbour. These constraints must be honoured as the grid is filled out.",
+  "status": "available",
+  "tags": [
+   "Numbers"
+  ]
+ },
+ {
+  "name": "Kuromasu",
+  "slug": "kuromasu",
+  "description": "Kuromasu (from Japanese \"kuromasu wa doko da\", literally \"Where is Black Cells?\"; also known as \"Kurodoko\") is played on a rectangular grid. Some of these cells have numbers in them. Each cell may be either black or white. The object is to determine what type each cell is.",
+  "status": "available",
+  "tags": [
+   "Shading"
+  ]
+ },
+ {
+  "name": "Nurikabe",
+  "slug": "nurikabe",
+  "description": "Nurikabe is a logic puzzle (\"nurikabe\" in Japanese folklore is an invisible wall that blocks roads and upon which delays in foot travel are blamed; other names for the puzzle: \"Cell Structure\", \"Islands in Stream\"). The puzzle is played on a grid, typically rectangular with no standard size. Some cells of the grid start containing numbers.",
+  "status": "available",
+  "tags": [
+   "Shading"
+  ]
+ },
+ {
+  "name": "Sashikabe",
+  "slug": "sashikabe",
+  "description": "Sashikabe combines Nurikabe puzzle with Sashigane puzzle. The goal is to blacken some cells of a grid according to the following rules:",
+  "status": "available",
+  "tags": [
+   "Shading"
+  ]
+ },
+ {
+  "name": "Yajikabe",
+  "slug": "yajikabe",
+  "description": "Yajikabe was invented by Naoki Inaba (Japan): he combined Yajilin and Nurikabe puzzles. The goal is to blacken some cells of a grid according to the following rules:",
+  "status": "available",
+  "tags": [
+   "Shading"
+  ]
+ },
+ {
+  "name": "Tents",
+  "slug": "tents",
+  "description": "Tents (\"Tents and Trees\") is a logic puzzle invented by Léon Balmaekers (Netherlands). The task is a grid of squares, some of them contain trees. The goal is to place tents in some of the remaining squares, in such a way that the following conditions are met:",
+  "status": "available",
+  "tags": [
+   "Objects"
+  ]
+ },
+ {
+  "name": "Calcudoku",
+  "slug": "calcudoku",
+  "description": "Calcudoku (also known as \"KenKen\", \"KENKEN\", \"KenDoku\", \"Square Wisdom\") is a mathematical and logical puzzle loosely similar to Sudoku. It was invented by a Japanese mathematics teacher Tetsuya Miyamoto. The objective is to fill the grid in with the digits 1 through N (where N is the number of rows or columns in the grid) such that:",
+  "status": "available",
+  "tags": [
+   "Numbers",
+   "Math"
+  ]
+ },
+ {
+  "name": "Hidato",
+  "slug": "hidato",
+  "description": "Hidato (from Hebrew: \"my puzzle\"; also known as \"Hidoku\") is a puzzle invented by Gyora Benedek, an Israeli mathematician. The goal of Hidato is to fill the grid with consecutive numbers that connect horizontally, vertically, or diagonally.",
+  "status": "available",
+  "tags": [
+   "Numbers",
+   "Lines"
+  ]
+ },
+ {
+  "name": "Numbrix",
+  "slug": "numbrix",
+  "description": "Numbrix is a type of logic puzzle. It is played on a rectangular grid of squares. Some of the cells have numbers in them. The object is to fill in the missing numbers, in sequential order, going horizontally and vertically only. Diagonal paths are not allowed.",
+  "status": "available",
+  "tags": [
+   "Numbers",
+   "Lines"
+  ]
+ },
+ {
+  "name": "Shikaku",
+  "slug": "shikaku",
+  "description": "Shikaku (also known as \"Divide by Squares\", \"Divide by Box\", \"Number Area\"; \"Shikakunikire\", from Japanese, literally \"cut into squares\") is a logic puzzle. It is played on a rectangular grid. Some of the cells in the grid are numbered. The objective is to divide the grid into rectangular and square pieces such that each piece contains exactly one number, and that number represents the area of the rectangle.",
+  "status": "available",
+  "tags": [
+   "Regions"
+  ]
+ },
+ {
+  "name": "Galaxies",
+  "slug": "galaxies",
+  "description": "Galaxies (also known as \"Tentai Show\", \"Sym-a-Pix\") consists of a rectangular grid with dots. The goal is to divide the rectangle into exactly one region per dot that is two-fold rotationally symmetric around the dot.",
+  "status": "available",
+  "tags": [
+   "Regions"
+  ]
+ },
+ {
+  "name": "Skyscrapers",
+  "slug": "skyscrapers",
+  "description": "Skyscrapers consists of a square grid. The goal is to fill in each cell with numbers from 1 to N, where N is the size of the puzzle's side. No number may appear twice in any row or column. The numbers along the edge of the puzzle indicate the number of buildings which you would see from that direction if there was a series of skyscrapers with heights equal the entries in that row or column.",
+  "status": "available",
+  "tags": [
+   "Numbers"
+  ]
+ },
+ {
+  "name": "Hakyuu",
+  "slug": "hakyuu",
+  "description": "Hakyuu (also known as \"Ripple Effect\", \"Hakyuu Kouka\", \"Hakyukoka\", \"Seismic\") is a logic puzzle published by Nikoli. The puzzle consists of a rectangular grid of any size divided into polyomino sections called \"rooms\". Each room must be filled with each of the numbers from 1 to the number of cells in the room. If two identical numbers appear in the same row or column, at least that many cells with other numbers must separate them.",
+  "status": "available",
+  "tags": [
+   "Numbers",
+   "Regions"
+  ]
+ },
+ {
+  "name": "Grand Tour",
+  "slug": "grand-tour",
+  "description": "Grand Tour is a logic puzzle. It is a grid of points that all need to be connected by a single loop. To begin the puzzle, a few of the points are already connected to insure a unique solution.",
+  "status": "available",
+  "tags": [
+   "Loop"
+  ]
+ },
+ {
+  "name": "Easy as ABC",
+  "slug": "easy-as-abc",
+  "description": "Easy as ABC (\"ABC End View\", \"Last Man Standing\") is a square grid, whose cells are to be filled by a range of letters (e.g. A through E), with each different letter occurring exactly once in each row and column, and the other cells remaining empty. The letters outside the grid show which letter will come across first from that direction.",
+  "status": "available",
+  "tags": [
+   "Objects",
+   "Words"
+  ]
+ },
+ {
+  "name": "Clouds",
+  "slug": "clouds",
+  "description": "Clouds (also known as \"Rain Clouds\", \"Radar\", \"Weather Watch\") is a variant of Battleships puzzle. The task is to mark certain cells of the rectangular grid as belonging to a cloud. Clouds occupy an area of rectangular shape and their width and height is at least two cells. No clouds touch each other, not even diagonally. Numbers outside the grid show the quantity of cells occupied by clouds in corresponding row or column.",
+  "status": "available",
+  "tags": [
+   "Shading"
+  ]
+ },
+ {
+  "name": "Yajilin",
+  "slug": "yajilin",
+  "description": "Yajilin (also known as \"Arrow Ring\", \"Straight and Arrow\") is a type of logic puzzle published by Nikoli. The goal is to draw a single continuous non-intersecting loop that connects the centers of the grid cells. The loop may not pass through any cells which contain arrows. The loop may only travel horizontally or vertically, and never diagonally. Any cell that does not have an arrow and which is not part of the loop must be shaded in black. Black cells do not touch each other orthogonally (they do not share a side). A cell containing a number and an arrow represents how many black cells are in the row or column pointed at by the arrow. There may be black cells that are not accounted for by the cells with arrows and numbers. The grid may contain gray cells that can not be part of the loop.",
+  "status": "available",
+  "tags": [
+   "Shading",
+   "Loop"
+  ]
+ },
+ {
+  "name": "Minesweeper",
+  "slug": "minesweeper",
+  "description": "Minesweeper is well-known by the game in Microsoft Windows. The task is to place mines into empty cells in the grid. The digits in the grid represent the number of mines in the neighbouring cells, including diagonal ones.",
+  "status": "available",
+  "tags": [
+   "Objects"
+  ]
+ },
+ {
+  "name": "Minesweeper Battleships",
+  "slug": "minesweeper-battleships",
+  "description": "Minesweeper Battleships (also known as \"Battlemines\") combines Battleships puzzle with Minesweeper game found on many computers. The aim is to locate the position of the fleet in the grid. The ships do not touch each other, not even diagonally. A cell with a number indicates how many ship pieces are adjacent to it. Ships are not allowed on the numbered cells.",
+  "status": "available",
+  "tags": [
+   "Objects"
+  ]
+ },
+ {
+  "name": "Heyawake",
+  "slug": "heyawake",
+  "description": "Heyawake (from Japanese, \"divided rooms\") is played on a rectangular grid. The grid is divided into rectangular \"rooms\". Some rooms may contain a single number. These rooms must have the designated number of cells painted black. Other rooms may have zero or more cells painted black.",
+  "status": "available",
+  "tags": [
+   "Shading"
+  ]
+ },
+ {
+  "name": "Tenner Grid",
+  "slug": "tenner-grid",
+  "description": "Tenner Grid (also known as \"From 1 to 10\", \"Zehnergitter\", \"Grid Ten\") consists of a rectangular grid of width ten cells. The task is to fill in the grid so that every row contains the digits 0 through 9. In columns the numbers may be repeated. The bottom numbers give the sum of the numbers in column. The digits in contiguous cells (even diagonally contiguous cells) must be different.",
+  "status": "available",
+  "tags": [
+   "Numbers",
+   "Math"
+  ]
+ },
+ {
+  "name": "Hundred",
+  "slug": "hundred",
+  "description": "Hundred is a square grid of 3 x 3 or 4 x 4, whose cells are to be filled by some digits. The task is to fill additional digits in required cells such that the sum of numbers in each row and each column equals to 100.",
+  "status": "available",
+  "tags": [
+   "Numbers",
+   "Math"
+  ]
+ },
+ {
+  "name": "Arrows",
+  "slug": "arrows",
+  "description": "Arrows is a type of logic puzzle. It is played on a rectangular grid filled with numbers. The task is to place arrows outside the grid. Every arrow can go horizontally, vertically or diagonally and points to at least one cell with a number. The numbers indicate the total number of arrows that point to them.",
+  "status": "available",
+  "tags": [
+   "Objects"
+  ]
+ },
+ {
+  "name": "Mathrax",
+  "slug": "mathrax",
+  "description": "Mathrax consists of a square grid. The goal is to fill in each cell with numbers from 1 to N, where N is the size of the puzzle's side. No number may appear twice in any row or column. Circles with additional conditions may be situated on intersections of lines inside the grid.",
+  "status": "available",
+  "tags": [
+   "Numbers",
+   "Math"
+  ]
+ },
+ {
+  "name": "Str8ts",
+  "slug": "str8ts",
+  "description": "Str8ts (also known as \"Straights\") is a logic puzzle, invented by Jeff Widderich (Canada). It is a grid, partially divided by black cells into compartments. Each compartment, vertically or horizontally, must contain a straight - a set of consecutive numbers, but in any order (for example: 2-1-3-4). The aim is to fill all white cells with the numbers from 1 to N (where N is the size of the grid). No single number can repeat in any row or column. Clues in black cells remove that number as an option in that row and column, and are not part of any straight.",
+  "status": "available",
+  "tags": [
+   "Numbers"
+  ]
+ },
+ {
+  "name": "Linesweeper",
+  "slug": "linesweeper",
+  "description": "Linesweeper (also known as \"Loop\") is played on a rectangular grid. The object is to create a single continuous non-intersecting loop that connects the centers of the grid cells. The numbered cells can't be passed through; the number in the cell means how many of the 8 surrounding cells should contain some part of the solution path. (For example, \"0\" means that 8 surrounding cells can't be passed through at all).",
+  "status": "available",
+  "tags": [
+   "Loop"
+  ]
+ },
+ {
+  "name": "Binairo",
+  "slug": "binairo",
+  "description": "Binairo (also known as \"Binary Puzzle\", \"Takuzu\", \"Tohu wa Vohu\") is played on a rectangular or square grid. The goal is to fill in the grid with digits \"0\" and \"1\" according to the following rules:",
+  "status": "available",
+  "tags": [
+   "Numbers"
+  ]
+ },
+ {
+  "name": "Walls",
+  "slug": "walls",
+  "description": "Walls is a logic puzzle, invented by Naoki Inaba (Japan). The task is to place a horizontal or a vertical line in every blank cell. A number in a black cell indicates the total length of the segments connected to that square.",
+  "status": "available",
+  "tags": [
+   "Lines",
+   "Math"
+  ]
+ },
+ {
+  "name": "Dominosa",
+  "slug": "dominosa",
+  "description": "Dominosa (also known as \"Dominosa Omnibus\", \"Solitaire Dominoes\", \"Domino Hunt\") is a logic puzzle. On the board the domino numbers are shown, but the borders between dominoes are missing. The task is to restore borders between domino tiles.",
+  "status": "available",
+  "tags": [
+   "Regions"
+  ]
+ },
+ {
+  "name": "Patchwork",
+  "slug": "patchwork",
+  "description": "Patchwork (also known as \"Tatami\") consists of a square grid divided into regions (\"rooms\"). Each room must be filled with each of the digits from 1 to the number of cells in the room. Every row and every column must contain the same amount of each digit. Same digits must not be orthogonally adjacent.",
+  "status": "available",
+  "tags": [
+   "Regions"
+  ]
+ },
+ {
+  "name": "Knossos",
+  "slug": "knossos",
+  "description": "Knossos is a logic puzzle (\"Knossos\" is a palace on Crete; this palace is connected with ancient legends, such as the myth of the Labyrinth with the Minotaur). It is played on a rectangular grid. Some of the cells in the grid are numbered. The goal is to divide the grid into regions (“rooms”) such that each region contains exactly one number. The number represents the border’s length of the region.",
+  "status": "available",
+  "tags": [
+   "Regions"
+  ]
+ },
+ {
+  "name": "Rekuto",
+  "slug": "rekuto",
+  "description": "Rekuto (\"Recto\") is played on a rectangular or square grid. Some of the cells have numbers in them. The aim is to divide the grid into rectangular and square pieces such that each piece contains exactly one number, and that number represents the sum of the width and height of the rectangle.",
+  "status": "available",
+  "tags": [
+   "Regions"
+  ]
+ },
+ {
+  "name": "Neighbours",
+  "slug": "neighbours",
+  "description": "Neighbours is played on a grid of irregular shape. Some cells of the grid contain numbers. It is necessary to divide the grid into a number of connected regions of an equal number of cells. Every region contains exactly one cell with a number (or a question mark) in it, and has as many neighbours as the number indicates. Regions are neighbours when they share a part of their border.",
+  "status": "available",
+  "tags": [
+   "Regions"
+  ]
+ },
+ {
+  "name": "Four Winds",
+  "slug": "four-winds",
+  "description": "Four Winds (\"Line Game\") is played on a rectangular or square grid with black and white cells. All black cells contain numbers. The aim is to draw a horizontal or a vertical line in each white cell. Each number represents the total number of white cells occupied by the lines from that number. Lines cannot enter other numbered black cells or intersect with other lines.",
+  "status": "available",
+  "tags": [
+   "Lines"
+  ]
+ },
+ {
+  "name": "Shakashaka",
+  "slug": "shakashaka",
+  "description": "Shakashaka (also known as \"Proof of Quilt\") is a logic puzzle, invented by Nikoli. The task is to place one of the four isosceles right triangles in some white cells. Each triangle must occupy exactly half of its cell, but may be in one of four orientations. Every contiguous white region must be a rectangle or a square. A number in a black cell indicates how many triangles are adjacent to that cell by sides.",
+  "status": "available",
+  "tags": [
+   "Shading"
+  ]
+ },
+ {
+  "name": "Kakurasu",
+  "slug": "kakurasu",
+  "description": "Kakurasu (\"Index Sums\") is played on a rectangular or square grid. The goal is to color in some of the cells to satisfy the clues. The numbers across the top and down the left are the clues, and equal the row and column totals for the black squares. The numbers across the bottom and down the right are the values for each of the squares in the rows and columns (the first square in a row or column is worth 1, the second 2, the third 3, etc.).",
+  "status": "available",
+  "tags": [
+   "Shading",
+   "Math"
+  ]
+ },
+ {
+  "name": "Mochikoro",
+  "slug": "mochikoro",
+  "description": "Mochikoro (\"Mochinuri\") is a logic puzzle. It consists of a grid, with numbers in some cells. The aim is to blacken some cells according to the following rules:",
+  "status": "available",
+  "tags": [
+   "Shading"
+  ]
+ },
+ {
+  "name": "Seethrough",
+  "slug": "seethrough",
+  "description": "Seethrough (also known as \"Doors\", \"Open Office\") is a logic puzzle, where every cell denotes a \"room\". The aim is to close some \"doors\" between rooms. Open doors allow to look into other rooms. The number in the cell indicates the total number of rooms visible in horizontal and vertical direction from that room (the room itself excluded). There can be no isolated rooms; this means that you should be able to reach all rooms by moving horizontally and vertically.",
+  "status": "available",
+  "tags": [
+   "Regions"
+  ]
+ },
+ {
+  "name": "Lighthouses",
+  "slug": "lighthouses",
+  "description": "Lighthouses is played on a rectangular or square grid. It contains black cells with numbers (\"lighthouses\"). The number in the cell represents the number of ships lit by the lighthouse. A ship is lit if it is in the same row or column as the lighthouse, also ships behind other ships or lighthouses. Each ship is lit by at least one lighthouse. The ships are placed so that no ship touches any other ship or lighthouse, not even diagonally.",
+  "status": "available",
+  "tags": [
+   "Objects"
+  ]
+ },
+ {
+  "name": "Lighthouse Battleships",
+  "slug": "lighthouse-battleships",
+  "description": "Lighthouse Battleships combines Battleships with Lighthouses puzzle. A cell with a number is a lighthouse, and it indicates the total number of ship pieces that are in the same row or column as the lighthouse. Ships can not touch the lighthouses, not even diagonally.",
+  "status": "available",
+  "tags": [
+   "Objects"
+  ]
+ },
+ {
+  "name": "Tapa",
+  "slug": "tapa",
+  "description": "Tapa is a logic puzzle created by Serkan Yürekli (Turkey). The goal is to blacken some cells of the grid. All the black cells form one contiguous region. No 2 x 2 cell area within the grid can contain all black cells. Clue cells with numbers may not be filled in and tell the length of each consecutive black cell block in the eight surrounding cells. If there's more than one digit in a cell, the groups of black cells have to be separated by at least one white cell. Question marks can be used instead of clue numbers. Each question mark can represent any nonzero integer.",
+  "status": "available",
+  "tags": [
+   "Shading"
+  ]
+ },
+ {
+  "name": "Fobidoshi",
+  "slug": "fobidoshi",
+  "description": "Fobidoshi (\"Forbidden Four\") is a logic puzzle, invented by Naoki Inaba (Japan). It is played on a rectangular or square grid. Some of the cells have circles in them. The aim is to place circles into empty cells; all the circles must form an orthogonally continuous area. A line of connected circles must not contain more than 3 circles.",
+  "status": "available",
+  "tags": [
+   "Objects"
+  ]
+ },
+ {
+  "name": "Island",
+  "slug": "island",
+  "description": "Island (also known as \"Tents Island\", \"Airando\") is a logic puzzle invented by Naoki Inaba (Japan). It consists of a grid, with numbers in some cells. The aim is to blacken some cells of a grid according to the following rules:",
+  "status": "available",
+  "tags": [
+   "Shading"
+  ]
+ },
+ {
+  "name": "Dominion",
+  "slug": "dominion",
+  "description": "Dominion is a logic puzzle created by Naoki Inaba (Japan). It consists of a grid, with letters in some cells. The aim is to blacken some cells of a grid according to the following rules:",
+  "status": "available",
+  "tags": [
+   "Shading"
+  ]
+ },
+ {
+  "name": "Tren",
+  "slug": "tren",
+  "description": "Tren is a logic puzzle invented by Shinichi Aoki (Japan). The Japanese name of this puzzle means \"parking\" (each block is a car, and a grid is a car park). The puzzle contains a grid with numbers in some cells. The goal is to locate some blocks in the grid, having the size either 1 x 2 or 1 x 3. Each number in the grid should be part of a block, indicating the amount of the possible movements of the block. Blocks can only move in the direction of their short edge.",
+  "status": "available",
+  "tags": [
+   "Objects",
+   "Moving"
+  ]
+ },
+ {
+  "name": "No Four in a Row",
+  "slug": "no-four-in-a-row",
+  "description": "No Four in a Row is played on a grid of irregular shape. Some cells of the grid contain 'X' and 'O'. The task is to fill in the grid so that four consecutive identical symbols never appear in any row, column or diagonal.",
+  "status": "available",
+  "tags": [
+   "Objects"
+  ]
+ },
+ {
+  "name": "Corral",
+  "slug": "corral",
+  "description": "Corral (also known as \"Bag\", \"Cave\") is a logic puzzle invented by Nikoli. The aim is to draw a single closed loop along the grid lines that does not intersect itself. The loop goes around all numbers. The numbers in the grid indicate how many cells inside the loop can be seen horizontally and vertically from that cell, including the cell itself. Question marks can be used instead of clue numbers. Each question mark can represent any nonzero integer.",
+  "status": "available",
+  "tags": [
+   "Loop"
+  ]
+ },
+ {
+  "name": "Foseruzu",
+  "slug": "foseruzu",
+  "description": "Foseruzu (\"Four Cells\") is a type of logic puzzle published by Nikoli. The goal is to divide the grid into regions of exactly four cells. The number inside a cell represents how many of its four sides are segments of region borders (including the border of the grid).",
+  "status": "available",
+  "tags": [
+   "Regions"
+  ]
+ },
+ {
+  "name": "Sutoreto",
+  "slug": "sutoreto",
+  "description": "Sutoreto (\"Sutoretokurosu\", \"Straight Cross\") is a logic puzzle created by Naoki Inaba (Japan). It is played on a rectangular or square grid with black and white cells. Some white cells contain numbers. The aim is to place a number into every white cell. The numbers in a horizontal or vertical stripe of consecutive white cells must form a sequence of numbers without gaps, but in any order (for example: 2-4-1-3).",
+  "status": "available",
+  "tags": [
+   "Numbers"
+  ]
+ },
+ {
+  "name": "Renban",
+  "slug": "renban",
+  "description": "Renban consists of a square grid divided into regions. The aim is to fill in each cell with numbers from 1 to N, where N is the size of the puzzle's side. No number may appear twice in any row, column or region. All numbers in a region must form a sequence of consecutive numbers, but in any order (for example: 5-3-4).",
+  "status": "available",
+  "tags": [
+   "Numbers",
+   "Regions"
+  ]
+ },
+ {
+  "name": "Buraitoraito",
+  "slug": "buraitoraito",
+  "description": "Buraitoraito (\"Bright Light\") is played on a rectangular or square grid. It contains black cells with numbers. The number in the cell represents how many stars can be seen from this cell. A star is visible from the black cell, if it is in the same row or column as this cell, but not behind other black cells.",
+  "status": "available",
+  "tags": [
+   "Shading"
+  ]
+ },
+ {
+  "name": "Irasuto",
+  "slug": "irasuto",
+  "description": "Irasuto (\"Illustration\") is a logic puzzle created by Naoki Inaba (Japan). A rectangular or square grid contains white and black cells with numbers. The goal is to blacken some cells of a grid according to the following rules:",
+  "status": "available",
+  "tags": [
+   "Shading"
+  ]
+ },
+ {
+  "name": "Suguru",
+  "slug": "suguru",
+  "description": "Suguru (\"Number Blocks\") is a logic puzzle invented by Naoki Inaba (Japan). The task consists of a rectangular or square grid divided into regions. Each region must be filled with each of the digits from 1 to the number of cells in the region. Cells with the same digits must not be orthogonally or diagonally adjacent.",
+  "status": "available",
+  "tags": [
+   "Numbers",
+   "Regions"
+  ]
+ },
+ {
+  "name": "Trinudo",
+  "slug": "trinudo",
+  "description": "Trinudo is a logic puzzle. It is played on a rectangular grid. Some cells of the grid start containing numbers, referred to as \"givens\". The goal is to divide the grid into blocks of either one, two or three cells. Blocks of the same size must not be orthogonally adjacent. Each given number represents the size of the block to which it belongs.",
+  "status": "available",
+  "tags": [
+   "Regions"
+  ]
+ },
+ {
+  "name": "Creek",
+  "slug": "creek",
+  "description": "Creek (\"Kuriku\") is played on a rectangular or square grid. Circles with digits from 0 to 4 may be situated on intersections of lines inside the grid. The digit in the circle indicates how many adjacent cells must be blackened. All the white cells must be connected horizontally or vertically.",
+  "status": "available",
+  "tags": [
+   "Shading"
+  ]
+ },
+ {
+  "name": "Gappy",
+  "slug": "gappy",
+  "description": "Gappy (\"Gaps\") is played on a square grid. The aim is to blacken some cells of a grid according to the following rules:",
+  "status": "available",
+  "tags": [
+   "Shading"
+  ]
+ },
+ {
+  "name": "Norinori",
+  "slug": "norinori",
+  "description": "Norinori (\"Dominnocuous\") is a logic puzzle invented by Nikoli. A rectangular or square grid is divided into regions. The aim is to blacken some cells of a grid according to the following rules:",
+  "status": "available",
+  "tags": [
+   "Shading"
+  ]
+ },
+ {
+  "name": "Yonmasu",
+  "slug": "yonmasu",
+  "description": "Yonmasu (\"Yonmasubunkatsu\") is a logic puzzle invented by Naoki Inaba (Japan). A rectangular or square grid contains circles in some cells. The goal is to divide the grid into regions of exactly four cells. Each region contains one circle.",
+  "status": "available",
+  "tags": [
+   "Regions"
+  ]
+ },
+ {
+  "name": "Bricks",
+  "slug": "bricks",
+  "description": "Bricks consists of a square grid. The aim is to fill in each cell with numbers from 1 to N, where N is the size of the puzzle's side. No number may appear twice in any row or column. Every brick contains an odd number and an even number.",
+  "status": "available",
+  "tags": [
+   "Numbers"
+  ]
+ },
+ {
+  "name": "Number Chain",
+  "slug": "number-chain",
+  "description": "Number Chain is a logic puzzle invented by Leonid Mochalov (Russia). A rectangular or square grid contains numbers from 1 to N in cells. The aim is to draw a single continuous line from the upper left corner to the lower right corner. The line includes each number from 1 to N exactly once.",
+  "status": "available",
+  "tags": [
+   "Lines",
+   "Numbers"
+  ]
+ },
+ {
+  "name": "Kapetto",
+  "slug": "kapetto",
+  "description": "Kapetto (\"Settokapetto\", \"Set Carpets\") is a logic puzzle invented by Naoki Inaba (Japan). It is played on a rectangular or square grid. Some of the cells have numbers in them. The goal is to divide the grid into rectangular blocks such that each block contains exactly one number. The number represents the amount of cells in the block. The grid may contain cells that belong to no one block.",
+  "status": "available",
+  "tags": [
+   "Regions"
+  ]
+ },
+ {
+  "name": "Renkatsu",
+  "slug": "renkatsu",
+  "description": "Renkatsu is a logic puzzle created by Naoki Inaba (Japan). It is played on a rectangular or square grid filled with numbers. It is necessary to divide the grid into regions. Each region contains digits from 1 to the number of cells in the region.",
+  "status": "available",
+  "tags": [
+   "Regions",
+   "Numbers"
+  ]
+ },
+ {
+  "name": "Eulero",
+  "slug": "eulero",
+  "description": "Eulero (\"Graeco-Latin Square\", \"Euler Square\") is a puzzle with letters and digits. The goal is to fill in the grid with symbols according to the following rules:",
+  "status": "available",
+  "tags": [
+   "Numbers"
+  ]
+ },
+ {
+  "name": "Anraikumozaiku",
+  "slug": "anraikumozaiku",
+  "description": "Anraikumozaiku (\"Unlike Mosaic\") is a logic puzzle invented by Naoki Inaba (Japan). A rectangular or square grid contains circles in some cells. The goal is to divide the grid into rectangular regions. Each region contains one circle. Black cells do not belong to any region. Regions of the same size must not share an edge.",
+  "status": "available",
+  "tags": [
+   "Regions"
+  ]
+ },
+ {
+  "name": "Kurotto",
+  "slug": "kurotto",
+  "description": "Kurotto (from Japanese, literally \"black units\") is a logic puzzle published by Nikoli. The task consists of a grid, with circles in some cells; a circle may have a number inside or not. The task is to blacken some cells of a grid according to the following rules:",
+  "status": "available",
+  "tags": [
+   "Shading"
+  ]
+ },
+ {
+  "name": "Tasukuea",
+  "slug": "tasukuea",
+  "description": "Tasukuea (\"Tasquare\"; from Japanese, literally \"find squares\") is a type of logic puzzles. It is played on a rectangular or square grid with numbers or question signs in some cells. The goal is to blacken some cells of a grid according to the following rules:",
+  "status": "available",
+  "tags": [
+   "Shading"
+  ]
+ },
+ {
+  "name": "Star Battle",
+  "slug": "star-battle",
+  "description": "Star Battle consists of a square grid divided into regions. The goal is to place stars into some cells in the grid so that each row, column, and region contains the same number of stars. Stars cannot be placed in adjacent cells, not even diagonally.",
+  "status": "available",
+  "tags": [
+   "Objects"
+  ]
+ },
+ {
+  "name": "Araf",
+  "slug": "araf",
+  "description": "Araf (from Turkish, literally \"purgatory\"; original Japanese name - \"Aidabeya\") is a logic puzzle. It is played on a rectangular grid. Some of the cells in the grid are numbered. The goal is to divide the grid into regions such that each region contains exactly two numbers. Each region must have an area that is strictly between those numbers. For example, if the region contains 2 and 5, the region's area must be equal to 3 or 4.",
+  "status": "available",
+  "tags": [
+   "Regions"
+  ]
+ },
+ {
+  "name": "Kabingurodo",
+  "slug": "kabingurodo",
+  "description": "Kabingurodo (\"Curving Road\") is a logic puzzle invented by Naoki Inaba (Japan). It consists of a grid, with circles in some cells. The aim is to blacken some cells of a grid according to the following rules:",
+  "status": "placeholder",
+  "tags": [
+   "Shading"
+  ]
+ },
+ {
+  "name": "Thermometers",
+  "slug": "thermometers",
+  "description": "Thermometers is a kind of logic puzzles. The grid is filled with thermometers, which are either not filled, partly filled or completely filled. The numbers on the outside indicate how many squares are filled in that row or column. Every thermometer is filled from the base (circular part), towards the top. This does not depend on the actual orientation of the thermometer.",
+  "status": "available",
+  "tags": [
+   "Shading"
+  ]
+ },
+ {
+  "name": "Snake",
+  "slug": "snake",
+  "description": "Snake (also known as \"Tunnel\") is a kind of logic puzzles. It is played on a rectangular or square grid, where two cells are marked. The task is to draw a single line (\"snake\") between marked cells; this line never touches itself, not even diagonally. Numbers outside the grid show how many cells must be blackened in the corresponding row or column.",
+  "status": "available",
+  "tags": [
+   "Shading"
+  ]
+ },
+ {
+  "name": "Peintoeria",
+  "slug": "peintoeria",
+  "description": "Peintoeria (\"Paint Area\") is a logic puzzle published by Nikoli. The puzzle consists of a rectangular grid of any size divided into regions. The goal is to blacken some cells of a grid according to the following rules:",
+  "status": "available",
+  "tags": [
+   "Shading",
+   "Regions"
+  ]
+ },
+ {
+  "name": "Irupu",
+  "slug": "irupu",
+  "description": "Irupu (\"I-Loop\") is a logic puzzle invented by Naoki Inaba (Japan). A rectangular or square grid contains circles in some cells. The goal is to locate some blocks in the grid, having the size either 1 x 3 or 3 x 1. Each block contains one circle and must be orthogonally adjacent to exactly two other blocks. All block cells form a closed loop.",
+  "status": "available",
+  "tags": [
+   "Loop"
+  ]
+ },
+ {
+  "name": "Sashigane",
+  "slug": "sashigane",
+  "description": "Sashigane (from Japanese, literally \"carpenter's square\"; \"Ellbound\") is a type of logic puzzle published by Nikoli. The goal is to divide the grid into L-shaped regions. The two \"legs\" of a region must be exactly one cell wide. A circle represents a cell in which an \"L\" must bend (the grid contains circles not for all regions). A region must have the same number of cells as a number in a circle. An arrow marks the end of the region's \"leg\"; the arrow points to the cell in which the \"L\" bends.",
+  "status": "available",
+  "tags": [
+   "Regions"
+  ]
+ },
+ {
+  "name": "Sashikazune",
+  "slug": "sashikazune",
+  "description": "Sashikazune is a logic puzzle published by Nikoli. A rectangular or square grid contains numbers in some cells. The aim is to divide the grid into L-shaped regions. The two \"legs\" of a region must be exactly one cell wide. Each region contains not more than three cells with numbers. The grid may contain regions without numbers. A number indicates the amount of cells up to a place where an \"L\" must bend (including the cell with the number). A cell with \"1\" always represents a cell in which an \"L\" must bend.",
+  "status": "available",
+  "tags": [
+   "Regions"
+  ]
+ },
+ {
+  "name": "Chocona",
+  "slug": "chocona",
+  "description": "Chocona (\"Chocolate\") consists of a rectangular or square grid divided into regions. The aim is to blacken some cells of a grid according to the following rules:",
+  "status": "available",
+  "tags": [
+   "Shading",
+   "Regions"
+  ]
+ },
+ {
+  "name": "Different Neighbours",
+  "slug": "different-neighbours",
+  "description": "Different Neighbours consists of a rectangular or square grid divided into regions. The aim is to place a number from 1 to 4 into each region so that no two regions that touch (even diagonally) share the same digit.",
+  "status": "available",
+  "tags": [
+   "Regions",
+   "Numbers"
+  ]
+ },
+ {
+  "name": "LITS",
+  "slug": "lits",
+  "description": "LITS (\"Nuruomino\") is a logic puzzle created by Naoki Inaba (Japan). The puzzle consists of a rectangular grid of any size divided into regions. The goal is to blacken exactly four connected cells in each region, to form an L, I, T, or S tetromino.",
+  "status": "available",
+  "tags": [
+   "Shading",
+   "Regions"
+  ]
+ },
+ {
+  "name": "Nanbaboru",
+  "slug": "nanbaboru",
+  "description": "Nanbaboru (\"Number Ball\") consists of a square grid. The goal is to fill in some cells with numbers from the given range. No number may appear twice in any row or column. A cell with a circle must contain a number; a cell with a cross cannot contain a number.",
+  "status": "available",
+  "tags": [
+   "Numbers"
+  ]
+ },
+ {
+  "name": "Tairupeinto",
+  "slug": "tairupeinto",
+  "description": "Tairupeinto (\"Tile Paint\", \"Crazy Pavement\") consists of a rectangular or square grid divided into regions. The aim is to blacken some cells so that each region is either completely filled or completely empty. External numbers are the clues, and equal the row and column totals for the black squares.",
+  "status": "available",
+  "tags": [
+   "Shading",
+   "Regions"
+  ]
+ },
+ {
+  "name": "Yin-Yang",
+  "slug": "yin-yang",
+  "description": "Yin-Yang consists of a rectangular or square grid with white and black circles in some cells. The aim is to place a black or white circle in each empty cell so that all circles of same color are connected to each other, vertically or horizontally. Additionally, no 2 x 2 group of cells can contain circles of the same color.",
+  "status": "available",
+  "tags": [
+   "Shading"
+  ]
+ },
+ {
+  "name": "Nanro",
+  "slug": "nanro",
+  "description": "Nanro is a logic puzzle published by Nikoli. The task consists of a rectangular or square grid divided into regions. The goal is to fill in some cells with numbers. All numbers in a region must be the same. The given number in a region denotes how many cells in this region contain a number (all regions must have at least one number). When two numbers are orthogonally adjacent across a region boundary, the numbers must be different. Numbered cells must not cover an area of size 2 x 2 or larger. All cells with numbers must be interconnected.",
+  "status": "available",
+  "tags": [
+   "Numbers",
+   "Regions"
+  ]
+ },
+ {
+  "name": "Light and Shadow",
+  "slug": "light-and-shadow",
+  "description": "Light and Shadow is a type of logic puzzles. The aim is to divide the grid into gray and white regions. Every region contains exactly one number. The region must have the same number of cells as the number it contains. Numbers in white cells are part of white regions; numbers in gray cells are part of gray regions. Same colored regions cannot share an edge.",
+  "status": "available",
+  "tags": [
+   "Regions"
+  ]
+ },
+ {
+  "name": "Arukone",
+  "slug": "arukone",
+  "description": "Arukone (\"Number Link\") consists of a rectangular or square grid with numbers in some cells. The goal is to connect each pair of numbers with single continuous lines. The lines must neither cross nor touch each other.",
+  "status": "available",
+  "tags": [
+   "Lines"
+  ]
+ },
+ {
+  "name": "Tetroid",
+  "slug": "tetroid",
+  "description": "Tetroid is a logic puzzle invented by Naoki Inaba (Japan). A rectangular or square grid contains black cells. The aim is to divide the grid into regions of exactly four cells, to form an L, I, T, S or O tetromino.",
+  "status": "available",
+  "tags": [
+   "Regions"
+  ]
+ },
+ {
+  "name": "Sukima",
+  "slug": "sukima",
+  "description": "Sukima (from Japanese \"Sukimaburokku\"; literally \"space between blocks\") is a logic puzzle created by Naoki Inaba (Japan). A rectangular or square grid contains circles in some cells. The aim is to locate some regions in the grid, having the size of exactly three cells. Each region contains one circle. Each 2 x 2 area must contain at least one cell, that does not belong to any region. Black cells do not belong to any region.",
+  "status": "available",
+  "tags": [
+   "Regions"
+  ]
+ },
+ {
+  "name": "Triplets",
+  "slug": "triplets",
+  "description": "Triplets (\"One or All\") is a logic puzzle invented by Naoki Inaba (Japan). The task consists of a rectangular or square grid divided into regions of exactly three cells. Some cells contain figures of 3 kinds: squares, circles, triangles. The goal is to fill in each cell with figures. Each region must contain all identical or all different figures. When two figures are orthogonally adjacent across a region boundary, the figures must be different.",
+  "status": "available",
+  "tags": [
+   "Regions"
+  ]
+ },
+ {
+  "name": "Korekutokonekuto",
+  "slug": "korekutokonekuto",
+  "description": "Korekutokonekuto (\"Correct Connection\") is a logic puzzle created by Naoki Inaba (Japan). The task consists of white and black circles; some white circles may contain digits. The aim is to connect all white circles by horizontal and vertical lines. The lines must not cross other lines or black circles. The number of lines connected to the white circle must match the digit in that circle.",
+  "status": "available",
+  "tags": [
+   "Lines"
+  ]
+ },
+ {
+  "name": "Doppelblock",
+  "slug": "doppelblock",
+  "description": "Doppelblock (\"Double Block\") consists of a square grid. The goal is to blacken two cells in each row and each column. The remaining white cells must be filled with the digits from 1 to N-2, where N is the size of the puzzle's side. Each number appears once in every row and column. Numbers outside the grid show the sums of the numbers between two black cells in corresponding row or column.",
+  "status": "available",
+  "tags": [
+   "Shading",
+   "Numbers",
+   "Math"
+  ]
+ },
+ {
+  "name": "Furisuri",
+  "slug": "furisuri",
+  "description": "Furisuri (\"Free Three\") is a logic puzzle invented by Naoki Inaba (Japan). A rectangular or square grid contains circles in some cells. The goal is to locate some blocks in the grid, having the size of exactly three cells. Each block must contain one circle. It must be possible to move each block by one cell in at least one direction.",
+  "status": "available",
+  "tags": [
+   "Regions",
+   "Moving"
+  ]
+ },
+ {
+  "name": "Yagit",
+  "slug": "yagit",
+  "description": "Yagit (from Japanese \"Yagi to ookami\"; literally \"goat and wolf\") is a logic puzzle published by Nikoli. The task consists of a rectangular or square grid with circles (\"goats\") and squares (\"wolves\") in some cells. The task is to divide the grid into regions. Each region must contain either goats or wolves (but not both) and must not be empty. The border lines of the regions start and end on the edges of the grid. Lines can only turn at black dots. Lines can cross each other except at black dots. Not all black dots must be used by border lines.",
+  "status": "available",
+  "tags": [
+   "Regions"
+  ]
+ },
+ {
+  "name": "Purenrupu",
+  "slug": "purenrupu",
+  "description": "Purenrupu (\"Pure Loop\") is a logic puzzle created by Naoki Inaba (Japan). A rectangular or square grid contains black cells. The aim is to draw a single loop. The loop visits all white cells exactly once. The segments of the loop run horizontally and vertically between the centers of white cells.",
+  "status": "available",
+  "tags": [
+   "Loop"
+  ]
+ },
+ {
+  "name": "Firumatto",
+  "slug": "firumatto",
+  "description": "Firumatto (\"Fillmat\") is a logic puzzle published by Nikoli. A rectangular or square grid contains digits in some cells. It is necessary to divide the grid into rectangular regions. Every region must be exactly one cell wide; the other side of the region has length from 1 to 4 cells. A cell with a number indicates the size of a region. Two regions of the same size must not be orthogonally adjacent. A grid dot must not be shared by the corners of four regions.",
+  "status": "available",
+  "tags": [
+   "Regions"
+  ]
+ },
+ {
+  "name": "Nawabari",
+  "slug": "nawabari",
+  "description": "Nawabari (\"Territory\") is a logic puzzle published by Nikoli. The aim is to divide the grid into rectangular regions such that each region contains exactly one digit. The digit in the cell represents how many sides of the cell belong to the borders of the regions, including the edge of the grid.",
+  "status": "available",
+  "tags": [
+   "Regions"
+  ]
+ },
+ {
+  "name": "Makaro",
+  "slug": "makaro",
+  "description": "Makaro is a logic puzzle published by Nikoli. A rectangular or square grid is divided into regions. Each region must be filled with each of the digits from 1 to the number of cells in the region. The grid may contain the black cells with arrows. The arrow points at the greatest number among the four cells around (up, under, left, right) the black cell. When two numbers are orthogonally adjacent across a region boundary, the numbers must be different.",
+  "status": "available",
+  "tags": [
+   "Numbers"
+  ]
+ },
+ {
+  "name": "Dosun-Fuwari",
+  "slug": "dosun-fuwari",
+  "description": "Dosun-Fuwari is a logic puzzle published by Nikoli. The task consists of a grid divided into regions. The grid may contain black cells; black cells do not belong to any region. The aim is to place one black circle and one white circle in each region according to the following rules:",
+  "status": "available",
+  "tags": [
+   "Objects"
+  ]
+ },
+ {
+  "name": "Satogaeri",
+  "slug": "satogaeri",
+  "description": "Satogaeri (from Japanese; literally \"coming home\") is a logic puzzle invented by Nikoli. A rectangular or square grid is divided into regions. Some cells of the grid contains circles (empty or with numbers). The task is to move the circles vertically or horizontally, so each region contains only one circle. The numbers in the circles indicate how many cells they have to pass through. Circles without numbers may move any distance, but some of them stay put. The circles cannot cross the tracks of other circles and cannot move over other circles.",
+  "status": "available",
+  "tags": [
+   "Regions",
+   "Moving"
+  ]
+ },
+ {
+  "name": "Koburin",
+  "slug": "koburin",
+  "description": "Koburin is a logic puzzle published by Nikoli. A rectangular or square grid contains numbers in some cells. The aim is to blacken some cells and draw a single continuous non-intersecting loop that properly passes through all empty white cells. The number in the cell indicates the total number of black cells orthogonally adjacent to this cell. The grid may contain black cells not adjacent to cells with numbers. Cells with numbers must not be blacken. Two black cells must not be orthogonally adjacent.",
+  "status": "available",
+  "tags": [
+   "Shading",
+   "Loop"
+  ]
+ },
+ {
+  "name": "Sukrokuro",
+  "slug": "sukrokuro",
+  "description": "Sukrokuro combines the elements of three logic puzzles: Sudoku, Kropki Sudoku and Kakuro. It consists of a square grid with white and black cells. The goal is to fill in the white cells, one number in each, so that each column and row contains the numbers 1 through 9 exactly once. Black cells contain a diagonal slash from top left to bottom right with numbers in them, called \"the clues\". Such number tells the sum of numbers in consecutive cells at its right or downward. If absolute difference between two numbers in neighbouring cells equals 1, then they are separated by a dot. If a dot is absent between two white cells, the difference between the numbers in these cells is more than 1.",
+  "status": "placeholder",
+  "tags": [
+   "Shading",
+   "Numbers"
+  ]
+ },
+ {
+  "name": "Shirokuro",
+  "slug": "shirokuro",
+  "description": "Shirokuro is a logic puzzle invented by Nikoli. It contains white and black circles. The task is to connect each white circle with a black circle by a horizontal or vertical line. Lines are not allowed to cross other lines. The line between two circles may not pass through other circles.",
+  "status": "available",
+  "tags": [
+   "Lines"
+  ]
+ },
+ {
+  "name": "Roma",
+  "slug": "roma",
+  "description": "Roma is a logic puzzle published by Nikoli. A rectangular or square grid is divided into regions. Some cells of the grid contain black circles. The goal is to place arrows pointing in four directions in each empty cell. Each region must contain all different arrows. Starting with any cell, following the arrows from cell to cell, this path must end in the cell with the black circle.",
+  "status": "available",
+  "tags": [
+   "Objects"
+  ]
+ },
+ {
+  "name": "Bodaburokku",
+  "slug": "bodaburokku",
+  "description": "Bodaburokku (\"Border Block\") is a logic puzzle published by Nikoli. A rectangular or square grid contains numbers in some cells. It is necessary to divide the grid into regions. Cells with the same number belong to the same region. All points where three or four lines meet are given. Every region contains at least one cell with a number.",
+  "status": "available",
+  "tags": [
+   "Regions"
+  ]
+ },
+ {
+  "name": "Kuroshuto",
+  "slug": "kuroshuto",
+  "description": "Kuroshuto (\"Kurochute\"; from Japanese, literally \"black shot\") is a logic puzzle invented by Nikoli. A rectangular or square grid contains numbers in some cells. The goal is to blacken some empty cells. A cell with a number indicates that only one of the cells with such distance must be blackened. Two black cells must not be orthogonally adjacent. All of the white cells must be connected.",
+  "status": "available",
+  "tags": [
+   "Shading"
+  ]
+ },
+ {
+  "name": "Toichika",
+  "slug": "toichika",
+  "description": "Toichika is a logic puzzle invented by Gesaku (Japan). The task consists of a rectangular or square grid divided into regions. The goal is to place arrows in some cells according to the following rules:",
+  "status": "available",
+  "tags": [
+   "Objects"
+  ]
+ },
+ {
+  "name": "Usotatami",
+  "slug": "usotatami",
+  "description": "Usotatami is a logic puzzle published by Nikoli. A rectangular or square grid contains numbers in some cells. The aim is to divide the grid into rectangular regions such that each region contains exactly one number. Every region must be exactly one cell wide; the length of the other side is NOT equal to the number in this region. A grid dot must not be shared by the corners of four regions.",
+  "status": "available",
+  "tags": [
+   "Regions"
+  ]
+ },
+ {
+  "name": "Pipelink",
+  "slug": "pipelink",
+  "description": "Pipelink consists of a rectangular or square grid. The task is to draw a single continuous loop that passes through all cells. The loop must use all given sections and may cross itself in any cell.",
+  "status": "available",
+  "tags": [
+   "Loop"
+  ]
+ },
+ {
+  "name": "Hakoiri",
+  "slug": "hakoiri",
+  "description": "Hakoiri is a logic puzzle published by Nikoli. A rectangular or square grid is divided into regions. The goal is to place exactly one triangle, one square and one circle in each region. The same figures cannot be placed in adjacent cells, not even diagonally. All the figures must be connected horizontally or vertically.",
+  "status": "available",
+  "tags": [
+   "Objects"
+  ]
+ },
+ {
+  "name": "Nuribou",
+  "slug": "nuribou",
+  "description": "Nuribou is a logic puzzle invented by Nikoli. A rectangular or square grid contains numbers in some cells. The task is to blacken some empty cells according to the rules:",
+  "status": "available",
+  "tags": [
+   "Shading"
+  ]
+ },
+ {
+  "name": "Tatamibari",
+  "slug": "tatamibari",
+  "description": "Tatamibari is a logic puzzle invented by Nikoli. A rectangular or square grid contains 3 kinds of symbols: cross, horizontal bar, vertical bar. The goal is to divide the grid into rectangular regions. Each region contains one cell with a symbol. A region with a cross must be a square. If a region contains a horizontal bar, the region's width must be greater than its height. If a region contains a vertical bar, the region's width must be less than its height. A grid dot must not be shared by the corners of four regions.",
+  "status": "available",
+  "tags": [
+   "Regions"
+  ]
+ },
+ {
+  "name": "Sun and Moon",
+  "slug": "sun-and-moon",
+  "description": "Sun and Moon (\"Munraito\") is a logic puzzle invented by Naoki Inaba (Japan). A square grid contains planets in some cells. The goal is to place exactly one star and one stardust cloud (dark square) into each row and each column of the grid. If a particular semicircle of a planet is illuminated, there must be a star in that rank to light it. A star shines horizontally and vertically only; planets and stardust clouds block starlight.",
+  "status": "available",
+  "tags": [
+   "Objects"
+  ]
+ },
+ {
+  "name": "Kojun",
+  "slug": "kojun",
+  "description": "Kojun is a logic puzzle invented by Nikoli. A rectangular or square grid is divided into regions. Some cells contain numbers. Each region must be filled with each of the digits from 1 to the number of cells in the region. When two numbers are orthogonally adjacent, the numbers must be different. The upper number of two vertically adjacent numbers in the same region must be greater than the lower number.",
+  "status": "available",
+  "tags": [
+   "Numbers",
+   "Regions"
+  ]
+ },
+ {
+  "name": "Usowan",
+  "slug": "usowan",
+  "description": "Usowan (from Japanese, literally \"one liar\") is a logic puzzle published by Nikoli. A grid is divided into rectangular and square regions. Some of the cells in the grid are numbered. The aim is to blacken some cells of a grid according to the following rules:",
+  "status": "available",
+  "tags": [
+   "Shading"
+  ]
+ },
+ {
+  "name": "Gokigen Naname",
+  "slug": "gokigen-naname",
+  "description": "Gokigen Naname (from Japanese, literally \"to be in a bad mood\"; also known as \"Slalom\", \"Slant\") is a logic puzzle invented by Nikoli. It is played on a rectangular or square grid. Circles with digits from 0 to 4 may be situated on intersections of lines inside the grid. The aim is to fill in a diagonal line in every cell. The number in each circle equals the number of lines extending from that circle. The diagonal lines must not form a closed loop.",
+  "status": "available",
+  "tags": [
+   "Lines"
+  ]
+ },
+ {
+  "name": "Hebi-Ichigo",
+  "slug": "hebi-ichigo",
+  "description": "Hebi-Ichigo is a logic puzzle invented by Nikoli. The goal is to insert the numbers 1 to 5 according to the rules:",
+  "status": "placeholder",
+  "tags": [
+   "Numbers"
+  ]
+ },
+ {
+  "name": "Hamle",
+  "slug": "hamle",
+  "description": "Hamle (from Turkish, literally \"move\") consists of a rectangular or square grid. The aim is to move every numbered black cell in one of the four directions, so that numbers in the cells indicate the length of their moves. When all moves are done, all white cells should be interconnected and numbered cells should not share an edge.",
+  "status": "available",
+  "tags": [
+   "Shading",
+   "Moving"
+  ]
+ },
+ {
+  "name": "Gyokuseki",
+  "slug": "gyokuseki",
+  "description": "Gyokuseki (from Japanese, literally \"gems and stones\") is a logic puzzle created by Naoki Inaba (Japan). The aim is to fill a square grid with black circles (\"gems\") and white circles (\"stones\"). Every row and every column contains one black circle and random quantity of white circles. A number at the edge of the puzzle indicates how many circles can be seen in the corresponding row or column up to and including the black circle.",
+  "status": "available",
+  "tags": [
+   "Objects"
+  ]
+ },
+ {
+  "name": "Kin-Kon-Kan",
+  "slug": "kin-kon-kan",
+  "description": "Kin-Kon-Kan is a logic puzzle published by Nikoli. The task consists of a rectangular or square grid divided into regions. The goal is to fill in some cells with diagonal lines (\"mirrors\"). Each region contains exactly one mirror. Letter-number pairs at the edges of the grid can be connected by straight lines (\"laser beams\") that bounce of the same number of mirrors as the number in the letter-number pair. Every mirror must reflect at least one laser beam.",
+  "status": "available",
+  "tags": [
+   "Objects"
+  ]
+ },
+ {
+  "name": "Ichimaga",
+  "slug": "ichimaga",
+  "description": "Ichimaga is a logic puzzle invented by Nikoli. The task is to connect all circles by horizontal and vertical lines. The number of lines connected to the circle must match the digit in that circle. Any number of lines may be connected to the empty circle (at least one). The lines must not cross other lines. The line may change direction 90 degrees no more than once.",
+  "status": "available",
+  "tags": [
+   "Lines"
+  ]
+ },
+ {
+  "name": "Shimaguni",
+  "slug": "shimaguni",
+  "description": "Shimaguni is a logic puzzle published by Nikoli. A rectangular or square grid is divided into regions. The goal is to blacken some cells in each region according to the following rules:",
+  "status": "available",
+  "tags": [
+   "Shading"
+  ]
+ },
+ {
+  "name": "Meadows",
+  "slug": "meadows",
+  "description": "Meadows is a logic puzzle. It is played on a rectangular or square grid. Some of the cells have circles in them. The aim is to divide the grid into square blocks such that each block contains exactly one circle.",
+  "status": "available",
+  "tags": [
+   "Regions"
+  ]
+ },
+ {
+  "name": "Yajisan-Kazusan",
+  "slug": "yajisan-kazusan",
+  "description": "Yajisan-Kazusan (from Japanese, literally \"arrow - number\") is a logic puzzle published by Nikoli. The aim is to blacken some cells according to the following rules:",
+  "status": "available",
+  "tags": [
+   "Shading"
+  ]
+ },
+ {
+  "name": "Snake Pit",
+  "slug": "snake-pit",
+  "description": "Snake Pit consists of a rectangular or square grid. The goal is to divide the grid into regions (\"snakes\") according to the following rules:",
+  "status": "available",
+  "tags": [
+   "Regions",
+   "Numbers"
+  ]
+ },
+ {
+  "name": "Hiroimono",
+  "slug": "hiroimono",
+  "description": "Hiroimono (\"Goishi Hiroi\"; from Japanese, literally \"things picked up\") is a logic puzzle invented by Nikoli. The grid contains circles (\"stones\") placed at some grid points. The task is to move along the grid lines and collect all the stones (number them in the order in which you pick them up) according to the following rules:",
+  "status": "available",
+  "tags": [
+   "Lines"
+  ]
+ },
+ {
+  "name": "Water Fun",
+  "slug": "water-fun",
+  "description": "Water Fun (\"Aquarium\") is played on a rectangular or square grid. The goal is to fill water in some parts of the grid. Numbers outside the grid show how many cells of each row and column must be filled with water. Connected areas of filled cells must have the same level of water everywhere, like in a series of tubes.",
+  "status": "available",
+  "tags": [
+   "Shading"
+  ]
+ },
+ {
+  "name": "Round Trip",
+  "slug": "round-trip",
+  "description": "Round Trip is a kind of logic puzzles. The aim is to draw a single loop in a rectangular or square grid. A loop may cross itself orthogonally, but otherwise does not touch or retrace itself. The numbers along the edge of the puzzle indicate the number of cells visited by the nearest section of the loop in corresponding row or column.",
+  "status": "placeholder",
+  "tags": [
+   "Loop"
+  ]
+ },
+ {
+  "name": "Number Cross",
+  "slug": "number-cross",
+  "description": "Number Cross consists of a square grid with numbers. The goal is to blacken some cells. Numbers outside the grid show the sums of the numbers in white cells in corresponding row or column.",
+  "status": "available",
+  "tags": [
+   "Shading",
+   "Math"
+  ]
+ },
+ {
+  "name": "Santoitchi",
+  "slug": "santoitchi",
+  "description": "Santoitchi (\"San to itchi\"; from Japanese, literally \"three and one\") is a logic puzzle invented by Naoki Inaba (Japan). A rectangular or square grid contains numbers in some cells. The task is to blacken some empty cells according to the rules:",
+  "status": "available",
+  "tags": [
+   "Shading"
+  ]
+ },
+ {
+  "name": "Hamusando",
+  "slug": "hamusando",
+  "description": "Hamusando (\"Ham Sandwich\") is a logic puzzle invented by Naoki Inaba (Japan). The goal is to fill a square grid with squares (\"toasts\") and circles (\"pieces of ham\"). Every row and every column contains two squares and N circles (N is given for each puzzle). A number at the edge of the grid indicates how many circles must be placed between the two squares in the corresponding row or column.",
+  "status": "available",
+  "tags": [
+   "Objects"
+  ]
+ },
+ {
+  "name": "Trace Numbers",
+  "slug": "trace-numbers",
+  "description": "Trace Numbers consists of a rectangular or square grid with numbers in some cells. The aim is to draw as many lines into the grid as it contains cells with the number 1. The line may only travel horizontally or vertically, and never diagonally. The line starts in the cell with the number 1 and visits all cells with numbers in order through the highest number. Each cell must be visited exactly once; lines cannot cross.",
+  "status": "available",
+  "tags": [
+   "Lines",
+   "Numbers"
+  ]
+ },
+ {
+  "name": "Area Division",
+  "slug": "area-division",
+  "description": "Area Division is played on a grid filled with Latin letters. The goal is to divide the grid into regions. Each region has all the letters of the given range. The region contains each letter exactly once. Each letter must be part of exactly one region.",
+  "status": "available",
+  "tags": [
+   "Regions"
+  ]
+ },
+ {
+  "name": "Sukoro",
+  "slug": "sukoro",
+  "description": "Sukoro consists of a rectangular or square grid with numbers from 1 to 4 in some cells. The number inside a cell represents how many neighbouring cells contain numbers. When two cells with numbers are orthogonally adjacent, the numbers must be different. All the cells with numbers must be connected horizontally or vertically.",
+  "status": "available",
+  "tags": [
+   "Numbers"
+  ]
+ },
+ {
+  "name": "EntryExit",
+  "slug": "entryexit",
+  "description": "EntryExit consists of a rectangular or square grid divided into regions. The aim is to draw a single continuous non-intersecting loop that passes through all cells. It can enter and exit each region only once.",
+  "status": "available",
+  "tags": [
+   "Loop"
+  ]
+ },
+ {
+  "name": "Sign In",
+  "slug": "sign-in",
+  "description": "Sign In is played on a square grid. The goal is to fill in each cell with numbers from 1 to N, where N is the size of the puzzle's side. No number may appear twice in any row or column. Some digits may be given at the start. If absolute difference between two digits in neighbouring cells equals 1, then they are separated by a sign \"+\" or \"-\". If a border between cells contains a sign \"+\", a digit in a left or upper cell is one lower than a digit in a right or lower cell. If a border between cells contains a sign \"-\", a digit in a left or upper cell is one bigger than a digit in a right or lower cell. All instances of consecutive digits are shown by these signs.",
+  "status": "available",
+  "tags": [
+   "Numbers",
+   "Math"
+  ]
+ },
+ {
+  "name": "Kuroshiro",
+  "slug": "kuroshiro",
+  "description": "Kuroshiro (\"Kuroshirorupu\"; from Japanese, literally \"black and white loop\") is played on a grid with black and white circles in some cells. The goal is to draw a single continuous non-intersecting loop that properly passes through all circled cells. Between two successive circles of the same color the loop must not be turned. Between two successive circles of different colors the loop must turn exactly once.",
+  "status": "available",
+  "tags": [
+   "Loop"
+  ]
+ },
+ {
+  "name": "Moonsun",
+  "slug": "moonsun",
+  "description": "Moonsun (\"Moon or Sun\") is a logic puzzle invented by Nikoli. A rectangular or square grid is divided into regions. A grid contains black and white circles in some cells. The aim is to draw a single non-intersecting loop. The loop must cross borders of each region exactly twice. In a region the loop must visit either all cells with black circles or all cells with white circles. Regions with visited black circles must alternate with regions, where white circles were visited.",
+  "status": "available",
+  "tags": [
+   "Loop"
+  ]
+ },
+ {
+  "name": "Rectslider",
+  "slug": "rectslider",
+  "description": "Rectslider (\"Rectangle-Slider\", \"Shikaku suraida\") consists of a rectangular or square grid with black cells. The task is to move the black cells vertically or horizontally, so black cells form rectangles having area greater than one cell. Two black rectangles must not be orthogonally adjacent. The numbers in the black cells indicate how many cells they have to pass through. Black cells without numbers may move any distance, but some of them stay put. The black cells cannot cross the tracks of other black cells and cannot move over other black cells.",
+  "status": "available",
+  "tags": [
+   "Shading",
+   "Moving"
+  ]
+ },
+ {
+  "name": "Stostone",
+  "slug": "stostone",
+  "description": "Stostone (\"Sto-Stone\", \"Stone on Stone\") is a logic puzzle invented by Nikoli. A rectangular or square grid is divided into regions. The goal is to blacken some cells of a grid (\"stones\") according to the following rules:",
+  "status": "available",
+  "tags": [
+   "Shading",
+   "Moving"
+  ]
+ },
+ {
+  "name": "Kohi Gyunyu",
+  "slug": "kohi-gyunyu",
+  "description": "Kohi Gyunyu (from Japanese, literally \"coffee milk\") consists of white, black and gray circles. The aim is to connect circles by horizontal and vertical lines. All connected circles form a group. Each group must contain exactly one gray circle and equal amounts of white and black circles. The lines must not cross other lines. White and black circles cannot be directly connected.",
+  "status": "available",
+  "tags": [
+   "Lines"
+  ]
+ },
+ {
+  "name": "Mirukuti",
+  "slug": "mirukuti",
+  "description": "Mirukuti (\"Milk Tea\", \"Milk-T\") consists of a rectangular or square grid with black and white circles in some cells. The goal is to connect each group of three circles (one black cell and two white circles) by a T-shaped line. Two white circles must be connected by the straight-line segment of the T-shaped line. The lines must not cross other lines.",
+  "status": "available",
+  "tags": [
+   "Lines"
+  ]
+ },
+ {
+  "name": "Slash Pack",
+  "slug": "slash-pack",
+  "description": "Slash Pack is a logic puzzle invented by Yosuke Imai (Japan). The grid of irregular shape contains numbers from 1 to N in some cells. The goal is to divide the grid into regions by placing the diagonal lines into empty cells. Each region must contain the numbers from 1 to N exactly once. Two diagonals cannot cross in one cell, and there can be no loose ends.",
+  "status": "placeholder",
+  "tags": [
+   "Regions"
+  ]
+ },
+ {
+  "name": "Nurimaze",
+  "slug": "nurimaze",
+  "description": "Nurimaze (\"Nurimeizu\") consists of a grid divided on regions. The aim is to blacken some regions according to the following rules:",
+  "status": "available",
+  "tags": [
+   "Shading"
+  ]
+ },
+ {
+  "name": "Canal View",
+  "slug": "canal-view",
+  "description": "Canal View is played on a rectangular grid. Some of these cells have numbers in them. The aim is to blacken some cells of a grid according to the following rules:",
+  "status": "available",
+  "tags": [
+   "Shading"
+  ]
+ },
+ {
+  "name": "Country Road",
+  "slug": "country-road",
+  "description": "Country Road is a logic puzzle invented by Nikoli. The puzzle consists of a rectangular or square grid of any size divided into regions. The goal is to draw a single continuous non-intersecting loop that connects the centers of the grid cells. The loop must visit each region exactly once. The number in a region indicates how many cells of this region are visited by the loop. In regions without a number the loop may visit any number of cells. If the loop does not visit any two neigbouring cells, these cells must be in the same region.",
+  "status": "available",
+  "tags": [
+   "Loop"
+  ]
+ },
+ {
+  "name": "Nondango",
+  "slug": "nondango",
+  "description": "Nondango (dango is a Japanese dish, small balls made from rice flour and skewered on bamboo sticks) is a logic puzzle published by Nikoli. A rectangular or square grid is divided into regions. Each region contains circles in some cells. The aim is to blacken some circles according to the following rules:",
+  "status": "available",
+  "tags": [
+   "Shading"
+  ]
+ },
+ {
+  "name": "Mintonette",
+  "slug": "mintonette",
+  "description": "Mintonette (the original name of the game known as volleyball) is played on a grid of irregular shape with circles in some cells. The goal is to connect circles in pairs by drawing a line that goes horizontally and vertically through the centers of cells. Lines cannot touch or cross themselves or each other. If a circle contains a number, it represents the number of turns for the line between two circles. If two circles have no number, a line may make any number of turns between circles. All cells must be used by the lines, and each circle must be connected to another circle.",
+  "status": "available",
+  "tags": [
+   "Lines"
+  ]
+ },
+ {
+  "name": "Arrow Maze",
+  "slug": "arrow-maze",
+  "description": "Arrow Maze consists of a rectangular or square grid with arrows. The aim is to find a path through the grid by visiting every cell once. The path is starting from the cell with number 1. The path can jump from one cell to another in a horizontal, vertical or diagonal direction, but only in the direction of the arrow. Some numbers have already been given.",
+  "status": "available",
+  "tags": [
+   "Numbers",
+   "Lines"
+  ]
+ },
+ {
+  "name": "Arrow Web",
+  "slug": "arrow-web",
+  "description": "Arrow Web is a logic puzzle. A rectangular or square grid is filled by arrows. The goal is to shade some of the arrows so that each arrow in the grid points to exactly one shaded arrow.",
+  "status": "available",
+  "tags": [
+   "Shading"
+  ]
+ },
+ {
+  "name": "Hanare",
+  "slug": "hanare",
+  "description": "Hanare (\"Hanaregumi\"; from Japanese, literally \"family pair\") is a logic puzzle. A square or rectangular grid is divided into regions. The aim is to place a number into each region. A number is equal to the size of the region. The distance between two horizontally or vertically neighbouring numbers must be equal to the difference of these numbers.",
+  "status": "available",
+  "tags": [
+   "Numbers",
+   "Regions"
+  ]
+ },
+ {
+  "name": "Oases",
+  "slug": "oases",
+  "description": "Oases is a logic puzzle. A rectangular or square grid contains circles with numbers in some cells. The goal is to blacken some cells (leaving the other cells white) so that the unshaded cells must be connected horizontally or vertically. Blackened cells should not share an edge. Cells with circles cannot be blackened. Unshaded cells must not cover an area of size 2 x 2. Each circled number represents the number of other circles that can be reached from that circle by only going through empty (unshaded and uncircled) cells. (A circle that can be reached by more than one path still only counts as one circle for counting purposes.)",
+  "status": "available",
+  "tags": [
+   "Shading"
+  ]
+ },
+ {
+  "name": "Rabbits and Trees",
+  "slug": "rabbits-and-trees",
+  "description": "Rabbits and Trees (also known as \"Raitonanba\", \"Light Number\") is a square grid with numbers in some cells. The task is to place exactly one white circle (\"rabbit\") and one black circle (\"tree\") in every row and every column. A number indicates how many white circles (\"rabbits\") can be seen in the corresponding row and column. A rabbit is visible only when it is not hidden behind a tree.",
+  "status": "available",
+  "tags": [
+   "Objects"
+  ]
+ },
+ {
+  "name": "Stars and Arrows",
+  "slug": "stars-and-arrows",
+  "description": "Stars and Arrows consists of a rectangular or square grid with arrows in some cells. The aim is to place stars in empty cells. Each arrow points to exactly one star and each star is pointed by exactly one arrow. Numbers outside the grid show the numbers of stars in corresponding row or column.",
+  "status": "available",
+  "tags": [
+   "Objects"
+  ]
+ },
+ {
+  "name": "Kanjo",
+  "slug": "kanjo",
+  "description": "Kanjo (\"Kanjo-sen supesharu\"; from Japanese, literally \"special ring line\") is a logic puzzle. A rectangular or square grid contains circles with numbers in some cells. The goal is to draw loops that properly passes through all cells. A loop may cross itself or other loops. All given line fregments must be used as a part of a loop. Cells with the same number belong to the same loop. Cells with different numbers belong to different loops. A loop must go trough at least one cell with a number (there are exactly as many loops as a grid contains different numbers). A cell with a number must not contain the intersection point where a loop crosses itself or other loop.",
+  "status": "placeholder",
+  "tags": [
+   "Loop"
+  ]
+ },
+ {
+  "name": "Rukkuea",
+  "slug": "rukkuea",
+  "description": "Rukkuea (\"Look-Air\") is a logic puzzle invented by Nikoli. The puzzle consists of a rectangular or square grid with numbers in some cells. It is necessary to blacken some cells according to the following rules:",
+  "status": "available",
+  "tags": [
+   "Shading"
+  ]
+ },
+ {
+  "name": "Golem Grad",
+  "slug": "golem-grad",
+  "description": "Golem Grad (an island in Lake Prespa, in the Republic of North Macedonia) combines the rules of Nurikabe and Snake puzzles. A rectangular or square grid contains circles and numbers in some cells. The aim is to blacken some cells according to the following rules:",
+  "status": "available",
+  "tags": [
+   "Shading"
+  ]
+ },
+ {
+  "name": "Trilogy",
+  "slug": "trilogy",
+  "description": "Trilogy consists of a square or rectangular grid with figures in some cells: squares, circles, triangles. The goal is to fill in each cell with figures. Three consecutive figures must not be all the same and must not be all different in any row, column or diagonal.",
+  "status": "available",
+  "tags": [
+   "Objects"
+  ]
+ },
+ {
+  "name": "Grades",
+  "slug": "grades",
+  "description": "Grades is a logic puzzle. The goal is to place numbers in some cells of a square or rectangular grid according to the rules:",
+  "status": "available",
+  "tags": [
+   "Numbers",
+   "Math"
+  ]
+ },
+ {
+  "name": "Hukuwall",
+  "slug": "hukuwall",
+  "description": "Hukuwall is a logic puzzle created by Nishiyama Yukari (Japan). A rectangular or square grid contains letters in some cells. The goal is to draw a horizontal or vertical line in every empty cell. Each letter stands for a number: all the same letters must be replaced by the same number, different letters must be replaced by different numbers. A number in a cell indicates the total length of the lines that end at the edges of this cell. A line cannot pass over a cell with a letter. Lines must not cross each other. The numbers of line directions coming out of the same letter are all different.",
+  "status": "placeholder",
+  "tags": [
+   "Lines",
+   "Math"
+  ]
+ },
+ {
+  "name": "Nurimisaki",
+  "slug": "nurimisaki",
+  "description": "Nurimisaki (from Japanese, literally \"paint a cape\") is a logic puzzle invented by Nikoli. A rectangular or square grid contains circles in some cells; a circle may have a number inside or not. The task is to blacken some cells of a grid according to the following rules:",
+  "status": "available",
+  "tags": [
+   "Shading"
+  ]
+ },
+ {
+  "name": "Starry Night",
+  "slug": "starry-night",
+  "description": "Starry Night (also known as \"Niapuresu\", \"Near Place\") is a logic puzzle invented by Naoki Inaba (Japan). The aim is to place one white circle (\"sun\"), one black circle (\"moon\") and one star in every row and column of the grid. Same figures may not touch each other diagonally. The figures outside the grid indicate the distance between the star and circles in that row or column:",
+  "status": "available",
+  "tags": [
+   "Objects"
+  ]
+ },
+ {
+  "name": "Douieru",
+  "slug": "douieru",
+  "description": "Douieru (from Japanese, literally \"same and different\") is a logic puzzle invented by Nishiyama Yukari (Japan). A rectangular or square grid contains circles in some cells. The aim is to divide the grid into L-shaped regions. The two \"legs\" of a region must be exactly one cell wide. A circle represents a cell in which an \"L\" must bend (the grid contains circles for all regions). If a cell contains a double circle, the two legs of the region must have the same length. A black circle means difference in leg lengths. If a cell contains a white circle, the ratio of leg lengths is unknown.",
+  "status": "available",
+  "tags": [
+   "Regions"
+  ]
+ },
+ {
+  "name": "Tetoron",
+  "slug": "tetoron",
+  "description": "Tetoron is a logic puzzle invented by Nishiyama Yukari (Japan). A rectangular or square grid contains symbols in some cells. The goal is to divide the grid into regions of exactly four cells (tetromino). Each region contains exactly two different symbols. Regions of the same shape must contain the same symbols. The tetrominoes may be rotated or mirrored.",
+  "status": "available",
+  "tags": [
+   "Regions"
+  ]
+ },
+ {
+  "name": "Sashikaku",
+  "slug": "sashikaku",
+  "description": "Sashikaku (\"Sadeshikaku\"; from Japanese, literally \"square by difference\") is a logic puzzle created by Nishiyama Yukari (Japan). A rectangular or square grid contains numbers in some cells. The aim is to divide the grid into rectangular and square regions such that each region contains exactly one number, and that number represents the difference of the width and height of the region.",
+  "status": "available",
+  "tags": [
+   "Regions"
+  ]
+ },
+ {
+  "name": "Heki",
+  "slug": "heki",
+  "description": "Heki is a logic puzzle invented by Nishiyama Yukari (Japan). A rectangular or square grid contains numbers in some cells. The goal is to divide the grid into regions of exactly six cells. Each region contains exactly two numbers. The number indicates how many cells of the same region are orthogonally adjacent to the cell with the number.",
+  "status": "available",
+  "tags": [
+   "Regions"
+  ]
+ },
+ {
+  "name": "Castle Wall",
+  "slug": "castle-wall",
+  "description": "Castle Wall is a logic puzzle created by Palmer Mebane (USA). A rectangular or square grid contains black or bordered cells; some of them contain numbers and arrows. The aim is to draw a single closed non-intersecting loop. Black cells must be outside the loop; white bordered cells must be inside the loop; for grey cells this information is unknown. Numbers and arrows refer to the total length of loop segments in the arrow's direction. (In other words, the number shows how many cell borders in the arrow's direction are crossed by the loop.)",
+  "status": "available",
+  "tags": [
+   "Loop"
+  ]
+ },
+ {
+  "name": "Deddoanguru",
+  "slug": "deddoanguru",
+  "description": "Deddoanguru (\"Dead Angle\") is a logic puzzle invented by Naoki Inaba (Japan). A rectangular or square grid contains black circles with numbers. The aim is to divide the grid into regions. Each region contains one black circle. A black circle is an eye that looks in all four directions until a region border. The number in the cell represents how many cells of the region the eye does not see.",
+  "status": "placeholder",
+  "tags": [
+   "Regions"
+  ]
+ },
+ {
+  "name": "Endorain",
+  "slug": "endorain",
+  "description": "Endorain (\"End Line\") is a logic puzzle created by Naoki Inaba (Japan). A rectangular or square grid is divided into regions. The goal is to draw horizontal and vertical lines between the centers of cells. Each line connects two cells in different regions. A number in a region indicates how many lines start/end in this region. All cells must be used by the lines.",
+  "status": "available",
+  "tags": [
+   "Lines"
+  ]
+ },
+ {
+  "name": "Nuraf",
+  "slug": "nuraf",
+  "description": "Nuraf (also known as \"Araf Nurikabe\") combines the rules of Nurikabe and Araf puzzles. A rectangular or square grid contains numbers in some cells. The aim is to blacken some cells of a grid according to the following rules:",
+  "status": "available",
+  "tags": [
+   "Shading"
+  ]
+ },
+ {
+  "name": "Miti",
+  "slug": "miti",
+  "description": "Miti (from Japanese, literally \"road\") is a logic puzzle created by Nishiyama Yukari (Japan). A rectangular or square grid contains dots at some intersections of the grid lines. The goal is to blacken some borders between cells. In each given grid dot exactly three black lines must meet. In all other grid dots at most two black lines may intersect. All cells of the grid form a single closed loop without dead ends, exactly one cell wide.",
+  "status": "available",
+  "tags": [
+   "Loop"
+  ]
+ },
+ {
+  "name": "Arofuro",
+  "slug": "arofuro",
+  "description": "Arofuro (\"Arrow Flow\") is a logic puzzle invented by Naoki Inaba (Japan). A rectangular or square grid contains numbers in some cells. The aim is to place arrows pointing in four directions in each empty cell.",
+  "status": "available",
+  "tags": [
+   "Lines"
+  ]
+ },
+ {
+  "name": "Every Second Turn",
+  "slug": "every-second-turn",
+  "description": "Every Second Turn (also known as \"Alternate Corners\", \"Every Second Breakpoint\") is a rectangular or square grid with circles in some cells. The aim is to draw a single continuous non-intersecting loop that visits every cell exactly ones. It makes a 90 degrees turn at every cell with a circle. There is exactly one turn between two consecutive circles that the loop visits.",
+  "status": "available",
+  "tags": [
+   "Loop"
+  ]
+ },
+ {
+  "name": "Mobiriti",
+  "slug": "mobiriti",
+  "description": "Mobiriti (\"Mobility\") is a logic puzzle created by Naoki Inaba (Japan). A rectangular or square grid contains circles with numbers in some cells. The aim is to blacken some cells of a grid. Cells with circles can not be blacken. A number in a circle indicates how many empty white cells can be reached from that cell by moving horizontally or vertically.",
+  "status": "available",
+  "tags": [
+   "Shading"
+  ]
+ },
+ {
+  "name": "Mubunanba",
+  "slug": "mubunanba",
+  "description": "Mubunanba (\"Move Number\") is a logic puzzle invented by Naoki Inaba (Japan). A rectangular or square grid contains digits in some cells. The goal is to locate some blocks in the grid, having the size of exactly three cells. The grid may contain cells that belong to no one block. Each block contains exactly one digit. A digit indicates the number of possible directions to move a block.",
+  "status": "available",
+  "tags": [
+   "Regions",
+   "Moving"
+  ]
+ },
+ {
+  "name": "Terra X",
+  "slug": "terra-x",
+  "description": "Terra X consists of a rectangular or square grid divided into regions. The aim is to place a digit from 0 to 9 into each region so that regions with equal numbers cannot share an edge (they may touch each other diagonally). For each grid point where four regions meet, the sum of the digits in those regions must equal 10. (All these grid points are marked with a small black dot.)",
+  "status": "placeholder",
+  "tags": [
+   "Numbers",
+   "Regions"
+  ]
+ },
+ {
+  "name": "Rimotoejji",
+  "slug": "rimotoejji",
+  "description": "Rimotoejji (\"Remote Edge\") is a logic puzzle created by Naoki Inaba (Japan). The goal is to connect all dots by a single continuous non-intersecting loop. All arrows and crosses are supposed to be contained within the loop. An arrow points in the direction of the longest straight sequence of cells visible from that cell. A cross is placed at the center of more than one longest straight sequences of cells within the loop.",
+  "status": "placeholder",
+  "tags": [
+   "Loop"
+  ]
+ },
+ {
+  "name": "Double Back",
+  "slug": "double-back",
+  "description": "Double Back consists of a rectangular or square grid divided into regions. The aim is to draw a single closed loop of horizontal and vertical segments passing through all white cells. Each region must be visited exactly twice. The grid may contain black cells; the loop cannot pass through a black cell.",
+  "status": "available",
+  "tags": [
+   "Loop"
+  ]
+ },
+ {
+  "name": "Wamuzu",
+  "slug": "wamuzu",
+  "description": "Wamuzu (\"Worms\") is a logic puzzle invented by Naoki Inaba (Japan). It consists of a grid, with circles in some cells. The goal is to connect circles in pairs by drawing a line that goes horizontally and vertically through the centers of cells. All cells must be used by the lines. All sections of each line must be equal to the length of the cell's side.",
+  "status": "available",
+  "tags": [
+   "Lines"
+  ]
+ },
+ {
+  "name": "Kaero",
+  "slug": "kaero",
+  "description": "Kaero (\"Ouchihekaero\"; from Japanese, literally \"let's go home\") is a logic puzzle created by Naoki Inaba (Japan). A rectangular or square grid is divided into regions. The aim is to move some letters horizontally or vertically, so all letters in a region must be the same. The letters cannot cross the tracks of other letters and cannot move over other letters.",
+  "status": "placeholder",
+  "tags": [
+   "Moving"
+  ]
+ },
+ {
+  "name": "Kapama",
+  "slug": "kapama",
+  "description": "Kapama (from Turkish, literally \"closing\") consists of a rectangular or square grid with diagonal lines in some cells. The goal is to blacken some cells to create pairs of figures (twin shapes). Twin shapes are symmetrical with respect to a diagonal line. Twin shapes are connected with a diagonal line. No two shapes may share an edge. Cells with diagonal lines can not be blacken. Numbers outside the grid show the number of black cells in corresponding row or column.",
+  "status": "placeholder",
+  "tags": [
+   "Shading"
+  ]
+ },
+ {
+  "name": "Yunikumaka",
+  "slug": "yunikumaka",
+  "description": "Yunikumaka (\"Unique Marker\") is a logic puzzle invented by Naoki Inaba (Japan). A rectangular or square grid contains dots; a dot can be situated in the center of a cell or on a border between neighbouring cells. The aim is to divide a grid on regions having the size of exactly four cells (tetromino). Each region contains exactly one dot either in the center of a cell or on a border between cells. Dots on borders between regions are ignored. Black cells do not belong to any region.",
+  "status": "available",
+  "tags": [
+   "Regions"
+  ]
+ },
+ {
+  "name": "Meandering Numbers",
+  "slug": "meandering-numbers",
+  "description": "Meandering Numbers (also known as \"Count Number\", \"Worms\") is played on a rectangular or square grid divided into regions. A grid may contain numbers in some cells. Each region must be filled with each of the digits from 1 to N, where N is the number of cells in the region. Cells with the same digits must not be orthogonally or diagonally adjacent. Consecutive numbers within the region are orthogonally adjacent. (For each region it must be possible to draw a path that starts at 1 and ends at N, going through each other cell exactly once and in numerically increasing order.)",
+  "status": "available",
+  "tags": [
+   "Numbers",
+   "Regions"
+  ]
+ },
+ {
+  "name": "Yokibunkatsu",
+  "slug": "yokibunkatsu",
+  "description": "Yokibunkatsu (from Japanese, literally \"container dividing\") is a logic puzzle invented by Naoki Inaba (Japan). A rectangular or square grid contains stars in some cells. The goal is to divide the grid into regions of exactly five cells. Each region contains a star. The cells of the region must be foldable to a cube, with the star at the bottom and without the top side (\"roof\"). Some sections of borders between regions have already been given. The grid may contain cells that belong to no one region.",
+  "status": "available",
+  "tags": [
+   "Regions"
+  ]
+ },
+ {
+  "name": "Scrin",
+  "slug": "scrin",
+  "description": "Scrin (\"Screen\") is a logic puzzle published by Nikoli. A rectangular or square grid contains circles (empty or with numbers) in some cells. The goal is to divide the grid into rectangular regions. Each region contains not more than one circle. The grid may contain regions without circles. A region must have the same number of cells as a number in a circle. Regions must not share an edge. Regions must form a single non-branching loop where all of them touch each other by corners.",
+  "status": "available",
+  "tags": [
+   "Regions"
+  ]
+ },
+ {
+  "name": "From 1 To X",
+  "slug": "from-1-to-x",
+  "description": "From 1 To X consists of a rectangular or square grid divided into regions. Each region must be filled with each of the numbers from 1 to the number of cells in the room. Same numbers must not be orthogonally adjacent. Numbers outside the grid show the sums of the numbers in corresponding row or column.",
+  "status": "available",
+  "tags": [
+   "Numbers",
+   "Regions",
+   "Math"
+  ]
+ },
+ {
+  "name": "Shingoki",
+  "slug": "shingoki",
+  "description": "Shingoki (from Japanese, literally \"traffic lights\") is a rectangular or square grid with circles in some cells. The goal is to draw a single continuous non-intersecting loop that passes through all circles. Black circles must be turned upon, white circles must be traveled straight through. In a cell with a gray circle the loop may turn or not. If a circle contains a number, this number indicates the total length of the straight lines going out of the circle.",
+  "status": "available",
+  "tags": [
+   "Loop"
+  ]
+ },
+ {
+  "name": "Stitches",
+  "slug": "stitches",
+  "description": "Stitches consists of a rectangular or square grid divided into regions. The aim is to connect each region with all neighbour regions with exactly one line (\"stitch\"). A length of each line is one cell (it connects two orthogonally adjacent cells from different regions). A cell may be visited at most one line. A number at the edge of the grid indicates how many line end points must be placed in the corresponding row or column.",
+  "status": "available",
+  "tags": [
+   "Lines"
+  ]
+ },
+ {
+  "name": "Neibadomino",
+  "slug": "neibadomino",
+  "description": "Neibadomino (\"Neighbour Domino\") is a logic puzzle invented by Naoki Inaba (Japan). A rectangular or square grid contains numbers in some cells. The aim is to locate some blocks in the grid, having the size of exactly two cells (\"dominoes\"), and fill blocks with numbers. The grid may contain cells that belong to no one block. Each number in the grid should be part of a block, indicating the amount of orthogonally adjacent dominoes. Blocks with the same numbers must not be orthogonally adjacent. Blocks must not cover an area of 2 x 2 cells. (The grid may contain 2 x 2 cell area without blocks.)",
+  "status": "available",
+  "tags": [
+   "Regions"
+  ]
+ },
+ {
+  "name": "Jemini",
+  "slug": "jemini",
+  "description": "Jemini (\"Jemini Block\") is a logic puzzle invented by Naoki Inaba (Japan). A rectangular or square grid contains letters in some cells. The goal is to divide the grid into regions such that each region contains exactly one letter. In regions of the same size, shape and orientation the same letter must be exactly at the same position.",
+  "status": "placeholder",
+  "tags": [
+   "Regions",
+   "Words"
+  ]
+ },
+ {
+  "name": "Double Choco",
+  "slug": "double-choco",
+  "description": "Double Choco is a logic puzzle published by Nikoli. In a rectangular or square grid exactly half of cells are painted gray. The aim is to divide the grid into regions. Each region must contain one area of white cells and one area of gray cells. A pair of areas must be of the same shape and size (the areas may be rotated or mirrored). A number indicates how many cells of the same color the region contains. A region may contain more than one cell with a number (in this case the cells contain the same number).",
+  "status": "available",
+  "tags": [
+   "Regions"
+  ]
+ },
+ {
+  "name": "Konarupu",
+  "slug": "konarupu",
+  "description": "Konarupu (\"Corner Loop\") is a logic puzzle invented by Naoki Inaba (Japan). The goal is to create a continuous non-intersecting loop, drawn from one dot to an adjacent dot horizontally or vertically. A number in a cell indicates how many times the loop turns by 90 degrees in dots surrounding this cell.",
+  "status": "available",
+  "tags": [
+   "Loop"
+  ]
+ },
+ {
+  "name": "Gaidoaro",
+  "slug": "gaidoaro",
+  "description": "Gaidoaro (\"Guide Arrow\") is a logic puzzle created by Naoki Inaba (Japan). A rectangular or square grid contains arrows and a single star. The goal is to blacken some cells so that the white cells must be connected horizontally or vertically. Blackened cells should not share an edge. Cells with arrows or a star cannot be blackened. An arrow indicates the direction in which you must move to reach a star by only going through white cells (there must be only one way from any white cell to reach a cell with a star).",
+  "status": "available",
+  "tags": [
+   "Shading"
+  ]
+ },
+ {
+  "name": "Mid-Loop",
+  "slug": "mid-loop",
+  "description": "Mid-Loop is a logic puzzle published by Nikoli. A rectangular or square grid contains dots; a dot can be situated in the center of a cell or on a border between neighbouring cells. The aim is to draw a single continuous non-intersecting loop that properly passes through all dots. Dots must be traveled straight through. Segments of a straight line going out of a dot must be equal.",
+  "status": "available",
+  "tags": [
+   "Loop"
+  ]
+ },
+ {
+  "name": "Dotchi-Loop",
+  "slug": "dotchi-loop",
+  "description": "Dotchi-Loop is a logic puzzle published by Nikoli. A rectangular or square grid is divided into regions. A grid contains white and black circles in some cells. The goal is to draw a single non-intersecting loop. The loop must visit all cells with white circles; the loop cannot pass through a black circle. The line either travels straight through all the white circles, or makes a 90 degrees turn at all the white circles in a region.",
+  "status": "available",
+  "tags": [
+   "Loop"
+  ]
+ },
+ {
+  "name": "Trinairo",
+  "slug": "trinairo",
+  "description": "Trinairo is a logic puzzle invented by Leo de Winter (Netherlands). The objective is to fill a 9 x 9 grid with letters so that each row and each column contains three letters A, three letters B and three letters C. If a cell is marked with other color, a letter in the cell differs from letters in all orthogonally adjacent cells.",
+  "status": "available",
+  "tags": [
+   "Numbers"
+  ]
+ },
+ {
+  "name": "Detour",
+  "slug": "detour",
+  "description": "Detour is a logic puzzle. It contains a rectangular or square grid divided into regions. The goal is to draw a single continuous non-intersecting loop that visits every cell exactly ones. Each number in a region indicates the number of times the loop turns in the region.",
+  "status": "available",
+  "tags": [
+   "Loop"
+  ]
+ },
+ {
+  "name": "Balance Loop",
+  "slug": "balance-loop",
+  "description": "Balance Loop is a logic puzzle created by Prasanna Seshadri (India). A rectangular or square grid contains black and white circles in some cells. The aim is to draw a single continuous non-intersecting loop that visits all cells with circles. Loop segments extending from a white circle are of equal length, while the loop segments extending from a black circle are not. If a cirlce contains a number, it indicates the sum of the loop segment lengths on both sides of the circle before turning.",
+  "status": "available",
+  "tags": [
+   "Loop"
+  ]
+ },
+ {
+  "name": "Turf",
+  "slug": "turf",
+  "description": "Turf is a logic puzzle invented by John Bulten (USA). A rectangular or square grid contains numbers in some cells. The goal is to shade some cells so that the grid will be divided into gray and white regions. Each region must contain at least one number. This number indicates the size of a region. If a region contains any other cell with a number, it represents how many surrounding cells are white, including itself and diagonal ones.",
+  "status": "available",
+  "tags": [
+   "Shading"
+  ]
+ },
+ {
+  "name": "SquarO",
+  "slug": "squaro",
+  "description": "SquarO is a logic puzzle similar to Minesweeper. A rectangular or square grid contains dots on intersections of lines. A number in a cell indicates how many of the four surrounding dots are black.",
+  "status": "available",
+  "tags": [
+   "Shading"
+  ]
+ },
+ {
+  "name": "Chiyotsui",
+  "slug": "chiyotsui",
+  "description": "Chiyotsui (from Japanese, literally \"door hinge\") is a logic puzzle published by Nikoli. A rectangular or square grid is divided into regions. The goal is to blacken some cells of a grid according to the following rules:",
+  "status": "available",
+  "tags": [
+   "Shading"
+  ]
+ },
+ {
+  "name": "Aqre",
+  "slug": "aqre",
+  "description": "Aqre is a logic puzzle invented by Eric Fox (USA). A rectangular or square grid is divided into regions. The goal is to blacken some cells of a grid that all black cells form one orthogonally connected area. A cell with a number indicates how many cells in the region must be blackened. In regions without a number any amount of cells may be blackened (all cells may stay white). There cannot be a run of more than three black or white cells in the grid.",
+  "status": "available",
+  "tags": [
+   "Shading"
+  ]
+ },
+ {
+  "name": "Geradeweg",
+  "slug": "geradeweg",
+  "description": "Geradeweg (\"Straight Loop\") is a logic puzzle. A rectangular or square grid contains circles with numbers in some cells. The task is to draw a single closed non-intersecting loop that passes through all circles. The number indicates the length of the straight segment passed through the circle. If the loop turns in a number cell, both straight segments must have the same length as the number indicates.",
+  "status": "available",
+  "tags": [
+   "Loop"
+  ]
+ },
+ {
+  "name": "Kuroclone",
+  "slug": "kuroclone",
+  "description": "Kuroclone is a logic puzzle published by Nikoli. A rectangular or square grid is divided into regions. The aim is to blacken some cells of a grid. Each region must contain two areas of black cells: this pair of areas must be of the same shape and size (the areas may be rotated or mirrored). Cells with numbers are always white. The arrow points to an adjacent cell that belongs to a black area. The number indicates the size of this area. When two cells are orthogonally adjacent across a region boundary, at least one cell must be white.",
+  "status": "available",
+  "tags": [
+   "Shading"
+  ]
+ },
+ {
+  "name": "Yajisan-Sokoban",
+  "slug": "yajisan-sokoban",
+  "description": "Yajisan-Sokoban is a logic puzzle invented by Jamie Hargrove. A rectangular or square grid contains gray squares. The task is to move the gray squares vertically or horizontally (some squares may stay unshifted). Gray squares cannot cross the tracks of other gray squares and cannot move over other squares (gray squares can pass through numbered cells). A cell containing a number and an arrow represents how many gray squares are in the row or column pointed at by the arrow. If there is a gray square on top of a numbered cell, it plays no further role in the puzzle, and may be true or false. If a gray square passes through a cell with a number and an arrow, this numbered cell provides true information.",
+  "status": "available",
+  "tags": [
+   "Moving"
+  ]
+ },
+ {
+  "name": "Line Segment",
+  "slug": "line-segment",
+  "description": "Line Segment is a logic puzzle invented by Erich Friedman (USA). The task is to draw line segments that pass through exactly 3 or 4 consecutive cells. The line segments can only be horizontal (H), vertical (V), or diagonal (D). Each cell must be visited exactly once. A cell with a letter contains a line segment with that orientation.",
+  "status": "available",
+  "tags": [
+   "Lines"
+  ]
+ },
+ {
+  "name": "Raneko",
+  "slug": "raneko",
+  "description": "Raneko (\"Ranekomappu\"; from Japanese, literally \"cat habitat map\") is a logic puzzle published by Nikoli. A rectangular or square grid contains circles (with numbers or empty). The goal is to divide the grid into regions. Each region contains one circle (\"cat\"). A circle with a number indicates the size of a region. A grid may contain black cells. The number in a black cell indicates how many regions share an edge with that black cell.",
+  "status": "available",
+  "tags": [
+   "Regions"
+  ]
+ },
+ {
+  "name": "Factorism",
+  "slug": "factorism",
+  "description": "Factorism (\"Find the Factors\") is a logic puzzle invented by Iva Sallay (USA). The goal is to place numbers from 1 to N across the top and down the left of the square grid N x N. A number in a cell indicates the product of numbers outside the grid in the corresponding row and column.",
+  "status": "available",
+  "tags": [
+   "Numbers",
+   "Math"
+  ]
+ },
+ {
+  "name": "Akiperago",
+  "slug": "akiperago",
+  "description": "Akiperago (\"Archipelago\") is a logic puzzle published by Nikoli. A rectangular or square grid contains black cells; some of them contain numbers. The goal is to blacken some cells of a grid according to the following rules:",
+  "status": "available",
+  "tags": [
+   "Shading"
+  ]
+ },
+ {
+  "name": "Yakazu",
+  "slug": "yakazu",
+  "description": "Yakazu is a logic puzzle invented by Patrick Tirone. A rectangular or square grid is partially divided by black cells into compartments. The aim is to fill all white cells with the numbers. Each compartment, vertically or horizontally, must contain a set of consecutive numbers, but in any order (for example: 4-1-3-2). Each compartment of two cells or more must contain all the numbers starting from 1.",
+  "status": "available",
+  "tags": [
+   "Numbers"
+  ]
+ },
+ {
+  "name": "Miraringutairu",
+  "slug": "miraringutairu",
+  "description": "Miraringutairu (\"Mirroring Tile\") is a logic puzzle published by Nikoli. A rectangular or square grid contains black cells; some of them contain numbers. The goal is to locate blocks of black cells in the grid. Each numbered cell indicates the total number of black cells in the block (a block may contain few numbered cells). The grid may contain blocks without numbers. No two blocks may share an edge, but each block must be connected with at least one another block of the same size and shape through their corners (blocks may be rotated or mirrored).",
+  "status": "available",
+  "tags": [
+   "Shading"
+  ]
+ },
+ {
+  "name": "Heyablock",
+  "slug": "heyablock",
+  "description": "Heyablock (\"Heyawake-Block\") is a logic puzzle invented by Atsumi Hirose (Japan). A rectangular or square grid is divided into regions. The aim is to blacken some cells of a grid according to the following rules:",
+  "status": "available",
+  "tags": [
+   "Shading"
+  ]
+ },
+ {
+  "name": "Choco Banana",
+  "slug": "choco-banana",
+  "description": "Choco Banana is a logic puzzle published by Nikoli. A rectangular or square grid contains numbers in some cells. The goal is to blacken some cells of a grid. An area of black cells must form a rectangle or square. An area of white cells must not form a rectangle or square. If a black or white area contains a number, it indicates the size of this area. An area may contain more than one cell with a number.",
+  "status": "available",
+  "tags": [
+   "Shading"
+  ]
+ },
+ {
+  "name": "Wataridori",
+  "slug": "wataridori",
+  "description": "Wataridori (from Japanese, literally \"migratory birds\") is a logic puzzle published by Nikoli. A rectangular or square grid is divided into regions. A grid contains circles (empty or with numbers) in some cells. The aim is to connect circles in pairs by drawing a line that goes horizontally and vertically through the centers of cells. A cell may be visited by a line at most once. A line may connect circles with equal numbers, empty circles, or a line may be drawn between an empty circle and a circle with a number. A number in a circle indicates how many regions are visited by the line. A region may be visited by the line at most once.",
+  "status": "available",
+  "tags": [
+   "Lines"
+  ]
+ },
+ {
+  "name": "Chenburo",
+  "slug": "chenburo",
+  "description": "Chenburo (\"Chain Block\") is a logic puzzle published by Nikoli. A grid contains numbers or question marks in some cells. The aim is to blacken some cells of a grid according to the following rules:",
+  "status": "available",
+  "tags": [
+   "Shading"
+  ]
+ },
+ {
+  "name": "Wanrumuwandoa",
+  "slug": "wanrumuwandoa",
+  "description": "Wanrumuwandoa (\"One Room One Door\") is a logic puzzle published by Nikoli. A rectangular or square grid is divided into regions (\"rooms\"). A region may contain a cell with a number. The goal is to blacken some cells of a grid according to the following rules:",
+  "status": "available",
+  "tags": [
+   "Shading"
+  ]
+ },
+ {
+  "name": "Haisu",
+  "slug": "haisu",
+  "description": "Haisu (\"House\") is a logic puzzle invented by William Hu. A square or rectangular grid is divided into regions. The aim is to draw a line (\"path\") from S (start) to G (goal) that goes through all cells. The line cannot cross itself. The line can visit each region more than once. When the line passes over a cell with a big number N, it is on its Nth entry to the region. If a region has a small number n in the top left corner, the line must visit this region a total of n times.",
+  "status": "available",
+  "tags": [
+   "Lines"
+  ]
+ },
+ {
+  "name": "Obitaru",
+  "slug": "obitaru",
+  "description": "Obitaru (from Japanese, literally \"orbital\") is a logic puzzle published by Nikoli. A grid contains white and black circles; black circles may contain numbers. The goal is to draw square or rectangular loops (\"belts\"). The loops may cross each other, but parallel lines cannot pass through the same cell. Loops must pass through all white cells. There may be loops that do not pass through any white circle. A black circle should be inside exactly one loop (there can be no more than one black circle inside the loop). If the black circle contains a number, it will be equal to the number of white circles through which the loop passes around this black circle.",
+  "status": "placeholder",
+  "tags": [
+   "Loop"
+  ]
+ },
+ {
+  "name": "Square Jam",
+  "slug": "square-jam",
+  "description": "Square Jam is a logic puzzle. A rectangular or square grid contains numbers in some cells. The aim is to divide the grid into square regions. A cell with a number indicates the side length of a region. A region may contain any amount of numbered cells. The grid may contain regions without numbers. A grid dot must not be shared by the corners of four regions.",
+  "status": "available",
+  "tags": [
+   "Regions"
+  ]
+ },
+ {
+  "name": "Cocktail Lamp",
+  "slug": "cocktail-lamp",
+  "description": "Cocktail Lamp (\"Kakuteruranpu\") is a logic puzzle. A rectangular or square grid is divided into regions. The goal is to blacken some cells of a grid according to the following rules:",
+  "status": "available",
+  "tags": [
+   "Shading"
+  ]
+ },
+ {
+  "name": "Kazoku",
+  "slug": "kazoku",
+  "description": "Kazoku (\"Kazoku shashin\"; from Japanese, literally \"family photo\") is a logic puzzle. A rectangular or square grid contains black circles in some cells; some circles may contain numbers or question marks. Also, some cells may contain numbers or question marks. The aim is to divide the grid into rectangular regions such that each region contains exactly one number or question mark. A number indicates how many black circles the region contains. The region with a question mark may contain any amount of black circles (at least one). Orthogonally adjacent circles must belong to the same region.",
+  "status": "available",
+  "tags": [
+   "Regions"
+  ]
+ },
+ {
+  "name": "Tontonbeya",
+  "slug": "tontonbeya",
+  "description": "Tontonbeya (from Japanese, literally \"gambler\") is a logic puzzle published by Nikoli. A rectangular or square grid is divided into regions. The goal is to fill in each cell with figures: squares, circles, triangles. A region may contain any types of figures, but if they are of different types, the number of figures of each type should be the same. All figures of the same type in a region must be connected horizontally or vertically (they form a \"block\"). Each block of the same figures within one region must be adjacent to exactly one block of the same figures in another region.",
+  "status": "available",
+  "tags": [
+   "Objects"
+  ]
+ },
+ {
+  "name": "Context",
+  "slug": "context",
+  "description": "Context is a rectangular or square grid with numbers in some cells. The aim is to blacken cells of a grid according to the following rules:",
+  "status": "available",
+  "tags": [
+   "Shading"
+  ]
+ },
+ {
+  "name": "Marutaringu",
+  "slug": "marutaringu",
+  "description": "Marutaringu (\"Maltese Ring\") is a logic puzzle published by Nikoli. A square or rectangular grid is divided into regions. The goal is to blacken some cells of a grid according to the following rules:",
+  "status": "available",
+  "tags": [
+   "Shading"
+  ]
+ },
+ {
+  "name": "Circles and Squares",
+  "slug": "circles-and-squares",
+  "description": "Circles and Squares is a logic puzzle. A square or rectangular grid contains black and white circles. The aim is to blacken cells of a grid according to the following rules:",
+  "status": "available",
+  "tags": [
+   "Shading"
+  ]
+ },
+ {
+  "name": "Putteria",
+  "slug": "putteria",
+  "description": "Putteria (from Japanese, \"put into an area\") consists of a grid divided on regions. The goal is to place a number into each region. A number is equal to the size of the region. No number may appear twice in any row or column. Cells with numbers must not be orthogonally adjacent. A cell with a cross cannot contain a number.",
+  "status": "available",
+  "tags": [
+   "Objects"
+  ]
+ },
+ {
+  "name": "Summandum",
+  "slug": "summandum",
+  "description": "Summandum (from Latin, \"summarize\") is a square grid with numbers in some cells. The aim is to place numbers from 0 to N across the top and down the left of the square grid. A number in a cell indicates the sum of numbers outside the grid in the corresponding row and column.",
+  "status": "available",
+  "tags": [
+   "Numbers",
+   "Math"
+  ]
+ },
+ {
+  "name": "Word Finder",
+  "slug": "word-finder",
+  "description": "Word Finder (\"Word Search\", \"Word Seek\", \"Word Sleuth\", \"Mystery Word\") consists of the grid with letters. The goal of this puzzle is to find and mark all the words hidden inside the grid. The letters in each word are orthogonally adjacent. Each letter can be used at one word only.",
+  "status": "available",
+  "tags": [
+   "Words"
+  ]
+ },
+ {
+  "name": "Nine Letters",
+  "slug": "nine-letters",
+  "description": "Nine Letters is the variation of Word Finder puzzle. It consists of the grid with letters. The grid is divided on 3 x 3 subgrids. The goal is to find and mark words hidden inside each subgrid.",
+  "status": "available",
+  "tags": [
+   "Words"
+  ]
+ },
+ {
+  "name": "Spider Web",
+  "slug": "spider-web",
+  "description": "Spider Web consists of circles connected by lines. Each circle contains one letter. The aim is to find and mark a key word hidden inside the net of circles.",
+  "status": "available",
+  "tags": [
+   "Words"
+  ]
+ },
+ {
+  "name": "Maze",
+  "slug": "maze",
+  "description": "Maze is a puzzle consisting of a complicated network of paths or passages. The aim is to find a path between two selected points. Cross+A allows to create puzzles of rectangular, square or irregular shapes.",
+  "status": "available",
+  "tags": [
+   "Lines"
+  ]
+ }
+]

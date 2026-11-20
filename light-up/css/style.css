@@ -1,0 +1,13 @@
+/* Light Up board. Shared styles live in ../css/style.css. */
+.lu-board .cell.wall { background: #2b2b2b; color: #fff; cursor: default; }
+.lu-board .cell.lit { background: #fff6c2; }
+.lu-board .cell.bulb::before {
+  content: '';
+  width: 56%;
+  height: 56%;
+  border-radius: 50%;
+  background: radial-gradient(circle at 35% 35%, #fff59d, #fbc02d 70%);
+  box-shadow: 0 0 6px rgba(251, 192, 45, 0.8);
+}
+.lu-board .cell.bulb.clash::before { background: #e53935; box-shadow: none; }
+.lu-board .cell.hint-clue { box-shadow: inset 0 0 0 3px #ff9800; }

@@ -1,0 +1,6 @@
+/* Sign In board. Shared styles live in ../css/style.css. */
+.si-sign {
+  position: absolute; transform: translate(-50%, -50%); z-index: 2; pointer-events: none;
+  width: 18px; height: 18px; border-radius: 9px; background: #fff; border: 1.5px solid #333;
+  font-size: 13px; font-weight: 800; line-height: 15px; text-align: center;
+}

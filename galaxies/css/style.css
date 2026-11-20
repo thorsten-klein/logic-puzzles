@@ -1,0 +1,13 @@
+/* Galaxies board. Shared styles live in ../css/style.css. */
+.gx-board { display: block; margin: 0 auto; user-select: none; }
+.gx-bg { fill: #fff; }
+.gx-frame { fill: none; stroke: #333; stroke-width: 3; }
+.gx-grid { stroke: #e0e0e0; stroke-width: 1; }
+.gx-wall { stroke: #333; stroke-width: 3; stroke-linecap: round; }
+.gx-wall.ok { stroke: #43a047; }
+.gx-wall.bad { stroke: #e53935; }
+.gx-wall.hint, .gx-grid.hint { stroke: #ff9800; stroke-width: 4; }
+.gx-hit { stroke: transparent; cursor: pointer; }
+.gx-hit:hover { stroke: rgba(25, 118, 210, 0.15); }
+.gx-board.readonly .gx-hit { cursor: default; }
+.gx-dot { fill: #fff; stroke: #333; stroke-width: 2; pointer-events: none; }

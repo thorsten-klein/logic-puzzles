@@ -1,0 +1,164 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" width="100%" height="100%" aria-label="Logic Puzzles Logo">
+  <defs>
+    <!-- Glass body gradient -->
+    <radialGradient id="bulbGlass" cx="50%" cy="38%" r="55%">
+      <stop offset="0%" stop-color="#ffffff" stop-opacity="0.9"/>
+      <stop offset="50%" stop-color="#e0f2fe" stop-opacity="0.75"/>
+      <stop offset="85%" stop-color="#bae6fd" stop-opacity="0.6"/>
+      <stop offset="100%" stop-color="#38bdf8" stop-opacity="0.8"/>
+    </radialGradient>
+    
+    <!-- Bulb outer ambient glow -->
+    <radialGradient id="ambientGlow" cx="50%" cy="38%" r="52%">
+      <stop offset="0%" stop-color="#0284c7" stop-opacity="0.2"/>
+      <stop offset="65%" stop-color="#0284c7" stop-opacity="0.05"/>
+      <stop offset="100%" stop-color="#0284c7" stop-opacity="0"/>
+    </radialGradient>
+
+    <!-- Screw base metal gradient -->
+    <linearGradient id="metalBase" x1="0%" y1="0%" x2="100%" y2="0%">
+      <stop offset="0%" stop-color="#475569"/>
+      <stop offset="20%" stop-color="#94a3b8"/>
+      <stop offset="50%" stop-color="#f1f5f9"/>
+      <stop offset="80%" stop-color="#94a3b8"/>
+      <stop offset="100%" stop-color="#334155"/>
+    </linearGradient>
+
+    <!-- Thread gradient -->
+    <linearGradient id="threadGrad" x1="0%" y1="0%" x2="100%" y2="0%">
+      <stop offset="0%" stop-color="#334155"/>
+      <stop offset="25%" stop-color="#64748b"/>
+      <stop offset="50%" stop-color="#cbd5e1"/>
+      <stop offset="75%" stop-color="#64748b"/>
+      <stop offset="100%" stop-color="#1e293b"/>
+    </linearGradient>
+    
+    <!-- Contact terminal -->
+    <linearGradient id="footGrad" x1="0%" y1="0%" x2="100%" y2="0%">
+      <stop offset="0%" stop-color="#0f172a"/>
+      <stop offset="50%" stop-color="#334155"/>
+      <stop offset="100%" stop-color="#020617"/>
+    </linearGradient>
+  </defs>
+
+  <style>
+    @keyframes synapsePulse1 {
+      0%, 100% { transform: scale(1); opacity: 0.95; }
+      50% { transform: scale(1.3); opacity: 1; }
+    }
+    @keyframes synapsePulse2 {
+      0%, 100% { transform: scale(1); opacity: 0.9; }
+      50% { transform: scale(1.35); opacity: 1; }
+    }
+    @keyframes synapsePulse3 {
+      0%, 100% { transform: scale(1); opacity: 0.9; }
+      50% { transform: scale(1.3); opacity: 1; }
+    }
+    @keyframes axonFlow {
+      0%, 100% { stroke-opacity: 0.65; }
+      50% { stroke-opacity: 1; }
+    }
+    .node-c1 { transform-origin: 256px 175px; animation: synapsePulse1 2.4s ease-in-out infinite; }
+    .node-c2 { transform-origin: 195px 120px; animation: synapsePulse2 2.1s ease-in-out infinite 0.3s; }
+    .node-c3 { transform-origin: 317px 120px; animation: synapsePulse2 2.1s ease-in-out infinite 0.6s; }
+    .node-c4 { transform-origin: 145px 185px; animation: synapsePulse3 2.6s ease-in-out infinite 0.9s; }
+    .node-c5 { transform-origin: 367px 185px; animation: synapsePulse3 2.6s ease-in-out infinite 1.2s; }
+    .node-c6 { transform-origin: 185px 235px; animation: synapsePulse1 2.3s ease-in-out infinite 0.4s; }
+    .node-c7 { transform-origin: 327px 235px; animation: synapsePulse1 2.3s ease-in-out infinite 0.8s; }
+    .node-c8 { transform-origin: 256px 85px;  animation: synapsePulse2 2.8s ease-in-out infinite 1.5s; }
+    .axon-net { animation: axonFlow 3s ease-in-out infinite; }
+  </style>
+
+  <!-- Ambient glow behind bulb -->
+  <circle cx="256" cy="195" r="205" fill="url(#ambientGlow)"/>
+
+  <!-- Glass bulb body (outer fill & stroke) -->
+  <path d="M 198 362 C 198 318, 106 278, 106 185 A 150 150 0 1 1 406 185 C 406 278, 314 318, 314 362 Z"
+        fill="url(#bulbGlass)"/>
+  <path d="M 198 362 C 198 318, 106 278, 106 185 A 150 150 0 1 1 406 185 C 406 278, 314 318, 314 362 Z"
+        fill="none" stroke="#0284c7" stroke-width="18" stroke-linecap="round" stroke-linejoin="round"/>
+
+  <!-- Specular highlight arc on glass -->
+  <path d="M 145 145 C 130 185, 138 230, 155 255"
+        fill="none" stroke="#ffffff" stroke-width="10" stroke-linecap="round" opacity="0.7"/>
+  <circle cx="170" cy="115" r="10" fill="#ffffff" opacity="0.75"/>
+
+  <!-- Filament Mount / Lead wires -->
+  <path d="M 230 362 V 305 L 256 265" fill="none" stroke="#94a3b8" stroke-width="8" stroke-linecap="round" stroke-linejoin="round"/>
+  <path d="M 282 362 V 305 L 256 265" fill="none" stroke="#94a3b8" stroke-width="8" stroke-linecap="round" stroke-linejoin="round"/>
+  <ellipse cx="256" cy="265" rx="11" ry="8" fill="#64748b"/>
+
+  <!-- Neural Synapse Brain Network -->
+  <g class="axon-net" stroke="#0284c7" stroke-linecap="round" stroke-linejoin="round">
+    <path d="M 256 265 V 175" stroke-width="11" stroke="#0369a1"/>
+    <path d="M 256 175 V 85" stroke-width="9" stroke="#0284c7"/>
+    
+    <!-- Left hemisphere axons -->
+    <path d="M 256 215 L 185 235 L 145 185" stroke-width="9"/>
+    <path d="M 185 235 L 195 120" stroke-width="8"/>
+    <path d="M 256 175 L 195 120 L 155 130" stroke-width="9"/>
+    <path d="M 145 185 L 155 130 L 195 120" stroke-width="8"/>
+    <path d="M 195 120 L 210 75 L 256 85" stroke-width="9"/>
+    <path d="M 256 175 L 185 235" stroke-width="9"/>
+    <path d="M 195 120 L 256 135" stroke-width="8"/>
+    <path d="M 145 185 L 190 175" stroke-width="8"/>
+
+    <!-- Right hemisphere axons -->
+    <path d="M 256 215 L 327 235 L 367 185" stroke-width="9"/>
+    <path d="M 327 235 L 317 120" stroke-width="8"/>
+    <path d="M 256 175 L 317 120 L 357 130" stroke-width="9"/>
+    <path d="M 367 185 L 357 130 L 317 120" stroke-width="8"/>
+    <path d="M 317 120 L 302 75 L 256 85" stroke-width="9"/>
+    <path d="M 256 175 L 327 235" stroke-width="9"/>
+    <path d="M 317 120 L 256 135" stroke-width="8"/>
+    <path d="M 367 185 L 322 175" stroke-width="8"/>
+
+    <!-- Inter-hemisphere logic bridge -->
+    <path d="M 195 120 C 230 102, 282 102, 317 120" stroke-width="9"/>
+  </g>
+
+  <!-- Glowing Synapse Nodes -->
+  <!-- Left hemisphere nodes -->
+  <g class="node-c4"><circle cx="145" cy="185" r="15" fill="#00acc1"/><circle cx="145" cy="185" r="6.75" fill="#e0f7fa"/></g>
+  <g class="node-c2"><circle cx="195" cy="120" r="17" fill="#f59e0b"/><circle cx="195" cy="120" r="7.65" fill="#fef3c7"/></g>
+  <g class="node-c6"><circle cx="185" cy="235" r="15" fill="#8b5cf6"/><circle cx="185" cy="235" r="6.75" fill="#ede9fe"/></g>
+  <circle cx="155" cy="130" r="13" fill="#10b981"/>
+  <circle cx="155" cy="130" r="5.8500000000000005" fill="#d1fae5"/>
+  <circle cx="210" cy="75" r="13" fill="#06b6d4"/>
+  <circle cx="210" cy="75" r="5.8500000000000005" fill="#cffafe"/>
+  <circle cx="190" cy="175" r="12" fill="#f43f5e"/>
+  <circle cx="190" cy="175" r="5.4" fill="#ffe4e6"/>
+
+  <!-- Right hemisphere nodes -->
+  <g class="node-c5"><circle cx="367" cy="185" r="15" fill="#00acc1"/><circle cx="367" cy="185" r="6.75" fill="#e0f7fa"/></g>
+  <g class="node-c3"><circle cx="317" cy="120" r="17" fill="#f59e0b"/><circle cx="317" cy="120" r="7.65" fill="#fef3c7"/></g>
+  <g class="node-c7"><circle cx="327" cy="235" r="15" fill="#8b5cf6"/><circle cx="327" cy="235" r="6.75" fill="#ede9fe"/></g>
+  <circle cx="357" cy="130" r="13" fill="#10b981"/>
+  <circle cx="357" cy="130" r="5.8500000000000005" fill="#d1fae5"/>
+  <circle cx="302" cy="75" r="13" fill="#06b6d4"/>
+  <circle cx="302" cy="75" r="5.8500000000000005" fill="#cffafe"/>
+  <circle cx="322" cy="175" r="12" fill="#f43f5e"/>
+  <circle cx="322" cy="175" r="5.4" fill="#ffe4e6"/>
+
+  <!-- Central axis nodes -->
+  <g class="node-c1"><circle cx="256" cy="175" r="19" fill="#0284c7"/><circle cx="256" cy="175" r="8.55" fill="#ffffff"/></g>
+  <g class="node-c8"><circle cx="256" cy="85" r="16" fill="#10b981"/><circle cx="256" cy="85" r="7.2" fill="#ecfdf5"/></g>
+  <circle cx="256" cy="135" r="13" fill="#f59e0b"/>
+  <circle cx="256" cy="135" r="5.8500000000000005" fill="#fffbeb"/>
+
+  <!-- Screw Base: Metal Collar & Threads -->
+  <!-- Top neck ring -->
+  <rect x="194" y="362" width="124" height="16" rx="6" fill="url(#metalBase)" stroke="#334155" stroke-width="4"/>
+  <!-- Thread 1 -->
+  <path d="M 197 390 C 215 401, 297 401, 315 390 L 317 408 C 297 420, 215 420, 195 408 Z"
+        fill="url(#threadGrad)" stroke="#1e293b" stroke-width="3.5" stroke-linejoin="round"/>
+  <!-- Thread 2 -->
+  <path d="M 199 420 C 217 430, 295 430, 313 420 L 314 438 C 295 449, 217 449, 198 438 Z"
+        fill="url(#threadGrad)" stroke="#1e293b" stroke-width="3.5" stroke-linejoin="round"/>
+  <!-- Thread 3 / Bottom tapered collar -->
+  <path d="M 206 449 C 220 458, 292 458, 306 449 L 303 465 C 285 474, 227 474, 209 465 Z"
+        fill="url(#threadGrad)" stroke="#1e293b" stroke-width="3.5" stroke-linejoin="round"/>
+  <!-- Black contact foot terminal -->
+  <path d="M 224 469 C 235 484, 277 484, 288 469 C 280 493, 232 493, 224 469 Z"
+        fill="url(#footGrad)" stroke="#020617" stroke-width="3.5"/>
+</svg>

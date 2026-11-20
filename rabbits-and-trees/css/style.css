@@ -1,0 +1,6 @@
+/* Rabbits and Trees board. Shared styles live in ../css/style.css. */
+.rt-board .rt-fig { width: 60%; height: 60%; border-radius: 50%; box-sizing: border-box; border: 2px solid #37474f; pointer-events: none; }
+.rt-board .rt-fig.rabbit { background: #fff; }
+.rt-board .rt-fig.tree { background: #37474f; }
+.rt-board .cell.rt-num { background: #eceff1; font-weight: 700; }
+.rt-board .cell.rt-empty::after { content: ''; width: 16%; height: 16%; border-radius: 50%; background: #90a4ae; }

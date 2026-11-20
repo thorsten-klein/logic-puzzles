@@ -1,0 +1,3 @@
+/* Number path board. Shared styles live in ../css/style.css. */
+.np-board .cell .digit-input, .np-board .cell.entry { color: var(--accent); }
+.np-board .cell.given { background: #eceff1; }

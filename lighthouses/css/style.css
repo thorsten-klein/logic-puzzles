@@ -1,0 +1,5 @@
+/* Lighthouses board. Shared styles live in ../css/style.css. */
+.lh-board .cell.light { background: #263238; color: #ffd54f; }
+.lh-board .cell.ship::after { content: '⛴'; font-size: calc(var(--cell) * 0.55); }
+.lh-board .cell.water { background: #e3f2fd; }
+.lh-board .cell.hint-clue { box-shadow: inset 0 0 0 3px #ff9800; }

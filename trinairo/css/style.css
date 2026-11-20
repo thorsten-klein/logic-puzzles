@@ -1,0 +1,4 @@
+/* Trinairo board. Shared styles live in ../css/style.css. */
+.tn-board .cell { color: var(--accent); }
+.tn-board .cell.given { color: var(--fg); }
+.tn-board .cell.marked-cell { background: #d7ccc8; }

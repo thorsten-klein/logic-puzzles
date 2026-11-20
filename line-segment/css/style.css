@@ -1,0 +1,8 @@
+/* Line Segment board. Shared styles live in ../css/style.css. */
+.ls2-board .cell { position: relative; overflow: hidden; }
+.ls2-board .ls2-bar { position: absolute; left: 50%; top: 50%; width: 142%; height: 4px; margin-left: -71%; margin-top: -2px; background: var(--accent); pointer-events: none; }
+.ls2-board .ls2-d1 { transform: rotate(0deg); width: 100%; margin-left: -50%; }
+.ls2-board .ls2-d2 { transform: rotate(90deg); width: 100%; margin-left: -50%; }
+.ls2-board .ls2-d3 { transform: rotate(45deg); }
+.ls2-board .ls2-d4 { transform: rotate(-45deg); }
+.ls2-board .ls2-letter { position: relative; z-index: 1; font-weight: 700; background: #fff; padding: 0 3px; border-radius: 4px; }

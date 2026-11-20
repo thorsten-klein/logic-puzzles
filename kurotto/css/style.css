@@ -1,0 +1,4 @@
+/* Kurotto board. Shared styles live in ../css/style.css. */
+.ku-board .cell.ring::before {
+  content: ''; position: absolute; inset: 12%; border: 2px solid #333; border-radius: 50%;
+}

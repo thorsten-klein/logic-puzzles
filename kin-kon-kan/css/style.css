@@ -1,0 +1,8 @@
+/* Kin-Kon-Kan board. Shared styles live in ../css/style.css. */
+.kk-mirror { stroke: #37474f; stroke-width: 4; stroke-linecap: round; }
+.kk-mirror.ok { stroke: #43a047; }
+.kk-mirror.bad { stroke: #e53935; }
+.kk-mirror.show { stroke: var(--accent); }
+.kk-cell.hint { fill: #ffe0b2; }
+.kk-dot { fill: #b0bec5; }
+.kk-dot.bad { fill: #e53935; }

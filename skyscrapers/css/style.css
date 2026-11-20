@@ -1,0 +1,4 @@
+/* Skyscrapers board. Shared styles live in ../css/style.css. */
+.sk-board .clue { background: var(--bg); font-weight: 700; color: #555; }
+.sk-board .cell .digit-input, .sk-board .cell.entry { color: var(--accent); }
+

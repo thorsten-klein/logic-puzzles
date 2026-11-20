@@ -1,0 +1,4 @@
+/* Tenner Grid board. Shared styles live in ../css/style.css. */
+.tg-board .cell { color: var(--accent); }
+.tg-board .cell.given { color: var(--fg); background: #eceff1; }
+.tg-board .cell:focus { outline: 2px solid var(--accent); outline-offset: -2px; }

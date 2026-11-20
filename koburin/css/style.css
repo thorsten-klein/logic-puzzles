@@ -1,0 +1,4 @@
+/* Koburin board. Shared styles live in ../css/style.css. */
+.kb-clue { fill: #eceff1; }
+.kb-black { fill: #37474f; }
+.ls-clue { text-anchor: middle; dominant-baseline: central; font-weight: 700; fill: #263238; }

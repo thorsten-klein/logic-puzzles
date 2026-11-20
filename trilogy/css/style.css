@@ -1,0 +1,3 @@
+/* Trilogy board. Shared styles live in ../css/style.css. */
+.tl-board .cell { color: var(--accent); font-size: calc(var(--cell) * 0.5); }
+.tl-board .cell.given { color: var(--fg); }

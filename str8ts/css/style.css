@@ -1,0 +1,3 @@
+/* Str8ts board. Shared styles live in ../css/style.css. */
+.s8-board .cell.blk { background: #263238; cursor: default; }
+.s8-board .cell .digit-input { color: var(--accent); }

@@ -1,0 +1,4 @@
+/* Water Fun board. Shared styles live in ../css/style.css. */
+.wf-board .cell.water { background: #64b5f6; }
+.wf-board .cell.dry::after { content: '×'; color: #bdbdbd; }
+.wf-board .clue { border: 0; }

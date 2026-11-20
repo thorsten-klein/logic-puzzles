@@ -1,0 +1,8 @@
+/* Shakashaka board. Shared styles live in ../css/style.css. */
+.sk-black { fill: #263238; }
+.sk-tri { fill: #37474f; }
+.sk-tri.ok { fill: #2e7d32; }
+.sk-tri.bad { fill: #c62828; }
+.sk-tri.show { fill: var(--accent); }
+.sk-cell.hint { fill: #ffe0b2; }
+.pt-board text.sk-num { fill: #fff; }

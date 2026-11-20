@@ -1,0 +1,3 @@
+/* Peintoeria board. Shared styles live in ../css/style.css. */
+.pe-board .cell { font-weight: 700; }
+.pe-board .cell.shaded { color: #fff; }

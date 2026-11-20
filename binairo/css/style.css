@@ -1,0 +1,4 @@
+/* Binairo board. Shared styles live in ../css/style.css. */
+.bi-board .cell.entry { color: var(--accent); }
+.bi-board .cell.given { background: #eceff1; }
+.bi-board .cell.v1 { font-weight: 800; }

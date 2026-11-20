@@ -1,0 +1,12 @@
+/* Creek board. Shared styles live in ../css/style.css. */
+.ck-board { display: block; margin: 0 auto; user-select: none; }
+.ck-cell { fill: #fff; stroke: #ccc; cursor: pointer; }
+.ck-cell.shaded { fill: #37474f; }
+.ck-board.readonly .ck-cell { cursor: default; }
+.ck-cell.hint { stroke: #ff9800; stroke-width: 3; }
+.ck-cell.ok { stroke: #43a047; stroke-width: 3; }
+.ck-cell.bad { stroke: #e53935; stroke-width: 3; }
+.ck-dot { fill: #90a4ae; pointer-events: none; }
+.ck-clue { fill: #fff; stroke: #333; stroke-width: 1.5; pointer-events: none; }
+.ck-clue.hint { stroke: #ff9800; stroke-width: 3; }
+.ck-num { text-anchor: middle; dominant-baseline: central; font-weight: 700; pointer-events: none; }

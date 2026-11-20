@@ -1,0 +1,4 @@
+/* Shikaku board. Shared styles live in ../css/style.css. */
+.sh-board { touch-action: none; }
+.sh-board .cell.drag { background: rgba(25, 118, 210, 0.25) !important; }
+.sh-board .cell.hint-clue { box-shadow: inset 0 0 0 3px #1976d2; }

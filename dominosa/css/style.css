@@ -1,0 +1,11 @@
+/* Dominosa board. Shared styles live in ../css/style.css. */
+.dm-board { display: block; margin: 0 auto; user-select: none; background: #fff; border-radius: 6px; }
+.dm-num { text-anchor: middle; dominant-baseline: central; font-weight: 700; fill: #222; pointer-events: none; }
+.dm-tile { fill: #ffe0b2; stroke: #8d6e63; stroke-width: 2; }
+.dm-tile.ok { fill: #c8e6c9; stroke: #43a047; }
+.dm-tile.hint { stroke: #ff9800; stroke-width: 3; }
+.dm-ghost { stroke: #ff9800; stroke-width: 4; stroke-dasharray: 4 3; }
+.dm-bad { stroke: #e53935; stroke-width: 4; }
+.dm-hit { stroke: transparent; cursor: pointer; }
+.dm-hit:hover { stroke: rgba(25, 118, 210, 0.15); }
+.dm-board.readonly .dm-hit { cursor: default; }

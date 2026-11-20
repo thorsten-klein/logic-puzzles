@@ -1,0 +1,3 @@
+/* Choco Banana board. Shared styles live in ../css/style.css. */
+.cb-board .cell { font-weight: 600; }
+.cb-board .cell.shaded { color: #fff; }

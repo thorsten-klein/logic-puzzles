@@ -1,0 +1,4 @@
+/* Arrows board. Shared styles live in ../css/style.css. */
+.ar-board .cell.num { background: #fff; color: var(--fg); cursor: default; }
+.ar-board .cell.slot { background: #e3f2fd; color: var(--accent); font-size: calc(var(--cell) * 0.55); }
+.ar-board .corner { background: transparent; }

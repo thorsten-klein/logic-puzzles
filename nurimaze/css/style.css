@@ -1,0 +1,6 @@
+/* Nurimaze board. Shared styles live in ../css/style.css. */
+.nz-board .cell { color: #37474f; }
+.nz-board .cell .pz-fig { width: 36%; height: 36%; }
+.nz-board .cell .pz-fig3 { width: 42%; }
+.nz-board .cell.nm2-letter { font-weight: 800; color: var(--accent); }
+.nz-board .cell.fixed.dot::after { display: none; }

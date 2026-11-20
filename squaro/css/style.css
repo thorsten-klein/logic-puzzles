@@ -1,0 +1,14 @@
+/* SquarO board. Shared styles live in ../css/style.css. */
+.sq-board { display: block; margin: 0 auto; user-select: none; }
+.sq-bg { fill: #fff; stroke: #888; }
+.sq-grid { stroke: #ddd; }
+.sq-num { text-anchor: middle; dominant-baseline: central; font-weight: 700; fill: #333; pointer-events: none; }
+.sq-hint-cell { fill: #fff3e0; stroke: #ff9800; stroke-width: 2; }
+.sq-dot { fill: #fff; stroke: #bbb; stroke-width: 1.5; pointer-events: none; }
+.sq-dot.black { fill: #263238; stroke: #263238; }
+.sq-dot.white { stroke: #546e7a; stroke-width: 2.5; }
+.sq-dot.hint { stroke: #ff9800; stroke-width: 3.5; }
+.sq-dot.ok { stroke: #43a047; stroke-width: 3; }
+.sq-dot.bad { stroke: #e53935; stroke-width: 3; }
+.sq-hit { fill: transparent; cursor: pointer; }
+.sq-board.readonly .sq-hit { cursor: default; }

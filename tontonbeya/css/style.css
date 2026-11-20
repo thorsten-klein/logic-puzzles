@@ -1,0 +1,3 @@
+/* Tontonbeya board. Shared styles live in ../css/style.css. */
+.tt-board .cell { font-size: calc(var(--cell) * 0.55); cursor: pointer; color: var(--accent); }
+.tt-board .cell.given { color: #263238; cursor: default; }

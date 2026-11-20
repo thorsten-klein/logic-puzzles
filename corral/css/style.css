@@ -1,0 +1,4 @@
+/* Corral board. Shared styles live in ../css/style.css. */
+.cr-board .cell { font-weight: 700; }
+.cr-board .cell.cr-in { background: #c8e6c9; }
+.cr-board .cell.cr-out { background: #eceff1; }

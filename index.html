@@ -1,0 +1,89 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Logic Puzzles</title>
+<link rel="icon" type="image/svg+xml" href="img/logo.svg">
+<link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+
+<div id="app">
+
+  <header id="topbar">
+    <div id="topbar-left">
+      <a class="brand" href="index.html" title="Logic Puzzles">
+        <img class="topbar-logo" src="img/logo.svg" alt="Logic Puzzles">
+        <span id="topbar-title">Logic Puzzles</span>
+      </a>
+    </div>
+    <div id="topbar-actions"></div>
+  </header>
+
+  <div id="screens">
+    <div class="page">
+      <div class="hub-intro">
+        <div class="hero-logo-wrap" title="Logic Puzzles">
+          <img class="hero-logo" src="img/logo.svg" alt="Logic Puzzles">
+        </div>
+        <h1>Logic Puzzles</h1>
+        <p>
+          A collection of classic pen-and-paper logic puzzles, playable entirely offline.
+          Every puzzle is generated with a unique solution. Pick a game to start.
+        </p>
+        <input id="game-search" type="search" placeholder="Search puzzles…" autocomplete="off">
+        <p class="coffee"><b>You like this work?</b>
+          <a class="coffee-badge" href="https://buymeacoffee.com/thorsten.klein" target="_blank" rel="noopener">
+            <img src="img/buy-me-a-coffee.svg" alt="Buy me a coffee" height="40"></a></p>
+        <div class="hub-tools">
+          <div class="view-switch" role="group" aria-label="View">
+            <button type="button" data-view="details" title="Details view with an example of each puzzle">
+              <svg class="icon" viewBox="0 0 24 24" aria-hidden="true"><rect x="4" y="4" width="16" height="9"/><line x1="4" y1="17" x2="20" y2="17"/><line x1="4" y1="20" x2="14" y2="20"/></svg>
+              Details</button>
+            <button type="button" data-view="icons" title="Icon view">
+              <svg class="icon" viewBox="0 0 24 24" aria-hidden="true"><rect x="4" y="4" width="7" height="7"/><rect x="13" y="4" width="7" height="7"/><rect x="4" y="13" width="7" height="7"/><rect x="13" y="13" width="7" height="7"/></svg>
+              Icons</button>
+            <button type="button" data-view="list" title="List view">
+              <svg class="icon" viewBox="0 0 24 24" aria-hidden="true"><line x1="4" y1="6" x2="20" y2="6"/><line x1="4" y1="12" x2="20" y2="12"/><line x1="4" y1="18" x2="20" y2="18"/></svg>
+              List</button>
+          </div>
+          <label class="sort-pick">Sort
+            <select id="game-sort">
+              <option value="name">Name (A–Z)</option>
+              <option value="name-desc">Name (Z–A)</option>
+              <option value="playable">Playable first</option>
+              <option value="original">Collection order</option>
+            </select>
+          </label>
+        </div>
+        <div id="tag-filter" class="tag-filter" role="group" aria-label="Filter by tag"></div>
+        <p id="hub-stats" class="hub-stats"></p>
+        <p class="random-pick"><b>You can't decide?</b>
+          <button id="random-btn" class="success icon-btn" type="button">
+            <svg class="icon" viewBox="0 0 24 24" aria-hidden="true"><rect x="4" y="4" width="16" height="16" rx="3"/><circle cx="9" cy="9" r="1.2" fill="currentColor" stroke="none"/><circle cx="15" cy="15" r="1.2" fill="currentColor" stroke="none"/><circle cx="15" cy="9" r="1.2" fill="currentColor" stroke="none"/><circle cx="9" cy="15" r="1.2" fill="currentColor" stroke="none"/></svg>
+            Play random puzzle</button></p>
+        <p class="random-pick"><b>You got some link?</b>
+          <button id="shared-btn" class="success icon-btn" type="button">
+            <svg class="icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M10 14a4.5 4.5 0 0 0 6.4 0l3-3a4.5 4.5 0 0 0-6.4-6.4l-1 1"/><path d="M14 10a4.5 4.5 0 0 0-6.4 0l-3 3a4.5 4.5 0 0 0 6.4 6.4l1-1"/></svg>
+            Play shared puzzle…</button></p>
+      </div>
+
+      <div id="game-grid" class="game-grid"></div>
+    </div>
+  </div>
+</div>
+
+<div id="modal-paste" class="modal" hidden><div class="modal-content">
+  <h2>Play a shared puzzle</h2><p>Paste a game ID or a shared URL.</p>
+  <textarea id="paste-input" rows="3" placeholder="Paste here…"></textarea>
+  <p id="paste-status" class="status"></p>
+  <div class="actions"><button id="btn-paste-start" class="primary" type="button">Start</button>
+    <button id="btn-paste-cancel" type="button">Cancel</button></div>
+</div></div>
+
+<script src="src/games-data.js"></script>
+<script src="src/main.js"></script>
+<script src="src/site.js"></script>
+</body>
+</html>

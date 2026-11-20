@@ -1,0 +1,9 @@
+/* Spider Web board. Shared styles live in ../css/style.css. */
+.sw-edge { stroke: #b0bec5; stroke-width: 3; }
+.sw-edge.on { stroke: var(--accent); stroke-width: 5; }
+.sw-node { fill: #fff; stroke: #546e7a; stroke-width: 2; cursor: pointer; }
+.sw-node.on { fill: #fff3c4; stroke: var(--accent); stroke-width: 3; }
+.sw-node.ok { fill: #c8e6c9; stroke: #43a047; }
+.sw-node.hint { stroke: #ff9800; stroke-width: 4; }
+.sw-letter { text-anchor: middle; dominant-baseline: central; font-weight: 700; fill: #263238; pointer-events: none; }
+.sw-info { text-align: center; margin-top: 8px; font-weight: 600; color: #455a64; }

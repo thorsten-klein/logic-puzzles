@@ -1,0 +1,3 @@
+/* Island board. Shared styles live in ../css/style.css. */
+.is-board .cell.sea { background: #4fc3f7; }
+.is-board .cell.numbered { background: #fff8e1; }

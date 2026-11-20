@@ -1,0 +1,3 @@
+/* Rukkuea board. Shared styles live in ../css/style.css. */
+.rk-board .cell { font-weight: 700; }
+.rk-board .cell.shaded { color: #fff; }

@@ -1,0 +1,3 @@
+/* Clouds board. Shared styles live in ../css/style.css. */
+.cl-board .cell.cloud { background: #78909c; }
+.cl-board .cell.sky { background: #e1f5fe; }

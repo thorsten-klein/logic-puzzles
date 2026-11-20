@@ -1,0 +1,5 @@
+/* Walls board. Shared styles live in ../css/style.css. */
+.wl-board .cell.wall-num { background: #263238; color: #fff; }
+.wl-board .cell.h-line::after { content: ''; position: absolute; left: 0; right: 0; top: 50%; height: 4px; margin-top: -2px; background: var(--accent); }
+.wl-board .cell.v-line::after { content: ''; position: absolute; top: 0; bottom: 0; left: 50%; width: 4px; margin-left: -2px; background: var(--accent); }
+.wl-board .cell.wall-num::after { display: none; }

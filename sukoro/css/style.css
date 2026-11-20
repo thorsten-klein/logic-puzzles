@@ -1,0 +1,3 @@
+/* Sukoro board. Shared styles live in ../css/style.css. */
+.sk2-board .cell.num { color: var(--accent); background: #e3f2fd; }
+.sk2-board .cell.fixed { color: var(--fg); background: #eceff1; }

@@ -1,0 +1,3 @@
+/* Yakazu board. Shared styles live in ../css/style.css. */
+.yk-board .cell.blk { background: #263238; cursor: default; }
+.yk-board .cell .digit-input { color: var(--accent); }

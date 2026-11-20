@@ -1,0 +1,8 @@
+/* Hundred board. Shared styles live in ../css/style.css. */
+.hd-board .cell .digit-input { color: var(--accent); }
+.hd-board .cell .digit-input::placeholder { color: #263238; opacity: 1; font-weight: 700; }
+.hd-board .cell .hd-base { position: absolute; top: 2px; left: 4px; font-size: calc(var(--cell) * 0.26); color: #78909c; }
+.hd-board .cell { position: relative; }
+.hd-sum { font-size: 14px; color: #607d8b; text-align: center; margin-top: 4px; }
+.hd-board .cell .hd-plain { color: #78909c; font-weight: 400; }
+.hd-board .cell.given { color: #263238; text-decoration: underline; }

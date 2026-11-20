@@ -1,0 +1,17 @@
+/* Hashiwokakero board. Shared styles live in ../css/style.css. */
+.hs-board { display: block; margin: 0 auto; user-select: none; }
+.hs-bg { fill: #e3f2fd; }
+.hs-bridge { stroke: #37474f; stroke-width: 3; }
+.hs-bridge.ok { stroke: #43a047; }
+.hs-bridge.bad { stroke: #e53935; }
+.hs-bridge.hint, .hs-ghost { stroke: #ff9800; }
+.hs-ghost { stroke-width: 3; stroke-dasharray: 4 3; }
+.hs-hit { stroke: transparent; cursor: pointer; }
+.hs-hit:hover { stroke: rgba(25, 118, 210, 0.15); }
+.hs-board.readonly .hs-hit { cursor: default; }
+.hs-island circle { fill: #fff; stroke: #37474f; stroke-width: 2; }
+.hs-island text { text-anchor: middle; dominant-baseline: central; font-weight: 700; fill: #222; pointer-events: none; }
+.hs-island.done circle { fill: #c8e6c9; }
+.hs-island.hint circle { stroke: #ff9800; stroke-width: 3; }
+.kc-black { fill: #263238; }
+.hs-ghost.bad { stroke: #e53935; }

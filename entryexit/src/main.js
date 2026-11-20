@@ -1,0 +1,106 @@
+// EntryExit. Draw one loop through every cell. The loop enters and
+// leaves each region exactly once (it crosses each region's border
+// exactly twice). Built on the shared Loop engine.
+
+(() => {
+  const { UNKNOWN, LINE, CROSS } = Loop;
+
+  function model(p) {
+    const g = Loop.grid(p.R, p.C);
+    const must = new Uint8Array(p.R * p.C).fill(1);
+    // Edges on each region's border.
+    const border = [];
+    for (let e = 0; e < g.E; e++) {
+      const [a, b] = g.ends[e];
+      if (p.region[a] === p.region[b]) continue;
+      (border[p.region[a]] = border[p.region[a]] || []).push(e);
+      (border[p.region[b]] = border[p.region[b]] || []).push(e);
+    }
+    function rule(s, log) {
+      for (const edges of border) {
+        if (!edges) continue;
+        const lines = edges.filter((e) => s[e] === LINE).length;
+        const open = edges.filter((e) => s[e] === UNKNOWN);
+        if (lines > 2 || lines + open.length < 2) return false;
+        if (!open.length) continue;
+        if (lines === 2) {
+          for (const e of open) s[e] = CROSS;
+          if (log) log.push({ edges: open, v: CROSS, reason: 'This region is already entered and left once. The loop crosses no more of its border.' });
+          return open.length;
+        }
+        if (lines + open.length === 2) {
+          for (const e of open) s[e] = LINE;
+          if (log) log.push({ edges: open, v: LINE, reason: 'The loop must enter and leave this region, and only these border crossings are left.' });
+          return open.length;
+        }
+      }
+      return 0;
+    }
+    return { g, must, rule };
+  }
+
+  function generate(half) {
+    const n = 2 * half;
+    const deadline = Date.now() + 8000;
+    while (Date.now() < deadline) {
+      const sol = Loop.randomTour(n);
+      const g = Loop.grid(n, n);
+      // Walk the tour and cut it into stretches of 2..6 cells.
+      const next = Array.from({ length: n * n }, () => []);
+      for (let e = 0; e < g.E; e++) if (sol[e] === LINE) { const [a, b] = g.ends[e]; next[a].push(b); next[b].push(a); }
+      const order = [0];
+      for (let prev = -1, cur = 0; order.length < n * n;) {
+        const nx = next[cur].find((x) => x !== prev);
+        prev = cur; cur = nx;
+        order.push(cur);
+      }
+      const shift = Math.floor(Math.random() * order.length);
+      const rot = order.slice(shift).concat(order.slice(0, shift));
+      const region = new Int32Array(n * n);
+      let id = 0;
+      for (let i = 0; i < rot.length;) {
+        const len = Math.min(rot.length - i, 2 + Math.floor(Math.random() * 5));
+        for (let j = 0; j < len; j++) region[rot[i + j]] = id;
+        i += len;
+        id++;
+      }
+      const p = { R: n, C: n, region };
+      const res = Loop.solve(model(p), 2, 20000);
+      if (res.solutions.length !== 1 || res.capped) continue;
+      p.solution = sol;
+      return p;
+    }
+    return null;
+  }
+
+  Loop.startGame({
+    id: 'entryexit',
+    name: 'EntryExit',
+    rules: 'Draw one closed loop through the centres of all cells, visiting every cell exactly once. ' +
+      'The loop enters and leaves each outlined region only once.',
+    size: { min: 2, max: 5, def: 3, text: (h) => `${2 * h}×${2 * h}` },
+    solvedText: 'In and out, once each — nicely done.',
+    generate,
+    encode: (p) => ({ n: p.R, g: Array.from(p.region, (v) => v.toString(36).padStart(2, '0')).join('') }),
+    decode(d) {
+      const n = d && d.n;
+      if (!Number.isInteger(n) || n < 2 || n > 16) throw new Error('Invalid board size');
+      if (typeof d.g !== 'string' || d.g.length !== 2 * n * n) throw new Error('Invalid regions');
+      return { R: n, C: n, region: Int32Array.from({ length: n * n }, (_, k) => parseInt(d.g.slice(2 * k, 2 * k + 2), 36)) };
+    },
+    model,
+    drawCell: (p) => (svg, k, x, y, s) => {
+      const { R, C, region } = p;
+      const r = Math.floor(k / C), c = k % C;
+      const x0 = x - s / 2, y0 = y - s / 2;
+      const wall = (x1, y1, x2, y2) => {
+        const l = document.createElementNS('http://www.w3.org/2000/svg', 'line');
+        l.setAttribute('x1', x1); l.setAttribute('y1', y1); l.setAttribute('x2', x2); l.setAttribute('y2', y2);
+        l.setAttribute('class', 'lp-wall');
+        svg.appendChild(l);
+      };
+      if (c < C - 1 && region[k + 1] !== region[k]) wall(x0 + s, y0, x0 + s, y0 + s);
+      if (r < R - 1 && region[k + C] !== region[k]) wall(x0, y0 + s, x0 + s, y0 + s);
+    },
+  });
+})();

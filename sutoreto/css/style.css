@@ -1,0 +1,3 @@
+/* Sutoreto board. Shared styles live in ../css/style.css. */
+.st-board .cell.blk { background: #263238; cursor: default; }
+.st-board .cell .digit-input { color: var(--accent); }

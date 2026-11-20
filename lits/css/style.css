@@ -1,0 +1,68 @@
+/* LITS board. Shared styles live in ../css/style.css. */
+.ck-board .room-clue {
+  position: absolute; top: 2px; left: 4px;
+  font-size: calc(var(--cell) * 0.32); font-weight: 700; color: #333;
+}
+.ck-board .cell.shaded .room-clue { color: #ccc; }
+
+/* The L, I, T and S shapes under the rules. */
+.lits-shapes { display: flex; gap: 28px; justify-content: center; align-items: flex-end; margin: 4px 0 8px; }
+.lits-shapes figure { margin: 0; display: flex; flex-direction: column; align-items: center; gap: 6px; }
+.lits-shapes figcaption { font-weight: 700; }
+.lits-shape { display: grid; gap: 2px; }
+.lits-shape span { width: 16px; height: 16px; }
+.lits-shape span.on { background: #2b2b2b; border-radius: 2px; }
+.lits-note { text-align: center; font-size: 13px; color: var(--muted); margin: 0 0 8px; }
+
+/* One color per shape, on the board and in the rules pictures. */
+.ck-board .cell.shaded.lits-L, .lits-shape span.lits-L { background: #ee7d1e; }
+.ck-board .cell.shaded.lits-I, .lits-shape span.lits-I { background: #2f6fd1; }
+.ck-board .cell.shaded.lits-T, .lits-shape span.lits-T { background: #e8b512; }
+.ck-board .cell.shaded.lits-S, .lits-shape span.lits-S { background: #2e9e4f; }
+
+/* A fully shaded 2×2 block: red frame over the four cells, "!" at the corner.
+   It sits in the block's top-left cell; --cell and the 2px gap come from the board. */
+.ck-board .lits-block {
+  position: absolute;
+  top: -3px;
+  left: -3px;
+  width: calc(2 * var(--cell) + 2px + 6px);
+  height: calc(2 * var(--cell) + 2px + 6px);
+  box-sizing: border-box;
+  border: 3px solid #e53935;
+  border-radius: 4px;
+  z-index: 3;
+  pointer-events: none;
+}
+.ck-board .lits-block::after {
+  content: '!';
+  position: absolute;
+  top: -11px;
+  right: -11px;
+  width: 18px;
+  height: 18px;
+  border-radius: 50%;
+  background: #e53935;
+  color: #fff;
+  font: 700 13px/18px sans-serif;
+  text-align: center;
+}
+
+/* Two equal shapes touch: red line on the shared border, "!" in its middle. */
+.ck-board .lits-touch { position: absolute; background: #e53935; z-index: 3; pointer-events: none; }
+.ck-board .lits-touch-r { top: -1px; bottom: -1px; right: -4px; width: 4px; }
+.ck-board .lits-touch-b { left: -1px; right: -1px; bottom: -4px; height: 4px; }
+.ck-board .lits-touch::after {
+  content: '!';
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  width: 18px;
+  height: 18px;
+  border-radius: 50%;
+  background: #e53935;
+  color: #fff;
+  font: 700 13px/18px sans-serif;
+  text-align: center;
+}

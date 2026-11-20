@@ -1,0 +1,3 @@
+/* Number Cross board. Shared styles live in ../css/style.css. */
+.nc-board .cell.shaded { color: #777; }
+.nc-board .cell.keep { background: #e8f5e9; }

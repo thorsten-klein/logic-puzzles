@@ -1,0 +1,2 @@
+/* Hitori board. Shared board styles live in ../css/style.css. */
+.hitori-board .cell.shaded { color: #888; }

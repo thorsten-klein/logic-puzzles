@@ -1,0 +1,4 @@
+/* Yajisan-Kazusan board. Shared styles live in ../css/style.css. */
+.yz-board .cell { font-weight: 700; font-size: calc(var(--cell) * 0.36); }
+.yz-board .cell.shaded { color: #90a4ae; }
+.yz-board .cell { font-family: "Noto Sans", Arial, sans-serif; }

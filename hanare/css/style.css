@@ -1,0 +1,2 @@
+/* Hanare board. Shared styles live in ../css/style.css. */
+.hn-board .cell.num { color: var(--accent); }

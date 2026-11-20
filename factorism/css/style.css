@@ -1,0 +1,5 @@
+/* Factorism board. Shared styles live in ../css/style.css. */
+.fc-board .corner { background: transparent; display: flex; align-items: center; justify-content: center; color: var(--muted); font-weight: 700; }
+.fc-board .cell.prod { color: var(--fg); font-weight: 600; font-size: calc(var(--cell) * 0.36); cursor: default; }
+.fc-board .cell.slot { background: #e3f2fd; color: var(--accent); }
+.fc-board .cell.slot .digit-input { color: var(--accent); }

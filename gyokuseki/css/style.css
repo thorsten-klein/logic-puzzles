@@ -1,0 +1,7 @@
+/* Gyokuseki board. Shared styles live in ../css/style.css. */
+.gy-board .cell.gy-white::after, .gy-board .cell.gy-black::after {
+  content: ''; width: 64%; height: 64%; border-radius: 50%; box-sizing: border-box; border: 2px solid #37474f;
+}
+.gy-board .cell.gy-black::after { background: #37474f; }
+.gy-board .cell.gy-empty::after { content: ''; width: 16%; height: 16%; border-radius: 50%; background: #90a4ae; }
+.gy-board .clue { font-weight: 700; }

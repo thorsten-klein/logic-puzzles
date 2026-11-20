@@ -1,0 +1,3 @@
+/* Doppelblock board. Shared styles live in ../css/style.css. */
+.db-board .cell { color: var(--accent); }
+.db-board .cell:focus { outline: 2px solid var(--accent); outline-offset: -2px; }

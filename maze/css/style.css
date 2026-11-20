@@ -1,0 +1,13 @@
+/* Maze board. Shared styles live in ../css/style.css. */
+.mz-board { display: block; margin: 0 auto; user-select: none; }
+.mz-cell { fill: #fff; cursor: pointer; }
+.mz-board.readonly .mz-cell { cursor: default; }
+.mz-cell.marked { fill: #90caf9; }
+.mz-cell.start { fill: #a5d6a7; }
+.mz-cell.goal { fill: #ef9a9a; }
+.mz-cell.marked.start, .mz-cell.marked.goal { fill: #64b5f6; }
+.mz-cell.ok { fill: #a5d6a7; }
+.mz-cell.bad { fill: #ef9a9a; }
+.mz-cell.hint { fill: #ffcc80; }
+.mz-wall { stroke: #263238; stroke-width: 2.5; stroke-linecap: square; }
+.mz-frame { fill: none; stroke: #263238; stroke-width: 3; }

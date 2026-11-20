@@ -1,0 +1,6 @@
+/* Dosun-Fuwari board. Shared styles live in ../css/style.css. */
+.df-board .cell.df-black { background: #37474f; }
+.df-board .rt-fig { width: 60%; height: 60%; border-radius: 50%; box-sizing: border-box; border: 2px solid #37474f; pointer-events: none; }
+.df-board .rt-fig.rabbit { background: #fff; }
+.df-board .rt-fig.tree { background: #37474f; }
+.df-board .cell.rt-empty::after { content: ''; width: 16%; height: 16%; border-radius: 50%; background: #90a4ae; }

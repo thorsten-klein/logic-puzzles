@@ -1,0 +1,8 @@
+/* Futoshiki board. Shared styles live in ../css/style.css. */
+.fu-board { background: var(--bg); border: 0; gap: 0; }
+.fu-board .cell { border: 1px solid var(--line); border-radius: 3px; }
+.fu-board .cell .digit-input, .fu-board .cell.entry { color: var(--accent); }
+.fu-board .sign, .fu-board .gap {
+  display: flex; align-items: center; justify-content: center;
+  font-weight: 700; color: #555; font-size: calc(var(--cell) * 0.4);
+}

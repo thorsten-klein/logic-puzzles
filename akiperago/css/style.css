@@ -1,0 +1,3 @@
+/* Akiperago board. Shared styles live in ../css/style.css. */
+.ak-board .cell { font-weight: 700; }
+.ak-board .cell.shaded { color: #fff; }

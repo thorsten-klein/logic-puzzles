@@ -1,0 +1,3 @@
+/* Chenburo board. Shared styles live in ../css/style.css. */
+.cb2-board .cell { font-weight: 700; }
+.cb2-board .cell.shaded { color: #fff; }

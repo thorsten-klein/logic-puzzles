@@ -1,0 +1,16 @@
+{
+  "name": "logic-puzzles",
+  "private": true,
+  "description": "Logic puzzles in the browser",
+  "license": "MIT",
+  "scripts": {
+    "test": "playwright test",
+    "test:logic": "playwright test --grep @logic",
+    "test:ui": "playwright test --grep @ui",
+    "test:full": "FULL=1 playwright test",
+    "test:coverage": "COVERAGE=1 playwright test --grep @coverage; node tests/coverage-report.js"
+  },
+  "devDependencies": {
+    "@playwright/test": "^1.65.1"
+  }
+}

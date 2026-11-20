@@ -1,0 +1,3 @@
+/* Linesweeper board. Shared styles live in ../css/style.css. */
+.ls-clue-bg { fill: #eceff1; }
+.ls-clue { text-anchor: middle; dominant-baseline: central; font-weight: 700; fill: #222; pointer-events: none; }

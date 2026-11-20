@@ -1,0 +1,2 @@
+/* Different Neighbours board. Shared styles live in ../css/style.css. */
+.dn-board .cell.given { color: #000; font-weight: 800; }

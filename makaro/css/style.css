@@ -1,0 +1,3 @@
+/* Makaro board. Shared styles live in ../css/style.css. */
+.mk-board .cell.mk-black { background: #37474f; color: #fff; }
+.mk-board .cell .digit-input { color: var(--accent); }

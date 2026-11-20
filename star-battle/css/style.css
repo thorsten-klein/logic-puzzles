@@ -1,0 +1,3 @@
+/* Star Battle board. Shared styles live in ../css/style.css. */
+.sb-board .cell.star { color: #f9a825; font-size: calc(var(--cell) * 0.6); }
+.sb-board .cell.area { filter: brightness(0.93); }

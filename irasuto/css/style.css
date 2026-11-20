@@ -1,0 +1,4 @@
+/* Irasuto board. Shared styles live in ../css/style.css. */
+.ir-board .cell { font-weight: 700; }
+.ir-board .cell.shaded { color: #fff; }
+.ir-board .cell.fixed.dot::after { display: none; }

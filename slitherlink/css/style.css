@@ -1,0 +1,14 @@
+/* Slitherlink SVG board. Shared styles live in ../css/style.css. */
+.sl-board { display: block; margin: 0 auto; user-select: none; }
+.sl-bg { fill: #fff; stroke: var(--line); }
+.sl-dot { fill: #333; }
+.sl-clue { fill: var(--fg); font-weight: 600; text-anchor: middle; dominant-baseline: central; }
+.sl-line { stroke: var(--accent); stroke-width: 4; stroke-linecap: round; }
+.sl-cross { stroke: #c62828; stroke-width: 1.8; }
+.sl-ghost { stroke: #ff9800; stroke-width: 3; stroke-dasharray: 4 3; opacity: 0.8; }
+.sl-hit { stroke: transparent; cursor: pointer; }
+.sl-hit:hover { stroke: rgba(25, 118, 210, 0.12); }
+.sl-line.ok { stroke: #43a047; }
+.sl-line.bad, .sl-ghost.bad, .sl-cross.bad { stroke: #e53935; }
+.sl-line.hint, .sl-cross.hint { stroke: #ff9800; }
+.sl-board.readonly .sl-hit { cursor: default; }

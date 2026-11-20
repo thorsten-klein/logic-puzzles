@@ -1,0 +1,7 @@
+/* Battleships board. Shared styles live in ../css/style.css. */
+.bs-board .cell.ship { background: #37474f; }
+.bs-board .cell.ship.fixed { background: #263238; }
+.bs-board .cell.water { background: #e3f2fd; }
+.bs-board .cell.fixed:not(.ship) { background: #bbdefb; }
+#fleet { letter-spacing: 1px; color: #37474f; }
+.bs-board .cell.lh { background: #f9a825 !important; color: #263238; font-weight: 700; border-radius: 50%; }

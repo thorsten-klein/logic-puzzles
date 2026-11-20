@@ -1,0 +1,7 @@
+/* Nanbaboru board. Shared styles live in ../css/style.css. */
+.nb-board .cell { position: relative; }
+.nb-board .cell .digit-input { color: var(--accent); position: relative; z-index: 1; background: transparent; }
+.nb-board .nb-ring { position: absolute; inset: 12%; border: 2px solid #90a4ae; border-radius: 50%; pointer-events: none; }
+.nb-board .nb-cross::before, .nb-board .nb-cross::after { content: ''; position: absolute; left: 20%; right: 20%; top: 50%; height: 2px; background: #b0bec5; pointer-events: none; }
+.nb-board .nb-cross::before { transform: rotate(45deg); }
+.nb-board .nb-cross::after { transform: rotate(-45deg); }

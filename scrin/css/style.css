@@ -1,0 +1,4 @@
+.nb-board .cell { font-weight: 700; }
+.gg-board .cell .gg-ring { position: absolute; inset: 14%; border: 2px solid #90a4ae; border-radius: 50%; pointer-events: none; }
+.gg-board .cell.shaded .gg-ring { border-color: #fff; }
+.gg-board .cell { position: relative; }

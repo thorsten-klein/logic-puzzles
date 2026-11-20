@@ -1,0 +1,3 @@
+/* Buraitoraito board. Shared styles live in ../css/style.css. */
+.br-board .cell.wall { background: #263238; color: #fff; }
+.br-board .cell.star::after { content: '★'; color: #f9a825; font-size: calc(var(--cell) * 0.6); }

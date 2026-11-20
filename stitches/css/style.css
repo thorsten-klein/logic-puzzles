@@ -1,0 +1,7 @@
+/* Stitches board. Shared styles live in ../css/style.css. */
+.sti-line { stroke: var(--accent); stroke-width: 4; stroke-linecap: round; }
+.sti-end { fill: var(--accent); }
+.sti-line.ok, .sti-end.ok { stroke: #43a047; fill: #43a047; }
+.sti-line.bad, .sti-end.bad { stroke: #e53935; fill: #e53935; }
+.sti-line.hint, .sti-end.hint { stroke: #ff9800; fill: #ff9800; }
+.pt-board .lp-cross { stroke: #90a4ae; stroke-width: 2; }

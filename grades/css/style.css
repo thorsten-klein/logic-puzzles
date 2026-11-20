@@ -1,0 +1,5 @@
+/* Grades board. Shared styles live in ../css/style.css. */
+.gr-board .clue.gr-cnt { color: #607d8b; font-weight: 700; }
+.gr-board .clue.gr-sum { color: var(--accent); font-weight: 700; }
+.gr-board .cell .digit-input { color: var(--accent); }
+.gr-board .cell.gr-empty::after { content: ''; width: 14%; height: 14%; border-radius: 50%; background: #90a4ae; }
