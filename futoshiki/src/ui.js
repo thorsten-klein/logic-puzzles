@@ -27,7 +27,7 @@ const UI = (() => {
       if (given[k]) { el.classList.add('given'); el.textContent = given[k]; continue; }
       if (result) {
         el.textContent = solution[k];
-        el.classList.add(entries[k] === solution[k] ? 'ok' : entries[k] ? 'bad' : 'show');
+        el.classList.add(PuzzleShell.resultClass(entries[k], solution[k]));
       } else if (readonly) {
         el.textContent = entries[k] || '';
         el.classList.add('entry');

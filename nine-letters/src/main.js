@@ -191,7 +191,7 @@
     check: (p, s) => s.every(Boolean) && p.words.every((_, i) => s.includes(i + 1)),
     hints,
     applyHint(p, s, h) {
-      if (h.v < 0) { for (let k = 0; k < s.length; k++) if (s[k] === -h.v) s[k] = 0; return; }
+      if (h.v < 0) { for (let k = 0; k < s.length; k++) { if (s[k] === -h.v) { s[k] = 0; } } return; }
       for (const k of h.cells) s[k] = h.v;
     },
   });

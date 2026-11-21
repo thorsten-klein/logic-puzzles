@@ -163,7 +163,7 @@ function uiTests(slug) {
         let p = null;
         for (let t = 0; t < 2 && !p; t++) p = cfg.generate(cfg.size.min);
         const s = cfg.newState(p);
-        for (let i = 0; i < 3000 && !cfg.check(p, s); i++) { const h = cfg.hints(p, s); if (!h.length) break; cfg.applyHint(p, s, h[0]); }
+        for (let i = 0; i < 3000 && !cfg.check(p, s); i++) { const h = cfg.hints(p, s); if (!h.length) { break; } cfg.applyHint(p, s, h[0]); }
         const view = (st) => cfg.render(p, st, { readonly: true, result: true });
         const bad = (st) => (cfg.mistakes ? cfg.mistakes(p, st) : view(st).querySelectorAll('.bad, .wrong, [class*="-bad"]').length);
         const miss = (st) => view(st).querySelectorAll('.show, .miss, [class*="-miss"]').length;

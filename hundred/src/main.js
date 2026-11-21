@@ -98,7 +98,8 @@
         el.append(b);
         if (result) {
           el.append(String(solution[k]));
-          el.classList.add(s[k] === solution[k] || (!s[k] && solution[k] === base[k]) ? 'ok' : s[k] ? 'bad' : 'show');
+          // Left empty is right when the answer is the printed digit.
+          el.classList.add(PuzzleShell.resultClass(s[k] || base[k], solution[k], Boolean(s[k])));
         } else {
           const input = PuzzleShell.digitInput({ r: Math.floor(k / n), c: k % n, value: s[k], max: 99,
             onSet: (v) => { s[k] = v; onChange(false); } });

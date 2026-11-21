@@ -28,7 +28,9 @@
     const p = { R: n, C: n, given: [] };
     const lines = [...sol.keys()].filter((e) => sol[e] === LINE);
     // Give connections where another tour differs, until unique.
-    for (let guard = 0; guard < lines.length; guard++) {
+    // At most one round per entry.
+    const rounds = lines.length;
+    for (let guard = 0; guard < rounds; guard++) {
       const res = Loop.solve(model(p), 2, 20000);
       if (res.solutions.length === 1 && !res.capped) break;
       const other = res.solutions.find((x) => x.some((v, e) => v !== sol[e]));

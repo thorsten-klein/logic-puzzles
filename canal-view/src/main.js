@@ -31,8 +31,8 @@
     function propagate(s, log) {
       for (const [k, dirs] of rays) {
         const v = clues[k];
-        const black = dirs.map((cells) => { let i = 0; while (i < cells.length && s[cells[i]] === YES) i++; return i; });
-        const open = dirs.map((cells) => { let i = 0; while (i < cells.length && s[cells[i]] !== NO) i++; return i; });
+        const black = dirs.map((cells) => { let i = 0; while (i < cells.length && s[cells[i]] === YES) { i++; } return i; });
+        const open = dirs.map((cells) => { let i = 0; while (i < cells.length && s[cells[i]] !== NO) { i++; } return i; });
         const min = black.reduce((a, b) => a + b, 0), max = open.reduce((a, b) => a + b, 0);
         if (min > v || max < v) return false;
         for (let d = 0; d < 4; d++) {
@@ -67,7 +67,7 @@
       for (let k = 0; k < R * C; k++) {
         if (sol[k] === YES || Math.random() < 0.3) continue;
         let v = 0;
-        for (const d of DIRS) for (const j of ray(R, C, k, d)) { if (sol[j] !== YES) break; v++; }
+        for (const d of DIRS) for (const j of ray(R, C, k, d)) { if (sol[j] !== YES) { break; } v++; }
         p.clues[k] = v;
       }
       const s = Binary.logicSolve(model(p));

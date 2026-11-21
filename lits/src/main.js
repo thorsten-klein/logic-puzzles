@@ -31,7 +31,7 @@
     const { R, C, room } = p;
     const N = R * C;
     const rooms = [];
-    room.forEach((g, k) => { (rooms[g] = rooms[g] || []).push(k); });
+    room.forEach((g, k) => { rooms[g] ??= []; rooms[g].push(k); });
     const cons = rooms.map((cells) => ({ cells, min: 4, max: 4, at: cells[0], why: (v) => (v === YES ? 'Each room needs four shaded cells.' : 'This room already has its four shaded cells.') }));
     for (let r = 0; r < R - 1; r++) for (let c = 0; c < C - 1; c++) {
       cons.push({ cells: [r * C + c, r * C + c + 1, (r + 1) * C + c, (r + 1) * C + c + 1], min: 0, max: 3, why: () => 'No 2×2 block may be all shaded.' });
@@ -48,7 +48,7 @@
         out.push(ks);
       }
       const seen = new Set();
-      return out.filter((ks) => { const key = ks.join(','); if (seen.has(key)) return false; seen.add(key); return true; });
+      return out.filter((ks) => { const key = ks.join(','); if (seen.has(key)) { return false; } seen.add(key); return true; });
     });
     // A room's cells: shaded if in every fitting placement, white if in none.
     function propagate(s, log) {

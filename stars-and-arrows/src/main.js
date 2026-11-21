@@ -16,7 +16,7 @@
       if (a < 0) continue;
       const [dr, dc] = DIRS[a], cells = [];
       let r = Math.floor(k / C) + dr, c = (k % C) + dc;
-      while (r >= 0 && c >= 0 && r < R && c < C) { if (arrows[r * C + c] < 0) cells.push(r * C + c); r += dr; c += dc; }
+      while (r >= 0 && c >= 0 && r < R && c < C) { if (arrows[r * C + c] < 0) { cells.push(r * C + c); } r += dr; c += dc; }
       out.push([k, cells]);
     }
     return out;

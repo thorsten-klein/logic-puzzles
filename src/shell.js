@@ -766,6 +766,13 @@ const PuzzleShell = (() => {
     });
   }
 
+  // Class for a cell in the result view: right ('ok'), wrong ('bad'),
+  // or not entered yet ('show'). `entered` tells if the player set it.
+  function resultClass(mine, answer, entered = Boolean(mine)) {
+    if (mine === answer) return 'ok';
+    return entered ? 'bad' : 'show';
+  }
+
   // Column name: A..Z, then AA, AB, …
   const colName = (c) => (c >= 26 ? colName(Math.floor(c / 26) - 1) : '') + String.fromCodePoint(65 + (c % 26));
   // Cell name like "D2" for cell k of a grid with C columns.
@@ -985,5 +992,5 @@ const PuzzleShell = (() => {
     return Math.max(min, Math.min(max, Math.floor(avail / cols) - 2));
   }
 
-  return { start, prepare, shuffle, gridBoard, colName, cellName, fitCell, digitInput, regionBorders, growRegions, TINTS, arrowIcon, figure, shapeFigures };
+  return { start, prepare, resultClass, shuffle, gridBoard, colName, cellName, fitCell, digitInput, regionBorders, growRegions, TINTS, arrowIcon, figure, shapeFigures };
 })();

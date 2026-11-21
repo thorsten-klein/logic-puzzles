@@ -58,8 +58,8 @@ const Rules = (() => {
       let set = 0;
       for (const [k, dirs] of rays) {
         const v = clues[k];
-        const white = dirs.map((cells) => { let i = 0; while (i < cells.length && s[cells[i]] === NO) i++; return i; });
-        const open = dirs.map((cells) => { let i = 0; while (i < cells.length && s[cells[i]] !== YES) i++; return i; });
+        const white = dirs.map((cells) => { let i = 0; while (i < cells.length && s[cells[i]] === NO) { i++; } return i; });
+        const open = dirs.map((cells) => { let i = 0; while (i < cells.length && s[cells[i]] !== YES) { i++; } return i; });
         const min = 1 + white.reduce((a, b) => a + b, 0);
         const max = 1 + open.reduce((a, b) => a + b, 0);
         if (min > v || max < v) return false;

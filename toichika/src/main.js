@@ -9,7 +9,7 @@
 
   function groups(region) {
     const out = [];
-    region.forEach((g, k) => { (out[g] = out[g] || []).push(k); });
+    region.forEach((g, k) => { out[g] ??= []; out[g].push(k); });
     return out;
   }
 
@@ -123,7 +123,9 @@
       if (!fill.solutions.length) continue;
       const truth = arrowsOf(p, fill.solutions[0]);
       // Give arrows where another answer differs, until unique.
-      for (let guard = 0; guard < p.list.length; guard++) {
+      // At most one round per entry.
+      const rounds = p.list.length;
+      for (let guard = 0; guard < rounds; guard++) {
         const res = solve(p, 2);
         if (res.solutions.length === 1 && !res.capped) break;
         const other = res.solutions.map((x) => arrowsOf(p, x)).find((m) => [...truth].some(([k, d]) => m.get(k) !== d));

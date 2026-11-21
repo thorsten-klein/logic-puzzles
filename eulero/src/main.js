@@ -118,7 +118,7 @@
         if (given[k] >= 0) { el.classList.add('given'); el.textContent = text(n, given[k]); return; }
         if (result) {
           el.textContent = text(n, solution[k]);
-          el.classList.add(entries[k] === solution[k] ? 'ok' : entries[k] >= 0 ? 'bad' : 'show');
+          el.classList.add(PuzzleShell.resultClass(entries[k], solution[k], entries[k] >= 0));
           return;
         }
         if (readonly) { el.textContent = text(n, entries[k]); return; }

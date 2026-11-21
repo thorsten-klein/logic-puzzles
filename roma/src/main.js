@@ -13,7 +13,7 @@
   function prepare(p) {
     const { region, circle } = p;
     p.groups = [];
-    region.forEach((g, k) => { if (!circle[k]) (p.groups[g] = p.groups[g] || []).push(k); });
+    region.forEach((g, k) => { if (!circle[k]) { p.groups[g] ??= []; p.groups[g].push(k); } });
     p.groups = p.groups.filter(Boolean);
     return p;
   }
@@ -203,7 +203,7 @@
         if (given[k]) { el.classList.add('given'); el.append(PuzzleShell.arrowIcon(TURN[given[k]])); return; }
         const v = result ? solution[k] : entries[k];
         if (v) el.append(PuzzleShell.arrowIcon(TURN[v]));
-        if (result) el.classList.add(entries[k] === solution[k] ? 'ok' : entries[k] ? 'bad' : 'show');
+        if (result) el.classList.add(PuzzleShell.resultClass(entries[k], solution[k]));
       },
       onCell(k, ev) {
         if (circle[k] || given[k]) return;

@@ -28,8 +28,8 @@ const Rules = (() => {
       if (id[k] >= 0 || !test(k)) continue;
       const cells = [k];
       id[k] = list.length;
-      for (let i = 0; i < cells.length; i++) {
-        for (const j of nb[cells[i]]) if (id[j] < 0 && test(j)) { id[j] = list.length; cells.push(j); }
+      for (const cur of cells) {
+        for (const j of nb[cur]) if (id[j] < 0 && test(j)) { id[j] = list.length; cells.push(j); }
       }
       list.push(cells);
     }
@@ -75,8 +75,8 @@ const Rules = (() => {
         const dist = new Int32Array(N).fill(-1);
         const queue = [];
         for (const k of cells) { dist[k] = 0; reach[k] = 1; queue.push(k); }
-        for (let q = 0; q < queue.length; q++) {
-          const k = queue[q];
+        for (const cur of queue) {
+          const k = cur;
           if (dist[k] >= left) continue;
           for (const j of nb[k]) {
             if (dist[j] >= 0 || s[j] === YES) continue;

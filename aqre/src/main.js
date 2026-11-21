@@ -11,7 +11,7 @@
     const { R, C, room, clues } = p;
     const N = R * C;
     const rooms = [];
-    room.forEach((g, k) => { (rooms[g] = rooms[g] || []).push(k); });
+    room.forEach((g, k) => { rooms[g] ??= []; rooms[g].push(k); });
     const cons = [];
     // Any four in a line: 1 to 3 shaded.
     for (let r = 0; r < R; r++) for (let c = 0; c < C; c++) {

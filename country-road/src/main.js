@@ -8,7 +8,7 @@
 
   function groups(region) {
     const out = [];
-    region.forEach((g, k) => { (out[g] = out[g] || []).push(k); });
+    region.forEach((g, k) => { out[g] ??= []; out[g].push(k); });
     return out;
   }
 
@@ -107,7 +107,7 @@
         if (region[k] >= 0) continue;
         const patch = [k];
         const seen = new Set([k]);
-        for (let i = 0; i < patch.length; i++) for (const j of nbs(patch[i])) if (!seen.has(j) && region[j] < 0) { seen.add(j); patch.push(j); }
+        for (const cur of patch) for (const j of nbs(cur)) if (!seen.has(j) && region[j] < 0) { seen.add(j); patch.push(j); }
         const opts = [...new Set(patch.flatMap(nbs).filter((j) => region[j] >= 0).map((j) => region[j]))];
         const to = opts[Math.floor(Math.random() * opts.length)];
         for (const x of patch) region[x] = to;

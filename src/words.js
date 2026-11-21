@@ -120,7 +120,7 @@ wedding weekend welcome welfare western whereas whether willing winning without 
 `;
   const all = raw.split(/\s+/).filter((w) => /^[a-z]+$/.test(w)).map((w) => w.toUpperCase());
   const byLen = {};
-  for (const w of all) (byLen[w.length] = byLen[w.length] || []).push(w);
+  for (const w of all) { byLen[w.length] ??= []; byLen[w.length].push(w); }
 
   // Nine-letter words for Nine Letters.
   const nine = `

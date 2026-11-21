@@ -54,7 +54,7 @@
         let seen = 0;
         for (const [dr, dc] of DIRS) {
           let r = Math.floor(k / C) + dr, c = (k % C) + dc;
-          while (r >= 0 && c >= 0 && r < R && c < C && sol[r * C + c] === sol[k]) { if (num[r * C + c] < 0) seen++; r += dr; c += dc; }
+          while (r >= 0 && c >= 0 && r < R && c < C && sol[r * C + c] === sol[k]) { if (num[r * C + c] < 0) { seen++; } r += dr; c += dc; }
         }
         num[k] = seen;
       }
@@ -74,7 +74,7 @@
             let seen = 0;
             for (const [dr, dc] of DIRS) {
               let r = Math.floor(j / C) + dr, c = (j % C) + dc;
-              while (r >= 0 && c >= 0 && r < R && c < C && sol[r * C + c] === sol[j]) { if (num[r * C + c] < 0) seen++; r += dr; c += dc; }
+              while (r >= 0 && c >= 0 && r < R && c < C && sol[r * C + c] === sol[j]) { if (num[r * C + c] < 0) { seen++; } r += dr; c += dc; }
             }
             num[j] = seen;
           }

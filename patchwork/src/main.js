@@ -11,7 +11,7 @@
   function prepare(p) {
     const { n, room } = p;
     p.rooms = [];
-    room.forEach((g, k) => { (p.rooms[g] = p.rooms[g] || []).push(k); });
+    room.forEach((g, k) => { p.rooms[g] ??= []; p.rooms[g].push(k); });
     const each = n / 3;
     p.lines = [];
     for (let i = 0; i < n; i++) {
@@ -124,7 +124,7 @@
         if (given[k]) { el.classList.add('given'); el.textContent = given[k]; return; }
         if (result) {
           el.textContent = solution[k];
-          el.classList.add(entries[k] === solution[k] ? 'ok' : entries[k] ? 'bad' : 'show');
+          el.classList.add(PuzzleShell.resultClass(entries[k], solution[k]));
         } else if (readonly) el.textContent = entries[k] || '';
         else {
           el.appendChild(PuzzleShell.digitInput({ r: Math.floor(k / n), c: k % n, value: entries[k], max: 3,

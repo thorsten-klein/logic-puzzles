@@ -17,7 +17,7 @@
       if (r < n - 1) { p.at[k][1].push(p.cands.length); p.at[k + n][1].push(p.cands.length); p.cands.push([k, k + n]); }
     }
     p.rooms = [];
-    p.room.forEach((g, k) => { (p.rooms[g] = p.rooms[g] || []).push(k); });
+    p.room.forEach((g, k) => { p.rooms[g] ??= []; p.rooms[g].push(k); });
     return p;
   }
 

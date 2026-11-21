@@ -27,7 +27,7 @@
     const ray = (k, d) => {
       const [dr, dc] = DIRS[d], out = [];
       let r = Math.floor(k / C) + dr, c = (k % C) + dc;
-      while (r >= 0 && c >= 0 && r < R && c < C) { if (!isArrow(r * C + c)) out.push(r * C + c); r += dr; c += dc; }
+      while (r >= 0 && c >= 0 && r < R && c < C) { if (!isArrow(r * C + c)) { out.push(r * C + c); } r += dr; c += dc; }
       return out;
     };
     const rays = [];
@@ -111,7 +111,7 @@
         for (const d of PuzzleShell.shuffle(['u', 'd', 'l', 'r'])) {
           const [dr, dc] = DIRS[d];
           let r = Math.floor(k / n) + dr, c = (k % n) + dc, cnt = 0, cells = 0;
-          while (r >= 0 && c >= 0 && r < n && c < n) { if (blackCell(r * n + c)) cnt++; cells++; r += dr; c += dc; }
+          while (r >= 0 && c >= 0 && r < n && c < n) { if (blackCell(r * n + c)) { cnt++; } cells++; r += dr; c += dc; }
           if (cells && (!best || cnt > best.n)) best = { d, n: cnt };
         }
         clues[k] = best || { d: 'u', n: 0 };

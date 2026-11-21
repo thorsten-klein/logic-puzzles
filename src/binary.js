@@ -24,7 +24,7 @@ const Binary = (() => {
     for (const con of model.cons) {
       if (con.w) {
         const r = weightedStep(con, s, log);
-        if (r === false) { if (log) log.push({ con, fail: true }); return false; }
+        if (r === false) { if (log) { log.push({ con, fail: true }); } return false; }
         set += r;
         continue;
       }
@@ -34,7 +34,7 @@ const Binary = (() => {
         if (s[k] === YES) yes++;
         else if (s[k] === UNKNOWN) open.push(k);
       }
-      if (yes > con.max || yes + open.length < con.min) { if (log) log.push({ con, fail: true }); return false; }
+      if (yes > con.max || yes + open.length < con.min) { if (log) { log.push({ con, fail: true }); } return false; }
       if (!open.length) continue;
       let v = 0;
       if (yes === con.max) v = NO;

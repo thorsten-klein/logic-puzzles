@@ -11,7 +11,7 @@
     const { R, C, room, mark } = p;
     const N = R * C;
     const rooms = [];
-    room.forEach((g, k) => { (rooms[g] = rooms[g] || []).push(k); });
+    room.forEach((g, k) => { rooms[g] ??= []; rooms[g].push(k); });
     const nb = (k) => {
       const r = Math.floor(k / C), c = k % C, out = [];
       if (r > 0) out.push(k - C);
@@ -60,7 +60,7 @@
       const prev = new Int32Array(N).fill(-2);
       prev[start] = -1;
       const queue = [start];
-      for (let i = 0; i < queue.length; i++) for (const j of nb(queue[i])) if (s[j] === NO && prev[j] === -2) { prev[j] = queue[i]; queue.push(j); }
+      for (const cur of queue) for (const j of nb(cur)) if (s[j] === NO && prev[j] === -2) { prev[j] = cur; queue.push(j); }
       if (prev[goal] === -2) return false;
       const onWay = new Set();
       for (let x = goal; x !== -1; x = prev[x]) onWay.add(x);
@@ -90,7 +90,7 @@
       const prev = new Int32Array(N).fill(-2);
       prev[start] = -1;
       const queue = [start];
-      for (let i = 0; i < queue.length; i++) for (const j of nb(queue[i])) if (fill[j] === NO && prev[j] === -2) { prev[j] = queue[i]; queue.push(j); }
+      for (const cur of queue) for (const j of nb(cur)) if (fill[j] === NO && prev[j] === -2) { prev[j] = cur; queue.push(j); }
       const goal = queue.at(-1);
       const way = [];
       for (let x = goal; x !== -1; x = prev[x]) way.push(x);

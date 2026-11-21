@@ -86,8 +86,8 @@
         if (sol[k] !== NO || seen[k]) continue;
         const cells = [k];
         seen[k] = 1;
-        for (let i = 0; i < cells.length; i++) {
-          const x = cells[i], r = Math.floor(x / C), c = x % C;
+        for (const cur of cells) {
+          const x = cur, r = Math.floor(x / C), c = x % C;
           for (const j of [r > 0 ? x - C : -1, r < R - 1 ? x + C : -1, c > 0 ? x - 1 : -1, c < C - 1 ? x + 1 : -1]) {
             if (j >= 0 && !seen[j] && sol[j] === NO) { seen[j] = 1; cells.push(j); }
           }

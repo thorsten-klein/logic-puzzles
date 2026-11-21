@@ -4,7 +4,7 @@
 // Built on the Parts engine; regions are listed as rectangles.
 
 (() => {
-  const sizeOf = (id, g) => { let n = 0; for (const v of id) if (v === g) n++; return n; };
+  const sizeOf = (id, g) => { let n = 0; for (const v of id) { if (v === g) { n++; } } return n; };
 
   Parts.startGame({
     id: 'anraikumozaiku',

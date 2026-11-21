@@ -21,8 +21,8 @@
         if (seen[k]) continue;
         const cells = [k];
         seen[k] = 1;
-        for (let i = 0; i < cells.length; i++) {
-          for (const j of Pieces.neighbours(R, C, cells[i])) if (!seen[j] && col[j] === col[k]) { seen[j] = 1; cells.push(j); }
+        for (const cur of cells) {
+          for (const j of Pieces.neighbours(R, C, cur)) if (!seen[j] && col[j] === col[k]) { seen[j] = 1; cells.push(j); }
         }
         if (cells.length > 9) ok = false;
         cells.sort((a, b) => a - b);

@@ -12,7 +12,7 @@
     const g = Loop.grid(R, C);
     const must = Uint8Array.from(mark, (m) => (m === 1 ? 1 : 0));
     const whites = [];
-    mark.forEach((m, k) => { if (m === 1) (whites[room[k]] = whites[room[k]] || []).push(k); });
+    mark.forEach((m, k) => { if (m === 1) { whites[room[k]] ??= []; whites[room[k]].push(k); } });
     // 'S' straight, 'T' turn, '' not known yet.
     const shape = (s, k) => {
       const dirs = [0, 1, 2, 3].filter((d) => g.cellEdges[k][d] >= 0 && s[g.cellEdges[k][d]] === LINE);

@@ -25,7 +25,7 @@ const Generator = (() => {
       for (const j of p.sight[k]) lit[j] = 1;
     }
     for (let k = 0; k < N; k++) {
-      if (walls[k] === WHITE) { if (!sol[k]) sol[k] = NONE; continue; }
+      if (walls[k] === WHITE) { if (!sol[k]) { sol[k] = NONE; } continue; }
       walls[k] = p.nb[k].filter((j) => sol[j] === BULB).length;
     }
     const solvedByLogic = () => {

@@ -13,8 +13,8 @@
     for (let e = 0; e < g.E; e++) {
       const [a, b] = g.ends[e];
       if (p.region[a] === p.region[b]) continue;
-      (border[p.region[a]] = border[p.region[a]] || []).push(e);
-      (border[p.region[b]] = border[p.region[b]] || []).push(e);
+      border[p.region[a]] ??= []; border[p.region[a]].push(e);
+      border[p.region[b]] ??= []; border[p.region[b]].push(e);
     }
     function rule(s, log) {
       for (const edges of border) {

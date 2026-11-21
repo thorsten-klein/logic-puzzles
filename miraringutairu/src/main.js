@@ -51,7 +51,7 @@
         if (area[k] >= 0 || s[k] !== YES) continue;
         const cells = [k];
         area[k] = areas.length;
-        for (let i = 0; i < cells.length; i++) for (const j of nb(cells[i])) if (area[j] < 0 && s[j] === YES) { area[j] = areas.length; cells.push(j); }
+        for (const cur of cells) for (const j of nb(cur)) if (area[j] < 0 && s[j] === YES) { area[j] = areas.length; cells.push(j); }
         const closed = done || cells.every((x) => nb(x).every((j) => s[j] !== UNKNOWN));
         areas.push({ cells, closed });
       }

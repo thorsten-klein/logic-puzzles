@@ -28,7 +28,7 @@
         if (id[k] >= 0 || !ok(k)) continue;
         const cells = [k];
         id[k] = list.length;
-        for (let i = 0; i < cells.length; i++) for (const j of nb(cells[i])) if (id[j] < 0 && ok(j)) { id[j] = list.length; cells.push(j); }
+        for (const cur of cells) for (const j of nb(cur)) if (id[j] < 0 && ok(j)) { id[j] = list.length; cells.push(j); }
         list.push(cells);
       }
       return { id, list };
@@ -68,7 +68,7 @@
         if (fill[k] !== NO || seen[k]) continue;
         const cells = [k];
         seen[k] = 1;
-        for (let i = 0; i < cells.length; i++) for (const j of nb(cells[i])) if (fill[j] === NO && !seen[j]) { seen[j] = 1; cells.push(j); }
+        for (const cur of cells) for (const j of nb(cur)) if (fill[j] === NO && !seen[j]) { seen[j] = 1; cells.push(j); }
         if (cells.length < 2 || cells.length > 8) { ok = false; break; }
         const [x, y] = PuzzleShell.shuffle(cells.slice()).slice(0, 2);
         clues[x] = Math.max(1, cells.length - 1 - Math.floor(Math.random() * 2));

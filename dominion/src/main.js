@@ -96,7 +96,7 @@
       if (shade[k] || comp[k] >= 0) continue;
       const cells = [k];
       comp[k] = id;
-      for (let i = 0; i < cells.length; i++) for (const j of nb[cells[i]]) if (!shade[j] && comp[j] < 0) { comp[j] = id; cells.push(j); }
+      for (const cur of cells) for (const j of nb[cur]) if (!shade[j] && comp[j] < 0) { comp[j] = id; cells.push(j); }
       if (id >= 26) return null;
       for (const x of cells) if (Math.random() < 0.5) letters[x] = id + 1;
       letters[cells[Math.floor(Math.random() * cells.length)]] = id + 1;

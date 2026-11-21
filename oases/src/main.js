@@ -56,7 +56,7 @@
           for (const j of nb(x)) {
             if (seen.has(j)) continue;
             seen.add(j);
-            if (nums[j] >= 0) { if (x === k || s[x] === NO) lowSet.add(j); continue; }
+            if (nums[j] >= 0) { if (x === k || s[x] === NO) { lowSet.add(j); } continue; }
             if (s[j] === NO) stack.push(j);
           }
         }

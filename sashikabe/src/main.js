@@ -59,7 +59,7 @@
         if (id[k] >= 0 || s[k] !== NO) continue;
         const cells = [k];
         id[k] = k;
-        for (let i = 0; i < cells.length; i++) for (const j of nb(cells[i])) if (id[j] < 0 && s[j] === NO) { id[j] = k; cells.push(j); }
+        for (const cur of cells) for (const j of nb(cur)) if (id[j] < 0 && s[j] === NO) { id[j] = k; cells.push(j); }
         // Must fit one row plus one column through a common cell.
         const fits = cells.some((x) => { const r = Math.floor(x / C), c = x % C; return cells.every((y) => Math.floor(y / C) === r || y % C === c); });
         if (!fits) return false;
@@ -90,8 +90,8 @@
         if (fill[k] !== NO || seen[k]) continue;
         const cells = [k];
         seen[k] = 1;
-        for (let i = 0; i < cells.length; i++) {
-          const x = cells[i], r = Math.floor(x / C), c = x % C;
+        for (const cur of cells) {
+          const x = cur, r = Math.floor(x / C), c = x % C;
           for (const [a, b] of [[r - 1, c], [r + 1, c], [r, c - 1], [r, c + 1]]) {
             const j = a * C + b;
             if (a >= 0 && b >= 0 && a < R && b < C && !seen[j] && fill[j] === NO) { seen[j] = 1; cells.push(j); }

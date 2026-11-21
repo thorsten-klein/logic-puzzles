@@ -38,7 +38,7 @@
     }
     p.by = new Map();
     p.opts.forEach((o, i) => {
-      for (const x of [o.black, ...o.whites]) { if (!p.by.has(x)) p.by.set(x, []); p.by.get(x).push(i); }
+      for (const x of [o.black, ...o.whites]) { if (!p.by.has(x)) { p.by.set(x, []); } p.by.get(x).push(i); }
     });
     return p;
   }

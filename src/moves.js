@@ -47,7 +47,7 @@ const Moves = (() => {
     let nodes = 0;
     (function rec(t) {
       if (out.length >= stopAt || ++nodes > maxNodes) return;
-      if (t === P) { if (partial(p, ends, true) !== false) out.push(Int32Array.from(ends)); return; }
+      if (t === P) { if (partial(p, ends, true) !== false) { out.push(Int32Array.from(ends)); } return; }
       const i = order[t];
       for (const o of random ? PuzzleShell.shuffle(opts[i].slice()) : opts[i]) {
         if (o.cells.some((x) => used[x] >= 0 && used[x] !== i)) continue;

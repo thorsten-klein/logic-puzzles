@@ -124,7 +124,7 @@
         let t = 0, max = 0, seen = false;
         for (const o of ring.concat(ring)) {
           if (o.turn) t++;
-          else if (mark[o.k]) { if (seen) max = Math.max(max, t); seen = true; t = 0; }
+          else if (mark[o.k]) { if (seen) { max = Math.max(max, t); } seen = true; t = 0; }
         }
         return max;
       };

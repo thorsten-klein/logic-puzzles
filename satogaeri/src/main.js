@@ -20,7 +20,7 @@
       const room = PuzzleShell.growRegions(n, n, seeds.map((k) => [k]));
       const rooms = Math.max(...room) + 1;
       const cells = [];
-      room.forEach((g, k) => { (cells[g] = cells[g] || []).push(k); });
+      room.forEach((g, k) => { cells[g] ??= []; cells[g].push(k); });
       const used = new Uint8Array(N);
       const ends = cells.map((list) => list[Math.floor(Math.random() * list.length)]);
       ends.forEach((k) => { used[k] = 1; });

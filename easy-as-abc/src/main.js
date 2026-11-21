@@ -29,7 +29,7 @@
           let used = 0, blanks = 0;
           for (const v of vals) {
             if (v > m) blanks++;
-            else { if (used & (1 << v)) return false; used |= 1 << v; }
+            else { if (used & (1 << v)) { return false; } used |= 1 << v; }
           }
           return blanks === n - m && (!want || firstSeen(vals, m) === want);
         };
@@ -147,7 +147,7 @@
         const v = result ? solution[k] : entries[k];
         el.textContent = letter(v, m);
         if (v > m) el.classList.add('blank');
-        if (result) el.classList.add(entries[k] === solution[k] ? 'ok' : entries[k] ? 'bad' : 'show');
+        if (result) el.classList.add(PuzzleShell.resultClass(entries[k], solution[k]));
         if (hintCells.has(k)) el.classList.add('hint');
       },
       onCell(K, ev) {

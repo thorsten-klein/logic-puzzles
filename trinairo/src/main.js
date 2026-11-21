@@ -135,7 +135,7 @@
         if (p.given[k]) { el.classList.add('given'); el.textContent = L[p.given[k]]; return; }
         const v = result ? p.solution[k] : entries[k];
         el.textContent = L[v];
-        if (result) el.classList.add(entries[k] === p.solution[k] ? 'ok' : entries[k] ? 'bad' : 'show');
+        if (result) el.classList.add(PuzzleShell.resultClass(entries[k], p.solution[k]));
       },
       onCell(k, ev) {
         if (p.given[k]) return;

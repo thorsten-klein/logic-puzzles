@@ -51,7 +51,7 @@
         if (p.given[k]) { el.classList.add('given'); el.textContent = p.given[k]; return; }
         if (result) {
           el.textContent = p.solution[k];
-          el.classList.add(s[k] === p.solution[k] ? 'ok' : s[k] ? 'bad' : 'show');
+          el.classList.add(PuzzleShell.resultClass(s[k], p.solution[k]));
         } else if (readonly) {
           el.textContent = s[k] || '';
         } else {

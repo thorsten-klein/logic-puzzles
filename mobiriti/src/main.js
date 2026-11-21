@@ -60,7 +60,7 @@
         if (sol[k] !== NO || area[k] >= 0) continue;
         const cells = [k];
         area[k] = k;
-        for (let i = 0; i < cells.length; i++) for (const j of nb(cells[i])) if (sol[j] === NO && area[j] < 0) { area[j] = k; cells.push(j); }
+        for (const cur of cells) for (const j of nb(cur)) if (sol[j] === NO && area[j] < 0) { area[j] = k; cells.push(j); }
         if (!cells.some((x) => num[x] >= 0)) num[cells[Math.floor(Math.random() * cells.length)]] = 0;
       }
       const recount = () => {

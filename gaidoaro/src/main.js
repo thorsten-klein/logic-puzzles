@@ -45,10 +45,10 @@
       const dist = new Int32Array(N).fill(-1);
       dist[star] = 0;
       const queue = [star];
-      for (let i = 0; i < queue.length; i++) {
+      for (const cur of queue) {
         for (let d = 0; d < 4; d++) {
-          const j = to(queue[i], d);
-          if (j >= 0 && s[j] === NO && dist[j] < 0) { dist[j] = dist[queue[i]] + 1; queue.push(j); }
+          const j = to(cur, d);
+          if (j >= 0 && s[j] === NO && dist[j] < 0) { dist[j] = dist[cur] + 1; queue.push(j); }
         }
       }
       for (let k = 0; k < N; k++) {
@@ -78,10 +78,10 @@
         const r = Math.floor(k / n) + STEP[d][0], c = (k % n) + STEP[d][1];
         return r >= 0 && c >= 0 && r < n && c < n ? r * n + c : -1;
       };
-      for (let i = 0; i < queue.length; i++) {
+      for (const cur of queue) {
         for (let d = 0; d < 4; d++) {
-          const j = to(queue[i], d);
-          if (j >= 0 && fill[j] === NO && dist[j] < 0) { dist[j] = dist[queue[i]] + 1; queue.push(j); }
+          const j = to(cur, d);
+          if (j >= 0 && fill[j] === NO && dist[j] < 0) { dist[j] = dist[cur] + 1; queue.push(j); }
         }
       }
       const arrow = new Int8Array(N).fill(-1);

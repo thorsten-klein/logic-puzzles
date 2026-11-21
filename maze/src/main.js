@@ -39,8 +39,8 @@
     const N = n * n, prev = new Int32Array(N).fill(-1);
     const queue = [0];
     prev[0] = 0;
-    for (let i = 0; i < queue.length; i++) {
-      const k = queue[i];
+    for (const cur of queue) {
+      const k = cur;
       for (const j of [k - n, k + n, k - 1, k + 1]) {
         if (j < 0 || j >= N || prev[j] >= 0 || !open(n, walls, k, j)) continue;
         prev[j] = k;

@@ -58,7 +58,7 @@
         if (id[k] >= 0) continue;
         const cells = [k];
         id[k] = g;
-        for (let i = 0; i < cells.length; i++) for (const [e, o] of at[cells[i]]) if (id[o] < 0 && s[e] === NO) { id[o] = g; cells.push(o); }
+        for (const cur of cells) for (const [e, o] of at[cur]) if (id[o] < 0 && s[e] === NO) { id[o] = g; cells.push(o); }
         const nums = new Set(cells.map((x) => num[x]).filter(Boolean));
         if (nums.size > 1) return false;
         seen.push({ cells, nums });
@@ -91,7 +91,7 @@
       for (const { k, es, frame } of p.points) if (frame + es.filter((e) => sol[e] === YES).length >= 3) p.dot[k] = 1;
       // Two numbers per region to start.
       const rooms = [];
-      room.forEach((g, k) => { (rooms[g] = rooms[g] || []).push(k); });
+      room.forEach((g, k) => { rooms[g] ??= []; rooms[g].push(k); });
       const labels = PuzzleShell.shuffle(rooms.map((_, i) => i + 1));
       rooms.forEach((cells, g) => { for (const k of PuzzleShell.shuffle(cells.slice()).slice(0, 2)) p.num[k] = labels[g]; });
       const unique = () => {

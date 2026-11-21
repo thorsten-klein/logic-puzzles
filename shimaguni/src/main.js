@@ -13,7 +13,7 @@
     const { R, C, room, clues } = p;
     const N = R * C;
     const rooms = [];
-    room.forEach((g, k) => { (rooms[g] = rooms[g] || []).push(k); });
+    room.forEach((g, k) => { rooms[g] ??= []; rooms[g].push(k); });
     const cons = [];
     rooms.forEach((cells, g) => {
       if (!cells) return;
@@ -95,7 +95,7 @@
       const seeds = PuzzleShell.shuffle([...new Array(N).keys()]).slice(0, Math.round(N / 5));
       const room = PuzzleShell.growRegions(R, C, seeds.map((k) => [k]));
       const rooms = [];
-      room.forEach((g, k) => { (rooms[g] = rooms[g] || []).push(k); });
+      room.forEach((g, k) => { rooms[g] ??= []; rooms[g].push(k); });
       const sol = new Uint8Array(N).fill(NO);
       // A connected blob per room, apart from other rooms' blobs.
       let ok = true;

@@ -23,7 +23,7 @@
     }
     p.of = new Map();
     p.links.forEach((l, i) => {
-      for (const x of [l.a, l.b]) { if (!p.of.has(x)) p.of.set(x, []); p.of.get(x).push(i); }
+      for (const x of [l.a, l.b]) { if (!p.of.has(x)) { p.of.set(x, []); } p.of.get(x).push(i); }
     });
     p.clash = p.links.map((l, i) => p.links.map((o, j) => j).filter((j) => j !== i && p.links[j].cells.some((x) => l.cells.includes(x))));
     return p;

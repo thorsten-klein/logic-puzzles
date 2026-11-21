@@ -46,7 +46,7 @@
         if (id[k] >= 0 || s[k] !== NO) continue;
         const cells = [k];
         id[k] = k;
-        for (let i = 0; i < cells.length; i++) for (const j of nb(cells[i])) if (id[j] < 0 && s[j] === NO) { id[j] = k; cells.push(j); }
+        for (const cur of cells) for (const j of nb(cur)) if (id[j] < 0 && s[j] === NO) { id[j] = k; cells.push(j); }
         const rows = cells.map((x) => Math.floor(x / C)), cols = cells.map((x) => x % C);
         const r1 = Math.min(...rows), r2 = Math.max(...rows), c1 = Math.min(...cols), c2 = Math.max(...cols);
         for (let r = r1; r <= r2; r++) for (let c = c1; c <= c2; c++) if (s[r * C + c] === YES) return false;

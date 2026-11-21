@@ -80,7 +80,7 @@ const Pieces = (() => {
     const who = Array.from({ length: N }, () => new Set());
     st.opts.forEach((list, i) => list.forEach((cells) => { for (const j of cells) who[j].add(i); }));
     for (let j = 0; j < N; j++) {
-      if (!who[j].size) { if (p.partial) continue; return false; }
+      if (!who[j].size) { if (p.partial) { continue; } return false; }
       // In partial games a cell may stay empty, so no "only cover" step.
       if (who[j].size !== 1 || p.partial) continue;
       const i = [...who[j]][0];

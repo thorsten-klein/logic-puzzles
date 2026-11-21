@@ -13,7 +13,7 @@
   function prepare(p) {
     const { R, C, region } = p;
     p.groups = [];
-    region.forEach((g, k) => { (p.groups[g] = p.groups[g] || []).push(k); });
+    region.forEach((g, k) => { p.groups[g] ??= []; p.groups[g].push(k); });
     p.pairs = [];
     for (let k = 0; k < R * C; k++) {
       const r = Math.floor(k / C), c = k % C;
@@ -116,7 +116,7 @@
         if (given[k]) { el.classList.add('given'); el.textContent = SHAPES[given[k]]; return; }
         const v = result ? solution[k] : entries[k];
         el.textContent = SHAPES[v];
-        if (result) el.classList.add(entries[k] === solution[k] ? 'ok' : entries[k] ? 'bad' : 'show');
+        if (result) el.classList.add(PuzzleShell.resultClass(entries[k], solution[k]));
       },
       onCell(k, ev) {
         if (given[k]) return;

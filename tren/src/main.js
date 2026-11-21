@@ -48,7 +48,7 @@
     // cells) and the possible ones (open cells may still be empty).
     region(p, cells, id) {
       const cars = new Map();
-      id.forEach((g, k) => { if (g >= 0) { if (!cars.has(g)) cars.set(g, []); cars.get(g).push(k); } });
+      id.forEach((g, k) => { if (g >= 0) { if (!cars.has(g)) { cars.set(g, []); } cars.get(g).push(k); } });
       for (const car of cars.values()) {
         const k = car.find((x) => p.clues[x]);
         const want = p.clues[k] - 1;
@@ -58,7 +58,7 @@
     },
     final(p, id) {
       const cars = new Map();
-      id.forEach((g, k) => { if (g >= 0) { if (!cars.has(g)) cars.set(g, []); cars.get(g).push(k); } });
+      id.forEach((g, k) => { if (g >= 0) { if (!cars.has(g)) { cars.set(g, []); } cars.get(g).push(k); } });
       for (const cells of cars.values()) {
         const k = cells.find((x) => p.clues[x]);
         if (moves(p, id, cells) !== p.clues[k] - 1) return false;

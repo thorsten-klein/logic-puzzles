@@ -117,7 +117,7 @@
         const label = (text) => { const t = document.createElement('span'); t.className = 'hr-num'; t.textContent = text; el.append(t); };
         if (result) {
           label(solution[k]);
-          el.classList.add(entries[k] === solution[k] ? 'ok' : entries[k] ? 'bad' : 'show');
+          el.classList.add(PuzzleShell.resultClass(entries[k], solution[k]));
         } else if (readonly) label(entries[k] || '');
         else {
           el.appendChild(PuzzleShell.digitInput({ r: Math.floor(k / n), c: k % n, value: entries[k], max: 99,

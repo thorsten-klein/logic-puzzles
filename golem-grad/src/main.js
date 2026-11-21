@@ -71,7 +71,7 @@
         if (seen[k] || s[k] !== NO) continue;
         const cells = [k];
         seen[k] = 1;
-        for (let i = 0; i < cells.length; i++) for (const j of nb[cells[i]]) if (!seen[j] && s[j] === NO) { seen[j] = 1; cells.push(j); }
+        for (const cur of cells) for (const j of nb[cur]) if (!seen[j] && s[j] === NO) { seen[j] = 1; cells.push(j); }
         const nums = cells.filter((x) => clues[x]);
         if (nums.length > 1) return false;
         const closed = done || cells.every((x) => nb[x].every((j) => s[j] !== UNKNOWN));
@@ -130,7 +130,7 @@
         if (black[k] || seen[k]) continue;
         const cells = [k];
         seen[k] = 1;
-        for (let i = 0; i < cells.length; i++) for (const j of nb[cells[i]]) if (!seen[j] && !black[j]) { seen[j] = 1; cells.push(j); }
+        for (const cur of cells) for (const j of nb[cur]) if (!seen[j] && !black[j]) { seen[j] = 1; cells.push(j); }
         if (cells.length > 35) { ok = false; break; }
         clues[cells[Math.floor(Math.random() * cells.length)]] = cells.length;
       }

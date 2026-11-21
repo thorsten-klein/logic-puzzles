@@ -23,7 +23,7 @@
   }
   const blocksOf = (id) => {
     const m = new Map();
-    id.forEach((g, k) => { if (g >= 0) { if (!m.has(g)) m.set(g, []); m.get(g).push(k); } });
+    id.forEach((g, k) => { if (g >= 0) { if (!m.has(g)) { m.set(g, []); } m.get(g).push(k); } });
     return [...m.values()];
   };
 

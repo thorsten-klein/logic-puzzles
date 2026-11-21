@@ -21,7 +21,7 @@
     }
     // No loops: a path has one edge less than its cells.
     let edges = 0;
-    for (const k of cells) { if (set.has(k + 1) && (k + 1) % C) edges++; if (set.has(k + C)) edges++; }
+    for (const k of cells) { if (set.has(k + 1) && (k + 1) % C) { edges++; } if (set.has(k + C)) { edges++; } }
     return edges === cells.length - 1;
   }
   const ends = (C, cells) => {

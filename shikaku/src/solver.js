@@ -74,7 +74,7 @@ const Solver = (() => {
         if (m.rect) choose(st, m.i, m.rect);
       }
       const i = st.chosen.findIndex((x) => !x);
-      if (i < 0) { if (!found) first = st.chosen.slice(); found++; return; }
+      if (i < 0) { if (!found) { first = st.chosen.slice(); } found++; return; }
       for (const rect of st.opts[i]) {
         const copy = { clueCells: st.clueCells, opts: st.opts.map((o) => o.slice()), chosen: st.chosen.slice() };
         choose(copy, i, rect);

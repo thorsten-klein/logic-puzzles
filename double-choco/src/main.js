@@ -59,7 +59,7 @@
         if (id[k] >= 0) continue;
         const cells = [k];
         id[k] = g;
-        for (let i = 0; i < cells.length; i++) for (const [e, o] of at[cells[i]]) if (id[o] < 0 && s[e] === NO) { id[o] = g; cells.push(o); }
+        for (const cur of cells) for (const [e, o] of at[cur]) if (id[o] < 0 && s[e] === NO) { id[o] = g; cells.push(o); }
         const white = cells.filter((x) => !grey[x]), dark = cells.filter((x) => grey[x]);
         // A region with number m holds m white and m grey cells.
         for (const x of cells) if (num[x] && (dark.length > num[x] || white.length > num[x])) return false;
@@ -139,7 +139,7 @@
       const sol = Uint8Array.from(p.edges, ([a, b]) => (reg[a] !== reg[b] ? YES : NO));
       // A number in every region to start.
       const rooms = [];
-      reg.forEach((g, k) => { (rooms[g] = rooms[g] || []).push(k); });
+      reg.forEach((g, k) => { rooms[g] ??= []; rooms[g].push(k); });
       for (const cells of rooms) p.num[cells[Math.floor(Math.random() * cells.length)]] = cells.length / 2;
       const unique = () => {
         const m = model(p);

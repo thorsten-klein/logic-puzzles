@@ -10,7 +10,7 @@
   function prepare(p) {
     const { n, room } = p;
     p.rooms = [];
-    room.forEach((g, k) => { (p.rooms[g] = p.rooms[g] || []).push(k); });
+    room.forEach((g, k) => { p.rooms[g] ??= []; p.rooms[g].push(k); });
     p.nb = Array.from({ length: n * n }, (_, k) => {
       const r = Math.floor(k / n), c = k % n;
       return [[r - 1, c], [r + 1, c], [r, c - 1], [r, c + 1]].filter(([a, b]) => a >= 0 && b >= 0 && a < n && b < n).map(([a, b]) => a * n + b);
@@ -119,7 +119,7 @@
         PuzzleShell.regionBorders(el, k, room, n, n);
         if (hintCells.has(k)) el.classList.add('hint');
         if (given[k]) { el.classList.add('given'); el.textContent = FIG[given[k]]; return; }
-        if (result) { el.textContent = FIG[solution[k]]; el.classList.add(s[k] === solution[k] ? 'ok' : s[k] ? 'bad' : 'show'); return; }
+        if (result) { el.textContent = FIG[solution[k]]; el.classList.add(PuzzleShell.resultClass(s[k], solution[k])); return; }
         el.textContent = FIG[s[k]];
       },
       onCell(k, ev) {

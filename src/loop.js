@@ -117,15 +117,15 @@ const Loop = (() => {
     for (let guard = 0; guard < 10000; guard++) {
       let r = cellStep(m.g, s, m.must, log);
       if (r === false) return false;
-      if (r) { if (log) return true; continue; }
+      if (r) { if (log) { return true; } continue; }
       if (m.rule) {
         r = m.rule(s, log);
         if (r === false) return false;
-        if (r) { if (log) return true; continue; }
+        if (r) { if (log) { return true; } continue; }
       }
       r = loopStep(m.g, s, m.must, log);
       if (r === false) return false;
-      if (r) { if (log) return true; continue; }
+      if (r) { if (log) { return true; } continue; }
       return true;
     }
     return true; // safety limit reached
@@ -386,7 +386,7 @@ const Loop = (() => {
   //   fixed(p) -> optional list of edges given as lines.
   function startGame(cfg) {
     const fixed = (p) => (cfg.fixed ? cfg.fixed(p) : []);
-    const withFixed = (p, s) => { for (const e of fixed(p)) s[e] = LINE; return s; };
+    const withFixed = (p, s) => { for (const e of fixed(p)) { s[e] = LINE; } return s; };
     PuzzleShell.start({
       id: cfg.id, name: cfg.name, rules: cfg.rules, size: cfg.size, solvedText: cfg.solvedText,
       controls: 'Click between two cells to draw a line, click again for a cross, again to clear. Right click cycles the other way.',
@@ -420,7 +420,7 @@ const Loop = (() => {
         return complete(m, t) && settle(m, t);
       },
       hints: (p, s) => hints(cfg.model(p), s, p.solution),
-      applyHint(p, s, h) { for (const e of h.edges) s[e] = h.v; withFixed(p, s); },
+      applyHint(p, s, h) { for (const e of h.edges) { s[e] = h.v; } withFixed(p, s); },
     });
   }
 

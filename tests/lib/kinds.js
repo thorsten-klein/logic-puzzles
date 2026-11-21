@@ -59,7 +59,7 @@ function groupsOf(R, C, inside) {
     if (seen[k] || !inside(k)) continue;
     const g = [k];
     seen[k] = 1;
-    for (let i = 0; i < g.length; i++) for (const j of sideNbs(R, C, g[i])) if (!seen[j] && inside(j)) { seen[j] = 1; g.push(j); }
+    for (const cur of g) for (const j of sideNbs(R, C, cur)) if (!seen[j] && inside(j)) { seen[j] = 1; g.push(j); }
     out.push(g);
   }
   return out;
@@ -81,7 +81,7 @@ function lineGraph(p) {
     if (seen[k] || !adj[k].length) continue;
     const comp = [k];
     seen[k] = 1;
-    for (let i = 0; i < comp.length; i++) for (const j of adj[comp[i]]) if (!seen[j]) { seen[j] = 1; comp.push(j); }
+    for (const cur of comp) for (const j of adj[cur]) if (!seen[j]) { seen[j] = 1; comp.push(j); }
     comps.push(comp);
   }
   return { adj, comps };
@@ -239,7 +239,7 @@ const CHECKS = {
       if (seen[k]) continue;
       const group = [k];
       seen[k] = 1;
-      for (let i = 0; i < group.length; i++) for (const j of sideNbs(R, C, group[i])) if (!seen[j] && sol[j] === sol[k]) { seen[j] = 1; group.push(j); }
+      for (const cur of group) for (const j of sideNbs(R, C, cur)) if (!seen[j] && sol[j] === sol[k]) { seen[j] = 1; group.push(j); }
       if (group.length !== sol[k]) out.push(`a group of ${sol[k]}s at cell ${k} has ${group.length} cells`);
     }
     return out;

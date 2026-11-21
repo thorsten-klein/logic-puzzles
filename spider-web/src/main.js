@@ -21,7 +21,7 @@
     const path = [];
     const walk = (x, str) => {
       if (!prefix.has(str)) return;
-      if (str.length === L) { if (words.has(str)) found.set(str, (found.get(str) || 0) + 1); return; }
+      if (str.length === L) { if (words.has(str)) { found.set(str, (found.get(str) || 0) + 1); } return; }
       for (const y of p.adj[x]) {
         if (path.includes(y)) continue;
         path.push(y); walk(y, str + p.letters[y]); path.pop();

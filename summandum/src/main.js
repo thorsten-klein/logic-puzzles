@@ -81,7 +81,7 @@
         if (hint && hint.slot === slot) el.classList.add('hint');
         if (result) {
           el.textContent = solution[slot];
-          el.classList.add(s[slot] === solution[slot] ? 'ok' : s[slot] ? 'bad' : 'show');
+          el.classList.add(PuzzleShell.resultClass(s[slot], solution[slot]));
         } else if (readonly) el.textContent = s[slot] || '';
         else {
           el.appendChild(PuzzleShell.digitInput({ r: r < 0 ? -1 : r, c: c < 0 ? -1 : c, value: s[slot], max: n,

@@ -13,7 +13,7 @@
   function prepare(p) {
     const { n, room, arrow } = p;
     p.rooms = [];
-    room.forEach((g, k) => { if (g >= 0) (p.rooms[g] = p.rooms[g] || []).push(k); });
+    room.forEach((g, k) => { if (g >= 0) { p.rooms[g] ??= []; p.rooms[g].push(k); } });
     p.rooms = p.rooms.filter(Boolean);
     p.sizeOf = new Int32Array(n * n);
     for (const cells of p.rooms) for (const k of cells) p.sizeOf[k] = cells.length;
@@ -146,12 +146,12 @@
       rows: n, cols: n, cellPx: PuzzleShell.fitCell(n, 44), className: 'pz-board pz-regions mk-board', readonly,
       renderCell(k, el) {
         PuzzleShell.regionBorders(el, k, room, n, n);
-        if (arrow[k] >= 0) { el.classList.add('mk-black'); if (arrow[k] < 4) el.append(PuzzleShell.arrowIcon([0, 4, 6, 2][arrow[k]])); return; }
+        if (arrow[k] >= 0) { el.classList.add('mk-black'); if (arrow[k] < 4) { el.append(PuzzleShell.arrowIcon([0, 4, 6, 2][arrow[k]])); } return; }
         if (hintCells.has(k)) el.classList.add('hint');
         if (given[k]) { el.classList.add('given'); el.textContent = given[k]; return; }
         if (result) {
           el.textContent = solution[k];
-          el.classList.add(entries[k] === solution[k] ? 'ok' : entries[k] ? 'bad' : 'show');
+          el.classList.add(PuzzleShell.resultClass(entries[k], solution[k]));
         } else if (readonly) el.textContent = entries[k] || '';
         else {
           el.appendChild(PuzzleShell.digitInput({ r: Math.floor(k / n), c: k % n, value: entries[k], max: 5,

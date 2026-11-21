@@ -52,7 +52,7 @@
         if (id[k] >= 0 || s[k] !== YES) continue;
         const cells = [k];
         id[k] = list.length;
-        for (let i = 0; i < cells.length; i++) for (const j of nb(cells[i])) if (id[j] < 0 && s[j] === YES) { id[j] = list.length; cells.push(j); }
+        for (const cur of cells) for (const j of nb(cur)) if (id[j] < 0 && s[j] === YES) { id[j] = list.length; cells.push(j); }
         list.push(cells);
       }
       return { id, list };
@@ -100,8 +100,8 @@
         if (seen[a]) continue;
         const chain = [a];
         seen[a] = 1;
-        for (let i = 0; i < chain.length; i++) {
-          for (const k of list[chain[i]]) for (const j of diag(k)) {
+        for (const cur of chain) {
+          for (const k of list[cur]) for (const j of diag(k)) {
             if (s[j] === YES && !seen[id[j]]) { seen[id[j]] = 1; chain.push(id[j]); }
           }
         }

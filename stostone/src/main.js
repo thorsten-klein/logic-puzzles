@@ -16,8 +16,8 @@
       if (!shaded[k] || id[k] >= 0) continue;
       const cells = [k];
       id[k] = blocks.length;
-      for (let i = 0; i < cells.length; i++) {
-        const x = cells[i], r = Math.floor(x / C), c = x % C;
+      for (const cur of cells) {
+        const x = cur, r = Math.floor(x / C), c = x % C;
         for (const [a, b] of [[r - 1, c], [r + 1, c], [r, c - 1], [r, c + 1]]) {
           const j = a * C + b;
           if (a >= 0 && b >= 0 && a < R && b < C && shaded[j] && id[j] < 0) { id[j] = blocks.length; cells.push(j); }
@@ -44,7 +44,7 @@
     const { R, C, room, clues } = p;
     const N = R * C;
     const rooms = [];
-    room.forEach((g, k) => { (rooms[g] = rooms[g] || []).push(k); });
+    room.forEach((g, k) => { rooms[g] ??= []; rooms[g].push(k); });
     const cons = [];
     for (let k = 0; k < N; k++) {
       const r = Math.floor(k / C), c = k % C;

@@ -100,7 +100,7 @@
         if (given[k]) { el.classList.add('given'); el.append(PuzzleShell.figure(given[k])); return; }
         const v = result ? solution[k] : entries[k];
         if (v) el.append(PuzzleShell.figure(v));
-        if (result) el.classList.add(entries[k] === solution[k] ? 'ok' : entries[k] ? 'bad' : 'show');
+        if (result) el.classList.add(PuzzleShell.resultClass(entries[k], solution[k]));
       },
       onCell(k, ev) {
         if (given[k]) return;

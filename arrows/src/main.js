@@ -105,7 +105,7 @@
         if (hint && hint.slot === i) el.classList.add('hint');
         const v = result ? solution[i] : s[i];
         if (v >= 0) el.append(PuzzleShell.arrowIcon(v));
-        if (result) el.classList.add(s[i] === solution[i] ? 'ok' : s[i] >= 0 ? 'bad' : 'show');
+        if (result) el.classList.add(PuzzleShell.resultClass(s[i], solution[i], s[i] >= 0));
       },
       onCell(K, ev) {
         const r = Math.floor(K / (n + 2)) - 1, c = (K % (n + 2)) - 1;

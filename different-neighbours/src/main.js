@@ -5,7 +5,7 @@
 (() => {
   function groups(region) {
     const out = [];
-    region.forEach((g, k) => { (out[g] = out[g] || []).push(k); });
+    region.forEach((g, k) => { out[g] ??= []; out[g].push(k); });
     return out;
   }
 
@@ -79,7 +79,9 @@
       const fill = solve(p, startCand(p), 1, 5000, true);
       if (!fill.solutions.length) continue;
       const sol = fill.solutions[0];
-      for (let guard = 0; guard < p.groups.length; guard++) {
+      // At most one round per entry.
+      const rounds = p.groups.length;
+      for (let guard = 0; guard < rounds; guard++) {
         const res = solve(p, startCand(p), 2);
         if (res.solutions.length === 1 && !res.capped) break;
         const other = res.solutions.find((x) => x.some((v, g) => v !== sol[g]));

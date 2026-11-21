@@ -14,7 +14,7 @@
   function prepare(p) {
     const { room } = p;
     p.rooms = [];
-    room.forEach((g, k) => { if (g >= 0) (p.rooms[g] = p.rooms[g] || []).push(k); });
+    room.forEach((g, k) => { if (g >= 0) { p.rooms[g] ??= []; p.rooms[g].push(k); } });
     p.rooms = p.rooms.filter(Boolean);
     p.roomOk = (vals) => vals.filter((v) => v === 2).length === 1 && vals.filter((v) => v === 3).length === 1;
     p.roomOk.partial = (vals, i) => vals.slice(0, i + 1).filter((v) => v === 2).length <= 1 && vals.slice(0, i + 1).filter((v) => v === 3).length <= 1;

@@ -29,8 +29,8 @@
     },
     setup(p, sol) {
       p.sums = [];
-      for (let c = 0; c < p.C; c++) { let t = 0; for (let r = 0; r < p.R; r++) t += sol[r * p.C + c]; p.sums.push(t); }
-      for (let r = 0; r < p.R; r++) { let t = 0; for (let c = 0; c < p.C; c++) t += sol[r * p.C + c]; p.sums.push(t); }
+      for (let c = 0; c < p.C; c++) { let t = 0; for (let r = 0; r < p.R; r++) { t += sol[r * p.C + c]; } p.sums.push(t); }
+      for (let r = 0; r < p.R; r++) { let t = 0; for (let c = 0; c < p.C; c++) { t += sol[r * p.C + c]; } p.sums.push(t); }
     },
     rule(p, cand) {
       const { R, C } = p;

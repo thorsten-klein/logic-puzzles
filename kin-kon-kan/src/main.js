@@ -37,7 +37,7 @@
 
   function prepare(p) {
     p.rooms = [];
-    p.room.forEach((g, k) => { (p.rooms[g] = p.rooms[g] || []).push(k); });
+    p.room.forEach((g, k) => { p.rooms[g] ??= []; p.rooms[g].push(k); });
     p.partner = new Int32Array(4 * p.n).fill(-1);
     p.clues.forEach((x, i) => {
       if (!x) return;
@@ -67,7 +67,7 @@
     };
     (function rec(g) {
       if (out.length >= stopAt || ++nodes > maxNodes) return;
-      if (g === rooms.length) { if (ok(true)) out.push(Uint8Array.from(mir)); return; }
+      if (g === rooms.length) { if (ok(true)) { out.push(Uint8Array.from(mir)); } return; }
       for (const k of rooms[g]) for (const v of [1, 2]) {
         mir[k] = v;
         done[g] = 1;
@@ -86,7 +86,7 @@
       const seeds = PuzzleShell.shuffle([...new Array(N).keys()]).slice(0, Math.round(N / 5));
       const room = PuzzleShell.growRegions(n, n, seeds.map((k) => [k]));
       const rooms = [];
-      room.forEach((g, k) => { (rooms[g] = rooms[g] || []).push(k); });
+      room.forEach((g, k) => { rooms[g] ??= []; rooms[g].push(k); });
       const mir = new Uint8Array(N);
       for (const cells of rooms) mir[cells[Math.floor(Math.random() * cells.length)]] = 1 + Math.floor(Math.random() * 2);
       // All beams with at least one bounce, each pair once.

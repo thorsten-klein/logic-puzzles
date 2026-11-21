@@ -34,7 +34,7 @@
           let used = 0, blacks = 0;
           for (const v of vals) {
             if (v === B) blacks++;
-            else { if (used & (1 << v)) return false; used |= 1 << v; }
+            else { if (used & (1 << v)) { return false; } used |= 1 << v; }
           }
           return blacks === 2 && (want < 0 || between(vals, B) === want);
         };
@@ -146,7 +146,7 @@
         const v = result ? solution[k] : entries[k];
         if (v === B) el.classList.add('shaded');
         else if (v) el.textContent = v;
-        if (result) el.classList.add(entries[k] === solution[k] ? 'ok' : entries[k] ? 'bad' : 'show');
+        if (result) el.classList.add(PuzzleShell.resultClass(entries[k], solution[k]));
         if (hintCells.has(k)) el.classList.add('hint');
         if (!readonly) {
           el.addEventListener('keydown', (ev) => {

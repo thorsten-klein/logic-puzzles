@@ -28,7 +28,7 @@
         for (let d = 0; d < 8; d++) for (const j of ray(n, k, d)) if (!used[j]) opts.push([j, d]);
         if (!opts.length) { ok = false; break; }
         // Prefer cells with few onward moves (keeps the walk going).
-        const onward = (j) => { let c = 0; for (let d = 0; d < 8; d++) for (const x of ray(n, j, d)) if (!used[x] && x !== j) c++; return c; };
+        const onward = (j) => { let c = 0; for (let d = 0; d < 8; d++) { for (const x of ray(n, j, d)) { if (!used[x] && x !== j) { c++; } } } return c; };
         opts.sort((a, b) => onward(a[0]) - onward(b[0]) + (Math.random() - 0.5) * 6);
         const [j, d] = opts[0];
         dir[k] = d;
@@ -135,7 +135,7 @@
         if (given[k]) { el.classList.add('given'); label.textContent = given[k]; el.append(label); return; }
         if (result) {
           label.textContent = solution[k];
-          el.classList.add(entries[k] === solution[k] ? 'ok' : entries[k] ? 'bad' : 'show');
+          el.classList.add(PuzzleShell.resultClass(entries[k], solution[k]));
           el.append(label);
         } else if (readonly) {
           label.textContent = entries[k] || '';

@@ -24,7 +24,7 @@
       for (const t of thermos) {
         // Highest filled cell and lowest empty cell.
         let top = -1, low = t.length;
-        t.forEach((k, i) => { if (s[k] === YES) top = i; if (s[k] === NO && low === t.length) low = i; });
+        t.forEach((k, i) => { if (s[k] === YES) { top = i; } if (s[k] === NO && low === t.length) { low = i; } });
         if (top >= low) return false;
         const fill = t.slice(0, Math.max(0, top)).filter((k) => s[k] === UNKNOWN);
         if (fill.length) {

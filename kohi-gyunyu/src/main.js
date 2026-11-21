@@ -48,10 +48,10 @@
         const group = [k];
         seen[k] = 1;
         let closed = true;
-        for (let i = 0; i < group.length; i++) for (const e of at[group[i]]) {
+        for (const cur of group) for (const e of at[cur]) {
           if (s[e] === UNKNOWN) { closed = false; continue; }
           if (s[e] !== YES) continue;
-          const o = cands[e].a === group[i] ? cands[e].b : cands[e].a;
+          const o = cands[e].a === cur ? cands[e].b : cands[e].a;
           if (!seen[o]) { seen[o] = 1; group.push(o); }
         }
         const cnt = [0, 0, 0, 0];

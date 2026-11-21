@@ -8,7 +8,7 @@
 (() => {
   function info(p, id) {
     const doms = new Map();
-    id.forEach((g, k) => { if (g >= 0) { if (!doms.has(g)) doms.set(g, []); doms.get(g).push(k); } });
+    id.forEach((g, k) => { if (g >= 0) { if (!doms.has(g)) { doms.set(g, []); } doms.get(g).push(k); } });
     const touch = new Map();
     for (const [g, cells] of doms) {
       const set = new Set();
@@ -41,7 +41,7 @@
         }
       }
       const doms = new Map();
-      id.forEach((g, k) => { if (g >= 0) { if (!doms.has(g)) doms.set(g, []); doms.get(g).push(k); } });
+      id.forEach((g, k) => { if (g >= 0) { if (!doms.has(g)) { doms.set(g, []); } doms.get(g).push(k); } });
       for (const [g, dc] of doms) {
         const num = dc.map((x) => p.clues[x]).find(Boolean);
         if (!num) continue;

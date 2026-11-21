@@ -25,7 +25,7 @@ const Generator = (() => {
       if (s[k] === YES) continue;
       let seen = 1;
       for (const d of [[-1, 0], [1, 0], [0, -1], [0, 1]]) {
-        for (const j of Rules.ray(n, k, d)) { if (s[j] === YES) break; seen++; }
+        for (const j of Rules.ray(n, k, d)) { if (s[j] === YES) { break; } seen++; }
       }
       clues[k] = seen;
     }

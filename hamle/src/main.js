@@ -51,7 +51,7 @@
     let nodes = 0;
     (function rec(i) {
       if (out.length >= stopAt || ++nodes > maxNodes) return;
-      if (i === p.blocks.length) { if (fine(p, land, true)) out.push(Int8Array.from(dirs)); return; }
+      if (i === p.blocks.length) { if (fine(p, land, true)) { out.push(Int8Array.from(dirs)); } return; }
       for (let d = 0; d < 4; d++) {
         const t = target(p, p.blocks[i], d);
         if (t < 0) continue;

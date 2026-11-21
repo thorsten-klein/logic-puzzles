@@ -164,7 +164,7 @@
         if (given[k]) { el.classList.add('given'); el.textContent = given[k] - 1; return; }
         const v = result ? solution[k] : entries[k];
         el.textContent = v ? v - 1 : '';
-        if (result) el.classList.add(entries[k] === solution[k] ? 'ok' : entries[k] ? 'bad' : 'show');
+        if (result) el.classList.add(PuzzleShell.resultClass(entries[k], solution[k]));
         if (!readonly) {
           el.tabIndex = 0;
           el.addEventListener('keydown', (ev) => {

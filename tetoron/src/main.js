@@ -40,7 +40,7 @@
     },
     final(p, id) {
       const regions = new Map();
-      id.forEach((g, k) => { if (g >= 0) { if (!regions.has(g)) regions.set(g, []); regions.get(g).push(k); } });
+      id.forEach((g, k) => { if (g >= 0) { if (!regions.has(g)) { regions.set(g, []); } regions.get(g).push(k); } });
       const pairOf = new Map();
       for (const cells of regions.values()) {
         const kind = kindOf(cells, p.C), l = letters(p, cells);

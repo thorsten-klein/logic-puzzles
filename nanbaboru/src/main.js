@@ -146,7 +146,8 @@
         if (given[x]) { el.classList.add('given'); el.append(String(given[x])); return; }
         if (result) {
           if (solution[x]) el.append(String(solution[x]));
-          const cls = s[x] === solution[x] ? (solution[x] ? 'ok' : '') : s[x] ? 'bad' : 'show';
+          // No mark on a cell that is rightly empty.
+          const cls = s[x] === solution[x] && !solution[x] ? '' : PuzzleShell.resultClass(s[x], solution[x]);
           if (cls) el.classList.add(cls);
         } else if (readonly) el.append(s[x] ? String(s[x]) : '');
         else if (mark[x] !== 2) {

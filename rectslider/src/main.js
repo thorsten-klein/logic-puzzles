@@ -16,8 +16,8 @@
       if (!on[k] || seen[k]) continue;
       const cells = [k];
       seen[k] = 1;
-      for (let i = 0; i < cells.length; i++) {
-        const x = cells[i], r = Math.floor(x / C), c = x % C;
+      for (const cur of cells) {
+        const x = cur, r = Math.floor(x / C), c = x % C;
         for (const [a, b] of [[r - 1, c], [r + 1, c], [r, c - 1], [r, c + 1]]) {
           const j = a * C + b;
           if (a >= 0 && b >= 0 && a < R && b < C && on[j] && !seen[j]) { seen[j] = 1; cells.push(j); }

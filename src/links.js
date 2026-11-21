@@ -56,12 +56,12 @@ const Links = (() => {
       const cells = [k];
       id[k] = list.length;
       let edges = 0;
-      for (let i = 0; i < cells.length; i++) {
-        for (const e of g.cellEdges[cells[i]]) {
+      for (const cur of cells) {
+        for (const e of g.cellEdges[cur]) {
           if (e < 0 || s[e] !== LINE) continue;
           edges++;
           const [a, b] = g.ends[e];
-          const j = a === cells[i] ? b : a;
+          const j = a === cur ? b : a;
           if (id[j] < 0) { id[j] = list.length; cells.push(j); }
         }
       }
@@ -110,15 +110,15 @@ const Links = (() => {
     for (let guard = 0; guard < 10000; guard++) {
       let r = cellStep(m, s, log);
       if (r === false) return false;
-      if (r) { if (log) return true; continue; }
+      if (r) { if (log) { return true; } continue; }
       if (m.rule) {
         r = m.rule(s, log);
         if (r === false) return false;
-        if (r) { if (log) return true; continue; }
+        if (r) { if (log) { return true; } continue; }
       }
       r = pathStep(m, s, log);
       if (r === false) return false;
-      if (r) { if (log) return true; continue; }
+      if (r) { if (log) { return true; } continue; }
       return true;
     }
     return true; // safety limit reached

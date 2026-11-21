@@ -7,7 +7,7 @@
 const RegionNum = (() => {
   const bitCount = (m) => { let c = 0; while (m) { m &= m - 1; c++; } return c; };
   const lowBit = (m) => 31 - Math.clz32(m & -m);
-  const values = (m) => { const out = []; for (let v = 1; m >> v; v++) if (m & (1 << v)) out.push(v); return out; };
+  const values = (m) => { const out = []; for (let v = 1; m >> v; v++) { if (m & (1 << v)) { out.push(v); } } return out; };
 
   // Adds region lists and sizes to a puzzle { R, C, region }.
   function prepare(p) {
@@ -201,7 +201,7 @@ const RegionNum = (() => {
         if (given[k]) { el.classList.add('given'); el.textContent = given[k]; return; }
         if (result) {
           el.textContent = solution[k];
-          el.classList.add(entries[k] === solution[k] ? 'ok' : entries[k] ? 'bad' : 'show');
+          el.classList.add(PuzzleShell.resultClass(entries[k], solution[k]));
         } else if (readonly) {
           el.textContent = entries[k] || '';
           el.classList.add('entry');

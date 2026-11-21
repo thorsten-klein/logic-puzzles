@@ -80,7 +80,7 @@
           Array.from({ length: c }, (_, i) => hEdge(C, r, c - 1 - i)),
           Array.from({ length: C - 1 - c }, (_, i) => hEdge(C, r, c + i)),
         ];
-        for (const ray of rays) for (const e of ray) { if (sol[e] === YES) break; clues[k]++; }
+        for (const ray of rays) for (const e of ray) { if (sol[e] === YES) { break; } clues[k]++; }
       }
       const p = { R, C, clues };
       const s = Binary.logicSolve(model(p));

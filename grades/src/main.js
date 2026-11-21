@@ -158,7 +158,7 @@
           else if (solution[k]) el.classList.add('show');
           return;
         }
-        if (readonly) { el.textContent = entries[k] && entries[k] < 10 ? entries[k] : ''; if (entries[k] === 10) el.classList.add('gr-empty'); return; }
+        if (readonly) { el.textContent = entries[k] && entries[k] < 10 ? entries[k] : ''; if (entries[k] === 10) { el.classList.add('gr-empty'); } return; }
         if (entries[k] === 10) el.classList.add('gr-empty');
         el.appendChild(PuzzleShell.digitInput({ r, c, value: entries[k] < 10 ? entries[k] : 0, max: 9,
           onSet: (v) => { entries[k] = v; onChange(false); } }));

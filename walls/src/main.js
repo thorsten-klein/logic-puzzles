@@ -28,8 +28,8 @@
     function propagate(s, log) {
       for (const [k, dirs] of arms) {
         const v = black[k];
-        const got = dirs.map(([cells, want]) => { let i = 0; while (i < cells.length && s[cells[i]] === want) i++; return i; });
-        const can = dirs.map(([cells, want]) => { let i = 0; while (i < cells.length && s[cells[i]] !== (want === YES ? NO : YES)) i++; return i; });
+        const got = dirs.map(([cells, want]) => { let i = 0; while (i < cells.length && s[cells[i]] === want) { i++; } return i; });
+        const can = dirs.map(([cells, want]) => { let i = 0; while (i < cells.length && s[cells[i]] !== (want === YES ? NO : YES)) { i++; } return i; });
         const min = got.reduce((a, b) => a + b, 0), max = can.reduce((a, b) => a + b, 0);
         if (min > v || max < v) return false;
         for (let d = 0; d < 4; d++) {

@@ -34,7 +34,7 @@
         const col = s[k];
         const cells = [k];
         seen[k] = 1;
-        for (let i = 0; i < cells.length; i++) for (const j of nb(cells[i])) if (!seen[j] && s[j] === col) { seen[j] = 1; cells.push(j); }
+        for (const cur of cells) for (const j of nb(cur)) if (!seen[j] && s[j] === col) { seen[j] = 1; cells.push(j); }
         const nums = cells.filter((x) => clues[x]);
         const closed = done || cells.every((x) => nb(x).every((j) => s[j] !== UNKNOWN));
         // A number that can not be its 3×3 count must be the region size.
@@ -78,8 +78,8 @@
         if (id[k] >= 0) continue;
         const cells = [k];
         id[k] = regions.length;
-        for (let i = 0; i < cells.length; i++) {
-          const x = cells[i], r = Math.floor(x / C), c = x % C;
+        for (const cur of cells) {
+          const x = cur, r = Math.floor(x / C), c = x % C;
           for (const [a, b] of [[r - 1, c], [r + 1, c], [r, c - 1], [r, c + 1]]) {
             const j = a * C + b;
             if (a >= 0 && b >= 0 && a < R && b < C && id[j] < 0 && sol[j] === sol[k]) { id[j] = regions.length; cells.push(j); }

@@ -27,7 +27,7 @@
         const path = [k];
         used[k] = w + 1;
         const walk = (i) => {
-          if (i === word.length) { paths[w] = path.slice(); if (rec(t + 1)) return true; paths[w] = null; return false; }
+          if (i === word.length) { paths[w] = path.slice(); if (rec(t + 1)) { return true; } paths[w] = null; return false; }
           for (const j of nbs(n, path[i - 1])) {
             if (used[j] || letters[j] !== word[i]) continue;
             used[j] = w + 1; path.push(j);
@@ -192,7 +192,7 @@
     check: (p, s) => s.every(Boolean) && p.words.every((_, i) => s.includes(i + 1)),
     hints,
     applyHint(p, s, h) {
-      if (h.v < 0) { for (let k = 0; k < s.length; k++) if (s[k] === -h.v) s[k] = 0; return; }
+      if (h.v < 0) { for (let k = 0; k < s.length; k++) { if (s[k] === -h.v) { s[k] = 0; } } return; }
       for (const k of h.cells) s[k] = h.v;
     },
   });

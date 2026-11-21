@@ -61,7 +61,7 @@
         if (id[k] >= 0) continue;
         const cells = [k];
         id[k] = g;
-        for (let i = 0; i < cells.length; i++) for (const [e, o] of at[cells[i]]) if (id[o] < 0 && s[e] === NO) { id[o] = g; cells.push(o); }
+        for (const cur of cells) for (const [e, o] of at[cur]) if (id[o] < 0 && s[e] === NO) { id[o] = g; cells.push(o); }
         const kinds = new Set(cells.map((x) => num[x]).filter(Boolean));
         if (kinds.size > 1) return false;
         const closed = done || cells.every((x) => at[x].every(([e, o]) => id[o] === g || s[e] === YES));
@@ -123,7 +123,7 @@
         if (reg[k] >= 0) continue;
         const cells = [k];
         reg[k] = regs.length;
-        for (let q = 0; q < cells.length; q++) for (const [e, o] of at[cells[q]]) if (reg[o] < 0 && !wall[e]) { reg[o] = regs.length; cells.push(o); }
+        for (const cur of cells) for (const [e, o] of at[cur]) if (reg[o] < 0 && !wall[e]) { reg[o] = regs.length; cells.push(o); }
         regs.push(cells);
       }
       if (regs.length < 3) continue;

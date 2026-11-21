@@ -37,7 +37,7 @@
     const { R, C, room, clues } = p;
     const N = R * C;
     const rooms = [];
-    room.forEach((g, k) => { (rooms[g] = rooms[g] || []).push(k); });
+    room.forEach((g, k) => { rooms[g] ??= []; rooms[g].push(k); });
     const cons = [];
     for (let k = 0; k < N; k++) {
       if (k % C < C - 1 && room[k] !== room[k + 1]) cons.push({ cells: [k, k + 1], min: 0, max: 1, why: () => 'Shaded cells in different rooms never touch.' });
@@ -63,7 +63,7 @@
         if (area[k] >= 0 || s[k] !== YES) continue;
         const cells = [k];
         area[k] = areas.length;
-        for (let i = 0; i < cells.length; i++) for (const j of nb(cells[i])) if (area[j] < 0 && s[j] === YES) { area[j] = areas.length; cells.push(j); }
+        for (const cur of cells) for (const j of nb(cur)) if (area[j] < 0 && s[j] === YES) { area[j] = areas.length; cells.push(j); }
         const closed = done || cells.every((x) => nb(x).every((j) => s[j] !== UNKNOWN));
         areas.push({ cells, closed });
       }
@@ -131,7 +131,7 @@
       const seeds = PuzzleShell.shuffle([...new Array(N).keys()]).slice(0, Math.max(2, Math.round(N / 8)));
       const room = PuzzleShell.growRegions(R, C, seeds.map((k) => [k]));
       const rooms = [];
-      room.forEach((g, k) => { (rooms[g] = rooms[g] || []).push(k); });
+      room.forEach((g, k) => { rooms[g] ??= []; rooms[g].push(k); });
       const sol = new Uint8Array(N).fill(NO);
       const pairs = [];
       let ok = true;

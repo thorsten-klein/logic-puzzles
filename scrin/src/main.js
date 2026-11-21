@@ -38,7 +38,7 @@
         if (seen[k] || s[k] !== YES) continue;
         const cells = [k];
         seen[k] = 1;
-        for (let i = 0; i < cells.length; i++) for (const j of nb(cells[i])) if (!seen[j] && s[j] === YES) { seen[j] = 1; cells.push(j); }
+        for (const cur of cells) for (const j of nb(cur)) if (!seen[j] && s[j] === YES) { seen[j] = 1; cells.push(j); }
         const rs = cells.map((x) => Math.floor(x / C)), cs = cells.map((x) => x % C);
         const box = { r0: Math.min(...rs), r1: Math.max(...rs), c0: Math.min(...cs), c1: Math.max(...cs) };
         const area = (box.r1 - box.r0 + 1) * (box.c1 - box.c0 + 1);

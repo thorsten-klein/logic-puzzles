@@ -50,7 +50,7 @@
       // Black cells among the empty ones, until the answer is unique; then drop extra ones.
       const unique = () => { const r = Parts.solve(this, p, 2, 20000); return r.solutions.length === 1 && !r.capped; };
       const singles = PuzzleShell.shuffle(regions.singles.slice());
-      for (const k of singles) { if (unique()) break; p.black[k] = 1; }
+      for (const k of singles) { if (unique()) { break; } p.black[k] = 1; }
       if (!unique()) return false;
       for (const k of singles) {
         if (!p.black[k]) continue;

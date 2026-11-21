@@ -12,7 +12,7 @@
   function prepare(p) {
     const { R, C, room } = p;
     p.rooms = [];
-    room.forEach((g, k) => { (p.rooms[g] = p.rooms[g] || []).push(k); });
+    room.forEach((g, k) => { p.rooms[g] ??= []; p.rooms[g].push(k); });
     p.near = Array.from({ length: R * C }, (_, k) => {
       const r = Math.floor(k / C), c = k % C, out = [];
       for (let dr = -1; dr <= 1; dr++) for (let dc = -1; dc <= 1; dc++) {

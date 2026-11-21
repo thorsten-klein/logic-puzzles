@@ -5,7 +5,7 @@
 
 (() => {
   const straight = (p, cells) => new Set(cells.map((k) => Math.floor(k / p.C))).size === 1 || new Set(cells.map((k) => k % p.C)).size === 1;
-  const sizeOf = (id, g) => { let n = 0; for (const x of id) if (x === g) n++; return n; };
+  const sizeOf = (id, g) => { let n = 0; for (const x of id) { if (x === g) { n++; } } return n; };
   const fourCorner = (p, id) => {
     for (let r = 1; r < p.R; r++) for (let c = 1; c < p.C; c++) {
       const a = id[(r - 1) * p.C + c - 1], b = id[(r - 1) * p.C + c], x = id[r * p.C + c - 1], y = id[r * p.C + c];

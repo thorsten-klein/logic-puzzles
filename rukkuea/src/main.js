@@ -34,8 +34,8 @@
         const open = cells.filter((k) => s[k] === UNKNOWN);
         if (yes === 3 && no === 1) return false;
         if (open.length !== 1) continue;
-        if (yes === 3) { s[open[0]] = YES; if (log) log.push({ cells: open, v: YES, reason: 'Shaded areas are squares. Three shaded cells in a 2×2 block need the fourth.' }); return 1; }
-        if (yes === 2 && no === 1) { s[open[0]] = NO; if (log) log.push({ cells: open, v: NO, reason: 'Shaded areas are squares. This cell would make an L shape.' }); return 1; }
+        if (yes === 3) { s[open[0]] = YES; if (log) { log.push({ cells: open, v: YES, reason: 'Shaded areas are squares. Three shaded cells in a 2×2 block need the fourth.' }); } return 1; }
+        if (yes === 2 && no === 1) { s[open[0]] = NO; if (log) { log.push({ cells: open, v: NO, reason: 'Shaded areas are squares. This cell would make an L shape.' }); } return 1; }
       }
       return 0;
     }
@@ -45,7 +45,7 @@
         if (id[k] >= 0 || s[k] !== YES) continue;
         const cells = [k];
         id[k] = list.length;
-        for (let i = 0; i < cells.length; i++) for (const j of nb(cells[i])) if (id[j] < 0 && s[j] === YES) { id[j] = list.length; cells.push(j); }
+        for (const cur of cells) for (const j of nb(cur)) if (id[j] < 0 && s[j] === YES) { id[j] = list.length; cells.push(j); }
         list.push(cells);
       }
       const size = list.map((cells) => {

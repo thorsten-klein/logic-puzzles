@@ -10,7 +10,7 @@
     const { R, C, room } = p;
     const N = R * C;
     const rooms = [];
-    room.forEach((g, k) => { (rooms[g] = rooms[g] || []).push(k); });
+    room.forEach((g, k) => { rooms[g] ??= []; rooms[g].push(k); });
     const nb = (k) => {
       const r = Math.floor(k / C), c = k % C, out = [];
       if (r > 0) out.push(k - C);

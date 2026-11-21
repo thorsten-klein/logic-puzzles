@@ -8,7 +8,7 @@
 
   // Degree rules: every cell has two lines, or four (a crossing).
   function settle(p, g, s) {
-    for (const e of p.given) { if (s[e] === CROSS) return false; s[e] = LINE; }
+    for (const e of p.given) { if (s[e] === CROSS) { return false; } s[e] = LINE; }
     for (let changed = true; changed;) {
       changed = false;
       for (let k = 0; k < g.R * g.C; k++) {
@@ -60,7 +60,7 @@
       if (out.length >= stopAt || ++nodes > maxNodes) return;
       if (!settle(p, g, s)) return;
       const e = s.indexOf(UNKNOWN);
-      if (e < 0) { if (oneLoop(g, s)) out.push(Uint8Array.from(s)); return; }
+      if (e < 0) { if (oneLoop(g, s)) { out.push(Uint8Array.from(s)); } return; }
       for (const v of [LINE, CROSS]) { const t = Uint8Array.from(s); t[e] = v; rec(t); }
     })(new Uint8Array(g.E));
     return { solutions: out, capped: nodes > maxNodes };
@@ -76,7 +76,9 @@
       const loop = Loop.randomTour(n);
       const p = { R: n, C: n, given: [] };
       const lines = [...loop.keys()].filter((e) => loop[e] === LINE);
-      for (let guard = 0; guard < lines.length; guard++) {
+      // At most one round per entry.
+      const rounds = lines.length;
+      for (let guard = 0; guard < rounds; guard++) {
         const res = solve(p, 2, 20000);
         if (res.solutions.length === 1 && !res.capped) break;
         const other = res.solutions.find((x) => x.some((v, e) => v !== loop[e]));
@@ -159,6 +161,6 @@
         [...new Array(g.R * g.C).keys()].every((k) => [2, 4].includes(g.cellEdges[k].filter((e) => e >= 0 && t[e] === LINE).length));
     },
     hints,
-    applyHint(p, s, h) { for (const e of h.edges) s[e] = h.v; for (const e of p.given) s[e] = LINE; },
+    applyHint(p, s, h) { for (const e of h.edges) { s[e] = h.v; } for (const e of p.given) { s[e] = LINE; } },
   });
 })();

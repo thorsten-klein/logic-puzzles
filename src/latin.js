@@ -188,7 +188,7 @@ const Latin = (() => {
     const lineInfo = (k, v) => {
       const r = Math.floor(k / n), c = k % n;
       const row = [], col = [];
-      for (let i = 0; i < n; i++) { if (entries[r * n + i]) row.push(entries[r * n + i]); if (entries[i * n + c]) col.push(entries[i * n + c]); }
+      for (let i = 0; i < n; i++) { if (entries[r * n + i]) { row.push(entries[r * n + i]); } if (entries[i * n + c]) { col.push(entries[i * n + c]); } }
       const list = (a) => a.length ? a.sort((x, y) => x - y).join(', ') : 'nothing yet';
       const used = [...new Set([...row, ...col])].sort((x, y) => x - y).join(', ');
       return `Row ${r + 1} has ${list(row)}. Column ${colName(c)} has ${list(col)}. ` +
@@ -251,7 +251,7 @@ const Latin = (() => {
           if (given[k]) { el.classList.add('given'); el.append(String(given[k])); return; }
           if (result) {
             el.append(String(solution[k]));
-            el.classList.add(entries[k] === solution[k] ? 'ok' : entries[k] ? 'bad' : 'show');
+            el.classList.add(PuzzleShell.resultClass(entries[k], solution[k]));
           } else if (readonly) {
             el.append(entries[k] ? String(entries[k]) : '');
             el.classList.add('entry');

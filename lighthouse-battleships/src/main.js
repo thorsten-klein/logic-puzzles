@@ -113,12 +113,12 @@
     const sol = Uint8Array.from(ship, (x) => (x ? YES : NO));
     // Lighthouses on water cells away from all ships.
     const light = new Uint8Array(n * n);
-    const nearShip = (k) => { const r = Math.floor(k / n), c = k % n; for (let dr = -1; dr <= 1; dr++) for (let dc = -1; dc <= 1; dc++) { const a = r + dr, b = c + dc; if (a >= 0 && b >= 0 && a < n && b < n && ship[a * n + b]) return true; } return false; };
+    const nearShip = (k) => { const r = Math.floor(k / n), c = k % n; for (let dr = -1; dr <= 1; dr++) { for (let dc = -1; dc <= 1; dc++) { const a = r + dr, b = c + dc; if (a >= 0 && b >= 0 && a < n && b < n && ship[a * n + b]) { return true; } } } return false; };
     const spots = PuzzleShell.shuffle([...new Array(n * n).keys()].filter((k) => !nearShip(k)));
     for (const k of spots.slice(0, Math.round(n * n / 4))) {
       const r = Math.floor(k / n), c = k % n;
       let v = 0;
-      for (let i = 0; i < n; i++) { if (i !== c) v += ship[r * n + i]; if (i !== r) v += ship[i * n + c]; }
+      for (let i = 0; i < n; i++) { if (i !== c) { v += ship[r * n + i]; } if (i !== r) { v += ship[i * n + c]; } }
       light[k] = v + 1;
     }
     if (light.filter(Boolean).length < 3) return generate(n);
