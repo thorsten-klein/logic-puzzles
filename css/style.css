@@ -1105,8 +1105,11 @@ button.regen-btn:disabled { opacity: 0.6; cursor: wait; }
 #menu-screen h1 .fav-star svg { width: 28px; height: 28px; }
 /* Main page: star in the bottom right corner of each card. */
 .game-card { position: relative; }
-.game-card .fav-star { position: absolute; right: 8px; bottom: 8px; }
-.game-card .card-foot { padding-right: 30px; }
-.game-grid.is-list .game-card .fav-star { position: static; margin-left: auto; }
+/* Bottom right corner of a card: the "New" badge, then the star. */
+.game-card .card-corner { position: absolute; right: 8px; bottom: 8px; display: flex; align-items: center; gap: 6px; }
+.game-card .card-foot { padding-right: 80px; }
+.game-grid.is-list .game-card .card-corner { position: static; margin-left: auto; }
 .game-grid.is-list .game-card .card-foot { padding-right: 0; }
+.badge.new { background: #fff3cd; color: #8a6100; border: 1px solid #f2d27a; }
+.card-corner .badge { align-self: center; margin-top: 0; }
 .tag-filter .chip .chip-star { color: #f2b01e; font-weight: normal; }
