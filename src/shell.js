@@ -56,7 +56,7 @@ const PuzzleShell = (() => {
         <img class="topbar-logo" src="../img/logo.svg" alt="Logic Puzzles">
         <span id="topbar-title">Logic Puzzles</span></a>
     </div>
-    <button id="topbar-game" type="button" title="How to play">${cfg.name}</button>
+    <div id="topbar-name"><button id="topbar-game" type="button" title="How to play">${cfg.name}</button></div>
     <div id="topbar-actions">
       <button id="btn-topbar-undo" class="topbar-btn" title="Undo (Ctrl+Z)" hidden disabled>
         <svg class="icon" aria-hidden="true"><use href="#icon-undo"/></svg></button>
