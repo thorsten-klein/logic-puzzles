@@ -33,7 +33,7 @@ const Generator = (() => {
     const state = new Uint8Array(total);
     const target = Math.round(total * (0.2 + Math.random() * 0.08));
     let count = 0;
-    for (const k of shuffle([...Array(total).keys()])) {
+    for (const k of shuffle([...new Array(total).keys()])) {
       if (count >= target) break;
       if (neighbours(k, n).some((j) => state[j] === BLACK)) continue;
       if (!openConnected(state, n, k)) continue;

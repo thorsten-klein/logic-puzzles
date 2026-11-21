@@ -128,7 +128,7 @@
     if (!id) { pasteStatus.textContent = 'No game ID found in that text.'; return; }
     let slug = null;
     try {
-      const b64 = id.replace(/-/g, '+').replace(/_/g, '/');
+      const b64 = id.replaceAll('-', '+').replaceAll('_', '/');
       slug = JSON.parse(decodeURIComponent(escape(atob(b64 + '='.repeat((4 - (b64.length % 4)) % 4))))).g;
     } catch { /* not readable */ }
     const game = GAMES.find((g) => g.slug === slug && g.status === 'available');

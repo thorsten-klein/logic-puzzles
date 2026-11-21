@@ -128,7 +128,7 @@
         }
         return max;
       };
-      for (const k of PuzzleShell.shuffle([...Array(n * n).keys()])) {
+      for (const k of PuzzleShell.shuffle([...new Array(n * n).keys()])) {
         if (!mark[k]) continue;
         const keep = mark[k];
         mark[k] = 0;
@@ -152,7 +152,7 @@
     generate,
     encode: (p) => ({ n: p.R, m: Array.from(p.mark).join('') }),
     decode(d) {
-      const n = d && d.n;
+      const n = d?.n;
       if (!Number.isInteger(n) || n < 3 || n > 16) throw new Error('Invalid board size');
       if (typeof d.m !== 'string' || d.m.length !== n * n || !/^[012]+$/.test(d.m)) throw new Error('Invalid circles');
       return { R: n, C: n, mark: Uint8Array.from(d.m, Number) };

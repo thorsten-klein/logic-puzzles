@@ -28,7 +28,7 @@
       for (const b of blocks) {
         if (usedBlock.has(b)) continue;
         const inBlock = (k) => blockOf(n, k) === b;
-        const cells = [...Array(n * n).keys()].filter(inBlock);
+        const cells = [...new Array(n * n).keys()].filter(inBlock);
         const path = [];
         const seen = new Set();
         const walk = (k, i) => {
@@ -58,7 +58,7 @@
     for (;;) {
       const path = [Math.floor(Math.random() * 9)];
       while (path.length < 9) {
-        const x = path[path.length - 1], r = Math.floor(x / 3), c = x % 3;
+        const x = path.at(-1), r = Math.floor(x / 3), c = x % 3;
         const opts = [[r - 1, c], [r + 1, c], [r, c - 1], [r, c + 1]].filter(([a, b]) => a >= 0 && b >= 0 && a < 3 && b < 3 && !path.includes(a * 3 + b));
         if (!opts.length) break;
         const [a, b] = opts[Math.floor(Math.random() * opts.length)];
@@ -119,7 +119,7 @@
           return;
         }
         if (s[k]) { sel = []; onChange(); return; }
-        const last = sel[sel.length - 1];
+        const last = sel.at(-1);
         if (k === last) sel.pop();
         else if (sel.length && nbs(n, last).includes(k) && !sel.includes(k) && blockOf(n, k) === blockOf(n, last)) sel.push(k);
         else sel = [k];
@@ -167,7 +167,7 @@
     generate,
     encode: (p) => ({ n: p.n, l: p.letters, w: p.words.join(',') }),
     decode(d) {
-      const n = d && d.n;
+      const n = d?.n;
       if (!Number.isInteger(n) || n < 3 || n > 12 || n % 3) throw new Error('Invalid board size');
       if (typeof d.l !== 'string' || d.l.length !== n * n || !/^[A-Z]+$/.test(d.l)) throw new Error('Invalid letters');
       const words = String(d.w).split(',');

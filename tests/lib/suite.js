@@ -12,7 +12,7 @@
 //                       the general workout does not reach)
 
 const { test, expect } = require('@playwright/test');
-const path = require('path');
+const path = require('node:path');
 const { root, loadGame, sizesOf, checkBoard, OWN_PAGE, isEmpty, ser, clone } = require('./games');
 const { kindOf, CHECKS, SKIP, MARKS_STATE } = require('./kinds');
 const { workout } = require('./coverage');
@@ -93,7 +93,7 @@ const url = (slug) => 'file://' + path.join(root, slug, 'index.html');
 // Grid labels (.gl) are layout, not game state: their place can move by
 // a pixel when the zoom is not a whole number.
 const boardSig = () => [...document.querySelectorAll('#board-wrap *:not(.gl)')].map((e) => {
-  const cls = typeof e.className === 'string' ? e.className : (e.className && e.className.baseVal) || '';
+  const cls = typeof e.className === 'string' ? e.className : (e.className?.baseVal) || '';
   const val = e.value !== undefined && e.tagName === 'INPUT' ? e.value : '';
   const style = e.getAttribute('style') || '';
   return cls + ':' + val + ':' + style + ':' + (e.childElementCount ? '' : e.textContent);

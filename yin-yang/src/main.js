@@ -38,7 +38,7 @@
       }
       return false;
     };
-    const edge = [...Array(N).keys()].filter((k) => k < n || k % n === 0);
+    const edge = [...new Array(N).keys()].filter((k) => k < n || k % n === 0);
     s[edge[Math.floor(Math.random() * edge.length)]] = YES;
     for (let changed = true; changed;) {
       changed = false;
@@ -83,7 +83,7 @@
     generate,
     encode: (p) => ({ r: p.R, c: p.C, g: Array.from(p.given).join('') }),
     decode(d) {
-      const R = d && d.r, C = d && d.c;
+      const R = d?.r, C = d?.c;
       if (![R, C].every((x) => Number.isInteger(x) && x >= 3 && x <= 20)) throw new Error('Invalid board size');
       if (typeof d.g !== 'string' || d.g.length !== R * C || !/^[012]+$/.test(d.g)) throw new Error('Invalid givens');
       return { R, C, given: Uint8Array.from(d.g, Number) };

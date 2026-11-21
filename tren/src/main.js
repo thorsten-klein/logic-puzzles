@@ -9,7 +9,7 @@
   // Free moves of a car (cells) when `id` holds all cars (-2 = empty).
   function moves(p, id, cells, free = (v) => v === -2) {
     const { R, C } = p;
-    const flat = Math.floor(cells[0] / C) === Math.floor(cells[cells.length - 1] / C);
+    const flat = Math.floor(cells[0] / C) === Math.floor(cells.at(-1) / C);
     let total = 0;
     for (const d of [-1, 1]) {
       for (let step = 1; ; step++) {
@@ -39,8 +39,8 @@
       const r0 = Math.floor(k / C), c0 = k % C;
       const out = [];
       for (const len of [2, 3]) {
-        if (c0 + len <= C) out.push([...Array(len).keys()].map((i) => k + i));
-        if (r0 + len <= R) out.push([...Array(len).keys()].map((i) => k + i * C));
+        if (c0 + len <= C) out.push([...new Array(len).keys()].map((i) => k + i));
+        if (r0 + len <= R) out.push([...new Array(len).keys()].map((i) => k + i * C));
       }
       return out.filter((cells) => cells.filter((x) => p.clues[x]).length === 1 && cells.every((x) => id[x] === -1 || x === k));
     },
@@ -72,7 +72,7 @@
       for (let t = 0; t < 4 * N && cars.length * 2.5 < N * 0.7; t++) {
         const len = 2 + Math.floor(Math.random() * 2), flat = Math.random() < 0.5;
         const r0 = Math.floor(Math.random() * R), c0 = Math.floor(Math.random() * C);
-        const cells = [...Array(len).keys()].map((i) => (flat ? [r0, c0 + i] : [r0 + i, c0]));
+        const cells = [...new Array(len).keys()].map((i) => (flat ? [r0, c0 + i] : [r0 + i, c0]));
         if (cells.some(([r, c]) => r >= R || c >= C || id[r * C + c] !== -2)) continue;
         const ks = cells.map(([r, c]) => r * C + c);
         ks.forEach((x) => { id[x] = cars.length; });

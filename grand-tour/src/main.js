@@ -56,7 +56,7 @@
     generate,
     encode: (p) => ({ n: p.R, e: p.given.join(',') }),
     decode(d) {
-      const n = d && d.n;
+      const n = d?.n;
       if (!Number.isInteger(n) || n < 2 || n > 16) throw new Error('Invalid board size');
       const E = Loop.grid(n, n).E;
       const given = String(d.e || '').split(',').filter(Boolean).map(Number);

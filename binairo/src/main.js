@@ -11,7 +11,7 @@ PuzzleShell.start({
   generate: (h) => Generator.generate(2 * h),
   encode: (p) => ({ n: p.n, g: Array.from(p.given).join('') }),
   decode(d) {
-    const n = d && d.n;
+    const n = d?.n;
     if (!Number.isInteger(n) || n < 4 || n > 16 || n % 2) throw new Error('Invalid board size');
     if (typeof d.g !== 'string' || d.g.length !== n * n || !/^[012]+$/.test(d.g)) throw new Error('Invalid givens');
     const p = { n, given: Uint8Array.from(d.g, Number) };

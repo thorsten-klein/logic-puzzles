@@ -10,7 +10,7 @@ puzzleTests('grades', {
       const { cfg } = window.__puzzleTest;
       for (let i = 0; i < 12; i++) {
         const d = JSON.parse(JSON.stringify(cfg.encode(cfg.generate(cfg.size.min))));
-        try { cfg.decode({ ...d, g: d.g.replace(/./g, '0') }); } catch { /* not unique */ }
+        try { cfg.decode({ ...d, g: d.g.replaceAll(/./g, '0') }); } catch { /* not unique */ }
       }
     });
   },

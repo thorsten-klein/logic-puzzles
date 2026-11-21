@@ -110,7 +110,7 @@
       };
       if (!unique()) continue;
       const sizeClue = new Set(regions.map((cells) => cells.find((k) => clues[k] === cells.length)));
-      for (const k of PuzzleShell.shuffle([...Array(N).keys()])) {
+      for (const k of PuzzleShell.shuffle([...new Array(N).keys()])) {
         if (!clues[k] || sizeClue.has(k)) continue;
         const keep = clues[k];
         clues[k] = 0;
@@ -135,7 +135,7 @@
     generate,
     encode: (p) => ({ r: p.R, c: p.C, g: Array.from(p.clues).join(',') }),
     decode(d) {
-      const R = d && d.r, C = d && d.c;
+      const R = d?.r, C = d?.c;
       if (![R, C].every((x) => Number.isInteger(x) && x >= 3 && x <= 20)) throw new Error('Invalid board size');
       const clues = Int16Array.from(String(d.g).split(','), Number);
       if (clues.length !== R * C) throw new Error('Invalid clues');

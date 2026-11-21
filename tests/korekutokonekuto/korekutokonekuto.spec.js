@@ -9,7 +9,7 @@ puzzleTests('korekutokonekuto', {
       const { cfg } = window.__puzzleTest;
       const p = cfg.generate(cfg.size.min);
       const s = cfg.newState(p);
-      const j = Array.from(p.solution).findIndex((v) => v === 0);
+      const j = Array.from(p.solution).indexOf(0);
       if (j < 0) return;
       s[j] = 1;
       const hs = cfg.hints(p, s);

@@ -32,7 +32,7 @@ const NumberPath = (() => {
     for (let r = 0; r < R; r++) for (let c = 0; c < C; c++) path.push(r * C + (r % 2 ? C - 1 - c : c));
     for (let it = 0; it < N * 40; it++) {
       if (Math.random() < 0.5) path.reverse();
-      const end = path[path.length - 1];
+      const end = path.at(-1);
       const at = new Map(path.map((k, i) => [k, i]));
       const opts = nb[end].filter((k) => at.get(k) !== path.length - 2);
       const k = opts[Math.floor(Math.random() * opts.length)];
@@ -105,7 +105,7 @@ const NumberPath = (() => {
     const N = R * C;
     const sol = randomPath(R, C, diag);
     const given = Int32Array.from(sol);
-    for (const k of PuzzleShell.shuffle([...Array(N).keys()])) {
+    for (const k of PuzzleShell.shuffle([...new Array(N).keys()])) {
       if (sol[k] === 1 || sol[k] === N) continue;
       if (Math.random() < keepRate) continue;
       given[k] = 0;
@@ -133,7 +133,7 @@ const NumberPath = (() => {
       if (pos[v] >= 0) continue;
       const a = pos[v - 1], b = pos[v + 1];
       if (a < 0 && b < 0) continue;
-      let opts = [...Array(N).keys()].filter((k) => !val[k]);
+      let opts = [...new Array(N).keys()].filter((k) => !val[k]);
       if (a >= 0) opts = opts.filter((k) => nb[a].includes(k));
       if (b >= 0) opts = opts.filter((k) => nb[b].includes(k));
       if (opts.length === 1) {

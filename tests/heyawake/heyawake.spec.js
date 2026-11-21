@@ -22,8 +22,8 @@ puzzleTests('heyawake', {
         if (room[cells[i]] !== room[cells[i - 1]] && ++borders >= 2) out.push(`white line crosses two borders at ${cells[i]}`);
       }
     };
-    for (let r = 0; r < R; r++) runs([...Array(C).keys()].map((c) => r * C + c));
-    for (let c = 0; c < C; c++) runs([...Array(R).keys()].map((r) => r * C + c));
+    for (let r = 0; r < R; r++) runs([...new Array(C).keys()].map((c) => r * C + c));
+    for (let c = 0; c < C; c++) runs([...new Array(R).keys()].map((r) => r * C + c));
     return out;
   },
 });

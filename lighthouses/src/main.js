@@ -56,8 +56,8 @@
       return false;
     };
     const lightCount = Math.max(2, Math.round(N / 10));
-    for (const k of PuzzleShell.shuffle([...Array(N).keys()]).slice(0, lightCount)) lights[k] = 0;
-    for (const k of PuzzleShell.shuffle([...Array(N).keys()])) {
+    for (const k of PuzzleShell.shuffle([...new Array(N).keys()]).slice(0, lightCount)) lights[k] = 0;
+    for (const k of PuzzleShell.shuffle([...new Array(N).keys()])) {
       if (lights[k] >= 0 || near(k, (j) => ship[j] || lights[j] >= 0)) continue;
       const r = Math.floor(k / C), c = k % C;
       let lit = false;
@@ -91,15 +91,15 @@
     generate(n) {
       const deadline = Date.now() + 8000;
       // A board without ships has nothing to do: try again.
-      while (Date.now() < deadline) { const p = tryOnce(n); if (p && p.solution.includes(YES)) return p; }
+      while (Date.now() < deadline) { const p = tryOnce(n); if (p?.solution.includes(YES)) return p; }
       return null;
     },
     encode: (p) => ({ r: p.R, c: p.C, g: Array.from(p.lights, (v) => (v < 0 ? '.' : v.toString(36))).join('') }),
     decode(d) {
-      const R = d && d.r, C = d && d.c;
+      const R = d?.r, C = d?.c;
       if (![R, C].every((x) => Number.isInteger(x) && x >= 3 && x <= 20)) throw new Error('Invalid board size');
       if (typeof d.g !== 'string' || d.g.length !== R * C) throw new Error('Invalid grid');
-      const lights = Int8Array.from(d.g, (ch) => (ch === '.' ? -1 : parseInt(ch, 36)));
+      const lights = Int8Array.from(d.g, (ch) => (ch === '.' ? -1 : Number.parseInt(ch, 36)));
       if (lights.some((v) => Number.isNaN(v))) throw new Error('Invalid grid');
       return { R, C, lights };
     },

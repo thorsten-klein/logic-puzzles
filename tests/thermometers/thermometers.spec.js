@@ -12,11 +12,11 @@ puzzleTests('thermometers', {
       if (fill.some((f, i) => f && i && !fill[i - 1])) out.push(`thermometer from ${t[0]} has a gap`);
     }
     for (let r = 0; r < R; r++) {
-      const got = [...Array(C).keys()].filter((c) => s[r * C + c] === 1).length;
+      const got = [...new Array(C).keys()].filter((c) => s[r * C + c] === 1).length;
       if (got !== rows[r]) out.push(`row ${r}: ${got} filled, clue ${rows[r]}`);
     }
     for (let c = 0; c < C; c++) {
-      const got = [...Array(R).keys()].filter((r) => s[r * C + c] === 1).length;
+      const got = [...new Array(R).keys()].filter((r) => s[r * C + c] === 1).length;
       if (got !== cols[c]) out.push(`column ${c}: ${got} filled, clue ${cols[c]}`);
     }
     return out;

@@ -11,7 +11,7 @@
   function orders(p, stopAt = 2, maxNodes = 200000, firstStone = -1) {
     const { n, stone } = p;
     const N = n * n;
-    const stones = [...Array(N).keys()].filter((k) => stone[k]);
+    const stones = [...new Array(N).keys()].filter((k) => stone[k]);
     const taken = new Uint8Array(N);
     const out = [];
     const path = [];
@@ -139,7 +139,7 @@
     generate,
     encode: (p) => ({ n: p.n, s: Array.from(p.stone).join('') }),
     decode(d) {
-      const n = d && d.n;
+      const n = d?.n;
       if (!Number.isInteger(n) || n < 3 || n > 12) throw new Error('Invalid board size');
       if (typeof d.s !== 'string' || d.s.length !== n * n || !/^[01]+$/.test(d.s)) throw new Error('Invalid stones');
       const p = { n, stone: Uint8Array.from(d.s, Number) };

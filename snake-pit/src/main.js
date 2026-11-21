@@ -69,7 +69,7 @@
       const snakes = [];
       const nb = (k) => { const r = Math.floor(k / C), c = k % C; return [[r - 1, c], [r + 1, c], [r, c - 1], [r, c + 1]].filter(([a, b]) => a >= 0 && b >= 0 && a < R && b < C).map(([a, b]) => a * C + b); };
       for (;;) {
-        const free = [...Array(N).keys()].filter((k) => used[k] < 0);
+        const free = [...new Array(N).keys()].filter((k) => used[k] < 0);
         if (!free.length) break;
         const deg = (k) => nb(k).filter((j) => used[j] < 0).length;
         const start = free.reduce((a, b) => (deg(b) < deg(a) || (deg(b) === deg(a) && Math.random() < 0.3) ? b : a));
@@ -77,7 +77,7 @@
         used[start] = snakes.length;
         const want = 2 + Math.floor(Math.random() * 5);
         while (path.length < want) {
-          const x = path[path.length - 1];
+          const x = path.at(-1);
           const opts = PuzzleShell.shuffle(nb(x).filter((j) => used[j] < 0 && snakeLike(C, path.concat([j]))));
           if (!opts.length) break;
           const j = opts.reduce((a, b) => (deg(b) < deg(a) ? b : a));

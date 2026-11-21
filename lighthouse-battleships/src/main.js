@@ -115,7 +115,7 @@
     // Lighthouses on water cells away from all ships.
     const light = new Uint8Array(n * n);
     const nearShip = (k) => { const r = Math.floor(k / n), c = k % n; for (let dr = -1; dr <= 1; dr++) for (let dc = -1; dc <= 1; dc++) { const a = r + dr, b = c + dc; if (a >= 0 && b >= 0 && a < n && b < n && ship[a * n + b]) return true; } return false; };
-    const spots = PuzzleShell.shuffle([...Array(n * n).keys()].filter((k) => !nearShip(k)));
+    const spots = PuzzleShell.shuffle([...new Array(n * n).keys()].filter((k) => !nearShip(k)));
     for (const k of spots.slice(0, Math.round(n * n / 4))) {
       const r = Math.floor(k / n), c = k % n;
       let v = 0;
@@ -157,7 +157,7 @@
     generate,
     encode: (p) => ({ n: p.R, l: Array.from(p.light).join(','), g: Array.from(p.given).join('') }),
     decode(d) {
-      const n = d && d.n;
+      const n = d?.n;
       if (!Number.isInteger(n) || n < 4 || n > 15) throw new Error('Invalid board size');
       const light = Uint8Array.from(String(d.l).split(','), Number);
       if (light.length !== n * n) throw new Error('Invalid lighthouses');

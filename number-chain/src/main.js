@@ -58,7 +58,7 @@
       let ok = false;
       const dist = (k) => (n - 1 - Math.floor(k / n)) + (n - 1 - (k % n));
       for (let guard = 0; guard < N * 4; guard++) {
-        const k = path[path.length - 1];
+        const k = path.at(-1);
         if (k === goal) { ok = path.length === len; break; }
         const left = len - path.length;
         const r = Math.floor(k / n), c = k % n;
@@ -129,10 +129,10 @@
     generate,
     encode: (p) => ({ n: p.R, t: p.top, g: Array.from(p.num, (v) => v.toString(36)).join('') }),
     decode(d) {
-      const n = d && d.n;
+      const n = d?.n;
       if (!Number.isInteger(n) || n < 2 || n > 12) throw new Error('Invalid board size');
       if (typeof d.g !== 'string' || d.g.length !== n * n || !Number.isInteger(d.t)) throw new Error('Invalid numbers');
-      return { R: n, C: n, top: d.t, num: Int8Array.from(d.g, (ch) => parseInt(ch, 36)) };
+      return { R: n, C: n, top: d.t, num: Int8Array.from(d.g, (ch) => Number.parseInt(ch, 36)) };
     },
     model,
     drawCell: (p) => (svg, k, x, y, s) => {

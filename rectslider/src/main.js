@@ -50,7 +50,7 @@
         for (let r = r0; r < r0 + h; r++) for (let c = c0; c < c0 + w; c++) on[r * n + c] = 1;
         if (on.reduce((a, b) => a + b, 0) > N / 5) break;
       }
-      const ends = [...Array(N).keys()].filter((k) => on[k]);
+      const ends = [...new Array(N).keys()].filter((k) => on[k]);
       if (ends.length < 4) continue;
       const used = Uint8Array.from(on);
       const pieces = [];

@@ -130,7 +130,7 @@
       const s = Binary.logicSolve(model(p));
       if (!s || s.includes(UNKNOWN)) continue;
       // Drop numbers (keep the circles) while logic still solves it.
-      for (const k of PuzzleShell.shuffle([...Array(N).keys()])) {
+      for (const k of PuzzleShell.shuffle([...new Array(N).keys()])) {
         if (clues[k] <= 0) continue;
         const keep = clues[k];
         clues[k] = 0;
@@ -155,10 +155,10 @@
     generate,
     encode: (p) => ({ r: p.R, c: p.C, g: Array.from(p.clues, (v) => (v < 0 ? '.' : v.toString(36))).join('') }),
     decode(d) {
-      const R = d && d.r, C = d && d.c;
+      const R = d?.r, C = d?.c;
       if (![R, C].every((x) => Number.isInteger(x) && x >= 3 && x <= 20)) throw new Error('Invalid board size');
       if (typeof d.g !== 'string' || d.g.length !== R * C) throw new Error('Invalid clues');
-      return { R, C, clues: Int8Array.from(d.g, (ch) => (ch === '.' ? -1 : parseInt(ch, 36))) };
+      return { R, C, clues: Int8Array.from(d.g, (ch) => (ch === '.' ? -1 : Number.parseInt(ch, 36))) };
     },
     model,
     fixed: (p, k) => (p.clues[k] >= 0 ? NO : 0),

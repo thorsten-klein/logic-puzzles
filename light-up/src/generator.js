@@ -18,7 +18,7 @@ const Generator = (() => {
     const p = Rules.prepare({ R, C, walls });
     const sol = new Uint8Array(N);
     const lit = new Uint8Array(N);
-    for (const k of shuffle([...Array(N).keys()])) {
+    for (const k of shuffle([...new Array(N).keys()])) {
       if (walls[k] !== WHITE || lit[k]) continue;
       sol[k] = BULB;
       lit[k] = 1;
@@ -33,7 +33,7 @@ const Generator = (() => {
       return s && !s.some((v, k) => !v && walls[k] === WHITE);
     };
     if (!solvedByLogic()) return null;
-    for (const k of shuffle([...Array(N).keys()])) {
+    for (const k of shuffle([...new Array(N).keys()])) {
       if (walls[k] < 0) continue;
       const keep = walls[k];
       walls[k] = BLACK;

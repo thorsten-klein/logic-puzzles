@@ -52,7 +52,7 @@
     const deadline = Date.now() + 8000;
     while (Date.now() < deadline) {
       const N = n * n;
-      const seeds = PuzzleShell.shuffle([...Array(N).keys()]).slice(0, Math.round(N / 5));
+      const seeds = PuzzleShell.shuffle([...new Array(N).keys()]).slice(0, Math.round(N / 5));
       const room = PuzzleShell.growRegions(n, n, seeds.map((k) => [k]));
       const p = prepare({ n, room, rowCnt: new Int8Array(n).fill(-1), colCnt: new Int8Array(n).fill(-1) });
       const sol = Binary.randomFill(model(p), 0.5, 20);
@@ -71,7 +71,7 @@
         return r.solutions.length === 1 && !r.capped;
       };
       if (!unique()) continue;
-      for (const [arr, i] of PuzzleShell.shuffle([...Array(n).keys()].flatMap((i) => [[p.rowCnt, i], [p.colCnt, i]]))) {
+      for (const [arr, i] of PuzzleShell.shuffle([...new Array(n).keys()].flatMap((i) => [[p.rowCnt, i], [p.colCnt, i]]))) {
         const keep = arr[i];
         arr[i] = -1;
         if (!unique()) arr[i] = keep;
@@ -153,7 +153,7 @@
     const log = [];
     Binary.settle(m, s, log);
     const step = log.find((x) => x.cells.some((i) => state[i] === UNKNOWN));
-    if (step) return [{ cells: step.cells, v: step.v, reason: step.con && step.con.why ? step.con.why(step.v) : 'This follows from the rules.' }];
+    if (step) return [{ cells: step.cells, v: step.v, reason: step.con?.why ? step.con.why(step.v) : 'This follows from the rules.' }];
     const i = p.solution.findIndex((v, j) => state[j] === UNKNOWN && v === YES);
     return i < 0 ? [] : [{ cells: [i], v: YES, reason: 'No simple step is left. A stitch goes here.' }];
   }
@@ -170,10 +170,10 @@
     generate,
     encode: (p) => ({ n: p.n, g: Array.from(p.room, (v) => v.toString(36).padStart(2, '0')).join(''), r: Array.from(p.rowCnt).join(','), c: Array.from(p.colCnt).join(',') }),
     decode(d) {
-      const n = d && d.n;
+      const n = d?.n;
       if (!Number.isInteger(n) || n < 3 || n > 12) throw new Error('Invalid board size');
       if (typeof d.g !== 'string' || d.g.length !== 2 * n * n) throw new Error('Invalid rooms');
-      const room = Int32Array.from({ length: n * n }, (_, k) => parseInt(d.g.slice(2 * k, 2 * k + 2), 36));
+      const room = Int32Array.from({ length: n * n }, (_, k) => Number.parseInt(d.g.slice(2 * k, 2 * k + 2), 36));
       const p = prepare({ n, room, rowCnt: Int8Array.from(String(d.r).split(','), Number), colCnt: Int8Array.from(String(d.c).split(','), Number) });
       const m = model(p);
       const t = Binary.logicSolve(m);

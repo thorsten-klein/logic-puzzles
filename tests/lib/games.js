@@ -1,9 +1,9 @@
 // Shared helpers for the tests: the list of games, loading a game's code
 // in Node, and the logic checks for one board.
 
-const fs = require('fs');
-const vm = require('vm');
-const path = require('path');
+const fs = require('node:fs');
+const vm = require('node:vm');
+const path = require('node:path');
 
 const root = path.join(__dirname, '..', '..');
 const GEN_LIMIT_MS = 30000;
@@ -104,7 +104,7 @@ function checkBoard(cfg, n, expect) {
     const unwatch = watch(q, reads, cfg.__answerKeys);
     let hs;
     try { hs = cfg.hints(q, s); } finally { unwatch(); }
-    const h = hs && hs[0];
+    const h = hs?.[0];
     expect(h, `a hint exists on an unsolved board (step ${steps})`).toBeTruthy();
     expect(typeof h.reason === 'string' && h.reason.length > 0, 'hint has a reason').toBeTruthy();
     const flat = Array.isArray(s) || ArrayBuffer.isView(s) ? Array.from(s) : null;
@@ -123,7 +123,7 @@ function checkBoard(cfg, n, expect) {
   for (const { reads, flat, reason } of seen) {
     // (States that are not cell lists can not be mapped; they are skipped.)
     const bad = flat && end ? [...reads].filter((i) => i < flat.length && isEmpty(flat[i]) && !isEmpty(end[i])) : [];
-    if (bad.length) peeks.add(reason.replace(/\d+/g, '#').slice(0, 90));
+    if (bad.length) peeks.add(reason.replaceAll(/\d+/g, '#').slice(0, 90));
   }
   return { ms, steps, reveals, peeks: [...peeks], warnings, q, end: s };
 }

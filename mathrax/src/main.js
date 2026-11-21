@@ -144,7 +144,7 @@
     generate,
     encode: (p) => ({ n: p.n, g: Array.from(p.given).join(''), k: p.clues.map((x) => `${x.r}.${x.c}.${x.op}${x.v || ''}`).join(',') }),
     decode(d) {
-      const n = d && d.n;
+      const n = d?.n;
       if (!Number.isInteger(n) || n < 3 || n > 9) throw new Error('Invalid board size');
       if (typeof d.g !== 'string' || d.g.length !== n * n || !/^[0-9]+$/.test(d.g)) throw new Error('Invalid givens');
       const clues = String(d.k || '').split(',').filter(Boolean).map((s) => {

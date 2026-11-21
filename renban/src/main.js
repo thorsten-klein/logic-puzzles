@@ -26,7 +26,7 @@
   function makeRegions(n, sol) {
     const region = new Int32Array(n * n).fill(-1);
     let id = 0;
-    for (const start of PuzzleShell.shuffle([...Array(n * n).keys()])) {
+    for (const start of PuzzleShell.shuffle([...new Array(n * n).keys()])) {
       if (region[start] >= 0) continue;
       const cells = [start];
       region[start] = id;
@@ -78,7 +78,7 @@
     encode: (p) => Array.from(p.region, (v) => v.toString(36).padStart(2, '0')).join(''),
     decode(x, n) {
       if (typeof x !== 'string' || x.length !== 2 * n * n) throw new Error('Invalid regions');
-      return { region: Int32Array.from({ length: n * n }, (_, k) => parseInt(x.slice(2 * k, 2 * k + 2), 36)) };
+      return { region: Int32Array.from({ length: n * n }, (_, k) => Number.parseInt(x.slice(2 * k, 2 * k + 2), 36)) };
     },
     prune,
     className: 'pz-regions',

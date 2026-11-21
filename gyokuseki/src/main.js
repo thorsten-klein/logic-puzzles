@@ -69,7 +69,7 @@
     while (Date.now() < deadline) {
       const N = n * n;
       // Black circles: a random permutation. White circles at random.
-      const perm = PuzzleShell.shuffle([...Array(n).keys()]);
+      const perm = PuzzleShell.shuffle([...new Array(n).keys()]);
       const sol = Int8Array.from({ length: N }, () => (Math.random() < 0.45 ? 2 : 1));
       perm.forEach((c, r) => { sol[r * n + c] = 3; });
       const row = (r) => Array.from({ length: n }, (_, c) => sol[r * n + c]);
@@ -152,7 +152,7 @@
 
   const side = (s, n) => {
     if (typeof s !== 'string' || s.length !== n) throw new Error('Invalid clues');
-    return Int8Array.from(s, (ch) => (ch === '.' ? -1 : parseInt(ch, 36)));
+    return Int8Array.from(s, (ch) => (ch === '.' ? -1 : Number.parseInt(ch, 36)));
   };
   const enc = (a) => Array.from(a, (v) => (v < 0 ? '.' : v.toString(36))).join('');
 
@@ -167,7 +167,7 @@
     generate,
     encode: (p) => ({ n: p.n, t: enc(p.top), b: enc(p.bottom), l: enc(p.left), r: enc(p.right) }),
     decode(d) {
-      const n = d && d.n;
+      const n = d?.n;
       if (!Number.isInteger(n) || n < 3 || n > 12) throw new Error('Invalid board size');
       const p = prepare({ n, top: side(d.t, n), bottom: side(d.b, n), left: side(d.l, n), right: side(d.r, n) });
       const res = solve(p, 2, 50000);

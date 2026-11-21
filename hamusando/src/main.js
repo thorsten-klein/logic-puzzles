@@ -55,7 +55,7 @@
     return { solutions: out, capped: nodes > maxNodes };
   }
 
-  const startCand = (p) => Int32Array.from({ length: p.n * p.n }, (_, i) => (p.given && p.given[i] ? 1 << p.given[i] : ALL));
+  const startCand = (p) => Int32Array.from({ length: p.n * p.n }, (_, i) => (p.given?.[i] ? 1 << p.given[i] : ALL));
 
   function generate(n) {
     const deadline = Date.now() + 8000;
@@ -75,19 +75,19 @@
       for (let guard = 0; guard < N && !solved(); guard++) {
         const c = startCand(p);
         propagate(p, c);
-        const open = [...Array(N).keys()].filter((i) => !one(c[i]) && sol[i] > 1);
+        const open = [...new Array(N).keys()].filter((i) => !one(c[i]) && sol[i] > 1);
         if (!open.length) break;
         const i = open[Math.floor(Math.random() * open.length)];
         p.given[i] = sol[i];
       }
       if (!solved()) continue;
-      for (const [side, i] of PuzzleShell.shuffle([...Array(n).keys()].flatMap((i) => [['left', i], ['top', i]]))) {
+      for (const [side, i] of PuzzleShell.shuffle([...new Array(n).keys()].flatMap((i) => [['left', i], ['top', i]]))) {
         const keep = p[side][i];
         p[side][i] = -1;
         prepare(p);
         if (!solved()) { p[side][i] = keep; prepare(p); }
       }
-      for (const i of PuzzleShell.shuffle([...Array(N).keys()])) {
+      for (const i of PuzzleShell.shuffle([...new Array(N).keys()])) {
         if (!p.given[i]) continue;
         const keep = p.given[i];
         p.given[i] = 0;
@@ -156,7 +156,7 @@
   const enc = (a) => Array.from(a, (v) => (v < 0 ? '.' : v.toString(36))).join('');
   const dec = (s, n) => {
     if (typeof s !== 'string' || s.length !== n) throw new Error('Invalid clues');
-    return Int8Array.from(s, (ch) => (ch === '.' ? -1 : parseInt(ch, 36)));
+    return Int8Array.from(s, (ch) => (ch === '.' ? -1 : Number.parseInt(ch, 36)));
   };
 
   PuzzleShell.start({
@@ -171,7 +171,7 @@
     generate,
     encode: (p) => ({ n: p.n, k: p.k, t: enc(p.top), l: enc(p.left), g: Array.from(p.given).join('') }),
     decode(d) {
-      const n = d && d.n;
+      const n = d?.n;
       if (!Number.isInteger(n) || n < 3 || n > 12) throw new Error('Invalid board size');
       if (!Number.isInteger(d.k) || d.k < 0 || d.k > n - 2) throw new Error('Invalid circle count');
       const p = prepare({ n, k: d.k, top: dec(d.t, n), left: dec(d.l, n) });

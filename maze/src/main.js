@@ -13,7 +13,7 @@
     const stack = [0];
     seen[0] = 1;
     while (stack.length) {
-      const k = stack[stack.length - 1];
+      const k = stack.at(-1);
       const r = Math.floor(k / n), c = k % n;
       const opts = [[r - 1, c], [r + 1, c], [r, c - 1], [r, c + 1]]
         .filter(([a, b]) => a >= 0 && b >= 0 && a < n && b < n && !seen[a * n + b]);
@@ -113,7 +113,7 @@
     },
     encode: (p) => ({ n: p.n, w: Array.from(p.walls).join('') }),
     decode(d) {
-      const n = d && d.n;
+      const n = d?.n;
       if (!Number.isInteger(n) || n < 2 || n > 40) throw new Error('Invalid size');
       if (typeof d.w !== 'string' || d.w.length !== n * n || !/^[0-3]+$/.test(d.w)) throw new Error('Invalid walls');
       const walls = Uint8Array.from(d.w, Number);

@@ -19,7 +19,7 @@ puzzleTests('calcudoku', {
       if (got !== target) out.push(`cage at ${cells} (${op}${target}) gives ${got}`);
     }
     const covered = p.cages.flatMap((c) => c.cells).sort((a, b) => a - b);
-    if (covered.join() !== [...Array(p.n * p.n).keys()].join()) out.push('cages do not cover each cell once');
+    if (covered.join() !== [...new Array(p.n * p.n).keys()].join()) out.push('cages do not cover each cell once');
     return out;
   },
 });

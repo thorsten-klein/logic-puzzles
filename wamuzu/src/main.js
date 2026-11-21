@@ -44,7 +44,7 @@
         paths.pop();
       }
       if (path.length >= maxLen) return false;
-      const x = path[path.length - 1], r = Math.floor(x / n), c = x % n;
+      const x = path.at(-1), r = Math.floor(x / n), c = x % n;
       const opts = (axis === 0 ? [[0, 1], [0, -1]] : axis === 1 ? [[1, 0], [-1, 0]] : [[0, 1], [1, 0]])
         .filter(([a, b]) => free(r + a, c + b));
       for (const [a, b] of PuzzleShell.shuffle(opts)) {
@@ -79,7 +79,7 @@
       const paths = randomCover(n, Math.min(deadline, Date.now() + 500));
       if (!paths) continue;
       const end = new Uint8Array(n * n);
-      for (const path of paths) { end[path[0]] = 1; end[path[path.length - 1]] = 1; }
+      for (const path of paths) { end[path[0]] = 1; end[path.at(-1)] = 1; }
       const p = { R: n, C: n, end };
       if (!Links.unique(model(p))) continue;
       const g = Loop.grid(n, n);
@@ -104,7 +104,7 @@
     generate,
     encode: (p) => ({ n: p.R, e: Array.from(p.end).join('') }),
     decode(d) {
-      const n = d && d.n;
+      const n = d?.n;
       if (!Number.isInteger(n) || n < 3 || n > 14) throw new Error('Invalid board size');
       if (typeof d.e !== 'string' || d.e.length !== n * n || !/^[01]+$/.test(d.e)) throw new Error('Invalid circles');
       return { R: n, C: n, end: Uint8Array.from(d.e, Number) };

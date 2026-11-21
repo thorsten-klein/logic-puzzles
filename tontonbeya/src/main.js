@@ -81,7 +81,7 @@
     const deadline = Date.now() + 8000;
     while (Date.now() < deadline) {
       const N = n * n;
-      const seeds = PuzzleShell.shuffle([...Array(N).keys()]).slice(0, Math.round(N / 4));
+      const seeds = PuzzleShell.shuffle([...new Array(N).keys()]).slice(0, Math.round(N / 4));
       const room = PuzzleShell.growRegions(n, n, seeds.map((k) => [k]));
       const p = prepare({ n, room });
       const fill = solve(p, new Int8Array(N), 1, 20000, true);
@@ -90,7 +90,7 @@
       const given = Int8Array.from(sol);
       const unique = () => { const r = solve(p, given, 2, 20000); return r.solutions.length === 1 && !r.capped; };
       if (!unique()) continue;
-      for (const k of PuzzleShell.shuffle([...Array(N).keys()])) {
+      for (const k of PuzzleShell.shuffle([...new Array(N).keys()])) {
         const keep = given[k];
         given[k] = 0;
         if (!unique()) given[k] = keep;
@@ -142,10 +142,10 @@
     generate,
     encode: (p) => ({ n: p.n, g: Array.from(p.room, (v) => v.toString(36).padStart(2, '0')).join(''), v: Array.from(p.given).join('') }),
     decode(d) {
-      const n = d && d.n;
+      const n = d?.n;
       if (!Number.isInteger(n) || n < 3 || n > 10) throw new Error('Invalid board size');
       if (typeof d.g !== 'string' || d.g.length !== 2 * n * n || typeof d.v !== 'string' || d.v.length !== n * n) throw new Error('Invalid puzzle');
-      const room = Int32Array.from({ length: n * n }, (_, k) => parseInt(d.g.slice(2 * k, 2 * k + 2), 36));
+      const room = Int32Array.from({ length: n * n }, (_, k) => Number.parseInt(d.g.slice(2 * k, 2 * k + 2), 36));
       const p = prepare({ n, room });
       p.given = Int8Array.from(d.v, Number);
       const res = solve(p, p.given, 2, 200000);

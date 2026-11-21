@@ -121,7 +121,7 @@
     generate,
     encode: (p) => ({ n: p.R, v: Array.from(p.given).join('') }),
     decode(d) {
-      const n = d && d.n;
+      const n = d?.n;
       if (!Number.isInteger(n) || n < 3 || n > 15) throw new Error('Invalid board size');
       if (typeof d.v !== 'string' || d.v.length !== n * n || !/^[0-3]+$/.test(d.v)) throw new Error('Invalid givens');
       const p = { R: n, C: n, triples: triples(n, n), given: Int8Array.from(d.v, Number) };

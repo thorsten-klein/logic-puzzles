@@ -126,7 +126,7 @@
     generate,
     encode: (p) => ({ r: p.R, c: p.C, g: p.clues.map((cl) => (cl ? cl.join('') : '.')).join(',') }),
     decode(d) {
-      const R = d && d.r, C = d && d.c;
+      const R = d?.r, C = d?.c;
       if (![R, C].every((x) => Number.isInteger(x) && x >= 3 && x <= 20)) throw new Error('Invalid board size');
       const parts = String(d.g).split(',');
       if (parts.length !== R * C || parts.some((t) => t !== '.' && !/^[0-8]{1,4}$/.test(t))) throw new Error('Invalid clues');

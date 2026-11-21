@@ -40,13 +40,13 @@ const Loop = (() => {
       const lines = es.filter((e) => s[e] === LINE).length;
       const open = es.filter((e) => s[e] === UNKNOWN);
       if (lines > 2) return false;
-      if (lines + open.length < (must && must[k] ? 2 : lines ? 2 : 0)) return false;
+      if (lines + open.length < (must?.[k] ? 2 : lines ? 2 : 0)) return false;
       if (!open.length) continue;
       let v = 0, why = '';
       if (lines === 2) { v = CROSS; why = 'This cell already has two lines. No more lines can touch it.'; }
       else if (lines === 1 && open.length === 1) { v = LINE; why = 'The line must go on, and this is its only way out.'; }
       else if (lines === 0 && open.length === 1) { v = CROSS; why = 'The loop can not pass through this cell: it has only one open side.'; }
-      else if (must && must[k] && lines + open.length === 2) { v = LINE; why = 'The loop must pass through this cell, and only these sides are open.'; }
+      else if (must?.[k] && lines + open.length === 2) { v = LINE; why = 'The loop must pass through this cell, and only these sides are open.'; }
       if (!v) continue;
       for (const e of open) s[e] = v;
       set += open.length;
@@ -274,7 +274,7 @@ const Loop = (() => {
     const stack = [Math.floor(Math.random() * h * h)];
     seen[stack[0]] = 1;
     while (stack.length) {
-      const k = stack[stack.length - 1];
+      const k = stack.at(-1);
       const i = Math.floor(k / h), j = k % h;
       const opts = [[i - 1, j], [i + 1, j], [i, j - 1], [i, j + 1]]
         .filter(([a, b]) => a >= 0 && b >= 0 && a < h && b < h && !seen[a * h + b]);

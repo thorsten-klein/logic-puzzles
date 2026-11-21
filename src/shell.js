@@ -171,11 +171,11 @@ const PuzzleShell = (() => {
   // --- share encoding ---
   function b64urlEncode(str) {
     const b64 = btoa(unescape(encodeURIComponent(str)));
-    return b64.replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/, '');
+    return b64.replaceAll('+', '-').replaceAll('/', '_').replace(/=+$/, '');
   }
 
   function b64urlDecode(s) {
-    s = s.replace(/-/g, '+').replace(/_/g, '/');
+    s = s.replaceAll('-', '+').replaceAll('_', '/');
     while (s.length % 4) s += '=';
     return decodeURIComponent(escape(atob(s)));
   }
@@ -673,7 +673,7 @@ const PuzzleShell = (() => {
     const settings = store.get(SETTINGS_KEY);
     if (settings && Number.isInteger(settings.size) &&
         settings.size >= cfg.size.min && settings.size <= cfg.size.max) st.size = settings.size;
-    if (settings && settings.opts) {
+    if (settings?.opts) {
       for (const o of cfg.options || []) if (typeof settings.opts[o.id] === 'boolean') st.opts[o.id] = settings.opts[o.id];
     }
     for (const o of cfg.options || []) $(`opt-${o.id}`).checked = st.opts[o.id];
@@ -709,7 +709,7 @@ const PuzzleShell = (() => {
       }
     }
     const saved = store.get(GAME_KEY);
-    if (saved && saved.id) {
+    if (saved?.id) {
       try { startGame(decodeId(saved.id), saved.s); } catch { store.del(GAME_KEY); }
     }
     if (!st.puzzle) showExample('menu-example');
@@ -836,7 +836,7 @@ const PuzzleShell = (() => {
     input.dataset.c = c;
     input.value = value || '';
     input.addEventListener('input', () => {
-      const digits = input.value.replace(/[^0-9]/g, '');
+      const digits = input.value.replaceAll(/[^0-9]/g, '');
       let v = digits ? Number(digits.slice(-1)) : 0;
       if (max >= 10 && digits.length >= 2 && Number(digits.slice(-2)) <= max) v = Number(digits.slice(-2));
       if (v > max) v = 0;

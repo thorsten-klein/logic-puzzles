@@ -139,10 +139,10 @@
     generate,
     encode: (p) => ({ r: p.R, c: p.C, g: Array.from(p.region, (v) => v.toString(36).padStart(2, '0')).join(''), n: p.clues.join(',') }),
     decode(d) {
-      const R = d && d.r, C = d && d.c;
+      const R = d?.r, C = d?.c;
       if (![R, C].every((x) => Number.isInteger(x) && x >= 3 && x <= 20)) throw new Error('Invalid board size');
       if (typeof d.g !== 'string' || d.g.length !== 2 * R * C) throw new Error('Invalid regions');
-      const region = Int32Array.from({ length: R * C }, (_, k) => parseInt(d.g.slice(2 * k, 2 * k + 2), 36));
+      const region = Int32Array.from({ length: R * C }, (_, k) => Number.parseInt(d.g.slice(2 * k, 2 * k + 2), 36));
       const clues = String(d.n).split(',').map(Number);
       if (Math.max(...region) >= clues.length) throw new Error('Invalid clues');
       return { R, C, region, clues };

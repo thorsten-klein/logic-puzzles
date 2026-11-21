@@ -64,7 +64,7 @@
     },
     encode: (p) => ({ n: p.n, g: Array.from(p.g).join(''), r: p.rows.join(','), c: p.cols.join(',') }),
     decode(d) {
-      const n = d && d.n;
+      const n = d?.n;
       if (!Number.isInteger(n) || n < 3 || n > 12) throw new Error('Invalid board size');
       if (typeof d.g !== 'string' || d.g.length !== n * n || !/^[1-9]+$/.test(d.g)) throw new Error('Invalid grid');
       const nums = (x) => String(x).split(',').map(Number);

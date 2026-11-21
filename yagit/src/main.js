@@ -141,7 +141,7 @@
         const r = Binary.solve(m, 2, 4000, t);
         if (r.capped) break;
         if (r.solutions.length === 1) { unique = true; break; }
-        const free = [...Array(N).keys()].filter((k) => !p.num[k]);
+        const free = [...new Array(N).keys()].filter((k) => !p.num[k]);
         if (!free.length) break;
         const k = free[Math.floor(Math.random() * free.length)];
         p.num[k] = kind[reg[k]];
@@ -218,7 +218,7 @@
     const log = [];
     Binary.settle(model(p), s, log);
     const step = log.find((x) => x.cells.some((i) => state[i] === UNKNOWN));
-    if (step) return [{ cells: step.cells, v: step.v, reason: step.con && step.con.why ? step.con.why(step.v) : 'This follows from the rules.' }];
+    if (step) return [{ cells: step.cells, v: step.v, reason: step.con?.why ? step.con.why(step.v) : 'This follows from the rules.' }];
     const i = p.solution.findIndex((v, j) => state[j] === UNKNOWN && v === YES);
     return i < 0 ? [] : [{ cells: [i], v: YES, reason: 'No one-step deduction is left; this needs a longer chain. A line goes here.' }];
   }
@@ -235,7 +235,7 @@
     generate,
     encode: (p) => ({ n: p.n, m: Array.from(p.num).join(','), d: Array.from(p.dot).join('') }),
     decode(d) {
-      const n = d && d.n;
+      const n = d?.n;
       if (!Number.isInteger(n) || n < 3 || n > 12) throw new Error('Invalid board size');
       const num = Uint8Array.from(String(d.m).split(','), Number);
       if (num.length !== n * n || typeof d.d !== 'string' || d.d.length !== (n + 1) * (n + 1)) throw new Error('Invalid puzzle');

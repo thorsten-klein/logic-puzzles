@@ -30,7 +30,7 @@
     if (!done) return true;
     // White cells connect.
     const N = R * C;
-    const start = [...Array(N).keys()].find((k) => !taken.has(k));
+    const start = [...new Array(N).keys()].find((k) => !taken.has(k));
     const seen = new Uint8Array(N);
     seen[start] = 1;
     const stack = [start];
@@ -69,7 +69,7 @@
       const N = n * n;
       // Landing cells first (not touching), then where each block came from.
       const land = [];
-      for (const k of PuzzleShell.shuffle([...Array(N).keys()])) {
+      for (const k of PuzzleShell.shuffle([...new Array(N).keys()])) {
         if (land.length >= Math.round(N / 6)) break;
         const r = Math.floor(k / n), c = k % n;
         if (land.some((j) => Math.abs(Math.floor(j / n) - r) + Math.abs((j % n) - c) <= 1)) continue;
@@ -164,7 +164,7 @@
     generate,
     encode: (p) => ({ n: p.R, b: p.blocks.map((b) => `${b.k}.${b.n}`).join(',') }),
     decode(d) {
-      const n = d && d.n;
+      const n = d?.n;
       if (!Number.isInteger(n) || n < 3 || n > 12) throw new Error('Invalid board size');
       const blocks = String(d.b).split(',').map((t) => { const [k, m] = t.split('.').map(Number); return { k, n: m }; });
       if (blocks.some((b) => !(b.k >= 0 && b.k < n * n && b.n >= 1 && b.n < n))) throw new Error('Invalid blocks');

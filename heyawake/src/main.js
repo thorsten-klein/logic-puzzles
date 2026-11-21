@@ -17,7 +17,7 @@
       while (c + maxW < C && id[r * C + c + maxW] < 0 && maxW < 4) maxW++;
       const w = 1 + Math.floor(Math.random() * maxW);
       let maxH = 0;
-      while (r + maxH < R && maxH < 4 && [...Array(w).keys()].every((i) => id[(r + maxH) * C + c + i] < 0)) maxH++;
+      while (r + maxH < R && maxH < 4 && [...new Array(w).keys()].every((i) => id[(r + maxH) * C + c + i] < 0)) maxH++;
       let h = 1 + Math.floor(Math.random() * maxH);
       if (w * h === 1 && maxH > 1) h = 2;
       for (let i = 0; i < h; i++) for (let j = 0; j < w; j++) id[(r + i) * C + c + j] = count;
@@ -56,7 +56,7 @@
     for (const line of lines) {
       const parts = [];
       for (const k of line) {
-        if (parts.length && room[parts[parts.length - 1][0]] === room[k]) parts[parts.length - 1].push(k);
+        if (parts.length && room[parts.at(-1)[0]] === room[k]) parts.at(-1).push(k);
         else parts.push([k]);
       }
       for (let i = 1; i + 1 < parts.length; i++) {
@@ -103,10 +103,10 @@
       n: Array.from(p.clues).join(','),
     }),
     decode(d) {
-      const R = d && d.r, C = d && d.c;
+      const R = d?.r, C = d?.c;
       if (![R, C].every((x) => Number.isInteger(x) && x >= 2 && x <= 20)) throw new Error('Invalid board size');
       if (typeof d.g !== 'string' || d.g.length !== 2 * R * C) throw new Error('Invalid rooms');
-      const room = Int32Array.from({ length: R * C }, (_, k) => parseInt(d.g.slice(2 * k, 2 * k + 2), 36));
+      const room = Int32Array.from({ length: R * C }, (_, k) => Number.parseInt(d.g.slice(2 * k, 2 * k + 2), 36));
       const clues = Int8Array.from(String(d.n).split(','), Number);
       if (room.some((v) => !(v >= 0 && v < clues.length))) throw new Error('Invalid rooms');
       return { R, C, room, clues };

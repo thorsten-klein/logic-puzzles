@@ -102,7 +102,7 @@
     generate(n) { for (let t = 0; t < 50; t++) { const p = generate(n); if (p) return p; } return null; },
     encode: (p) => ({ n: p.n, g: Array.from(p.prod).join(',') }),
     decode(d) {
-      const n = d && d.n;
+      const n = d?.n;
       if (!Number.isInteger(n) || n < 2 || n > 12) throw new Error('Invalid size');
       const prod = Int32Array.from(String(d.g).split(','), Number);
       if (prod.length !== n * n) throw new Error('Invalid products');

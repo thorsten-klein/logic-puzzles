@@ -10,7 +10,7 @@ PuzzleShell.start({
   generate: (n) => Generator.generate(n),
   encode: (p) => ({ n: p.n, h: p.h, v: p.v, g: Array.from(p.given).join('') }),
   decode(d) {
-    const n = d && d.n;
+    const n = d?.n;
     if (!Number.isInteger(n) || n < 3 || n > 9) throw new Error('Invalid board size');
     if (typeof d.h !== 'string' || d.h.length !== n * (n - 1) || !/^[.<>]*$/.test(d.h)) throw new Error('Invalid signs');
     if (typeof d.v !== 'string' || d.v.length !== n * (n - 1) || !/^[.^v]*$/.test(d.v)) throw new Error('Invalid signs');

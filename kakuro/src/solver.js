@@ -28,7 +28,7 @@ const Solver = (() => {
     const cells = [];
     for (let k = 0; k < total; k++) {
       if (layout[k]) continue;
-      const g = given && given[k];
+      const g = given?.[k];
       if (g) {
         const bit = 1 << (g - 1);
         const rr = cellRow[k], cr = cellCol[k];

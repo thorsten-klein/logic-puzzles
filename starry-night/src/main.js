@@ -60,7 +60,7 @@
     return { solutions: out, capped: nodes > maxNodes };
   }
 
-  const startCand = (p, given) => Int32Array.from({ length: p.n * p.n }, (_, k) => (given && given[k] ? 1 << given[k] : ALL));
+  const startCand = (p, given) => Int32Array.from({ length: p.n * p.n }, (_, k) => (given?.[k] ? 1 << given[k] : ALL));
 
   function generate(n) {
     const deadline = Date.now() + 8000;
@@ -81,19 +81,19 @@
       for (let guard = 0; guard < N && !solved(); guard++) {
         const c = startCand(p, p.given);
         propagate(p, c);
-        const open = [...Array(N).keys()].filter((k) => !one(c[k]) && sol[k] > 1);
+        const open = [...new Array(N).keys()].filter((k) => !one(c[k]) && sol[k] > 1);
         if (!open.length) break;
         const k = open[Math.floor(Math.random() * open.length)];
         p.given[k] = sol[k];
       }
       if (!solved()) continue;
-      for (const [arr, i] of PuzzleShell.shuffle([...Array(n).keys()].flatMap((i) => [[p.rowClue, i], [p.colClue, i]]))) {
+      for (const [arr, i] of PuzzleShell.shuffle([...new Array(n).keys()].flatMap((i) => [[p.rowClue, i], [p.colClue, i]]))) {
         const keep = arr[i];
         arr[i] = 0;
         prepare(p);
         if (!solved()) { arr[i] = keep; prepare(p); }
       }
-      for (const k of PuzzleShell.shuffle([...Array(N).keys()])) {
+      for (const k of PuzzleShell.shuffle([...new Array(N).keys()])) {
         if (!p.given[k]) continue;
         const keep = p.given[k];
         p.given[k] = 0;
@@ -185,7 +185,7 @@
     generate,
     encode: (p) => ({ n: p.n, r: enc(p.rowClue), c: enc(p.colClue), g: enc(p.given) }),
     decode(d) {
-      const n = d && d.n;
+      const n = d?.n;
       if (!Number.isInteger(n) || n < 3 || n > 12) throw new Error('Invalid board size');
       const p = prepare({ n, rowClue: dec(d.r, n), colClue: dec(d.c, n) });
       p.given = dec(d.g, n * n);

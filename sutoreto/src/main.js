@@ -69,7 +69,7 @@
       const sol = fill.solutions[0];
       const given = Int8Array.from(sol);
       const solved = () => { const c = startCand(p, given); return propagate(p, c) && c.every((m, k) => black[k] || one(m)); };
-      for (const k of PuzzleShell.shuffle([...Array(N).keys()])) {
+      for (const k of PuzzleShell.shuffle([...new Array(N).keys()])) {
         if (!given[k]) continue;
         const v = given[k];
         given[k] = 0;
@@ -129,7 +129,7 @@
     generate,
     encode: (p) => ({ n: p.R, b: Array.from(p.black).join(''), v: Array.from(p.given).join('') }),
     decode(d) {
-      const n = d && d.n;
+      const n = d?.n;
       if (!Number.isInteger(n) || n < 3 || n > 15) throw new Error('Invalid size');
       if (typeof d.b !== 'string' || d.b.length !== n * n || typeof d.v !== 'string' || d.v.length !== n * n) throw new Error('Invalid grid');
       const p = prepare({ R: n, C: n, black: Uint8Array.from(d.b, Number) });

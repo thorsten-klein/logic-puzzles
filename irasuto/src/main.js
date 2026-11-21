@@ -63,7 +63,7 @@
       if (!s || s.includes(UNKNOWN)) continue;
       // Drop numbers while logic still solves it. Counts of the others
       // stay right: numbered cells never count.
-      for (const k of PuzzleShell.shuffle([...Array(N).keys()])) {
+      for (const k of PuzzleShell.shuffle([...new Array(N).keys()])) {
         if (num[k] < 0) continue;
         const keep = num[k];
         num[k] = -1;
@@ -102,12 +102,12 @@
     generate,
     encode: (p) => ({ r: p.R, c: p.C, g: Array.from(p.num, (v, k) => (v < 0 ? '.' : (p.col[k] === YES ? 'b' : 'w') + v.toString(36))).join(',') }),
     decode(d) {
-      const R = d && d.r, C = d && d.c;
+      const R = d?.r, C = d?.c;
       if (![R, C].every((x) => Number.isInteger(x) && x >= 3 && x <= 20)) throw new Error('Invalid board size');
       const parts = String(d.g).split(',');
       if (parts.length !== R * C || parts.some((t) => t !== '.' && !/^[bw][0-9a-z]+$/.test(t))) throw new Error('Invalid clues');
       const num = new Int8Array(R * C).fill(-1), col = new Uint8Array(R * C);
-      parts.forEach((t, k) => { if (t !== '.') { col[k] = t[0] === 'b' ? YES : NO; num[k] = parseInt(t.slice(1), 36); } });
+      parts.forEach((t, k) => { if (t !== '.') { col[k] = t[0] === 'b' ? YES : NO; num[k] = Number.parseInt(t.slice(1), 36); } });
       return { R, C, num, col };
     },
     model,

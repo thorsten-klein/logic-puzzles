@@ -100,7 +100,7 @@
     while (Date.now() < deadline) {
       const N = n * n;
       const lit = new Int8Array(N).fill(-1);
-      for (const k of PuzzleShell.shuffle([...Array(N).keys()]).slice(0, Math.round(N * 0.18))) lit[k] = 0;
+      for (const k of PuzzleShell.shuffle([...new Array(N).keys()]).slice(0, Math.round(N * 0.18))) lit[k] = 0;
       const free = prepare({ n, lit: Int8Array.from(lit, (v) => (v >= 0 ? 15 : -1)) });
       // Fill ignoring light, then set the light bits from the answer.
       free.lines.forEach((L) => { L.planets = []; });
@@ -111,14 +111,14 @@
       const solved = () => { const c = startCand(p); return propagate(p, c) && c.every((m, k) => p.lit[k] >= 0 || one(m)); };
       if (!solved()) continue;
       // Drop planets while logic still solves it.
-      for (const k of PuzzleShell.shuffle([...Array(N).keys()])) {
+      for (const k of PuzzleShell.shuffle([...new Array(N).keys()])) {
         if (p.lit[k] < 0) continue;
         const keep = Int8Array.from(p.lit);
         const test = Int8Array.from(p.lit, (v) => v);
         test[k] = -1;
         // Without the planet the cell is empty in the answer.
         const sol2 = Int8Array.from(sol, (v, j) => (j === k ? 1 : v));
-        if ([...Array(n).keys()].some((r) => ![...Array(n).keys()].some((c) => sol2[r * n + c] === 2))) continue;
+        if ([...new Array(n).keys()].some((r) => ![...new Array(n).keys()].some((c) => sol2[r * n + c] === 2))) continue;
         p.lit = lightOf(n, test, sol2);
         prepare(p);
         if (solved()) sol.set(sol2); else { p.lit = keep; prepare(p); }
@@ -205,10 +205,10 @@
     generate,
     encode: (p) => ({ n: p.n, g: Array.from(p.lit, (v) => (v < 0 ? '.' : v.toString(16))).join('') }),
     decode(d) {
-      const n = d && d.n;
+      const n = d?.n;
       if (!Number.isInteger(n) || n < 3 || n > 12) throw new Error('Invalid board size');
       if (typeof d.g !== 'string' || d.g.length !== n * n || !/^[.0-9a-f]+$/.test(d.g)) throw new Error('Invalid planets');
-      const p = prepare({ n, lit: Int8Array.from(d.g, (ch) => (ch === '.' ? -1 : parseInt(ch, 16))) });
+      const p = prepare({ n, lit: Int8Array.from(d.g, (ch) => (ch === '.' ? -1 : Number.parseInt(ch, 16))) });
       const res = solve(p, startCand(p), 2, 50000);
       if (res.solutions.length !== 1) throw new Error('Puzzle has no unique solution');
       p.solution = res.solutions[0];

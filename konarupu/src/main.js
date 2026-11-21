@@ -68,7 +68,7 @@
     generate,
     encode: (p) => ({ n: p.n, g: Array.from(p.clues, (v) => (v < 0 ? '.' : v)).join('') }),
     decode(d) {
-      const n = d && d.n;
+      const n = d?.n;
       if (!Number.isInteger(n) || n < 2 || n > 15) throw new Error('Invalid board size');
       if (typeof d.g !== 'string' || d.g.length !== n * n || !/^[.0-4]+$/.test(d.g)) throw new Error('Invalid clues');
       return { n, R: n + 1, C: n + 1, clues: Int8Array.from(d.g, (ch) => (ch === '.' ? -1 : Number(ch))) };

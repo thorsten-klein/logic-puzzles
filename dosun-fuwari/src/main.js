@@ -65,11 +65,11 @@
     while (Date.now() < deadline) {
       const N = n * n;
       const black = new Uint8Array(N);
-      for (const k of PuzzleShell.shuffle([...Array(N).keys()]).slice(0, Math.round(N * 0.12))) black[k] = 1;
+      for (const k of PuzzleShell.shuffle([...new Array(N).keys()]).slice(0, Math.round(N * 0.12))) black[k] = 1;
       // Rooms of 2..5 white cells.
       const room = new Int32Array(N).fill(-1);
       let id = 0;
-      for (const k of PuzzleShell.shuffle([...Array(N).keys()])) {
+      for (const k of PuzzleShell.shuffle([...new Array(N).keys()])) {
         if (black[k] || room[k] >= 0) continue;
         const want = 2 + Math.floor(Math.random() * 4);
         const cells = [k];
@@ -148,10 +148,10 @@
     generate,
     encode: (p) => ({ n: p.n, g: Array.from(p.room, (v) => (v < 0 ? '..' : v.toString(36).padStart(2, '0'))).join('') }),
     decode(d) {
-      const n = d && d.n;
+      const n = d?.n;
       if (!Number.isInteger(n) || n < 3 || n > 12) throw new Error('Invalid board size');
       if (typeof d.g !== 'string' || d.g.length !== 2 * n * n) throw new Error('Invalid rooms');
-      const room = Int32Array.from({ length: n * n }, (_, k) => { const t = d.g.slice(2 * k, 2 * k + 2); return t === '..' ? -1 : parseInt(t, 36); });
+      const room = Int32Array.from({ length: n * n }, (_, k) => { const t = d.g.slice(2 * k, 2 * k + 2); return t === '..' ? -1 : Number.parseInt(t, 36); });
       const p = prepare({ n, room });
       const res = solve(p, startCand(p), 2, 50000);
       if (res.solutions.length !== 1) throw new Error('Puzzle has no unique solution');

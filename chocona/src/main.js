@@ -59,7 +59,7 @@
         if (!ok) continue;
         for (let r = r0; r < r0 + h; r++) for (let c = c0; c < c0 + w; c++) sol[r * C + c] = YES;
       }
-      const seeds = PuzzleShell.shuffle([...Array(N).keys()]).slice(0, Math.round(N / 5));
+      const seeds = PuzzleShell.shuffle([...new Array(N).keys()]).slice(0, Math.round(N / 5));
       const room = PuzzleShell.growRegions(R, C, seeds.map((k) => [k]));
       const count = Math.max(...room) + 1;
       const clues = new Int8Array(count);
@@ -73,7 +73,7 @@
         return r.solutions.length === 1 && !r.capped;
       };
       if (!unique()) continue;
-      for (const g of PuzzleShell.shuffle([...Array(count).keys()])) {
+      for (const g of PuzzleShell.shuffle([...new Array(count).keys()])) {
         const keep = clues[g];
         clues[g] = -1;
         if (!unique()) clues[g] = keep;
@@ -97,10 +97,10 @@
     generate,
     encode: (p) => ({ r: p.R, c: p.C, g: Array.from(p.room, (v) => v.toString(36).padStart(2, '0')).join(''), n: Array.from(p.clues).join(',') }),
     decode(d) {
-      const R = d && d.r, C = d && d.c;
+      const R = d?.r, C = d?.c;
       if (![R, C].every((x) => Number.isInteger(x) && x >= 2 && x <= 20)) throw new Error('Invalid board size');
       if (typeof d.g !== 'string' || d.g.length !== 2 * R * C) throw new Error('Invalid rooms');
-      const room = Int32Array.from({ length: R * C }, (_, k) => parseInt(d.g.slice(2 * k, 2 * k + 2), 36));
+      const room = Int32Array.from({ length: R * C }, (_, k) => Number.parseInt(d.g.slice(2 * k, 2 * k + 2), 36));
       const clues = Int8Array.from(String(d.n).split(','), Number);
       if (room.some((v) => !(v >= 0 && v < clues.length))) throw new Error('Invalid rooms');
       return { R, C, room, clues };

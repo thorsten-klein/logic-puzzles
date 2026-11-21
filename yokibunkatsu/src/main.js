@@ -53,7 +53,7 @@
         const blocks = pieces.filter((c) => c.length === 5);
         // Each block must fold with some star cell.
         const stars = blocks.map((cells) => PuzzleShell.shuffle(cells.slice()).find((k) => folds(C, cells, k)));
-        if (stars.some((k) => k === undefined)) continue;
+        if (stars.includes(undefined)) continue;
         blocks.black = new Uint8Array(R * C);
         pieces.filter((c) => c.length === 1).forEach(([k]) => { blocks.black[k] = 1; });
         blocks.stars = stars;

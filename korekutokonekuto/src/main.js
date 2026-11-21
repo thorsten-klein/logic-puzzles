@@ -156,7 +156,7 @@
           // New islands may not touch other islands.
           const nr = [[-1, 0], [1, 0], [0, -1], [0, 1]].some(([a, b]) => {
             const x = er + a, y = ec + b;
-            return x >= 0 && y >= 0 && x < R && y < C && grid[x * C + y] >= 0 && x * C + y !== path[path.length - 1];
+            return x >= 0 && y >= 0 && x < R && y < C && grid[x * C + y] >= 0 && x * C + y !== path.at(-1);
           });
           if (nr) continue;
           add(end);
@@ -171,7 +171,7 @@
       }
       if (isl.length < Math.max(4, target * 0.7)) continue;
       // Black circles on some free cells; they block lines.
-      const black = PuzzleShell.shuffle([...Array(R * C).keys()].filter((k) => grid[k] === -1)).slice(0, Math.round(R * C * 0.08));
+      const black = PuzzleShell.shuffle([...new Array(R * C).keys()].filter((k) => grid[k] === -1)).slice(0, Math.round(R * C * 0.08));
       const p = prepare({ R, C, isl, black });
       const unique = () => { const r = solve(p, 2); return r.solutions.length === 1 && !r.capped; };
       if (!unique()) continue;
@@ -272,7 +272,7 @@
     generate,
     encode: (p) => ({ r: p.R, c: p.C, i: p.isl.map((x) => `${x.k}.${x.n}`).join(','), b: (p.black || []).join(',') }),
     decode(d) {
-      const R = d && d.r, C = d && d.c;
+      const R = d?.r, C = d?.c;
       if (![R, C].every((x) => Number.isInteger(x) && x >= 3 && x <= 25)) throw new Error('Invalid board size');
       const isl = String(d.i).split(',').map((s) => { const [k, n] = s.split('.').map(Number); return { k, n }; });
       if (isl.some((x) => !(x.k >= 0 && x.k < R * C && (x.n === -1 || (x.n >= 1 && x.n <= 4))))) throw new Error('Invalid circles');

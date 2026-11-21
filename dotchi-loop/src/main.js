@@ -53,7 +53,7 @@
       if (!loop) continue;
       const g = Loop.grid(n, n);
       const N = n * n;
-      const seeds = PuzzleShell.shuffle([...Array(N).keys()]).slice(0, Math.round(N / 5));
+      const seeds = PuzzleShell.shuffle([...new Array(N).keys()]).slice(0, Math.round(N / 5));
       const room = PuzzleShell.growRegions(n, n, seeds.map((k) => [k]));
       const shapeOf = (k) => {
         const dirs = [0, 1, 2, 3].filter((d) => g.cellEdges[k][d] >= 0 && loop[g.cellEdges[k][d]] === LINE);
@@ -71,7 +71,7 @@
       const p = { R: n, C: n, room, mark };
       const solved = () => Loop.solvedBy(Loop.logicSolve(model(p)));
       if (!solved()) continue;
-      for (const k of PuzzleShell.shuffle([...Array(N).keys()])) {
+      for (const k of PuzzleShell.shuffle([...new Array(N).keys()])) {
         if (!mark[k]) continue;
         const keep = mark[k];
         mark[k] = 0;
@@ -94,11 +94,11 @@
     generate,
     encode: (p) => ({ n: p.R, g: Array.from(p.room, (v) => v.toString(36).padStart(2, '0')).join(''), m: Array.from(p.mark).join('') }),
     decode(d) {
-      const n = d && d.n;
+      const n = d?.n;
       if (!Number.isInteger(n) || n < 3 || n > 16) throw new Error('Invalid board size');
       if (typeof d.g !== 'string' || d.g.length !== 2 * n * n) throw new Error('Invalid rooms');
       if (typeof d.m !== 'string' || d.m.length !== n * n || !/^[012]+$/.test(d.m)) throw new Error('Invalid circles');
-      const room = Int32Array.from({ length: n * n }, (_, k) => parseInt(d.g.slice(2 * k, 2 * k + 2), 36));
+      const room = Int32Array.from({ length: n * n }, (_, k) => Number.parseInt(d.g.slice(2 * k, 2 * k + 2), 36));
       return { R: n, C: n, room, mark: Uint8Array.from(d.m, Number) };
     },
     model,

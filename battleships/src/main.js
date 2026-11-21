@@ -146,7 +146,7 @@
     generate,
     encode: (p) => ({ n: p.R, r: p.rows.join(','), c: p.cols.join(','), g: Array.from(p.given).join('') }),
     decode(d) {
-      const n = d && d.n;
+      const n = d?.n;
       if (!Number.isInteger(n) || n < 4 || n > 15) throw new Error('Invalid board size');
       const nums = (x) => String(x).split(',').map(Number);
       const rows = nums(d.r), cols = nums(d.c);

@@ -132,7 +132,7 @@ const Rects = (() => {
       while (c + maxW < C && id[r * C + c + maxW] < 0 && maxW < maxSide) maxW++;
       let w = 1 + Math.floor(Math.random() * maxW);
       let maxH = 0;
-      while (r + maxH < R && maxH < maxSide && [...Array(w).keys()].every((i) => id[(r + maxH) * C + c + i] < 0)) maxH++;
+      while (r + maxH < R && maxH < maxSide && [...new Array(w).keys()].every((i) => id[(r + maxH) * C + c + i] < 0)) maxH++;
       let h = 1 + Math.floor(Math.random() * maxH);
       if (shape) [h, w] = shape(h, w, maxH, maxW);
       const rect = [r, c, r + h - 1, c + w - 1];
@@ -307,10 +307,10 @@ const Rects = (() => {
       generate: (n) => generate(cfg, n),
       encode: (p) => ({ r: p.R, c: p.C, g: Array.from(p.clues, (v) => v.toString(36)).join(''), x: cfg.encodeExtra ? cfg.encodeExtra(p) : undefined }),
       decode(d) {
-        const R = d && d.r, C = d && d.c;
+        const R = d?.r, C = d?.c;
         if (![R, C].every((x) => Number.isInteger(x) && x >= 2 && x <= 25)) throw new Error('Invalid board size');
         if (typeof d.g !== 'string' || d.g.length !== R * C) throw new Error('Invalid clues');
-        const p = { R, C, clues: Int8Array.from(d.g, (ch) => parseInt(ch, 36)), maxArea: cfg.maxArea };
+        const p = { R, C, clues: Int8Array.from(d.g, (ch) => Number.parseInt(ch, 36)), maxArea: cfg.maxArea };
         if (cfg.decodeExtra) cfg.decodeExtra(p, d.x);
         const res = count(cfg, p, 2, 50000);
         if (res.count !== 1) throw new Error('Puzzle has no unique solution');

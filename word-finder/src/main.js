@@ -53,7 +53,7 @@
       const paths = [];
       let ok = true;
       while (ok) {
-        const free = [...Array(N).keys()].filter((k) => used[k] < 0);
+        const free = [...new Array(N).keys()].filter((k) => used[k] < 0);
         if (!free.length) break;
         const deg = (k) => nbs(n, k).filter((j) => used[j] < 0).length;
         const start = free.reduce((a, b) => (deg(b) < deg(a) || (deg(b) === deg(a) && Math.random() < 0.3) ? b : a));
@@ -61,7 +61,7 @@
         used[start] = paths.length;
         const want = 4 + Math.floor(Math.random() * 4);
         while (path.length < want) {
-          const opts = nbs(n, path[path.length - 1]).filter((j) => used[j] < 0);
+          const opts = nbs(n, path.at(-1)).filter((j) => used[j] < 0);
           if (!opts.length) break;
           const j = opts.reduce((a, b) => (deg(b) < deg(a) || (deg(b) === deg(a) && Math.random() < 0.5) ? b : a));
           used[j] = paths.length;
@@ -121,7 +121,7 @@
           return;
         }
         if (s[k]) { sel = []; onChange(); return; }
-        const last = sel[sel.length - 1];
+        const last = sel.at(-1);
         if (k === last) sel.pop();
         else if (sel.length && nbs(n, last).includes(k) && !sel.includes(k)) sel.push(k);
         else sel = [k];
@@ -168,7 +168,7 @@
     generate,
     encode: (p) => ({ n: p.n, l: p.letters, w: p.words.join(',') }),
     decode(d) {
-      const n = d && d.n;
+      const n = d?.n;
       if (!Number.isInteger(n) || n < 3 || n > 12) throw new Error('Invalid board size');
       if (typeof d.l !== 'string' || d.l.length !== n * n || !/^[A-Z]+$/.test(d.l)) throw new Error('Invalid letters');
       const words = String(d.w).split(',');

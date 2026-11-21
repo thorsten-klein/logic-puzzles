@@ -14,7 +14,7 @@ PuzzleShell.start({
     g: Array.from(p.walls, (v) => (v === Rules.WHITE ? '.' : v === Rules.BLACK ? '#' : String(v))).join(''),
   }),
   decode(d) {
-    const R = d && d.r, C = d && d.c;
+    const R = d?.r, C = d?.c;
     if (![R, C].every((x) => Number.isInteger(x) && x >= 2 && x <= 30)) throw new Error('Invalid board size');
     if (typeof d.g !== 'string' || d.g.length !== R * C || !/^[.#0-4]+$/.test(d.g)) throw new Error('Invalid grid');
     const walls = Int8Array.from(d.g, (ch) => (ch === '.' ? Rules.WHITE : ch === '#' ? Rules.BLACK : Number(ch)));

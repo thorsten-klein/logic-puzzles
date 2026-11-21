@@ -95,7 +95,7 @@
         path.forEach((x) => { used[x] = 1; });
         const white = Math.random() < 0.5;
         col[path[0]] = white ? 1 : 2;
-        col[path[path.length - 1]] = white ? 2 : 1;
+        col[path.at(-1)] = white ? 2 : 1;
       }
       const p = prepare({ R, C, col });
       const sols = solve(p);
@@ -176,7 +176,7 @@
     generate,
     encode: (p) => ({ r: p.R, c: p.C, g: Array.from(p.col).join('') }),
     decode(d) {
-      const R = d && d.r, C = d && d.c;
+      const R = d?.r, C = d?.c;
       if (![R, C].every((x) => Number.isInteger(x) && x >= 3 && x <= 20)) throw new Error('Invalid board size');
       if (typeof d.g !== 'string' || d.g.length !== R * C || !/^[012]+$/.test(d.g)) throw new Error('Invalid circles');
       const p = prepare({ R, C, col: Int8Array.from(d.g, Number) });

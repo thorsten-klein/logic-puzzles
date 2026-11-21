@@ -62,7 +62,7 @@
   function addZoom() {
     const wrap = doc.getElementById('board-wrap');
     if (!wrap || doc.getElementById('zoom-box')) return;
-    const key = 'zoomstep:' + location.pathname.split('/').slice(-2, -1)[0];
+    const key = 'zoomstep:' + location.pathname.split('/').at(-2);
     let i = STEPS.indexOf(1);
     try { const z = Number(localStorage.getItem(key)); if (STEPS.includes(z)) i = STEPS.indexOf(z); } catch { /* no storage */ }
     const box = doc.createElement('div');
@@ -165,7 +165,7 @@
 
   // Game pages: a star next to the name in the top bar and on the setup screen.
   function addFavs() {
-    const slug = location.pathname.split('/').slice(-2, -1)[0];
+    const slug = location.pathname.split('/').at(-2);
     const name = doc.getElementById('topbar-name');
     if (name && !name.querySelector('.fav-star')) name.appendChild(Favs.button(slug));
     const h1 = doc.querySelector('#menu-screen h1');

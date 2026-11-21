@@ -93,7 +93,7 @@
       if (!loop) continue;
       const g = Loop.grid(n, n);
       const on = (k) => g.cellEdges[k].some((e) => e >= 0 && loop[e] === LINE);
-      const off = [...Array(n * n).keys()].filter((k) => !on(k));
+      const off = [...new Array(n * n).keys()].filter((k) => !on(k));
       // Arrows break up touching off-loop cells; a few extra for clues.
       const arrow = new Uint8Array(n * n);
       for (const k of PuzzleShell.shuffle(off.slice())) {
@@ -138,14 +138,14 @@
     generate,
     encode: (p) => ({ r: p.R, c: p.C, g: p.clues.map((x) => (x ? x.d + x.n.toString(36) : '..')).join('') }),
     decode(d) {
-      const R = d && d.r, C = d && d.c;
+      const R = d?.r, C = d?.c;
       if (![R, C].every((x) => Number.isInteger(x) && x >= 3 && x <= 20)) throw new Error('Invalid board size');
       if (typeof d.g !== 'string' || d.g.length !== 2 * R * C) throw new Error('Invalid clues');
       const clues = Array.from({ length: R * C }, (_, k) => {
         const t = d.g.slice(2 * k, 2 * k + 2);
         if (t === '..') return null;
         if (!DIRS[t[0]]) throw new Error('Invalid clue');
-        return { d: t[0], n: parseInt(t[1], 36) };
+        return { d: t[0], n: Number.parseInt(t[1], 36) };
       });
       return { R, C, clues };
     },

@@ -92,7 +92,7 @@
     const deadline = Date.now() + (n > 5 ? 14000 : 8000);
     while (Date.now() < deadline) {
       const R = n, C = n, N = R * C;
-      const seeds = PuzzleShell.shuffle([...Array(N).keys()]).slice(0, Math.round(N / 5));
+      const seeds = PuzzleShell.shuffle([...new Array(N).keys()]).slice(0, Math.round(N / 5));
       const room = PuzzleShell.growRegions(R, C, seeds.map((k) => [k]));
       const rooms = [];
       room.forEach((g, k) => { (rooms[g] = rooms[g] || []).push(k); });
@@ -127,11 +127,11 @@
         const other = r.solutions.find((x) => x.some((v, k) => v !== sol[k]));
         if (!other) { unique = true; break; }
         let moved = false;
-        for (const x of PuzzleShell.shuffle([...Array(N).keys()].filter((k) => other[k] === YES && sol[k] === NO))) {
+        for (const x of PuzzleShell.shuffle([...new Array(N).keys()].filter((k) => other[k] === YES && sol[k] === NO))) {
           const g = room[x];
           const to = side(C, N, x).filter((j) => room[j] !== g && sol[j] === NO);
           if (!to.length) continue;
-          const rest = [...Array(N).keys()].filter((k) => room[k] === g && k !== x);
+          const rest = [...new Array(N).keys()].filter((k) => room[k] === g && k !== x);
           const set = new Set(rest), seen = new Set([rest[0]]), st = [rest[0]];
           while (st.length) { const k = st.pop(); for (const j of side(C, N, k)) if (set.has(j) && !seen.has(j)) { seen.add(j); st.push(j); } }
           if (seen.size !== rest.length) continue;
@@ -171,10 +171,10 @@
     generate,
     encode: (p) => ({ r: p.R, c: p.C, g: Array.from(p.room, (v) => v.toString(36).padStart(2, '0')).join(''), n: Array.from(p.clues).join(',') }),
     decode(d) {
-      const R = d && d.r, C = d && d.c;
+      const R = d?.r, C = d?.c;
       if (![R, C].every((x) => Number.isInteger(x) && x >= 2 && x <= 20)) throw new Error('Invalid board size');
       if (typeof d.g !== 'string' || d.g.length !== 2 * R * C) throw new Error('Invalid rooms');
-      const room = Int32Array.from({ length: R * C }, (_, k) => parseInt(d.g.slice(2 * k, 2 * k + 2), 36));
+      const room = Int32Array.from({ length: R * C }, (_, k) => Number.parseInt(d.g.slice(2 * k, 2 * k + 2), 36));
       const clues = Int8Array.from(String(d.n).split(','), Number);
       if (room.some((v) => !(v >= 0 && v < clues.length))) throw new Error('Invalid rooms');
       return { R, C, room, clues };

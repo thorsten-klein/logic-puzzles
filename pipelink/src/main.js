@@ -128,7 +128,7 @@
     generate,
     encode: (p) => ({ n: p.R, e: p.given.join(',') }),
     decode(d) {
-      const n = d && d.n;
+      const n = d?.n;
       if (!Number.isInteger(n) || n < 2 || n > 16) throw new Error('Invalid board size');
       const E = Loop.grid(n, n).E;
       const given = String(d.e || '').split(',').filter((t) => t !== '').map(Number);
@@ -156,7 +156,7 @@
       const g = Loop.grid(p.R, p.C);
       const t = Uint8Array.from(s, (v) => (v === LINE ? LINE : CROSS));
       return settle(p, g, Uint8Array.from(t)) && oneLoop(g, t) &&
-        [...Array(g.R * g.C).keys()].every((k) => [2, 4].includes(g.cellEdges[k].filter((e) => e >= 0 && t[e] === LINE).length));
+        [...new Array(g.R * g.C).keys()].every((k) => [2, 4].includes(g.cellEdges[k].filter((e) => e >= 0 && t[e] === LINE).length));
     },
     hints,
     applyHint(p, s, h) { for (const e of h.edges) s[e] = h.v; for (const e of p.given) s[e] = LINE; },

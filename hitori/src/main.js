@@ -14,12 +14,12 @@ PuzzleShell.start({
     b: Array.from(p.solution, (v) => (v === Rules.BLACK ? '1' : '0')).join(''),
   }),
   decode(d) {
-    const n = d && d.n;
+    const n = d?.n;
     if (!Number.isInteger(n) || n < 3 || n > 16) throw new Error('Invalid board size');
     if (typeof d.g !== 'string' || d.g.length !== n * n || typeof d.b !== 'string' || d.b.length !== n * n) {
       throw new Error('Invalid puzzle grid');
     }
-    const nums = Int8Array.from(d.g, (ch) => parseInt(ch, 36));
+    const nums = Int8Array.from(d.g, (ch) => Number.parseInt(ch, 36));
     if (nums.some((v) => !(v >= 1))) throw new Error('Invalid numbers');
     const solution = Uint8Array.from(d.b, (ch) => (ch === '1' ? Rules.BLACK : Rules.WHITE));
     if (!Rules.isSolved(nums, n, solution)) throw new Error('Puzzle solution is not valid');

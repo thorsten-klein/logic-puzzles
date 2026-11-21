@@ -120,7 +120,7 @@ const Fillo = (() => {
     const { readonly, result, hint, onChange } = opts;
     const val = result ? solution : Int8Array.from(entries, (v, k) => given[k] || v);
     // Borders between different values (or unknown cells).
-    const ids = Int32Array.from(val, (v, k) => (v ? v : -1 - k));
+    const ids = Int32Array.from(val, (v, k) => (v || -1 - k));
     const hintCells = new Set(hint ? hint.cells : []);
     const max = Math.max(...(p.sizes || [9]));
     return PuzzleShell.gridBoard({
@@ -158,7 +158,7 @@ const Fillo = (() => {
       generate: (n) => generate(cfg, n),
       encode: (p) => ({ r: p.R, c: p.C, g: Array.from(p.given).join('') }),
       decode(d) {
-        const R = d && d.r, C = d && d.c;
+        const R = d?.r, C = d?.c;
         if (![R, C].every((x) => Number.isInteger(x) && x >= 2 && x <= 15)) throw new Error('Invalid board size');
         if (typeof d.g !== 'string' || d.g.length !== R * C || !/^[0-9]+$/.test(d.g)) throw new Error('Invalid givens');
         const p = { R, C, given: Int8Array.from(d.g, Number), sizes: sizesOf() };

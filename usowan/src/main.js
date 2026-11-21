@@ -67,7 +67,7 @@
         if (id[k] >= 0) continue;
         const r = Math.floor(k / C), c = k % C;
         let w = 1 + Math.floor(Math.random() * 3), h = 1 + Math.floor(Math.random() * 3);
-        while (c + w > C || [...Array(w).keys()].some((i) => id[r * C + c + i] >= 0)) w--;
+        while (c + w > C || [...new Array(w).keys()].some((i) => id[r * C + c + i] >= 0)) w--;
         while (r + h > R) h--;
         for (let i = 0; i < h; i++) for (let j = 0; j < w; j++) id[(r + i) * C + c + j] = rects.length;
         rects.push(true);
@@ -114,11 +114,11 @@
     generate,
     encode: (p) => ({ r: p.R, c: p.C, g: Array.from(p.region, (v) => v.toString(36).padStart(2, '0')).join(''), n: Array.from(p.clues, (v) => (v < 0 ? '.' : v)).join('') }),
     decode(d) {
-      const R = d && d.r, C = d && d.c;
+      const R = d?.r, C = d?.c;
       if (![R, C].every((x) => Number.isInteger(x) && x >= 3 && x <= 20)) throw new Error('Invalid board size');
       if (typeof d.g !== 'string' || d.g.length !== 2 * R * C) throw new Error('Invalid regions');
       if (typeof d.n !== 'string' || d.n.length !== R * C || !/^[.0-4]+$/.test(d.n)) throw new Error('Invalid clues');
-      return { R, C, region: Int32Array.from({ length: R * C }, (_, k) => parseInt(d.g.slice(2 * k, 2 * k + 2), 36)),
+      return { R, C, region: Int32Array.from({ length: R * C }, (_, k) => Number.parseInt(d.g.slice(2 * k, 2 * k + 2), 36)),
         clues: Int8Array.from(d.n, (ch) => (ch === '.' ? -1 : Number(ch))) };
     },
     model,

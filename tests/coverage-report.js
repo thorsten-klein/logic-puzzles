@@ -8,8 +8,8 @@
 // A line counts as run if any of its code ran. Comment and blank lines
 // and lines with only brackets do not count.
 
-const fs = require('fs');
-const path = require('path');
+const fs = require('node:fs');
+const path = require('node:path');
 
 const root = path.join(__dirname, '..');
 const RAW = path.join(root, 'coverage', 'raw');
@@ -48,7 +48,7 @@ function lines(f) {
       code = ' '.repeat(e + 2) + code.slice(e + 2);
     }
     const b = code.indexOf('/*');
-    if (b >= 0 && code.indexOf('*/', b) < 0) { inComment = true; code = code.slice(0, b); }
+    if (b >= 0 && !code.includes('*/', b)) { inComment = true; code = code.slice(0, b); }
     code = code.replace(/\/\/.*$/, (m) => (/['"`]/.test(m) ? m : ''));
     if (!/[A-Za-z0-9_$'"`]/.test(code)) continue; // blank, comment or brackets only
     let ran = false;

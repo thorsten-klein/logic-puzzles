@@ -131,7 +131,7 @@
     generate,
     encode: (p) => ({ n: p.n, g: Array.from(p.nums).join(',') }),
     decode(d) {
-      const n = d && d.n;
+      const n = d?.n;
       if (!Number.isInteger(n) || n < 2 || n > 10) throw new Error('Invalid size');
       const nums = Int32Array.from(String(d.g).split(','), Number);
       if (nums.length !== n * n) throw new Error('Invalid numbers');

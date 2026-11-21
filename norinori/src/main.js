@@ -74,7 +74,7 @@
       const room = new Int32Array(N).fill(-1);
       dominoes.forEach(([a, b], i) => { room[a] = room[b] = i; });
       for (let open = room.filter((x) => x < 0).length, guard = 0; open > 0 && guard < N * 4; guard++) {
-        for (const k of PuzzleShell.shuffle([...Array(N).keys()])) {
+        for (const k of PuzzleShell.shuffle([...new Array(N).keys()])) {
           if (room[k] >= 0) continue;
           const r = Math.floor(k / C), c = k % C;
           const near = [[r - 1, c], [r + 1, c], [r, c - 1], [r, c + 1]]
@@ -100,11 +100,11 @@
         const other = r.solutions.find((x) => x.some((v, k) => v !== sol[k]));
         if (!other) { ok = r.solutions.length === 1; break; }
         let moved = false;
-        for (const x of PuzzleShell.shuffle([...Array(N).keys()].filter((k) => other[k] === YES && sol[k] === NO))) {
+        for (const x of PuzzleShell.shuffle([...new Array(N).keys()].filter((k) => other[k] === YES && sol[k] === NO))) {
           const g = room[x];
           const to = side(x).filter((j) => room[j] !== g);
           if (!to.length) continue;
-          const rest = [...Array(N).keys()].filter((k) => room[k] === g && k !== x);
+          const rest = [...new Array(N).keys()].filter((k) => room[k] === g && k !== x);
           const set = new Set(rest), seen = new Set([rest[0]]), st = [rest[0]];
           while (st.length) { const k = st.pop(); for (const j of side(k)) if (set.has(j) && !seen.has(j)) { seen.add(j); st.push(j); } }
           if (seen.size !== rest.length) continue;
@@ -132,10 +132,10 @@
     generate,
     encode: (p) => ({ r: p.R, c: p.C, g: Array.from(p.room, (v) => v.toString(36).padStart(2, '0')).join('') }),
     decode(d) {
-      const R = d && d.r, C = d && d.c;
+      const R = d?.r, C = d?.c;
       if (![R, C].every((x) => Number.isInteger(x) && x >= 2 && x <= 20)) throw new Error('Invalid board size');
       if (typeof d.g !== 'string' || d.g.length !== 2 * R * C) throw new Error('Invalid rooms');
-      return { R, C, room: Int32Array.from({ length: R * C }, (_, k) => parseInt(d.g.slice(2 * k, 2 * k + 2), 36)) };
+      return { R, C, room: Int32Array.from({ length: R * C }, (_, k) => Number.parseInt(d.g.slice(2 * k, 2 * k + 2), 36)) };
     },
     model,
     draw(p, k, el) { PuzzleShell.regionBorders(el, k, p.room, p.R, p.C); },

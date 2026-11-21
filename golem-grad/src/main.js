@@ -104,7 +104,7 @@
       const ring = new Uint8Array(N);
       let ok = true;
       for (;;) {
-        const free = [...Array(N).keys()].filter((k) => black[k] && !used[k]);
+        const free = [...new Array(N).keys()].filter((k) => black[k] && !used[k]);
         if (!free.length) break;
         const deg = (k) => nb[k].filter((j) => black[j] && !used[j]).length;
         const start = free.reduce((a, b) => (deg(b) < deg(a) || (deg(b) === deg(a) && Math.random() < 0.3) ? b : a));
@@ -112,7 +112,7 @@
         used[start] = 1;
         const want = 2 + Math.floor(Math.random() * 6);
         while (path.length < want) {
-          const x = path[path.length - 1];
+          const x = path.at(-1);
           const opts = nb[x].filter((j) => black[j] && !used[j]);
           if (!opts.length) break;
           const j = opts.reduce((a, b) => (deg(b) < deg(a) ? b : a));
@@ -121,7 +121,7 @@
         }
         if (path.length < 2) { ok = false; break; }
         ring[path[0]] = 1;
-        ring[path[path.length - 1]] = 1;
+        ring[path.at(-1)] = 1;
       }
       if (!ok) continue;
       // Every island gets its size; then drop sizes that are not needed.
@@ -145,7 +145,7 @@
         return r.solutions.length === 1 && !r.capped;
       };
       if (!unique()) continue;
-      for (const k of PuzzleShell.shuffle([...Array(N).keys()])) {
+      for (const k of PuzzleShell.shuffle([...new Array(N).keys()])) {
         if (!clues[k]) continue;
         const keep = clues[k];
         clues[k] = 0;
@@ -170,10 +170,10 @@
     generate,
     encode: (p) => ({ r: p.R, c: p.C, g: Array.from(p.clues, (v) => (v > 0 ? v.toString(36) : '.')).join(''), o: Array.from(p.ring).join('') }),
     decode(d) {
-      const R = d && d.r, C = d && d.c;
+      const R = d?.r, C = d?.c;
       if (![R, C].every((x) => Number.isInteger(x) && x >= 3 && x <= 20)) throw new Error('Invalid board size');
       if (typeof d.g !== 'string' || d.g.length !== R * C || typeof d.o !== 'string' || d.o.length !== R * C) throw new Error('Invalid clues');
-      return { R, C, clues: Int8Array.from(d.g, (ch) => (ch === '.' ? 0 : parseInt(ch, 36))), ring: Uint8Array.from(d.o, Number) };
+      return { R, C, clues: Int8Array.from(d.g, (ch) => (ch === '.' ? 0 : Number.parseInt(ch, 36))), ring: Uint8Array.from(d.o, Number) };
     },
     model,
     fixed: (p, k) => (p.clues[k] > 0 ? NO : p.ring[k] ? YES : 0),

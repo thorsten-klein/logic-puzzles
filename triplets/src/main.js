@@ -137,11 +137,11 @@
     generate: (h) => generate(3 * h),
     encode: (p) => ({ n: p.R, g: Array.from(p.region, (v) => v.toString(36).padStart(2, '0')).join(''), v: Array.from(p.given).join('') }),
     decode(d) {
-      const n = d && d.n;
+      const n = d?.n;
       if (!Number.isInteger(n) || n < 3 || n > 15) throw new Error('Invalid board size');
       if (typeof d.g !== 'string' || d.g.length !== 2 * n * n) throw new Error('Invalid regions');
       if (typeof d.v !== 'string' || d.v.length !== n * n || !/^[0-3]+$/.test(d.v)) throw new Error('Invalid givens');
-      const p = prepare({ R: n, C: n, region: Int32Array.from({ length: n * n }, (_, k) => parseInt(d.g.slice(2 * k, 2 * k + 2), 36)) });
+      const p = prepare({ R: n, C: n, region: Int32Array.from({ length: n * n }, (_, k) => Number.parseInt(d.g.slice(2 * k, 2 * k + 2), 36)) });
       p.given = Int8Array.from(d.v, Number);
       const res = solve(p, startCand(p, p.given), 2, 50000);
       if (res.solutions.length !== 1) throw new Error('Puzzle has no unique solution');

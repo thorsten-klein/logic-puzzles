@@ -105,7 +105,7 @@
       for (let k = 0; k < N; k++) if (sol[k] === 1) p.num[k] = count(k);
       const solved = () => { const c = startCand(p); return propagate(p, c) && c.every(one); };
       if (!solved()) continue;
-      for (const k of PuzzleShell.shuffle([...Array(N).keys()])) {
+      for (const k of PuzzleShell.shuffle([...new Array(N).keys()])) {
         if (p.num[k] < 0) continue;
         const keep = p.num[k];
         p.num[k] = -1;
@@ -173,7 +173,7 @@
     generate,
     encode: (p) => ({ n: p.n, g: Array.from(p.num, (v) => (v < 0 ? '.' : v)).join('') }),
     decode(d) {
-      const n = d && d.n;
+      const n = d?.n;
       if (!Number.isInteger(n) || n < 3 || n > 12) throw new Error('Invalid board size');
       if (typeof d.g !== 'string' || d.g.length !== n * n || !/^[.0-2]+$/.test(d.g)) throw new Error('Invalid numbers');
       const p = prepare({ n, num: Int8Array.from(d.g, (ch) => (ch === '.' ? -1 : Number(ch))) });

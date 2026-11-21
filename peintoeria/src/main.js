@@ -54,7 +54,7 @@
     const deadline = Date.now() + 8000;
     while (Date.now() < deadline) {
       const R = n, C = n, N = R * C;
-      const seeds = PuzzleShell.shuffle([...Array(N).keys()]).slice(0, Math.round(N / 3));
+      const seeds = PuzzleShell.shuffle([...new Array(N).keys()]).slice(0, Math.round(N / 3));
       const room = PuzzleShell.growRegions(R, C, seeds.map((k) => [k]));
       const base = { R, C, room, clues: new Int8Array(N).fill(-1) };
       const fill = Binary.randomFill(model(base), 0.5, 10);
@@ -85,11 +85,11 @@
     generate,
     encode: (p) => ({ r: p.R, c: p.C, g: Array.from(p.room, (v) => v.toString(36).padStart(2, '0')).join(''), n: Array.from(p.clues, (v) => (v < 0 ? '.' : v)).join('') }),
     decode(d) {
-      const R = d && d.r, C = d && d.c;
+      const R = d?.r, C = d?.c;
       if (![R, C].every((x) => Number.isInteger(x) && x >= 2 && x <= 20)) throw new Error('Invalid board size');
       if (typeof d.g !== 'string' || d.g.length !== 2 * R * C) throw new Error('Invalid rooms');
       if (typeof d.n !== 'string' || d.n.length !== R * C || !/^[.0-4]+$/.test(d.n)) throw new Error('Invalid clues');
-      const room = Int32Array.from({ length: R * C }, (_, k) => parseInt(d.g.slice(2 * k, 2 * k + 2), 36));
+      const room = Int32Array.from({ length: R * C }, (_, k) => Number.parseInt(d.g.slice(2 * k, 2 * k + 2), 36));
       return { R, C, room, clues: Int8Array.from(d.n, (ch) => (ch === '.' ? -1 : Number(ch))) };
     },
     model,

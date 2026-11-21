@@ -34,7 +34,7 @@
     split(R, C) {
       const N = R * C;
       const black = new Uint8Array(N);
-      for (const k of PuzzleShell.shuffle([...Array(N).keys()]).slice(0, Math.round(N * 0.12))) black[k] = 1;
+      for (const k of PuzzleShell.shuffle([...new Array(N).keys()]).slice(0, Math.round(N * 0.12))) black[k] = 1;
       const id = new Int32Array(N).fill(-1);
       const regions = [];
       for (let k = 0; k < N; k++) {

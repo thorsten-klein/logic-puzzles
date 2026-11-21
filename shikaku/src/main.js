@@ -9,10 +9,10 @@ PuzzleShell.start({
   generate: (n) => Generator.generate(n),
   encode: (p) => ({ r: p.R, c: p.C, g: Array.from(p.clues, (v) => (v ? v.toString(36) : '.')).join('') }),
   decode(d) {
-    const R = d && d.r, C = d && d.c;
+    const R = d?.r, C = d?.c;
     if (![R, C].every((x) => Number.isInteger(x) && x >= 2 && x <= 30)) throw new Error('Invalid board size');
     if (typeof d.g !== 'string' || d.g.length !== R * C) throw new Error('Invalid clues');
-    const clues = Int8Array.from(d.g, (ch) => (ch === '.' ? 0 : parseInt(ch, 36)));
+    const clues = Int8Array.from(d.g, (ch) => (ch === '.' ? 0 : Number.parseInt(ch, 36)));
     const p = { R, C, clues };
     const res = Solver.countSolutions(p);
     if (res.count !== 1) throw new Error('Puzzle has no unique solution');

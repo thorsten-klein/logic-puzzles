@@ -4,8 +4,8 @@
 // The raw data goes to coverage/raw/<slug>.json; tests/coverage-report.js
 // turns it into a table.
 
-const fs = require('fs');
-const path = require('path');
+const fs = require('node:fs');
+const path = require('node:path');
 const { root } = require('./games');
 
 const RAW = path.join(root, 'coverage', 'raw');
@@ -29,7 +29,7 @@ async function fuzzBoard(page) {
   const box = await page.locator('#board-wrap > *').first().boundingBox();
   if (!box) return;
   const dims = await page.evaluate(() => {
-    const t = window.__puzzleTest, p = t && t.st.puzzle;
+    const t = window.__puzzleTest, p = t?.st.puzzle;
     const R = (p && (p.R || p.n)) || 6, C = (p && (p.C || p.n)) || R;
     return { R: Math.min(R, 12), C: Math.min(C, 12) };
   });
@@ -157,7 +157,7 @@ async function fuzzCode(page) {
       for (const k of keys) {
         const v = obj[k];
         // Thinned clues (every 2nd or 3rd clue gone) make solvers search.
-        const thin = (str, m, blank) => str.replace(/[^,]/g, (ch, i) => (i % m === 0 && /[1-9a-z]/i.test(ch) ? blank : ch));
+        const thin = (str, m, blank) => str.replaceAll(/[^,]/g, (ch, i) => (i % m === 0 && /[1-9a-z]/i.test(ch) ? blank : ch));
         const extra = typeof v === 'string' ? [v.slice(0, Math.floor(v.length / 2)), v + ',1', v.replace(/^./, '#'), v.replace(/\d/, '9'),
           thin(v, 2, '0'), thin(v, 3, '0'), thin(v, 2, '.'), thin(v, 3, '.'), thin(v, 2, '-')]
           : Array.isArray(v) ? [v.slice(1), v.concat(v), v.map(() => -1), v.map((x, i) => (i % 2 ? 0 : x)), v.filter((_, i) => i % 2)]
@@ -184,7 +184,7 @@ async function fuzzCode(page) {
         continue;
       }
       // All clues blank, too.
-      early.push({ ...d0, [key]: v.replace(/[1-9a-z]/gi, v.includes('.') ? '.' : v.includes('-') ? '-' : '0') });
+      early.push({ ...d0, [key]: v.replaceAll(/[1-9a-z]/gi, v.includes('.') ? '.' : v.includes('-') ? '-' : '0') });
       let made = 0;
       for (let i = 0; i < v.length && made < 40; i++) {
         if (!/[1-9a-z]/i.test(v[i])) continue;
@@ -258,7 +258,7 @@ async function fuzzCode(page) {
       let x = cfg.newState(q);
       for (let i = 0; i < 2000 && !cfg.check(q, x) && Date.now() < more + 3000; i++) {
         const hs = tryIt(() => cfg.hints(q, x));
-        if (!hs || !hs.length) break;
+        if (!hs?.length) break;
         cfg.applyHint(q, x, hs[0]);
       }
     }
@@ -268,7 +268,7 @@ async function fuzzCode(page) {
     const snaps = [];
     for (let i = 0; i < 2000 && !cfg.check(p, s) && Date.now() < stop; i++) {
       const hs = tryIt(() => cfg.hints(p, s));
-      if (!hs || !hs.length) break;
+      if (!hs?.length) break;
       snaps.push(clone(cfg.saveState(s)));
       hs.slice(0, 3).forEach((h) => tryIt(() => cfg.render(p, s, { readonly: true, hint: h })));
       cfg.applyHint(p, s, hs[0]);
@@ -434,7 +434,7 @@ async function workout(page, slug, more) {
   await page.waitForTimeout(300);
   const link = await page.evaluate(() => {
     const t = window.__puzzleTest;
-    return t && t.st.puzzle ? location.href.split('?')[0] + '?game-id=' + t.encodeId(t.st.puzzle, t.st.state) : null;
+    return t?.st.puzzle ? location.href.split('?')[0] + '?game-id=' + t.encodeId(t.st.puzzle, t.st.state) : null;
   });
   if (link) await page.goto(link);
   await page.waitForTimeout(100);

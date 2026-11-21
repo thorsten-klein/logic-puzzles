@@ -35,7 +35,7 @@ const Hint = (() => {
       } else {
         reason = `This ${n} already has ${n} filled cell${n === 1 ? '' : 's'}. The rest stay empty.`;
       }
-      out.push({ cells: st.cells, clue: st.con.k, other: st.other && st.other.k, v: st.v, reason });
+      out.push({ cells: st.cells, clue: st.con.k, other: st.other?.k, v: st.v, reason });
     }
     return out;
   }

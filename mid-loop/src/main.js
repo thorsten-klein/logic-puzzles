@@ -110,7 +110,7 @@
     generate,
     encode: (p) => ({ n: p.R, c: Array.from(p.cdot).join(''), e: p.edot.join(',') }),
     decode(d) {
-      const n = d && d.n;
+      const n = d?.n;
       if (!Number.isInteger(n) || n < 3 || n > 16) throw new Error('Invalid board size');
       if (typeof d.c !== 'string' || d.c.length !== n * n || !/^[01]+$/.test(d.c)) throw new Error('Invalid dots');
       const E = Loop.grid(n, n).E;

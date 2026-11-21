@@ -2,7 +2,7 @@
 // random button and the shaking logo.
 
 const { test, expect } = require('@playwright/test');
-const path = require('path');
+const path = require('node:path');
 const { root } = require('../lib/games');
 const { collect } = require('../lib/coverage');
 

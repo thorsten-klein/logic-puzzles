@@ -21,7 +21,7 @@
         if (d === undefined) break;
         x += step[d];
         from = d ^ 1;
-        if (room[x] !== rooms[rooms.length - 1]) rooms.push(room[x]);
+        if (room[x] !== rooms.at(-1)) rooms.push(room[x]);
       }
       return { rooms, end: x };
     };
@@ -50,7 +50,7 @@
       const keep = PuzzleShell.shuffle(paths).slice(0, Math.max(2, Math.round(paths.length * 0.6)));
       const remap = (k) => Math.floor(k / even) * n + (k % even);
       const lines = keep.map((path) => path.map(remap));
-      const seeds = PuzzleShell.shuffle([...Array(N).keys()]).slice(0, Math.round(N / 5));
+      const seeds = PuzzleShell.shuffle([...new Array(N).keys()]).slice(0, Math.round(N / 5));
       const room = PuzzleShell.growRegions(n, n, seeds.map((k) => [k]));
       // Every line may enter a room only once.
       const ok = lines.every((path) => {
@@ -66,12 +66,12 @@
       for (const path of lines) {
         const count = path.map((k) => room[k]).filter((r, i, a) => i === 0 || r !== a[i - 1]).length;
         circle[path[0]] = count;
-        circle[path[path.length - 1]] = count;
+        circle[path.at(-1)] = count;
         for (let i = 0; i + 1 < path.length; i++) state[edgeOf.get([path[i], path[i + 1]].sort((a, b) => a - b).join(','))] = LINE;
       }
       const p = { R: n, C: n, room, circle };
       if (!Links.unique(model(p))) continue;
-      for (const k of PuzzleShell.shuffle([...Array(N).keys()])) {
+      for (const k of PuzzleShell.shuffle([...new Array(N).keys()])) {
         if (circle[k] <= 0) continue;
         const keepV = circle[k];
         circle[k] = 0;
@@ -95,12 +95,12 @@
     generate,
     encode: (p) => ({ n: p.R, g: Array.from(p.room, (v) => v.toString(36).padStart(2, '0')).join(''), o: Array.from(p.circle, (v) => (v < 0 ? '.' : v.toString(36))).join('') }),
     decode(d) {
-      const n = d && d.n;
+      const n = d?.n;
       if (!Number.isInteger(n) || n < 2 || n > 16) throw new Error('Invalid board size');
       if (typeof d.g !== 'string' || d.g.length !== 2 * n * n) throw new Error('Invalid rooms');
       if (typeof d.o !== 'string' || d.o.length !== n * n) throw new Error('Invalid circles');
-      const room = Int32Array.from({ length: n * n }, (_, k) => parseInt(d.g.slice(2 * k, 2 * k + 2), 36));
-      return { R: n, C: n, room, circle: Int8Array.from(d.o, (ch) => (ch === '.' ? -1 : parseInt(ch, 36))) };
+      const room = Int32Array.from({ length: n * n }, (_, k) => Number.parseInt(d.g.slice(2 * k, 2 * k + 2), 36));
+      return { R: n, C: n, room, circle: Int8Array.from(d.o, (ch) => (ch === '.' ? -1 : Number.parseInt(ch, 36))) };
     },
     model,
     drawCell: (p) => (svg, k, x, y, s) => {

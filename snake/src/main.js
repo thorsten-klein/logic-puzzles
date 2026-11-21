@@ -14,7 +14,7 @@
     const { rows, cols } = Rules.computeClues(path, size);
     return {
       size, noTouch,
-      head: path[0].slice(), tail: path[path.length - 1].slice(),
+      head: path[0].slice(), tail: path.at(-1).slice(),
       rowClues: rows, colClues: cols,
       solution: path.map(([r, c]) => [r, c]),
     };
@@ -81,7 +81,7 @@
   }
 
   // "(row 3, col 5)" in the hint texts becomes "E3", like the labels.
-  const cellNames = (text) => text.replace(/\(?row (\d+), col(?:umn)? (\d+)\)?/g,
+  const cellNames = (text) => text.replaceAll(/\(?row (\d+), col(?:umn)? (\d+)\)?/g,
     (m, r, c) => PuzzleShell.colName(Number(c) - 1) + r);
 
   function hints(p, s) {
@@ -111,7 +111,7 @@
       return d;
     },
     decode(d) {
-      const size = d && d.s, path = d && d.p;
+      const size = d?.s, path = d?.p;
       if (!Number.isInteger(size) || size < 3 || size > 30) throw new Error('Invalid board size');
       if (!Array.isArray(path) || path.length < 2) throw new Error('Invalid solution path');
       for (const cell of path) {

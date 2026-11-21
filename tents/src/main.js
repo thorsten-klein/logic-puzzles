@@ -10,7 +10,7 @@ PuzzleShell.start({
   generate: (n) => Generator.generate(n),
   encode: (p) => ({ n: p.n, t: Array.from(p.trees).join(''), r: p.rows.join(','), c: p.cols.join(',') }),
   decode(d) {
-    const n = d && d.n;
+    const n = d?.n;
     if (!Number.isInteger(n) || n < 3 || n > 20) throw new Error('Invalid board size');
     if (typeof d.t !== 'string' || d.t.length !== n * n || !/^[01]+$/.test(d.t)) throw new Error('Invalid trees');
     const nums = (s) => String(s).split(',').map(Number);

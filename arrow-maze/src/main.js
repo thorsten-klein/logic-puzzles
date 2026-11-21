@@ -23,7 +23,7 @@
       const dir = new Int8Array(N).fill(-1);
       let ok = true;
       while (path.length < N) {
-        const k = path[path.length - 1];
+        const k = path.at(-1);
         const opts = [];
         for (let d = 0; d < 8; d++) for (const j of ray(n, k, d)) if (!used[j]) opts.push([j, d]);
         if (!opts.length) { ok = false; break; }
@@ -85,14 +85,14 @@
         const res = solve(p, 2, 50000);
         if (res.solutions.length === 1 && !res.capped) break;
         const other = res.solutions.find((x) => x.some((v, k) => v !== sol[k]));
-        const diff = [...Array(N).keys()].filter((k) => !p.given[k] && (!other || other[k] !== sol[k]));
+        const diff = [...new Array(N).keys()].filter((k) => !p.given[k] && (!other || other[k] !== sol[k]));
         if (!diff.length) break;
         const k = diff[Math.floor(Math.random() * diff.length)];
         p.given[k] = sol[k];
       }
       const unique = () => { const r = solve(p, 2, 50000); return r.solutions.length === 1 && !r.capped; };
       if (!unique()) continue;
-      for (const k of PuzzleShell.shuffle([...Array(N).keys()])) {
+      for (const k of PuzzleShell.shuffle([...new Array(N).keys()])) {
         const v = p.given[k];
         if (!v || v === 1 || v === N) continue;
         p.given[k] = 0;
@@ -161,7 +161,7 @@
     generate,
     encode: (p) => ({ n: p.n, d: Array.from(p.dir, (v) => (v < 0 ? '.' : v)).join(''), g: Array.from(p.given).join(',') }),
     decode(d) {
-      const n = d && d.n;
+      const n = d?.n;
       if (!Number.isInteger(n) || n < 2 || n > 10) throw new Error('Invalid size');
       if (typeof d.d !== 'string' || d.d.length !== n * n || !/^[.0-7]+$/.test(d.d)) throw new Error('Invalid arrows');
       const given = Int32Array.from(String(d.g).split(','), Number);

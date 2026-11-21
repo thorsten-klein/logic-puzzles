@@ -136,10 +136,10 @@
     generate,
     encode: (p) => ({ n: p.R, g: Array.from(p.clues, (v) => (v < 0 ? '.' : v.toString(36))).join('') }),
     decode(d) {
-      const n = d && d.n;
+      const n = d?.n;
       if (!Number.isInteger(n) || n < 4 || n > 15) throw new Error('Invalid board size');
       if (typeof d.g !== 'string' || d.g.length !== n * n) throw new Error('Invalid clues');
-      return { R: n, C: n, fleet: fleetFor(n), clues: Int8Array.from(d.g, (ch) => (ch === '.' ? -1 : parseInt(ch, 36))) };
+      return { R: n, C: n, fleet: fleetFor(n), clues: Int8Array.from(d.g, (ch) => (ch === '.' ? -1 : Number.parseInt(ch, 36))) };
     },
     model,
     fixed: (p, k) => (p.clues[k] >= 0 ? NO : 0),

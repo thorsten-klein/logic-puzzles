@@ -72,7 +72,7 @@ const LegLoop = (() => {
       };
       if (!solved()) continue;
       // Drop whole circles, then numbers, while logic still solves it.
-      for (const k of PuzzleShell.shuffle([...Array(N).keys()])) {
+      for (const k of PuzzleShell.shuffle([...new Array(N).keys()])) {
         if (!kind[k]) continue;
         const keep = [kind[k], num[k]];
         kind[k] = ''; num[k] = 0;
@@ -93,11 +93,11 @@ const LegLoop = (() => {
       generate: (n) => generate(cfg, n),
       encode: (p) => ({ r: p.R, c: p.C, k: p.kind.map((x) => x || '.').join(''), n: Array.from(p.num, (v) => v.toString(36)).join('') }),
       decode(d) {
-        const R = d && d.r, C = d && d.c;
+        const R = d?.r, C = d?.c;
         if (![R, C].every((x) => Number.isInteger(x) && x >= 3 && x <= 20)) throw new Error('Invalid board size');
         if (typeof d.k !== 'string' || d.k.length !== R * C || !/^[.wb]+$/.test(d.k)) throw new Error('Invalid circles');
         if (typeof d.n !== 'string' || d.n.length !== R * C) throw new Error('Invalid numbers');
-        return { R, C, kind: Array.from(d.k, (ch) => (ch === '.' ? '' : ch)), num: Int8Array.from(d.n, (ch) => parseInt(ch, 36) || 0) };
+        return { R, C, kind: Array.from(d.k, (ch) => (ch === '.' ? '' : ch)), num: Int8Array.from(d.n, (ch) => Number.parseInt(ch, 36) || 0) };
       },
       model: (p) => model(cfg, p),
       drawOnTop: true,

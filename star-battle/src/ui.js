@@ -10,7 +10,7 @@ const UI = (() => {
     const { readonly, result, hint, onChange } = opts;
     const shown = result ? solution : state;
     const hintCells = new Set(hint ? hint.cells : []);
-    const area = new Set(hint && hint.area ? hint.area : []);
+    const area = new Set(hint?.area ? hint.area : []);
     return PuzzleShell.gridBoard({
       rows: n, cols: n, cellPx: PuzzleShell.fitCell(n, 46), className: 'pz-board pz-regions sb-board', readonly,
       renderCell(k, el) {

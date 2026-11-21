@@ -23,7 +23,7 @@
     size: { min: 4, max: 6, def: 5 },
     solvedText: 'Good neighbours all around — nicely done.',
     prepare(p) {
-      const clues = p.clues.filter((v) => v).length;
+      const clues = p.clues.filter(Boolean).length;
       p.size = Math.round((p.R * p.C) / clues);
     },
     sizeOf: (p) => p.size,

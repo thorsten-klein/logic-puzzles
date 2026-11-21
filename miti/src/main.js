@@ -69,7 +69,7 @@
     const oneLoop = () => {
       let x = 0, prev = -1, len = 0;
       do {
-        const e = g.cellEdges[x].find((f) => f >= 0 && s[f] === LINE && g.ends[f].indexOf(prev) < 0);
+        const e = g.cellEdges[x].find((f) => f >= 0 && s[f] === LINE && !g.ends[f].includes(prev));
         const [a, b] = g.ends[e];
         prev = x;
         x = a === x ? b : a;
@@ -133,7 +133,7 @@
     generate,
     encode: (p) => ({ n: p.R, d: Array.from(p.dot).join('') }),
     decode(d) {
-      const n = d && d.n;
+      const n = d?.n;
       if (!Number.isInteger(n) || n < 2 || n > 16 || n % 2) throw new Error('Invalid board size');
       if (typeof d.d !== 'string' || d.d.length !== (n + 1) * (n + 1) || !/^[01]+$/.test(d.d)) throw new Error('Invalid dots');
       return { R: n, C: n, dot: Uint8Array.from(d.d, Number) };

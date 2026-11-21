@@ -215,7 +215,7 @@
     },
     encode: (p) => ({ n: p.n, g: Array.from(p.g).join('') }),
     decode(d) {
-      const n = d && d.n;
+      const n = d?.n;
       if (!Number.isInteger(n) || n < 1 || n > 9) throw new Error('Invalid size');
       if (typeof d.g !== 'string' || d.g.length !== (n + 1) * (n + 2) || !/^[0-9]+$/.test(d.g)) throw new Error('Invalid grid');
       const p = prepare({ n, g: Int8Array.from(d.g, Number) });

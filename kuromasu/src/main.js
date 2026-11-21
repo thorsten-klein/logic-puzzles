@@ -10,10 +10,10 @@ PuzzleShell.start({
   generate: (n) => Generator.generate(n),
   encode: (p) => ({ n: p.n, g: Array.from(p.clues, (v) => v.toString(36)).join('') }),
   decode(d) {
-    const n = d && d.n;
+    const n = d?.n;
     if (!Number.isInteger(n) || n < 3 || n > 18) throw new Error('Invalid board size');
     if (typeof d.g !== 'string' || d.g.length !== n * n) throw new Error('Invalid clues');
-    const clues = Int8Array.from(d.g, (ch) => parseInt(ch, 36));
+    const clues = Int8Array.from(d.g, (ch) => Number.parseInt(ch, 36));
     if (clues.some((v) => !(v >= 0))) throw new Error('Invalid clues');
     const p = { n, clues };
     const res = Binary.solveFull(Rules.model(p));

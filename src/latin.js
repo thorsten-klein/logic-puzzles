@@ -99,7 +99,7 @@ const Latin = (() => {
   // Candidates from given values (0 = empty).
   function startCand(n, given) {
     const cand = new Int32Array(n * n).fill(full(n));
-    for (let k = 0; k < n * n; k++) if (given && given[k]) cand[k] = 1 << given[k];
+    for (let k = 0; k < n * n; k++) if (given?.[k]) cand[k] = 1 << given[k];
     return cand;
   }
 
@@ -151,7 +151,7 @@ const Latin = (() => {
       }
     }
     // Joins names: "1, 3 and 5".
-    const join = (a, word = 'and') => a.length > 1 ? `${a.slice(0, -1).join(', ')} ${word} ${a[a.length - 1]}` : String(a[0]);
+    const join = (a, word = 'and') => a.length > 1 ? `${a.slice(0, -1).join(', ')} ${word} ${a.at(-1)}` : String(a[0]);
     // `rule` names what removed the other spots (for the game-rule pass).
     const singles = (cnd, reason, rule) => {
       for (let k = 0; k < n * n; k++) {
@@ -274,7 +274,7 @@ const Latin = (() => {
       generate: cfg.generate,
       encode: (p) => ({ n: p.n, g: Array.from(p.given).join(','), x: cfg.encode(p) }),
       decode(d) {
-        const n = d && d.n;
+        const n = d?.n;
         if (!Number.isInteger(n) || n < 3 || n > 9) throw new Error('Invalid board size');
         const given = Int8Array.from(String(d.g).split(','), Number);
         if (given.length !== n * n || given.some((v) => !(v >= 0 && v <= n))) throw new Error('Invalid givens');

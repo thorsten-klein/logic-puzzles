@@ -12,7 +12,7 @@
     const C = g.C;
     const step = [-C, C, -1, 1];
     const deg = (k) => g.cellEdges[k].filter((e) => e >= 0 && s[e] === LINE).length;
-    const start = [...Array(g.R * C).keys()].find((k) => deg(k));
+    const start = [...new Array(g.R * C).keys()].find((k) => deg(k));
     if (start === undefined) return null;
     const out = [];
     let x = start, from = -1;
@@ -159,7 +159,7 @@
     generate,
     encode: (p) => ({ n: p.R, m: Array.from(p.circle).join('') }),
     decode(d) {
-      const n = d && d.n;
+      const n = d?.n;
       if (!Number.isInteger(n) || n < 3 || n > 16) throw new Error('Invalid board size');
       if (typeof d.m !== 'string' || d.m.length !== n * n || !/^[01]+$/.test(d.m)) throw new Error('Invalid circles');
       return { R: n, C: n, circle: Uint8Array.from(d.m, Number) };

@@ -43,7 +43,7 @@
       } else {
         const d = v - 40;
         // An arrow at a leg end, pointing back toward the bend.
-        const ok = L.legs.some(({ d: ld, leg }) => leg[leg.length - 1] === k && d === (ld ^ 1));
+        const ok = L.legs.some(({ d: ld, leg }) => leg.at(-1) === k && d === (ld ^ 1));
         if (!ok) return false;
       }
     }
@@ -118,7 +118,7 @@
         if (!L) return false;
         // Circle (sometimes with the size) and arrows on both leg ends.
         p.clues[L.bend] = Math.random() < 0.5 ? cells.length + 1 : 1;
-        for (const { d, leg } of L.legs) p.clues[leg[leg.length - 1]] = 40 + (d ^ 1);
+        for (const { d, leg } of L.legs) p.clues[leg.at(-1)] = 40 + (d ^ 1);
       }
       return true;
     },

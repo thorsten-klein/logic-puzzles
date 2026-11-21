@@ -11,7 +11,7 @@ const Generator = (() => {
     const s = new Uint8Array(N).fill(NO);
     const target = Math.round(N * (0.2 + Math.random() * 0.06));
     let count = 0;
-    for (const k of PuzzleShell.shuffle([...Array(N).keys()])) {
+    for (const k of PuzzleShell.shuffle([...new Array(N).keys()])) {
       if (count >= target) break;
       const r = Math.floor(k / n), c = k % n;
       if ((r > 0 && s[k - n] === YES) || (r < n - 1 && s[k + n] === YES) ||
@@ -31,7 +31,7 @@ const Generator = (() => {
     }
     const p = { n, clues };
     const solved = () => { const t = Binary.logicSolve(Rules.model(p)); return t && !t.includes(UNKNOWN); };
-    for (const k of PuzzleShell.shuffle([...Array(N).keys()])) {
+    for (const k of PuzzleShell.shuffle([...new Array(N).keys()])) {
       if (!clues[k]) continue;
       const keep = clues[k];
       clues[k] = 0;

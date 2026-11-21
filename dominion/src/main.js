@@ -83,7 +83,7 @@
     const R = n, C = n, N = R * C;
     const nb = nbsOf(R, C);
     const shade = new Uint8Array(N);
-    for (const k of PuzzleShell.shuffle([...Array(N).keys()])) {
+    for (const k of PuzzleShell.shuffle([...new Array(N).keys()])) {
       const j = nb[k][Math.floor(Math.random() * nb[k].length)];
       if ([k, j].some((x) => shade[x] || nb[x].some((y) => shade[y]))) continue;
       if (Math.random() < 0.6) { shade[k] = 1; shade[j] = 1; }
@@ -107,7 +107,7 @@
     const s = Binary.logicSolve(model(p));
     if (!s || s.includes(UNKNOWN)) return null;
     // Thin letters, keeping at least one per area.
-    for (const k of PuzzleShell.shuffle([...Array(N).keys()])) {
+    for (const k of PuzzleShell.shuffle([...new Array(N).keys()])) {
       if (!letters[k]) continue;
       const keep = letters[k];
       if (letters.filter((v) => v === keep).length === 1) continue;
@@ -135,7 +135,7 @@
     },
     encode: (p) => ({ r: p.R, c: p.C, g: Array.from(p.letters, (v) => (v ? String.fromCharCode(64 + v) : '.')).join('') }),
     decode(d) {
-      const R = d && d.r, C = d && d.c;
+      const R = d?.r, C = d?.c;
       if (![R, C].every((x) => Number.isInteger(x) && x >= 3 && x <= 20)) throw new Error('Invalid board size');
       if (typeof d.g !== 'string' || d.g.length !== R * C || !/^[.A-Z]+$/.test(d.g)) throw new Error('Invalid letters');
       return { R, C, letters: Int8Array.from(d.g, (ch) => (ch === '.' ? 0 : ch.charCodeAt(0) - 64)) };

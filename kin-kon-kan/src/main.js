@@ -83,7 +83,7 @@
     const deadline = Date.now() + 8000;
     while (Date.now() < deadline) {
       const N = n * n;
-      const seeds = PuzzleShell.shuffle([...Array(N).keys()]).slice(0, Math.round(N / 5));
+      const seeds = PuzzleShell.shuffle([...new Array(N).keys()]).slice(0, Math.round(N / 5));
       const room = PuzzleShell.growRegions(n, n, seeds.map((k) => [k]));
       const rooms = [];
       room.forEach((g, k) => { (rooms[g] = rooms[g] || []).push(k); });
@@ -205,10 +205,10 @@
     encode: (p) => ({ n: p.n, g: Array.from(p.room, (v) => v.toString(36).padStart(2, '0')).join(''),
       c: p.clues.map((x) => (x ? LET[x[0]] + x[1] : '')).join(',') }),
     decode(d) {
-      const n = d && d.n;
+      const n = d?.n;
       if (!Number.isInteger(n) || n < 3 || n > 12) throw new Error('Invalid board size');
       if (typeof d.g !== 'string' || d.g.length !== 2 * n * n) throw new Error('Invalid rooms');
-      const room = Int32Array.from({ length: n * n }, (_, k) => parseInt(d.g.slice(2 * k, 2 * k + 2), 36));
+      const room = Int32Array.from({ length: n * n }, (_, k) => Number.parseInt(d.g.slice(2 * k, 2 * k + 2), 36));
       const parts = String(d.c).split(',');
       if (parts.length !== 4 * n) throw new Error('Invalid clues');
       const clues = parts.map((t) => (t ? [LET.indexOf(t[0]), Number(t.slice(1))] : null));

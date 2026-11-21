@@ -14,12 +14,12 @@ puzzleTests('kakuro', {
         if (Date.now() > stop) break;
         const p = tryIt(() => Generator.generate(size));
         if (!p) continue;
-        const cells = [...Array(p.rows * p.cols).keys()].filter((k) => !p.layout[k]);
+        const cells = [...new Array(p.rows * p.cols).keys()].filter((k) => !p.layout[k]);
         // Hint walk: fill the first forced cell until none is left.
         let filled = new Map(Object.entries(p.given).map(([k, v]) => [Number(k), v]));
         for (let i = 0; i < 300; i++) {
           const hs = Hint.findAll(p, filled);
-          if (!hs || !hs.length) break;
+          if (!hs?.length) break;
           const h = hs[0];
           if (h.idx === undefined || !h.digit) break;
           filled.set(h.idx, h.digit);

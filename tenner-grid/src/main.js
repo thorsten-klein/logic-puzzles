@@ -81,7 +81,7 @@
       if (k === R * C) return true;
       if (++nodes > 20000) return false;
       const r = Math.floor(k / C), c = k % C;
-      for (const d of PuzzleShell.shuffle([...Array(10).keys()])) {
+      for (const d of PuzzleShell.shuffle([...new Array(10).keys()])) {
         let ok = true;
         for (let j = r * C; j < k && ok; j++) if (g[j] === d + 1) ok = false;
         for (let dc = -1; dc <= 1 && ok; dc++) {
@@ -199,7 +199,7 @@
     generate,
     encode: (p) => ({ r: p.R, s: p.sums.join(','), g: Array.from(p.given, (v) => (v ? v - 1 : '.')).join('') }),
     decode(d) {
-      const R = d && d.r;
+      const R = d?.r;
       if (!Number.isInteger(R) || R < 2 || R > 10) throw new Error('Invalid board size');
       const sums = String(d.s).split(',').map(Number);
       if (sums.length !== C || typeof d.g !== 'string' || d.g.length !== R * C) throw new Error('Invalid puzzle');

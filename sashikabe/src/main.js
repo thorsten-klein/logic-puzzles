@@ -34,7 +34,7 @@
     const v = clues[k];
     if (!v) return true;
     if (v < 40) return k === L.bend && (v === 1 || v - 1 === cells.length);
-    return L.legs.some(({ d, leg }) => leg[leg.length - 1] === k && v - 40 === (d ^ 1));
+    return L.legs.some(({ d, leg }) => leg.at(-1) === k && v - 40 === (d ^ 1));
   });
 
   function model(p) {
@@ -100,7 +100,7 @@
         const L = shape(C, cells);
         if (!L) { ok = false; break; }
         clues[L.bend] = Math.random() < 0.6 ? cells.length + 1 : 1;
-        for (const { d, leg } of L.legs) clues[leg[leg.length - 1]] = 40 + (d ^ 1);
+        for (const { d, leg } of L.legs) clues[leg.at(-1)] = 40 + (d ^ 1);
       }
       if (!ok) continue;
       const p = { R, C, clues };
@@ -112,7 +112,7 @@
         return r.solutions.length === 1 && !r.capped;
       };
       if (!unique()) continue;
-      for (const k of PuzzleShell.shuffle([...Array(N).keys()])) {
+      for (const k of PuzzleShell.shuffle([...new Array(N).keys()])) {
         if (!clues[k]) continue;
         const keep = clues[k];
         clues[k] = 0;
@@ -137,7 +137,7 @@
     generate,
     encode: (p) => ({ r: p.R, c: p.C, g: Array.from(p.clues).join(',') }),
     decode(d) {
-      const R = d && d.r, C = d && d.c;
+      const R = d?.r, C = d?.c;
       if (![R, C].every((x) => Number.isInteger(x) && x >= 3 && x <= 20)) throw new Error('Invalid board size');
       const clues = Int16Array.from(String(d.g).split(','), Number);
       if (clues.length !== R * C) throw new Error('Invalid clues');

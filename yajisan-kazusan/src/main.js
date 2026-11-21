@@ -112,14 +112,14 @@
     generate,
     encode: (p) => ({ r: p.R, c: p.C, n: Array.from(p.num, (v, k) => (v < 0 ? '.' : v.toString(36) + p.dir[k])).join(',') }),
     decode(d) {
-      const R = d && d.r, C = d && d.c;
+      const R = d?.r, C = d?.c;
       if (![R, C].every((x) => Number.isInteger(x) && x >= 3 && x <= 20)) throw new Error('Invalid board size');
       const parts = String(d.n).split(',');
       if (parts.length !== R * C) throw new Error('Invalid clues');
       const num = new Int8Array(R * C).fill(-1), dir = new Int8Array(R * C);
       parts.forEach((t, k) => {
         if (t === '.') return;
-        num[k] = parseInt(t.slice(0, -1), 36);
+        num[k] = Number.parseInt(t.slice(0, -1), 36);
         dir[k] = Number(t.slice(-1)) % 4;
         if (!(num[k] >= 0)) throw new Error('Invalid clues');
       });

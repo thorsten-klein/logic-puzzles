@@ -76,11 +76,11 @@
     while (Date.now() < deadline) {
       const N = n * n;
       const arrow = new Int8Array(N).fill(-1);
-      for (const k of PuzzleShell.shuffle([...Array(N).keys()]).slice(0, Math.round(N * 0.12))) arrow[k] = 4;
+      for (const k of PuzzleShell.shuffle([...new Array(N).keys()]).slice(0, Math.round(N * 0.12))) arrow[k] = 4;
       // Rooms of 1..5 white cells.
       const room = new Int32Array(N).fill(-1);
       let id = 0;
-      for (const k of PuzzleShell.shuffle([...Array(N).keys()])) {
+      for (const k of PuzzleShell.shuffle([...new Array(N).keys()])) {
         if (arrow[k] >= 0 || room[k] >= 0) continue;
         const want = 1 + Math.floor(Math.random() * 5);
         const cells = [k];
@@ -113,7 +113,7 @@
       const given = Int8Array.from(sol);
       const solved = () => { const c = startCand(p, given); return propagate(p, c) && c.every((m, k) => arrow[k] >= 0 || one(m)); };
       if (!solved()) continue;
-      for (const k of PuzzleShell.shuffle([...Array(N).keys()])) {
+      for (const k of PuzzleShell.shuffle([...new Array(N).keys()])) {
         if (!given[k]) continue;
         const v = given[k];
         given[k] = 0;
@@ -175,10 +175,10 @@
     encode: (p) => ({ n: p.n, g: Array.from(p.room, (v) => (v < 0 ? '..' : v.toString(36).padStart(2, '0'))).join(''),
       a: Array.from(p.arrow, (v) => (v < 0 ? '.' : v)).join(''), v: Array.from(p.given).join('') }),
     decode(d) {
-      const n = d && d.n;
+      const n = d?.n;
       if (!Number.isInteger(n) || n < 3 || n > 12) throw new Error('Invalid board size');
       if (typeof d.g !== 'string' || d.g.length !== 2 * n * n || typeof d.a !== 'string' || d.a.length !== n * n) throw new Error('Invalid puzzle');
-      const room = Int32Array.from({ length: n * n }, (_, k) => { const t = d.g.slice(2 * k, 2 * k + 2); return t === '..' ? -1 : parseInt(t, 36); });
+      const room = Int32Array.from({ length: n * n }, (_, k) => { const t = d.g.slice(2 * k, 2 * k + 2); return t === '..' ? -1 : Number.parseInt(t, 36); });
       const p = prepare({ n, room, arrow: Int8Array.from(d.a, (ch) => (ch === '.' ? -1 : Number(ch))) });
       p.given = Int8Array.from(d.v, Number);
       const res = solve(p, startCand(p, p.given), 2, 50000);

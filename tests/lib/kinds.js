@@ -2,8 +2,8 @@
 // built on (src/<kind>.js). Each check looks at the hidden answer of a new
 // board and returns a list of problems (empty = fine).
 
-const fs = require('fs');
-const path = require('path');
+const fs = require('node:fs');
+const path = require('node:path');
 const { root } = require('./games');
 
 // First match wins: some games load more than one engine.
@@ -117,8 +117,8 @@ const CHECKS = {
     const { R, C } = dims(p);
     const sol = list(p.solution);
     const key = (cells) => cells.map((k) => sol[k]).sort((a, b) => a - b).join(',');
-    const rows = [...Array(R).keys()].map((r) => key([...Array(C).keys()].map((c) => r * C + c)));
-    const cols = [...Array(C).keys()].map((c) => key([...Array(R).keys()].map((r) => r * C + c)));
+    const rows = [...new Array(R).keys()].map((r) => key([...new Array(C).keys()].map((c) => r * C + c)));
+    const cols = [...new Array(C).keys()].map((c) => key([...new Array(R).keys()].map((r) => r * C + c)));
     const out = [];
     rows.forEach((x, r) => { if (x !== rows[0]) out.push(`row ${r} holds ${x}, row 0 holds ${rows[0]}`); });
     if (R === C) cols.forEach((x, c) => { if (x !== rows[0]) out.push(`column ${c} holds ${x}, row 0 holds ${rows[0]}`); });

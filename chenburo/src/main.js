@@ -150,7 +150,7 @@
       return true;
     };
     for (let ch = 0, fails = 0; fails < 30; ch++) {
-      const starts = [...Array(N).keys()].filter((k) => id[k] < 0 && around(k, true).every((j) => id[j] < 0));
+      const starts = [...new Array(N).keys()].filter((k) => id[k] < 0 && around(k, true).every((j) => id[j] < 0));
       if (!starts.length) break;
       const used = new Set();
       const first = blocks.length;
@@ -191,7 +191,7 @@
       };
       if (!unique()) continue;
       // Turn numbers into "?" while it stays unique.
-      for (const k of PuzzleShell.shuffle([...Array(N).keys()])) {
+      for (const k of PuzzleShell.shuffle([...new Array(N).keys()])) {
         if (clues[k] <= 0) continue;
         const keep = clues[k];
         clues[k] = 0;
@@ -216,10 +216,10 @@
     generate,
     encode: (p) => ({ r: p.R, c: p.C, g: Array.from(p.clues, (v) => (v < 0 ? '.' : v === 0 ? '?' : v.toString(36))).join('') }),
     decode(d) {
-      const R = d && d.r, C = d && d.c;
+      const R = d?.r, C = d?.c;
       if (![R, C].every((x) => Number.isInteger(x) && x >= 3 && x <= 20)) throw new Error('Invalid board size');
       if (typeof d.g !== 'string' || d.g.length !== R * C) throw new Error('Invalid clues');
-      return { R, C, clues: Int8Array.from(d.g, (ch) => (ch === '.' ? -1 : ch === '?' ? 0 : parseInt(ch, 36))) };
+      return { R, C, clues: Int8Array.from(d.g, (ch) => (ch === '.' ? -1 : ch === '?' ? 0 : Number.parseInt(ch, 36))) };
     },
     model,
     fixed: (p, k) => (p.clues[k] >= 0 ? YES : 0),

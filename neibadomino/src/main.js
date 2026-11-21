@@ -83,7 +83,7 @@
         }
         return false;
       };
-      for (const k of PuzzleShell.shuffle([...Array(N).keys()])) {
+      for (const k of PuzzleShell.shuffle([...new Array(N).keys()])) {
         if (id[k] >= 0) continue;
         const opts = PuzzleShell.shuffle(Parts.nbs(R, C, k).filter((j) => id[j] < 0));
         for (const j of opts) {

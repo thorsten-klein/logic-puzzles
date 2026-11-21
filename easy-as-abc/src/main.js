@@ -77,7 +77,7 @@
   }
 
   const startCand = (p, entries) => Int32Array.from({ length: p.n * p.n },
-    (_, k) => (entries && entries[k] ? 1 << entries[k] : Latin.full(p.m + 1)));
+    (_, k) => (entries?.[k] ? 1 << entries[k] : Latin.full(p.m + 1)));
 
   function generate(n) {
     const m = n <= 4 ? n - 1 : n - 2;
@@ -175,7 +175,7 @@
     },
     encode: (p) => ({ n: p.n, m: p.m, c: p.clues.join('') }),
     decode(d) {
-      const n = d && d.n, m = d && d.m;
+      const n = d?.n, m = d?.m;
       if (!Number.isInteger(n) || n < 3 || n > 9 || !Number.isInteger(m) || m < 1 || m > n) throw new Error('Invalid board size');
       if (typeof d.c !== 'string' || d.c.length !== 4 * n || !/^[0-9]+$/.test(d.c)) throw new Error('Invalid clues');
       const p = { n, m, clues: Array.from(d.c, Number) };

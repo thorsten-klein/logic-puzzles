@@ -72,7 +72,7 @@
   function generate(n) {
     for (let t = 0; t < 50; t++) {
       const R = n, C = n, N = R * C;
-      const seeds = PuzzleShell.shuffle([...Array(N).keys()]).slice(0, Math.round(N / 4));
+      const seeds = PuzzleShell.shuffle([...new Array(N).keys()]).slice(0, Math.round(N / 4));
       const region = PuzzleShell.growRegions(R, C, seeds.map((k) => [k]));
       const p = prepare({ R, C, region });
       p.given = new Int8Array(p.groups.length);
@@ -163,10 +163,10 @@
     generate,
     encode: (p) => ({ r: p.R, c: p.C, g: Array.from(p.region, (v) => v.toString(36).padStart(2, '0')).join(''), v: Array.from(p.given).join('') }),
     decode(d) {
-      const R = d && d.r, C = d && d.c;
+      const R = d?.r, C = d?.c;
       if (![R, C].every((x) => Number.isInteger(x) && x >= 2 && x <= 20)) throw new Error('Invalid board size');
       if (typeof d.g !== 'string' || d.g.length !== 2 * R * C) throw new Error('Invalid regions');
-      const region = Int32Array.from({ length: R * C }, (_, k) => parseInt(d.g.slice(2 * k, 2 * k + 2), 36));
+      const region = Int32Array.from({ length: R * C }, (_, k) => Number.parseInt(d.g.slice(2 * k, 2 * k + 2), 36));
       const p = prepare({ R, C, region });
       if (typeof d.v !== 'string' || d.v.length !== p.groups.length) throw new Error('Invalid givens');
       p.given = Int8Array.from(d.v, Number);

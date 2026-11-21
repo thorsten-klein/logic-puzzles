@@ -69,7 +69,7 @@
     const room = new Int32Array(N).fill(-1);
     groups.forEach((cells, id) => cells.forEach((k) => { room[k] = id; }));
     for (let open = room.filter((x) => x < 0).length, guard = 0; open > 0 && guard < N * 4; guard++) {
-      for (const k of PuzzleShell.shuffle([...Array(N).keys()])) {
+      for (const k of PuzzleShell.shuffle([...new Array(N).keys()])) {
         if (room[k] >= 0) continue;
         const r = Math.floor(k / n), c = k % n;
         const near = [[r - 1, c], [r + 1, c], [r, c - 1], [r, c + 1]]
@@ -108,7 +108,7 @@
       let cur = [order[0]];
       for (let i = 1; i < order.length; i++) {
         const k = order[i];
-        const straight = cur.length < 2 || (k - cur[cur.length - 1]) === (cur[cur.length - 1] - cur[cur.length - 2]);
+        const straight = cur.length < 2 || (k - cur.at(-1)) === (cur.at(-1) - cur.at(-2));
         if (straight && cur.length < 2 + Math.floor(Math.random() * 2)) cur.push(k);
         else { pieces.push(cur); cur = [k]; }
       }
@@ -152,10 +152,10 @@
     generate,
     encode: (p) => ({ r: p.R, c: p.C, g: Array.from(p.room, (v) => v.toString(36).padStart(2, '0')).join(''), n: Array.from(p.clues).join(',') }),
     decode(d) {
-      const R = d && d.r, C = d && d.c;
+      const R = d?.r, C = d?.c;
       if (![R, C].every((x) => Number.isInteger(x) && x >= 2 && x <= 20)) throw new Error('Invalid board size');
       if (typeof d.g !== 'string' || d.g.length !== 2 * R * C) throw new Error('Invalid rooms');
-      const room = Int32Array.from({ length: R * C }, (_, k) => parseInt(d.g.slice(2 * k, 2 * k + 2), 36));
+      const room = Int32Array.from({ length: R * C }, (_, k) => Number.parseInt(d.g.slice(2 * k, 2 * k + 2), 36));
       const clues = Int8Array.from(String(d.n).split(','), Number);
       if (room.some((v) => !(v >= 0 && v < clues.length))) throw new Error('Invalid rooms');
       return { R, C, room, clues };

@@ -41,7 +41,7 @@ const Moves = (() => {
     const used = new Int32Array(p.R * p.C).fill(-1);
     p.pieces.forEach((q, i) => { used[q.k] = i; });
     const opts = p.pieces.map((_, i) => options(p, i));
-    const order = [...Array(P).keys()].sort((a, b) => opts[a].length - opts[b].length);
+    const order = [...new Array(P).keys()].sort((a, b) => opts[a].length - opts[b].length);
     const ends = new Int32Array(P).fill(-1);
     const out = [];
     let nodes = 0;
@@ -158,7 +158,7 @@ const Moves = (() => {
       generate: cfg.generate,
       encode: (p) => ({ r: p.R, c: p.C, p: p.pieces.map((q) => [q.k, q.num, q.label || 0]), x: cfg.encodeExtra ? cfg.encodeExtra(p) : undefined }),
       decode(d) {
-        const R = d && d.r, C = d && d.c;
+        const R = d?.r, C = d?.c;
         if (![R, C].every((x) => Number.isInteger(x) && x >= 3 && x <= 16)) throw new Error('Invalid board size');
         if (!Array.isArray(d.p)) throw new Error('Invalid pieces');
         const pieces = d.p.map((q) => {

@@ -170,14 +170,14 @@
         if (r.capped || !r.solutions.length) break;
         const other = r.solutions.find((x) => x.some((v, k) => v !== sol[k]));
         if (!other) { unique = true; break; }
-        const cand = PuzzleShell.shuffle([...Array(N).keys()].filter((k) => other[k] === YES && sol[k] === NO));
+        const cand = PuzzleShell.shuffle([...new Array(N).keys()].filter((k) => other[k] === YES && sol[k] === NO));
         let moved = false;
         for (const x of cand) {
           const g = room[x];
           const to = [x - C, x + C, x % C ? x - 1 : -1, (x + 1) % C ? x + 1 : -1].filter((j) => j >= 0 && j < N && room[j] !== g);
           if (!to.length) continue;
           // Room g must stay connected without x.
-          const rest = [...Array(N).keys()].filter((k) => room[k] === g && k !== x);
+          const rest = [...new Array(N).keys()].filter((k) => room[k] === g && k !== x);
           const set = new Set(rest), seen = new Set([rest[0]]), st = [rest[0]];
           while (st.length) { const k = st.pop(); for (const j of [k - C, k + C, k % C ? k - 1 : -1, (k + 1) % C ? k + 1 : -1]) if (set.has(j) && !seen.has(j)) { seen.add(j); st.push(j); } }
           if (seen.size !== rest.length) continue;
@@ -244,10 +244,10 @@
     generate,
     encode: (p) => ({ r: p.R, c: p.C, g: Array.from(p.room, (v) => v.toString(36).padStart(2, '0')).join('') }),
     decode(d) {
-      const R = d && d.r, C = d && d.c;
+      const R = d?.r, C = d?.c;
       if (![R, C].every((x) => Number.isInteger(x) && x >= 3 && x <= 20)) throw new Error('Invalid board size');
       if (typeof d.g !== 'string' || d.g.length !== 2 * R * C) throw new Error('Invalid rooms');
-      return { R, C, room: Int32Array.from({ length: R * C }, (_, k) => parseInt(d.g.slice(2 * k, 2 * k + 2), 36)) };
+      return { R, C, room: Int32Array.from({ length: R * C }, (_, k) => Number.parseInt(d.g.slice(2 * k, 2 * k + 2), 36)) };
     },
     model,
     draw(p, k, el, v, shown) {

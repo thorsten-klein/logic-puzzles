@@ -49,7 +49,7 @@
         const inner = PuzzleShell.shuffle(Array.from({ length: path.length - 2 }, (_, i) => i + 1)).slice(0, top - 2).sort((a, b) => a - b);
         num[path[0]] = 1;
         inner.forEach((pos, i) => { num[path[pos]] = i + 2; });
-        num[path[path.length - 1]] = top;
+        num[path.at(-1)] = top;
       }
       const p = { R: n, C: n, num };
       if (!Links.unique(model(p))) continue;
@@ -70,10 +70,10 @@
     generate,
     encode: (p) => ({ n: p.R, g: Array.from(p.num, (v) => (v ? v.toString(36) : '.')).join('') }),
     decode(d) {
-      const n = d && d.n;
+      const n = d?.n;
       if (!Number.isInteger(n) || n < 2 || n > 16) throw new Error('Invalid board size');
       if (typeof d.g !== 'string' || d.g.length !== n * n) throw new Error('Invalid numbers');
-      return { R: n, C: n, num: Int8Array.from(d.g, (ch) => (ch === '.' ? 0 : parseInt(ch, 36))) };
+      return { R: n, C: n, num: Int8Array.from(d.g, (ch) => (ch === '.' ? 0 : Number.parseInt(ch, 36))) };
     },
     model,
     drawCell: (p) => (svg, k, x, y, s) => {

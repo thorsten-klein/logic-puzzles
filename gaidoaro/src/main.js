@@ -111,7 +111,7 @@
     generate,
     encode: (p) => ({ r: p.R, c: p.C, s: p.star, a: Array.from(p.arrow, (v) => (v < 0 ? '.' : v)).join('') }),
     decode(d) {
-      const R = d && d.r, C = d && d.c;
+      const R = d?.r, C = d?.c;
       if (![R, C].every((x) => Number.isInteger(x) && x >= 3 && x <= 20)) throw new Error('Invalid board size');
       if (!Number.isInteger(d.s) || d.s < 0 || d.s >= R * C) throw new Error('Invalid star');
       if (typeof d.a !== 'string' || d.a.length !== R * C || !/^[.0-3]+$/.test(d.a)) throw new Error('Invalid arrows');

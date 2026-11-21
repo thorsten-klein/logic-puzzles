@@ -38,7 +38,7 @@
   }
   function pointOk(o) {
     if (o.every((x) => x === 1)) return true;
-    const start = o.findIndex((x) => x === 0);
+    const start = o.indexOf(0);
     if (start < 0) return true; // white and unknown only
     // Runs of white between two known blacks.
     for (let s = 0; s < 8; s++) {
@@ -91,7 +91,7 @@
     while (Date.now() < deadline) {
       const N = n * n;
       const black = new Uint8Array(N);
-      for (const k of PuzzleShell.shuffle([...Array(N).keys()]).slice(0, Math.round(N * 0.15))) black[k] = 1;
+      for (const k of PuzzleShell.shuffle([...new Array(N).keys()]).slice(0, Math.round(N * 0.15))) black[k] = 1;
       const p = { n, black };
       const fill = solve(p, 1, 20000, true);
       if (!fill.solutions.length) continue;
@@ -102,7 +102,7 @@
       for (let k = 0; k < N; k++) if (black[k]) black[k] = 2 + nbs(k).filter((j) => !black[j] && sol[j] > 0).length;
       const unique = () => { const r = solve(p, 2, 30000); return r.solutions.length === 1 && !r.capped; };
       if (!unique()) continue;
-      for (const k of PuzzleShell.shuffle([...Array(N).keys()])) {
+      for (const k of PuzzleShell.shuffle([...new Array(N).keys()])) {
         if (black[k] < 2) continue;
         const keep = black[k];
         black[k] = 1;
@@ -192,7 +192,7 @@
     generate,
     encode: (p) => ({ n: p.n, b: Array.from(p.black).join(',') }),
     decode(d) {
-      const n = d && d.n;
+      const n = d?.n;
       if (!Number.isInteger(n) || n < 3 || n > 12) throw new Error('Invalid board size');
       const black = Uint8Array.from(String(d.b).split(','), Number);
       if (black.length !== n * n) throw new Error('Invalid cells');

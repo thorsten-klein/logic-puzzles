@@ -50,7 +50,7 @@
     generate,
     encode: (p) => ({ r: p.R, c: p.C, b: Array.from(p.black).join('') }),
     decode(d) {
-      const R = d && d.r, C = d && d.c;
+      const R = d?.r, C = d?.c;
       if (![R, C].every((x) => Number.isInteger(x) && x >= 3 && x <= 20)) throw new Error('Invalid board size');
       if (typeof d.b !== 'string' || d.b.length !== R * C || !/^[01]+$/.test(d.b)) throw new Error('Invalid grid');
       return { R, C, black: Uint8Array.from(d.b, Number) };

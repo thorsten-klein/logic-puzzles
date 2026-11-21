@@ -164,7 +164,7 @@ const Binary = (() => {
   // dead-end hint is one short line instead of the step-by-step list.
   function hints(model, state, solution, noun, noNoun = null, name = null) {
     const a = (w) => (/^[aeiou8]/i.test(w) ? `an ${w}` : `a ${w}`);
-    const names = (ks) => ks.length > 1 ? `${ks.slice(0, -1).map(name).join(', ')} and ${name(ks[ks.length - 1])}` : name(ks[0]);
+    const names = (ks) => ks.length > 1 ? `${ks.slice(0, -1).map(name).join(', ')} and ${name(ks.at(-1))}` : name(ks[0]);
     // "F2 is a white cell" / "E1 and G1 are white cells".
     const becomes = (ks, v) => {
       const w = v === YES ? noun : noNoun || 'empty cell';
@@ -191,7 +191,7 @@ const Binary = (() => {
         if (r === 0 && model.propagate) r = model.propagate(t, log);
         for (const st of log) {
           // The clue cell behind this step, if there is one.
-          const at = st.at != null ? st.at : st.con && st.con.at != null ? st.con.at : null;
+          const at = st.at != null ? st.at : st.con?.at != null ? st.con.at : null;
           const text = why(st);
           if (st.fail) {
             const where = at != null ? ` at ${name(at)}` : st.con ? ` at ${names(st.con.cells)}` : '';
@@ -279,7 +279,7 @@ const Binary = (() => {
       const top = cfg.top ? cfg.top(p, withFixed) : null, left = cfg.left ? cfg.left(p, withFixed) : null;
       const offR = top ? 1 : 0, offC = left ? 1 : 0;
       const hintCells = new Set(hint ? hint.cells : []);
-      const area = new Set(hint && hint.area ? hint.area : []);
+      const area = new Set(hint?.area ? hint.area : []);
       const shown = result ? solution : full(p, state);
       const board = PuzzleShell.gridBoard({
         rows: R + offR, cols: C + offC, cellPx: PuzzleShell.fitCell(C + offC, cfg.cellMax || 42),

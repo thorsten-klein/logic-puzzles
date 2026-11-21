@@ -43,7 +43,7 @@
       seen[st[0]] = 1;
       const near = (k) => { const r = Math.floor(k / m), c = k % m; return [[r - 1, c], [r + 1, c], [r, c - 1], [r, c + 1]].filter(([a, b]) => a >= 0 && b >= 0 && a < m && b < m).map(([a, b]) => a * m + b); };
       while (st.length) {
-        const k = st[st.length - 1];
+        const k = st.at(-1);
         const opts = near(k).filter((j) => !seen[j]);
         if (!opts.length) { st.pop(); continue; }
         const j = opts[Math.floor(Math.random() * opts.length)];
@@ -62,7 +62,7 @@
       for (let t = 0; t < 50 && !path; t++) {
         const pth = [Math.floor(Math.random() * N)];
         while (pth.length < L) {
-          const opts = adj[pth[pth.length - 1]].filter((y) => !pth.includes(y));
+          const opts = adj[pth.at(-1)].filter((y) => !pth.includes(y));
           if (!opts.length) break;
           pth.push(opts[Math.floor(Math.random() * opts.length)]);
         }
@@ -116,7 +116,7 @@
       if (!readonly && !result) {
         c.addEventListener('click', () => {
           const cur = Array.from(s).filter((x) => x >= 0);
-          const last = cur[cur.length - 1];
+          const last = cur.at(-1);
           let next;
           if (k === last) next = cur.slice(0, -1);
           else if (cur.length && adj[last].includes(k) && !cur.includes(k) && cur.length < L) next = cur.concat([k]);
@@ -145,7 +145,7 @@
     generate,
     encode: (p) => ({ m: p.m, l: p.letters, e: p.links.map(([a, b]) => a + '-' + b).join(','), n: p.L }),
     decode(d) {
-      const m = d && d.m, L = d && d.n;
+      const m = d?.m, L = d?.n;
       if (!Number.isInteger(m) || m < 3 || m > 8 || !Number.isInteger(L) || L < 3 || L > 9) throw new Error('Invalid size');
       if (typeof d.l !== 'string' || d.l.length !== m * m || !/^[A-Z]+$/.test(d.l)) throw new Error('Invalid letters');
       const links = String(d.e).split(',').map((t) => t.split('-').map(Number));

@@ -53,8 +53,8 @@ const Generator = (() => {
       if (path.length > best.length) best = path.slice();
       if (path.length >= targetLen) return true;
       if (Date.now() > deadline) return false;
-      const last = path[path.length - 1];
-      const grandprev = path.length >= 2 ? path[path.length - 2] : null;
+      const last = path.at(-1);
+      const grandprev = path.length >= 2 ? path.at(-2) : null;
       const moves = legalMoves(last[0], last[1], grandprev);
       for (const m of moves) {
         path.push(m);
@@ -87,7 +87,7 @@ const Generator = (() => {
       const path = buildSnake(size, noTouch, targetLen, buildBudgetMs);
       if (path.length < minLen) continue;
       const head = path[0];
-      const tail = path[path.length - 1];
+      const tail = path.at(-1);
       const { rows, cols } = Rules.computeClues(path, size);
       const puzzle = { size, head, tail, rowClues: rows, colClues: cols, noTouch };
       // A search cut off by its time proves nothing: try the next snake.

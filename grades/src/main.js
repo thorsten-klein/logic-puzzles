@@ -75,7 +75,7 @@
       const N = n * n;
       // Random digits that never touch.
       const sol = new Int8Array(N);
-      for (const k of PuzzleShell.shuffle([...Array(N).keys()])) {
+      for (const k of PuzzleShell.shuffle([...new Array(N).keys()])) {
         const r = Math.floor(k / n), c = k % n;
         let free = true;
         for (let dr = -1; dr <= 1; dr++) for (let dc = -1; dc <= 1; dc++) {
@@ -96,13 +96,13 @@
       for (let guard = 0; guard < N && !solved() && Date.now() < deadline; guard++) {
         const c = startCand(p);
         propagate(p, c);
-        const open = [...Array(N).keys()].filter((k) => !one(c[k]) && sol[k]);
+        const open = [...new Array(N).keys()].filter((k) => !one(c[k]) && sol[k]);
         if (!open.length) break;
         const k = open[Math.floor(Math.random() * open.length)];
         p.given[k] = sol[k];
       }
       if (!solved()) continue;
-      for (const k of PuzzleShell.shuffle([...Array(N).keys()])) {
+      for (const k of PuzzleShell.shuffle([...new Array(N).keys()])) {
         if (!p.given[k]) continue;
         const keep = p.given[k];
         p.given[k] = 0;
@@ -178,7 +178,7 @@
     generate,
     encode: (p) => ({ n: p.n, c: Array.from(p.cnt).join(','), s: Array.from(p.sum).join(','), g: Array.from(p.given).join('') }),
     decode(d) {
-      const n = d && d.n;
+      const n = d?.n;
       if (!Number.isInteger(n) || n < 3 || n > 10) throw new Error('Invalid board size');
       const cnt = Int8Array.from(String(d.c).split(','), Number), sum = Int16Array.from(String(d.s).split(','), Number);
       if (cnt.length !== 2 * n || sum.length !== 2 * n) throw new Error('Invalid clues');

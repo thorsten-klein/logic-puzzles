@@ -100,7 +100,7 @@
     generate,
     encode: (p) => ({ n: p.R, a: Array.from(p.arrows, (v) => (v < 0 ? '.' : v)).join(''), r: p.rows.join(','), c: p.cols.join(',') }),
     decode(d) {
-      const n = d && d.n;
+      const n = d?.n;
       if (!Number.isInteger(n) || n < 3 || n > 15) throw new Error('Invalid board size');
       if (typeof d.a !== 'string' || d.a.length !== n * n || !/^[.0-7]+$/.test(d.a)) throw new Error('Invalid arrows');
       const nums = (x) => String(x).split(',').map(Number);
