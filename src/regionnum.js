@@ -234,9 +234,9 @@ const RegionNum = (() => {
         const R = d?.r, C = d?.c;
         if (![R, C].every((x) => Number.isInteger(x) && x >= 2 && x <= 20)) throw new Error('Invalid board size');
         if (typeof d.g !== 'string' || d.g.length !== 2 * R * C) throw new Error('Invalid regions');
-        if (typeof d.v !== 'string' || d.v.length !== R * C || !/^[0-9]+$/.test(d.v)) throw new Error('Invalid givens');
+        if (typeof d.v !== 'string' || d.v.length !== R * C || !/^\d+$/.test(d.v)) throw new Error('Invalid givens');
         const region = Int32Array.from({ length: R * C }, (_, k) => Number.parseInt(d.g.slice(2 * k, 2 * k + 2), 36));
-        if (region.some((v) => !(v >= 0))) throw new Error('Invalid regions');
+        if (region.some((v) => !Number.isInteger(v) || v < 0)) throw new Error('Invalid regions');
         const p = prepare({ R, C, region, given: Int8Array.from(d.v, Number) });
         if (cfg.decodeExtra) cfg.decodeExtra(p, d.x);
         const res = solve(p, startCand(p, p.given), cfg.rule, 2, 50000);

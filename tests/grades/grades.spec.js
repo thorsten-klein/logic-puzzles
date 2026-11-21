@@ -9,7 +9,7 @@ puzzleTests('grades', {
     await page.evaluate(() => {
       const { cfg } = window.__puzzleTest;
       for (let i = 0; i < 12; i++) {
-        const d = JSON.parse(JSON.stringify(cfg.encode(cfg.generate(cfg.size.min))));
+        const d = JSON.parse(JSON.stringify(cfg.encode(cfg.generate(cfg.size.min)))); // NOSONAR: JSON round trip, like a share link
         try { cfg.decode({ ...d, g: d.g.replaceAll(/./g, '0') }); } catch { /* not unique */ }
       }
     });

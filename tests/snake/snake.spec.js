@@ -13,7 +13,8 @@ puzzleTests('snake', {
       // then a short hint walk from there. Rare deductions need a few
       // hundred boards.
       const stop = Date.now() + 100000;
-      for (let b = 0; Date.now() < stop; b++) {
+      for (let b = 0; ; b++) {
+        if (Date.now() >= stop) break;
         const p = tryIt(() => Generator.generate(5 + (b % 5), b % 3 !== 0));
         if (!p) continue;
         const N = p.size * p.size;

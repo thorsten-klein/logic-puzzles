@@ -42,7 +42,8 @@
         if (nums.length === 2 && cells.length >= Math.max(...nums)) return false;
         if (closed) {
           if (nums.length !== 2) return false;
-          const [a, b] = nums.sort((x, y) => x - y);
+          nums.sort((x, y) => x - y);
+          const [a, b] = nums;
           if (!(cells.length > a && cells.length < b)) return false;
         }
       }

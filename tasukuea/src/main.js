@@ -19,6 +19,8 @@
       if (c < C - 1) out.push(k + 1);
       return out;
     };
+    // True when no cell next to k is still open.
+    const settled = (k, s) => nb(k).every((j) => s[j] !== UNKNOWN);
     const cons = [];
     for (let k = 0; k < N; k++) {
       if (clues[k] === -1) continue;
@@ -57,7 +59,7 @@
       const sizeOf = black.list.map((cells) => {
         const rows = cells.map((k) => Math.floor(k / C)), cols = cells.map((k) => k % C);
         const h = Math.max(...rows) - Math.min(...rows) + 1, w = Math.max(...cols) - Math.min(...cols) + 1;
-        const closed = cells.every((k) => nb(k).every((j) => s[j] !== UNKNOWN));
+        const closed = cells.every((k) => settled(k, s));
         if ((closed || done) && h !== w) return -1;
         return cells.length;
       });

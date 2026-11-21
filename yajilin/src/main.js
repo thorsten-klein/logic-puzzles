@@ -68,7 +68,7 @@
           if (r) return r;
         }
       }
-      for (const [k, n, cells] of rays) {
+      for (const [, n, cells] of rays) {
         const known = cells.filter((j) => black(s, j)).length;
         const maybe = cells.filter((j) => !black(s, j) && !onLoop(s, j)).length;
         if (known > n || known + maybe < n) return false;

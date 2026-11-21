@@ -90,7 +90,7 @@ const Binary = (() => {
       if (q === false) return false;
       if (q === 0) break;
     }
-    return !model.check || model.check(s, !s.includes(UNKNOWN)) !== false;
+    return model.check?.(s, !s.includes(UNKNOWN)) !== false;
   }
 
   // Tries both values of each open cell. If one fails, the other is
@@ -195,7 +195,8 @@ const Binary = (() => {
           const text = why(st);
           if (st.fail) {
             const where = at != null ? ` at ${name(at)}` : st.con ? ` at ${names(st.con.cells)}` : '';
-            lines.push(`Now a rule is broken${where}${text ? `: ${text}` : '.'}`);
+            const tail = text ? `: ${text}` : '.';
+            lines.push(`Now a rule is broken${where}${tail}`);
           } else if (last && at == null && last.at == null && last.v === st.v && last.text === text) {
             last.cells.push(...st.cells);
             lines[lines.length - 1] = `Then ${becomes(last.cells, st.v)}${since(text, null)}.`;
@@ -209,7 +210,7 @@ const Binary = (() => {
         }
         if (r === 0) break;
       }
-      if (model.check && model.check(t, !t.includes(UNKNOWN)) === false) lines.push('Now the rules can no longer all be met (for example, the cells can no longer connect).');
+      if (model.check?.(t, !t.includes(UNKNOWN)) === false) lines.push('Now the rules can no longer all be met (for example, the cells can no longer connect).');
       return lines;
     }
     const out = [];
@@ -234,13 +235,15 @@ const Binary = (() => {
       if (la) {
         if (!name) {
           const ifNo = noNoun ? `${a(noNoun)} here` : 'Leaving this cell empty';
+          const stays = noNoun ? `is ${a(noNoun)}` : 'stays empty';
           out.push({ cells: [la.k], v: la.v, area: la.area, reason: la.tried === YES
-            ? `${a(noun)} here leads to a dead end, so this cell ${noNoun ? `is ${a(noNoun)}` : 'stays empty'}.`.replace(/^a/, 'A')
+            ? `${a(noun)} here leads to a dead end, so this cell ${stays}.`.replace(/^a/, 'A')
             : `${ifNo} leads to a dead end, so it needs ${a(noun)}.`.replace(/^a/, 'A') });
           return out;
         }
+        const beNo = noNoun ? `be ${a(noNoun)}` : 'stay empty';
         const end = la.tried === YES
-          ? `That is not possible, so ${name(la.k)} must ${noNoun ? `be ${a(noNoun)}` : 'stay empty'}.`
+          ? `That is not possible, so ${name(la.k)} must ${beNo}.`
           : `That is not possible, so ${name(la.k)} must be ${a(noun)}.`;
         out.push({ cells: [la.k], v: la.v, area: la.area, reason: [...chain(la.k, la.tried), end].join('\n') });
       }
@@ -336,8 +339,8 @@ const Binary = (() => {
         const y = con.cells.reduce((a, k, i) => a + (s[k] === YES ? (con.w ? con.w[i] : 1) : 0), 0);
         if (y < con.min || y > con.max) return false;
       }
-      if (m.propagate && m.propagate(Uint8Array.from(s)) === false) return false;
-      return !m.check || m.check(s, true) !== false;
+      if (m.propagate?.(Uint8Array.from(s)) === false) return false;
+      return m.check?.(s, true) !== false;
     }
 
     PuzzleShell.start({
@@ -351,7 +354,7 @@ const Binary = (() => {
         const m = cfg.model(p);
         const byLogic = logicSolve(m);
         if (!byLogic) throw new Error('Puzzle has no solution');
-        if (!byLogic.includes(UNKNOWN) && (!m.check || m.check(byLogic, true) !== false)) { p.solution = byLogic; return p; }
+        if (!byLogic.includes(UNKNOWN) && (m.check?.(byLogic, true) !== false)) { p.solution = byLogic; return p; }
         const res = solve(m, 2, 50000, byLogic);
         if (res.solutions.length !== 1) throw new Error('Puzzle has no unique solution');
         p.solution = res.solutions[0];
@@ -426,7 +429,7 @@ const Binary = (() => {
         s[k] = v === YES ? NO : YES;
         ok = settle(model, s);
       }
-      if (ok && (!model.check || model.check(s, true) !== false)) return s;
+      if (ok && (model.check?.(s, true) !== false)) return s;
     }
     return null;
   }

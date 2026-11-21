@@ -10,7 +10,7 @@
   // p = { R, C, isl: [{ k, n }] }. Pairs are islands that see each
   // other along a row or column: { a, b, cells } (cells between them).
   function prepare(p) {
-    const { R, C, isl } = p;
+    const { C, isl } = p;
     const at = new Map(isl.map((x, i) => [x.k, i]));
     const line = (a, b) => {
       const ra = Math.floor(a / C), ca = a % C, rb = Math.floor(b / C), cb = b % C;

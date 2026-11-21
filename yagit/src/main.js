@@ -44,8 +44,7 @@
       const [up, down, left, right] = dirs;
       if (!dot[k]) {
         // Lines go straight here: up = down and left = right.
-        cons.push({ cells: [up, down], w: [1, -1], min: 0, max: 0, why: () => 'Lines turn only at dots, so this line goes straight on.' });
-        cons.push({ cells: [left, right], w: [1, -1], min: 0, max: 0, why: () => 'Lines turn only at dots, so this line goes straight on.' });
+        cons.push({ cells: [up, down], w: [1, -1], min: 0, max: 0, why: () => 'Lines turn only at dots, so this line goes straight on.' }, { cells: [left, right], w: [1, -1], min: 0, max: 0, why: () => 'Lines turn only at dots, so this line goes straight on.' });
       } else cons.push({ cells: es, min: 0, max: 2, why: () => 'Lines never cross at a dot.' });
     }
     const at = Array.from({ length: n * n }, () => []);

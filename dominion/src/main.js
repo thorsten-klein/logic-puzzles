@@ -133,7 +133,7 @@
       while (Date.now() < deadline) { const p = tryOnce(n); if (p) return p; }
       return null;
     },
-    encode: (p) => ({ r: p.R, c: p.C, g: Array.from(p.letters, (v) => (v ? String.fromCharCode(64 + v) : '.')).join('') }),
+    encode: (p) => ({ r: p.R, c: p.C, g: Array.from(p.letters, (v) => (v ? String.fromCodePoint(64 + v) : '.')).join('') }),
     decode(d) {
       const R = d?.r, C = d?.c;
       if (![R, C].every((x) => Number.isInteger(x) && x >= 3 && x <= 20)) throw new Error('Invalid board size');
@@ -142,7 +142,7 @@
     },
     model,
     fixed: (p, k) => (p.letters[k] ? NO : 0),
-    draw(p, k, el) { if (p.letters[k]) el.textContent = String.fromCharCode(64 + p.letters[k]); },
+    draw(p, k, el) { if (p.letters[k]) el.textContent = String.fromCodePoint(64 + p.letters[k]); },
     noun: 'shaded cell', noNoun: 'white cell',
     className: 'dm2-board',
   });

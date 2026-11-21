@@ -35,12 +35,11 @@
     // The other end of the line that ends in cell k (or -1 if not known yet).
     const other = (s, k) => {
       const i = at[k][0].concat(at[k][1]).find((e) => s[e] === YES);
-      let prev = k, x = cands[i][0] === k ? cands[i][1] : cands[i][0];
-      const step = x - prev;
+      let x = cands[i][0] === k ? cands[i][1] : cands[i][0];
+      const step = x - k;
       for (;;) {
         if (!done(s, x)) return -1;
         if (deg(s, x) === 1) return x;
-        prev = x;
         x += step;
       }
     };

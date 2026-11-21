@@ -83,7 +83,7 @@
       const board = wrap.firstElementChild;
       const now = Number(wrap.style.getPropertyValue('--board-zoom')) || 1;
       const r = board ? board.getBoundingClientRect() : null;
-      return r && r.width && wrap.clientWidth ? { w: r.width / now, h: r.height / now } : null;
+      return r?.width && wrap.clientWidth ? { w: r.width / now, h: r.height / now } : null;
     };
     // Zoom at step 1: the longer side is 60% of the smaller app side.
     const base = (n) => {

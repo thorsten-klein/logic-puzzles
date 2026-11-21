@@ -12,8 +12,8 @@ PuzzleShell.start({
   decode(d) {
     const n = d?.n;
     if (!Number.isInteger(n) || n < 3 || n > 9) throw new Error('Invalid board size');
-    if (typeof d.c !== 'string' || d.c.length !== 4 * n || !/^[0-9]+$/.test(d.c)) throw new Error('Invalid clues');
-    if (typeof d.g !== 'string' || d.g.length !== n * n || !/^[0-9]+$/.test(d.g)) throw new Error('Invalid givens');
+    if (typeof d.c !== 'string' || d.c.length !== 4 * n || !/^\d+$/.test(d.c)) throw new Error('Invalid clues');
+    if (typeof d.g !== 'string' || d.g.length !== n * n || !/^\d+$/.test(d.g)) throw new Error('Invalid givens');
     const p = { n, clues: Array.from(d.c, Number), given: Int8Array.from(d.g, Number) };
     const res = Latin.solve(n, Latin.startCand(n, p.given), Rules.makePrune(p), 2, 50000);
     if (res.solutions.length !== 1) throw new Error('Puzzle has no unique solution');

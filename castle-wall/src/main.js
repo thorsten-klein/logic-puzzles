@@ -126,7 +126,7 @@
         if (t === '.') return;
         num[k] = Number.parseInt(t.slice(0, -1), 36);
         dir[k] = Number(t.slice(-1)) % 4;
-        if (!(num[k] >= 0)) throw new Error('Invalid numbers');
+        if (!Number.isInteger(num[k]) || num[k] < 0) throw new Error('Invalid numbers');
       });
       return { R, C, wall: Array.from(d.w, (ch) => (ch === '.' ? '' : ch)), num, dir };
     },

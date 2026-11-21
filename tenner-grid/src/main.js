@@ -114,7 +114,7 @@
         const res = run();
         if (res.solutions.length === 1 && !res.capped) break;
         const other = res.solutions.find((x) => x.some((v, k) => v !== sol[k]));
-        const diff = [...sol.keys()].filter((k) => !p.given[k] && (!other || other[k] !== sol[k]));
+        const diff = [...sol.keys()].filter((k) => !p.given[k] && (other?.[k] !== sol[k]));
         const k = diff[Math.floor(Math.random() * diff.length)];
         p.given[k] = sol[k];
       }
@@ -168,7 +168,7 @@
         if (!readonly) {
           el.tabIndex = 0;
           el.addEventListener('keydown', (ev) => {
-            if (/^[0-9]$/.test(ev.key)) { entries[k] = Number(ev.key) + 1; onChange(); }
+            if (/^\d$/.test(ev.key)) { entries[k] = Number(ev.key) + 1; onChange(); }
             else if (ev.key === 'Backspace' || ev.key === 'Delete' || ev.key === ' ') { entries[k] = 0; onChange(); }
             else return;
             ev.preventDefault();

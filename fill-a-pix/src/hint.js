@@ -3,7 +3,7 @@
 // Exposes the global `Hint`.
 
 const Hint = (() => {
-  const { UNKNOWN, FILLED, EMPTY } = Rules;
+  const { UNKNOWN, FILLED } = Rules;
 
   function where(k, C) {
     return `row ${Math.floor(k / C) + 1}, column ${(k % C) + 1}`;

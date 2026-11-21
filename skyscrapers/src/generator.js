@@ -17,7 +17,7 @@ const Generator = (() => {
     const p = { n, clues: Rules.cluesFor(n, sol), given: new Int8Array(n * n), solution: sol };
     for (let guard = 0; guard < n * n && !unique(p); guard++) {
       const other = solutions(p).solutions.find((x) => x.some((v, k) => v !== sol[k]));
-      const diff = [...new Array(n * n).keys()].filter((k) => !p.given[k] && (!other || other[k] !== sol[k]));
+      const diff = [...new Array(n * n).keys()].filter((k) => !p.given[k] && (other?.[k] !== sol[k]));
       const k = diff[Math.floor(Math.random() * diff.length)];
       p.given[k] = sol[k];
     }

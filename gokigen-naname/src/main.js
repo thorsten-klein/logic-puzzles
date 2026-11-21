@@ -127,7 +127,7 @@
       const v = clues[r * (C + 1) + c];
       if (v < 0) continue;
       const cx = c * s, cy = r * s;
-      el('circle', { cx, cy, r: s * 0.22, class: 'gn-clue' + (hint && hint.at === r * (C + 1) + c ? ' hint' : '') }, g);
+      el('circle', { cx, cy, r: s * 0.22, class: 'gn-clue' + (hint?.at === r * (C + 1) + c ? ' hint' : '') }, g);
       const t = el('text', { x: cx, y: cy, 'font-size': s * 0.3, class: 'gn-num' }, g);
       t.textContent = v;
     }

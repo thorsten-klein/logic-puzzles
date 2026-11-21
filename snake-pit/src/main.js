@@ -72,7 +72,7 @@
         const free = [...new Array(N).keys()].filter((k) => used[k] < 0);
         if (!free.length) break;
         const deg = (k) => nb(k).filter((j) => used[j] < 0).length;
-        const start = free.reduce((a, b) => (deg(b) < deg(a) || (deg(b) === deg(a) && Math.random() < 0.3) ? b : a));
+        const start = free.reduce((a, b) => (deg(b) < deg(a) || (deg(b) === deg(a) && Math.random() < 0.3) ? b : a), free[0]);
         const path = [start];
         used[start] = snakes.length;
         const want = 2 + Math.floor(Math.random() * 5);

@@ -169,21 +169,24 @@ const PuzzleShell = (() => {
   }
 
   // --- share encoding ---
+  // UTF-8 text <-> base64url. Broken input throws (fatal decoder).
   function b64urlEncode(str) {
-    const b64 = btoa(unescape(encodeURIComponent(str)));
-    return b64.replaceAll('+', '-').replaceAll('/', '_').replace(/=+$/, '');
+    let bin = '';
+    for (const b of new TextEncoder().encode(str)) bin += String.fromCodePoint(b);
+    return btoa(bin).replaceAll('+', '-').replaceAll('/', '_').replace(/={1,2}$/, '');
   }
 
   function b64urlDecode(s) {
     s = s.replaceAll('-', '+').replaceAll('_', '/');
     while (s.length % 4) s += '=';
-    return decodeURIComponent(escape(atob(s)));
+    const bytes = Uint8Array.from(atob(s), (ch) => ch.codePointAt(0));
+    return new TextDecoder('utf-8', { fatal: true }).decode(bytes);
   }
 
   function extractGameId(text) {
     const t = String(text || '').trim();
     if (!t) return null;
-    const m = t.match(/[?&]game-id=([A-Za-z0-9_-]+)/);
+    const m = /[?&]game-id=([A-Za-z0-9_-]+)/.exec(t);
     if (m) return m[1];
     if (/^[A-Za-z0-9_-]+$/.test(t)) return t;
     return null;
@@ -243,7 +246,7 @@ const PuzzleShell = (() => {
       if (!t) throw new Error('Empty game ID');
       let payload;
       try { payload = JSON.parse(b64urlDecode(t)); } catch { throw new Error('Unreadable game ID'); }
-      if (!payload || payload.v !== 1 || payload.g !== cfg.id) throw new Error('Not a game ID for this puzzle');
+      if (payload?.v !== 1 || payload.g !== cfg.id) throw new Error('Not a game ID for this puzzle');
       return { puzzle: cfg.decode(payload.d), s: payload.s };
     }
     const decodeId = (id) => readId(id).puzzle;
@@ -591,7 +594,7 @@ const PuzzleShell = (() => {
         }
         ta.remove();
       };
-      if (navigator.clipboard && navigator.clipboard.writeText) {
+      if (navigator.clipboard?.writeText) {
         navigator.clipboard.writeText(text)
           .then(() => { statusEl.textContent = 'Copied to clipboard.'; })
           .catch(fallback);
@@ -754,7 +757,7 @@ const PuzzleShell = (() => {
   // Splits text into text nodes and boxed cell names ("F1", "AB12"),
   // so a cell name in a hint reads as a board cell.
   function withCellRefs(text) {
-    return text.split(/\b([A-Z]{1,2}[1-9][0-9]?)\b/).map((part, i) => {
+    return text.split(/\b([A-Z]{1,2}[1-9]\d?)\b/).map((part, i) => {
       if (i % 2 === 0) return document.createTextNode(part);
       const el = document.createElement('span');
       el.className = 'cell-ref';
@@ -764,7 +767,7 @@ const PuzzleShell = (() => {
   }
 
   // Column name: A..Z, then AA, AB, …
-  const colName = (c) => (c >= 26 ? colName(Math.floor(c / 26) - 1) : '') + String.fromCharCode(65 + (c % 26));
+  const colName = (c) => (c >= 26 ? colName(Math.floor(c / 26) - 1) : '') + String.fromCodePoint(65 + (c % 26));
   // Cell name like "D2" for cell k of a grid with C columns.
   const cellName = (k, C) => colName(k % C) + (Math.floor(k / C) + 1);
 
@@ -836,7 +839,7 @@ const PuzzleShell = (() => {
     input.dataset.c = c;
     input.value = value || '';
     input.addEventListener('input', () => {
-      const digits = input.value.replaceAll(/[^0-9]/g, '');
+      const digits = input.value.replaceAll(/\D/g, '');
       let v = digits ? Number(digits.slice(-1)) : 0;
       if (max >= 10 && digits.length >= 2 && Number(digits.slice(-2)) <= max) v = Number(digits.slice(-2));
       if (v > max) v = 0;

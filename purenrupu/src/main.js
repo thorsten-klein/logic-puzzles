@@ -2,7 +2,7 @@
 // exactly once. Black cells are never visited. Built on the Loop engine.
 
 (() => {
-  const { UNKNOWN, LINE, CROSS } = Loop;
+  const { LINE, CROSS } = Loop;
 
   function model(p) {
     const g = Loop.grid(p.R, p.C);

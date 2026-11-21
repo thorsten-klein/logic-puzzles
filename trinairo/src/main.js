@@ -9,8 +9,7 @@
   function lines() {
     const out = [];
     for (let i = 0; i < N; i++) {
-      out.push(Array.from({ length: N }, (_, j) => i * N + j));
-      out.push(Array.from({ length: N }, (_, j) => j * N + i));
+      out.push(Array.from({ length: N }, (_, j) => i * N + j), Array.from({ length: N }, (_, j) => j * N + i));
     }
     return out;
   }

@@ -40,11 +40,9 @@ const Rules = (() => {
     const { n, clues } = p;
     const N = n * n;
     const nb = neighbours(n);
-    const clueCells = [];
     const cons = [];
     for (let k = 0; k < N; k++) {
       if (clues[k]) {
-        clueCells.push(k);
         cons.push({ cells: [k], min: 0, max: 0, why: () => 'Numbered cells are part of an island.' });
       }
     }

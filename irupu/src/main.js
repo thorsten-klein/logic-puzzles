@@ -94,7 +94,7 @@
       }
       if (s.includes(UNKNOWN)) return 0;
       const ring = order(g, s);
-      return ring && ring.length === cells && blocks(C, ring, circle) ? 0 : false;
+      return ring?.length === cells && blocks(C, ring, circle) ? 0 : false;
     }
     return { g, must, rule };
   }

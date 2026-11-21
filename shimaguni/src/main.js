@@ -28,7 +28,7 @@
     for (let k = 0; k < N; k++) for (const j of side(C, N, k)) if (room[j] !== room[k]) near[room[k]].add(room[j]);
     // For rooms with a number: every connected block of that size.
     const blocks = rooms.map((cells, g) => {
-      if (!cells || !(clues[g] > 0) || cells.length > 14) return null;
+      if (!cells || !Number.isInteger(clues[g]) || clues[g] <= 0 || cells.length > 14) return null;
       const want = clues[g], set = new Set(cells), out = new Set();
       const grow = (cur) => {
         if (cur.length === want) { out.add(cur.slice().sort((x, y) => x - y).join(',')); return; }

@@ -24,8 +24,7 @@
       if (r < R - 1) cons.push({ cells: [k, k + C], min: 0, max: 1, why });
       const v = clues[k];
       if (v <= 0) continue;
-      cons.push({ cells: [k], min: 0, max: 0, why: () => 'Numbered cells stay white.' });
-      cons.push({ cells: atDistance(R, C, k, v), min: 1, max: 1, at: k,
+      cons.push({ cells: [k], min: 0, max: 0, why: () => 'Numbered cells stay white.' }, { cells: atDistance(R, C, k, v), min: 1, max: 1, at: k,
         why: (x) => (x === YES ? `Exactly one cell ${v} steps from this ${v} is shaded, and only this one is left.`
           : `One cell ${v} steps from this ${v} is already shaded. The others stay white.`) });
     }

@@ -6,7 +6,7 @@
 // p.arrow: -1 none, 0 up, 1 down, 2 left, 3 right; p.star: star cell.
 
 (() => {
-  const { UNKNOWN, YES, NO } = Binary;
+  const { UNKNOWN, NO } = Binary;
   const STEP = [[-1, 0], [1, 0], [0, -1], [0, 1]];
 
   function model(p) {

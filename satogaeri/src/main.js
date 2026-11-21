@@ -25,7 +25,6 @@
       const ends = cells.map((list) => list[Math.floor(Math.random() * list.length)]);
       ends.forEach((k) => { used[k] = 1; });
       const pieces = [];
-      const sol = [];
       let ok = true;
       for (const end of ends) {
         let placed = false;
@@ -42,7 +41,6 @@
           if (track.length !== d) continue;
           track.forEach((x) => { used[x] = 1; });
           pieces.push({ k: d ? track[d - 1] : end, num: d });
-          sol.push(end);
           placed = true;
         }
         if (!placed) { ok = false; break; }

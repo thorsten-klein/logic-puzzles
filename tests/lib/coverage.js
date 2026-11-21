@@ -138,6 +138,23 @@ async function solveByHints(page) {
 // share data, broken saved states, random boards for hints and check.
 async function fuzzCode(page) {
   await page.evaluate(() => {
+    // Shared engines by name: globals of the page, or null when the game
+    // does not load them.
+    const ENGINES = {
+      Binary: typeof Binary === 'undefined' ? null : Binary,
+      Latin: typeof Latin === 'undefined' ? null : Latin,
+      Loop: typeof Loop === 'undefined' ? null : Loop,
+      Links: typeof Links === 'undefined' ? null : Links,
+      Parts: typeof Parts === 'undefined' ? null : Parts,
+      Pieces: typeof Pieces === 'undefined' ? null : Pieces,
+      Rects: typeof Rects === 'undefined' ? null : Rects,
+      RegionNum: typeof RegionNum === 'undefined' ? null : RegionNum,
+      NumberPath: typeof NumberPath === 'undefined' ? null : NumberPath,
+      Fillo: typeof Fillo === 'undefined' ? null : Fillo,
+      Moves: typeof Moves === 'undefined' ? null : Moves,
+      LegLoop: typeof LegLoop === 'undefined' ? null : LegLoop,
+    };
+    const engine = (name) => ENGINES[name] || null;
     const t = window.__puzzleTest;
     if (!t) return;
     const { cfg } = t;
@@ -145,7 +162,8 @@ async function fuzzCode(page) {
     const tryIt = (f) => { try { return f(); } catch { return undefined; } };
     const p = t.st.puzzle || tryIt(() => cfg.generate(cfg.size.min));
     if (!p) return;
-    const clone = (x) => JSON.parse(JSON.stringify(x));
+    // A JSON round trip on purpose: share data travels as JSON.
+    const clone = (x) => JSON.parse(JSON.stringify(x)); // NOSONAR
     const d0 = clone(cfg.encode(p));
 
     // Broken share data: change one part at a time.
@@ -202,7 +220,7 @@ async function fuzzCode(page) {
     // Decoders try logic first and search when it stalls: with the engines'
     // logicSolve "stuck", the search must find the answer on its own.
     for (const name of ['Binary', 'Loop', 'Links', 'Latin']) {
-      const eng = tryIt(() => new Function(`return typeof ${name} === 'undefined' ? null : ${name}`)());
+      const eng = engine(name);
       if (!eng || typeof eng.logicSolve !== 'function') continue;
       const real = eng.logicSolve;
       eng.logicSolve = () => null;
@@ -223,7 +241,7 @@ async function fuzzCode(page) {
       // answers): the generator must give up cleanly ("give up" paths).
       const FAILS = [() => null, () => false, () => ({ solutions: [], capped: false, all: [] }), () => ({ solutions: [[], []], capped: true, all: [[], []] })];
       for (const name of ['Binary', 'Latin', 'Loop', 'Links', 'Parts', 'Pieces', 'Rects', 'RegionNum', 'NumberPath', 'Fillo', 'Moves', 'LegLoop']) {
-        const eng = tryIt(() => new Function(`return typeof ${name} === 'undefined' ? null : ${name}`)());
+        const eng = engine(name);
         if (!eng) continue;
         // All helpers fail, or only the solvers (so random boards still come).
         for (const only of [null, /solve|count|unique/i]) {
@@ -241,7 +259,6 @@ async function fuzzCode(page) {
     } finally { Date.now = realNow; }
 
     // Engine edge cases: safety limits and "no loop possible".
-    const engine = (name) => tryIt(() => new Function(`return typeof ${name} === 'undefined' ? null : ${name}`)());
     const LoopE = engine('Loop'), LinksE = engine('Links');
     if (LoopE) {
       const g = LoopE.grid(2, 2);
@@ -265,11 +282,10 @@ async function fuzzCode(page) {
 
     // States along the hint walk; then broken and random states.
     let s = cfg.newState(p);
-    const snaps = [];
     for (let i = 0; i < 2000 && !cfg.check(p, s) && Date.now() < stop; i++) {
       const hs = tryIt(() => cfg.hints(p, s));
       if (!hs?.length) break;
-      snaps.push(clone(cfg.saveState(s)));
+      tryIt(() => cfg.saveState(s)); // run the save code on every step
       hs.slice(0, 3).forEach((h) => tryIt(() => cfg.render(p, s, { readonly: true, hint: h })));
       cfg.applyHint(p, s, hs[0]);
     }

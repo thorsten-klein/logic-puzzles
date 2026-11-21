@@ -42,7 +42,9 @@
         }
         // The clue cell is white, so the clue is true.
         if (broken) {
-          if (log) log.push({ fail: true, at: k, reason: `This white clue must be true, but it ${yes > v ? `already sees ${yes}` : `can see at most ${yes + open.length}`} shaded ${(yes > v ? yes : yes + open.length) === 1 ? 'cell' : 'cells'}, not ${v}.` });
+          const seen = yes > v ? yes : yes + open.length;
+          const sees = yes > v ? `already sees ${seen}` : `can see at most ${seen}`;
+          if (log) log.push({ fail: true, at: k, reason: `This white clue must be true, but it ${sees} shaded ${seen === 1 ? 'cell' : 'cells'}, not ${v}.` });
           return false;
         }
         if (!open.length) continue;
@@ -121,7 +123,7 @@
         if (t === '.') return;
         num[k] = Number.parseInt(t.slice(0, -1), 36);
         dir[k] = Number(t.slice(-1)) % 4;
-        if (!(num[k] >= 0)) throw new Error('Invalid clues');
+        if (!Number.isInteger(num[k]) || num[k] < 0) throw new Error('Invalid clues');
       });
       return { R, C, num, dir };
     },

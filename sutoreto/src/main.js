@@ -26,7 +26,7 @@
   }
 
   function propagate(p, cand) {
-    const { R, C, black } = p;
+    const { black } = p;
     for (let guard = 0; guard < 200; guard++) {
       const before = cand.join(',');
       // Each stretch is a run of consecutive numbers.

@@ -32,7 +32,7 @@
       const res = Loop.solve(model(p), 2, 20000);
       if (res.solutions.length === 1 && !res.capped) break;
       const other = res.solutions.find((x) => x.some((v, e) => v !== sol[e]));
-      const opts = lines.filter((e) => !p.given.includes(e) && (!other || other[e] !== LINE));
+      const opts = lines.filter((e) => !p.given.includes(e) && (other?.[e] !== LINE));
       p.given.push(opts[Math.floor(Math.random() * opts.length)]);
     }
     // Drop givens that are not needed.

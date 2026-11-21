@@ -7,17 +7,20 @@
 (() => {
   const { UNKNOWN, YES, NO } = Binary;
 
+  // Cells next to cell k (by a side).
+  function neighbours(R, C, k) {
+    const r = Math.floor(k / C), c = k % C, out = [];
+    if (r > 0) out.push(k - C);
+    if (r < R - 1) out.push(k + C);
+    if (c > 0) out.push(k - 1);
+    if (c < C - 1) out.push(k + 1);
+    return out;
+  }
+
   function model(p) {
     const { R, C, nums } = p;
     const N = R * C;
-    const nb = (k) => {
-      const r = Math.floor(k / C), c = k % C, out = [];
-      if (r > 0) out.push(k - C);
-      if (r < R - 1) out.push(k + C);
-      if (c > 0) out.push(k - 1);
-      if (c < C - 1) out.push(k + 1);
-      return out;
-    };
+    const nb = (k) => neighbours(R, C, k);
     const cons = [];
     for (let k = 0; k < N; k++) {
       if (nums[k] >= 0) cons.push({ cells: [k], min: 0, max: 0, why: () => 'Circles stay white.' });
@@ -76,14 +79,7 @@
       for (let k = 0; k < N; k++) if (sol[k] === NO && Math.random() < 0.25) nums[k] = 0;
       const p = { R, C, nums };
       // Count circles reachable through white, uncircled cells.
-      const nb = (k) => {
-        const r = Math.floor(k / C), c = k % C, out = [];
-        if (r > 0) out.push(k - C);
-        if (r < R - 1) out.push(k + C);
-        if (c > 0) out.push(k - 1);
-        if (c < C - 1) out.push(k + 1);
-        return out;
-      };
+      const nb = (k) => neighbours(R, C, k);
       for (let k = 0; k < N; k++) {
         if (nums[k] < 0) continue;
         const seen = new Set([k]), stack = [k], found = new Set();

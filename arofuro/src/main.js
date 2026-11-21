@@ -108,7 +108,7 @@
       if (k < 0) {
         const val = Int8Array.from(cand, (m, i) => (p.circle[i] ? 0 : low(m)));
         const cnt = counts(p, val);
-        if (cnt && cnt.every((v, i) => !p.circle[i] || v === p.num[i])) out.push(val);
+        if (cnt?.every((v, i) => !p.circle[i] || v === p.num[i])) out.push(val);
         return;
       }
       for (let v = 1; v <= 4; v++) {
@@ -158,7 +158,7 @@
         const res = solve(p, startCand(p, p.given), 2, 8000);
         if (res.solutions.length === 1 && !res.capped) break;
         const other = res.solutions.find((x) => x.some((v, k) => !circle[k] && v !== arrow[k]));
-        const diff = [...new Array(N).keys()].filter((k) => !circle[k] && !p.given[k] && (!other || other[k] !== arrow[k]));
+        const diff = [...new Array(N).keys()].filter((k) => !circle[k] && !p.given[k] && (other?.[k] !== arrow[k]));
         if (!diff.length) break;
         const k = diff[Math.floor(Math.random() * diff.length)];
         p.given[k] = arrow[k];

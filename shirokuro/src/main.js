@@ -33,7 +33,7 @@
   function settle(p, st, log) {
     for (let changed = true; changed;) {
       changed = false;
-      for (const [k, ls] of p.of) {
+      for (const [, ls] of p.of) {
         const used = ls.filter((i) => st[i] === 1), open = ls.filter((i) => st[i] === 0);
         if (used.length > 1 || (!used.length && !open.length)) return false;
         if (used.length === 1 && open.length) {

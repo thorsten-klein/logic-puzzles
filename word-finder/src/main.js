@@ -56,14 +56,14 @@
         const free = [...new Array(N).keys()].filter((k) => used[k] < 0);
         if (!free.length) break;
         const deg = (k) => nbs(n, k).filter((j) => used[j] < 0).length;
-        const start = free.reduce((a, b) => (deg(b) < deg(a) || (deg(b) === deg(a) && Math.random() < 0.3) ? b : a));
+        const start = free.reduce((a, b) => (deg(b) < deg(a) || (deg(b) === deg(a) && Math.random() < 0.3) ? b : a), free[0]);
         const path = [start];
         used[start] = paths.length;
         const want = 4 + Math.floor(Math.random() * 4);
         while (path.length < want) {
           const opts = nbs(n, path.at(-1)).filter((j) => used[j] < 0);
           if (!opts.length) break;
-          const j = opts.reduce((a, b) => (deg(b) < deg(a) || (deg(b) === deg(a) && Math.random() < 0.5) ? b : a));
+          const j = opts.reduce((a, b) => (deg(b) < deg(a) || (deg(b) === deg(a) && Math.random() < 0.5) ? b : a), opts[0]);
           used[j] = paths.length;
           path.push(j);
         }

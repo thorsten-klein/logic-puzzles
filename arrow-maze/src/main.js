@@ -85,7 +85,7 @@
         const res = solve(p, 2, 50000);
         if (res.solutions.length === 1 && !res.capped) break;
         const other = res.solutions.find((x) => x.some((v, k) => v !== sol[k]));
-        const diff = [...new Array(N).keys()].filter((k) => !p.given[k] && (!other || other[k] !== sol[k]));
+        const diff = [...new Array(N).keys()].filter((k) => !p.given[k] && (other?.[k] !== sol[k]));
         if (!diff.length) break;
         const k = diff[Math.floor(Math.random() * diff.length)];
         p.given[k] = sol[k];

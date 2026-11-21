@@ -59,7 +59,7 @@
     for (let k = 0; k < R * C; k++) {
       if (clues[k] < 0) continue;
       const x = (k % C) * s + s / 2, y = Math.floor(k / C) * s + s / 2;
-      if (hint && hint.at === k) el('rect', { x: x - s / 2 + 2, y: y - s / 2 + 2, width: s - 4, height: s - 4, class: 'sq-hint-cell' }, g);
+      if (hint?.at === k) el('rect', { x: x - s / 2 + 2, y: y - s / 2 + 2, width: s - 4, height: s - 4, class: 'sq-hint-cell' }, g);
       const t = el('text', { x, y, 'font-size': s * 0.42, class: 'sq-num' }, g);
       t.textContent = clues[k];
     }

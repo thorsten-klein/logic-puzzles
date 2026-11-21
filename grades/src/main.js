@@ -182,7 +182,7 @@
       if (!Number.isInteger(n) || n < 3 || n > 10) throw new Error('Invalid board size');
       const cnt = Int8Array.from(String(d.c).split(','), Number), sum = Int16Array.from(String(d.s).split(','), Number);
       if (cnt.length !== 2 * n || sum.length !== 2 * n) throw new Error('Invalid clues');
-      if (typeof d.g !== 'string' || d.g.length !== n * n || !/^[0-9]+$/.test(d.g)) throw new Error('Invalid givens');
+      if (typeof d.g !== 'string' || d.g.length !== n * n || !/^\d+$/.test(d.g)) throw new Error('Invalid givens');
       const p = prepare({ n, cnt, sum, given: Int8Array.from(d.g, Number) });
       const res = solve(p, startCand(p), 2, 50000);
       if (res.solutions.length !== 1) throw new Error('Puzzle has no unique solution');

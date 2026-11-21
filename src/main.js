@@ -25,7 +25,11 @@
 
   function excerpt(text, max = 140) {
     if (text.length <= max) return text;
-    return text.slice(0, max).replace(/\s+\S*$/, '') + '…';
+    // Cut at the last space, so no word is cut in half.
+    const cut = text.slice(0, max);
+    let i = cut.length - 1;
+    while (i >= 0 && !/\s/.test(cut[i])) i--;
+    return (i >= 0 ? cut.slice(0, i).trimEnd() : cut) + '…';
   }
 
   function cardHtml(game) {
@@ -129,7 +133,8 @@
     let slug = null;
     try {
       const b64 = id.replaceAll('-', '+').replaceAll('_', '/');
-      slug = JSON.parse(decodeURIComponent(escape(atob(b64 + '='.repeat((4 - (b64.length % 4)) % 4))))).g;
+      const bytes = Uint8Array.from(atob(b64 + '='.repeat((4 - (b64.length % 4)) % 4)), (ch) => ch.codePointAt(0));
+      slug = JSON.parse(new TextDecoder('utf-8', { fatal: true }).decode(bytes)).g;
     } catch { /* not readable */ }
     const game = GAMES.find((g) => g.slug === slug && g.status === 'available');
     if (!game) { pasteStatus.textContent = 'This is not a game ID of a puzzle here.'; return; }

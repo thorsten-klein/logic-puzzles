@@ -18,6 +18,8 @@
       if (c < C - 1) out.push(k + 1);
       return out;
     };
+    // True when no cell next to k is still open.
+    const settled = (k, s) => nb(k).every((j) => s[j] !== UNKNOWN);
     const cons = [];
     for (let k = 0; k < N; k++) {
       if (clues[k] < 0) continue;
@@ -50,7 +52,7 @@
         const rows = cells.map((k) => Math.floor(k / C)), cols = cells.map((k) => k % C);
         const r1 = Math.min(...rows), r2 = Math.max(...rows), c1 = Math.min(...cols), c2 = Math.max(...cols);
         for (let r = r1; r <= r2; r++) for (let c = c1; c <= c2; c++) if (s[r * C + c] === NO) return -2;
-        const closed = done || cells.every((k) => nb(k).every((j) => s[j] !== UNKNOWN));
+        const closed = done || cells.every((k) => settled(k, s));
         if (!closed) return 0;
         return r2 - r1 === c2 - c1 && cells.length === (r2 - r1 + 1) * (c2 - c1 + 1) ? r2 - r1 + 1 : -2;
       });

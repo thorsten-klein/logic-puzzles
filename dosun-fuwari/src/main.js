@@ -12,7 +12,7 @@
   const ALL = 0b1110;
 
   function prepare(p) {
-    const { n, room } = p;
+    const { room } = p;
     p.rooms = [];
     room.forEach((g, k) => { if (g >= 0) (p.rooms[g] = p.rooms[g] || []).push(k); });
     p.rooms = p.rooms.filter(Boolean);

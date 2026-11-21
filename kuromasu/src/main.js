@@ -14,7 +14,7 @@ PuzzleShell.start({
     if (!Number.isInteger(n) || n < 3 || n > 18) throw new Error('Invalid board size');
     if (typeof d.g !== 'string' || d.g.length !== n * n) throw new Error('Invalid clues');
     const clues = Int8Array.from(d.g, (ch) => Number.parseInt(ch, 36));
-    if (clues.some((v) => !(v >= 0))) throw new Error('Invalid clues');
+    if (clues.some((v) => !Number.isInteger(v) || v < 0)) throw new Error('Invalid clues');
     const p = { n, clues };
     const res = Binary.solveFull(Rules.model(p));
     if (res.solutions.length !== 1) throw new Error('Puzzle has no unique solution');

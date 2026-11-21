@@ -49,7 +49,9 @@ function lines(f) {
     }
     const b = code.indexOf('/*');
     if (b >= 0 && !code.includes('*/', b)) { inComment = true; code = code.slice(0, b); }
-    code = code.replace(/\/\/.*$/, (m) => (/['"`]/.test(m) ? m : ''));
+    // Drop a line comment at the end (not when quotes follow: it may be in a string).
+    const lc = code.indexOf('//');
+    if (lc >= 0 && !code.includes('\n', lc) && !/['"`]/.test(code.slice(lc))) code = code.slice(0, lc);
     if (!/[A-Za-z0-9_$'"`]/.test(code)) continue; // blank, comment or brackets only
     let ran = false;
     for (let c = 0; c < code.length && !ran; c++) if (code[c].trim() && f.ran[start + c]) ran = true;

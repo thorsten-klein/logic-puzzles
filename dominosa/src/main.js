@@ -217,7 +217,7 @@
     decode(d) {
       const n = d?.n;
       if (!Number.isInteger(n) || n < 1 || n > 9) throw new Error('Invalid size');
-      if (typeof d.g !== 'string' || d.g.length !== (n + 1) * (n + 2) || !/^[0-9]+$/.test(d.g)) throw new Error('Invalid grid');
+      if (typeof d.g !== 'string' || d.g.length !== (n + 1) * (n + 2) || !/^\d+$/.test(d.g)) throw new Error('Invalid grid');
       const p = prepare({ n, g: Int8Array.from(d.g, Number) });
       const res = solve(p, 2, 50000);
       if (res.solutions.length !== 1) throw new Error('Puzzle has no unique solution');

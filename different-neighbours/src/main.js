@@ -83,7 +83,7 @@
         const res = solve(p, startCand(p), 2);
         if (res.solutions.length === 1 && !res.capped) break;
         const other = res.solutions.find((x) => x.some((v, g) => v !== sol[g]));
-        const diff = [...sol.keys()].filter((g) => !p.given[g] && (!other || other[g] !== sol[g]));
+        const diff = [...sol.keys()].filter((g) => !p.given[g] && (other?.[g] !== sol[g]));
         const g = diff[Math.floor(Math.random() * diff.length)];
         p.given[g] = sol[g];
       }

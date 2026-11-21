@@ -4,7 +4,7 @@
 // borders. Built on the shared Binary game page.
 
 (() => {
-  const { YES, NO } = Binary;
+  const { YES } = Binary;
 
   // Random split into rectangles of side 1..4 (no 1x1 rooms).
   function split(R, C) {

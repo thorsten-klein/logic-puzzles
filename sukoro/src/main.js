@@ -24,8 +24,7 @@
     for (let k = 0; k < R * C; k++) {
       const v = clues[k];
       if (v < 0) continue;
-      cons.push({ cells: [k], min: 1, max: 1, why: () => 'A given number is part of the picture.' });
-      cons.push({ cells: nb[k], min: v, max: v, area: [k],
+      cons.push({ cells: [k], min: 1, max: 1, why: () => 'A given number is part of the picture.' }, { cells: nb[k], min: v, max: v, area: [k],
         why: (x) => (x === YES ? `This ${v} needs a number in every open cell next to it.`
           : `This ${v} already has ${v} numbered neighbour${v === 1 ? '' : 's'}. The other neighbours stay empty.`) });
     }

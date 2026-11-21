@@ -54,7 +54,7 @@
       for (let guard = 0; guard < R * C; guard++) {
         const s = Binary.logicSolve(model(p));
         if (s && !s.includes(UNKNOWN)) break;
-        const open = [...sol.keys()].filter((k) => s && s[k] === UNKNOWN && sol[k] === NO);
+        const open = [...sol.keys()].filter((k) => s?.[k] === UNKNOWN && sol[k] === NO);
         if (!open.length) break;
         p.cross[open[Math.floor(Math.random() * open.length)]] = 1;
       }

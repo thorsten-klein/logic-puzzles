@@ -37,7 +37,7 @@
       finals.forEach((k) => { on[k] = 1; });
       // Clues on free cells.
       const clue = new Int16Array(N);
-      for (const k of [...new Array(N).keys()]) {
+      for (const k of new Array(N).keys()) {
         if (on[k]) continue;
         const d = Math.floor(Math.random() * 4);
         clue[k] = d + 1;

@@ -93,7 +93,6 @@
   function generate(n) {
     const deadline = Date.now() + 8000;
     while (Date.now() < deadline) {
-      const N = n * n;
       const sol = makeAnswer(n);
       const p = { R: n, C: n, clues: Uint8Array.from(sol, (v) => (v === YES ? 1 : 2)) };
       const m = model(p);

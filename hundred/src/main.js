@@ -133,7 +133,7 @@
     decode(d) {
       const n = d?.n;
       if (!Number.isInteger(n) || n < 2 || n > 6) throw new Error('Invalid board size');
-      if (typeof d.b !== 'string' || d.b.length !== n * n || !/^[0-9]+$/.test(d.b)) throw new Error('Invalid digits');
+      if (typeof d.b !== 'string' || d.b.length !== n * n || !/^\d+$/.test(d.b)) throw new Error('Invalid digits');
       const full = d.f ? Int32Array.from(String(d.f).split(','), Number) : new Int32Array(n * n);
       if (full.length !== n * n) throw new Error('Invalid numbers');
       const p = { n, base: Int8Array.from(d.b, Number), full };

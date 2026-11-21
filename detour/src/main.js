@@ -3,7 +3,7 @@
 // Built on the shared Loop engine. Menu size is half the board side.
 
 (() => {
-  const { UNKNOWN, LINE, CROSS } = Loop;
+  const { LINE, CROSS } = Loop;
 
   function groups(region) {
     const out = [];

@@ -74,7 +74,7 @@
       if (marked) cls += ' marked';
       if (result && state[k]) cls += onPath.has(k) ? ' ok' : ' bad';
       else if (result && onPath.has(k) && k !== 0 && k !== n * n - 1) cls += ' miss'; // not entered yet
-      if (hint && hint.k === k) cls += ' hint';
+      if (hint?.k === k) cls += ' hint';
       if (k === 0) cls += ' start';
       if (k === n * n - 1) cls += ' goal';
       const cell = el('rect', { x, y, width: s, height: s, class: cls }, g);

@@ -205,7 +205,7 @@ const Rects = (() => {
     let start = null, preview = [];
     const cellAt = (ev) => {
       const el = document.elementFromPoint(ev.clientX, ev.clientY);
-      return el && el.closest('.rc-board') === board && el.dataset.k !== undefined ? Number(el.dataset.k) : null;
+      return el?.closest('.rc-board') === board && el.dataset.k !== undefined ? Number(el.dataset.k) : null;
     };
     const rectOf = (a, b) => [Math.min(Math.floor(a / C), Math.floor(b / C)), Math.min(a % C, b % C),
       Math.max(Math.floor(a / C), Math.floor(b / C)), Math.max(a % C, b % C)];
@@ -257,7 +257,7 @@ const Rects = (() => {
       const rects = cfg.split(R, C);
       if (!rects) continue;
       const p = { R, C, clues: new Int8Array(R * C), maxArea: cfg.maxArea };
-      if (cfg.prepare && cfg.prepare(p, rects) === false) continue;
+      if (cfg.prepare?.(p, rects) === false) continue;
       if (cfg.final && !cfg.final(p, rects)) continue;
       let ok = true;
       for (const rect of rects) {

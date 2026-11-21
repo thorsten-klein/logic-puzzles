@@ -20,7 +20,7 @@ PuzzleShell.start({
       throw new Error('Invalid puzzle grid');
     }
     const nums = Int8Array.from(d.g, (ch) => Number.parseInt(ch, 36));
-    if (nums.some((v) => !(v >= 1))) throw new Error('Invalid numbers');
+    if (nums.some((v) => !Number.isInteger(v) || v < 1)) throw new Error('Invalid numbers');
     const solution = Uint8Array.from(d.b, (ch) => (ch === '1' ? Rules.BLACK : Rules.WHITE));
     if (!Rules.isSolved(nums, n, solution)) throw new Error('Puzzle solution is not valid');
     return { n, nums, solution };

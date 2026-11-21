@@ -73,7 +73,7 @@
         const res = solveP(p, 5000);
         if (res.solutions.length === 1 && !res.capped) break;
         const other = res.solutions.find((x) => x.some((v, k) => v !== sol[k]));
-        const diff = [...sol.keys()].filter((k) => !p.given[k] && (!other || other[k] !== sol[k]));
+        const diff = [...sol.keys()].filter((k) => !p.given[k] && (other?.[k] !== sol[k]));
         const k = diff[Math.floor(Math.random() * diff.length)];
         p.given[k] = sol[k];
       }
@@ -146,9 +146,9 @@
     decode(d) {
       const n = d?.n;
       if (!Number.isInteger(n) || n < 3 || n > 9) throw new Error('Invalid board size');
-      if (typeof d.g !== 'string' || d.g.length !== n * n || !/^[0-9]+$/.test(d.g)) throw new Error('Invalid givens');
+      if (typeof d.g !== 'string' || d.g.length !== n * n || !/^\d+$/.test(d.g)) throw new Error('Invalid givens');
       const clues = String(d.k || '').split(',').filter(Boolean).map((s) => {
-        const m = s.match(/^(\d+)\.(\d+)\.([-+*/EO])(\d*)$/);
+        const m = /^(\d+)\.(\d+)\.([-+*/EO])(\d*)$/.exec(s);
         if (!m) throw new Error('Invalid clue');
         return { r: Number(m[1]), c: Number(m[2]), op: m[3], v: m[4] ? Number(m[4]) : undefined };
       });

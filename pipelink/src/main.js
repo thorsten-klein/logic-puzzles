@@ -80,7 +80,7 @@
         const res = solve(p, 2, 20000);
         if (res.solutions.length === 1 && !res.capped) break;
         const other = res.solutions.find((x) => x.some((v, e) => v !== loop[e]));
-        const opts = lines.filter((e) => !p.given.includes(e) && (!other || other[e] !== LINE));
+        const opts = lines.filter((e) => !p.given.includes(e) && (other?.[e] !== LINE));
         if (!opts.length) break;
         p.given.push(opts[Math.floor(Math.random() * opts.length)]);
       }

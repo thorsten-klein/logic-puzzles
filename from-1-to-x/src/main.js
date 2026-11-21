@@ -58,7 +58,7 @@
     encodeExtra: (p) => p.sums.join(','),
     decodeExtra(p, x) {
       const sums = String(x).split(',').map(Number);
-      if (sums.length !== p.R + p.C || sums.some((v) => !(v >= 0))) throw new Error('Invalid sums');
+      if (sums.length !== p.R + p.C || sums.some((v) => !Number.isInteger(v) || v < 0)) throw new Error('Invalid sums');
       p.sums = sums;
     },
   });

@@ -17,8 +17,7 @@ const Rules = (() => {
     for (let i = 0; i < n; i++) {
       const row = Array.from({ length: n }, (_, j) => i * n + j);
       const col = Array.from({ length: n }, (_, j) => j * n + i);
-      cons.push({ cells: row, min: k, max: k, area: row, why: why(`Row ${i + 1}`) });
-      cons.push({ cells: col, min: k, max: k, area: col, why: why(`Column ${i + 1}`) });
+      cons.push({ cells: row, min: k, max: k, area: row, why: why(`Row ${i + 1}`) }, { cells: col, min: k, max: k, area: col, why: why(`Column ${i + 1}`) });
     }
     for (let g = 0; g < n; g++) {
       const cells = [];

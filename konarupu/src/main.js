@@ -4,7 +4,7 @@
 // (an (n+1) x (n+1) grid); numbers sit between four dots.
 
 (() => {
-  const { UNKNOWN, LINE, CROSS } = Loop;
+  const { LINE, CROSS } = Loop;
 
   function model(p) {
     const { n, clues } = p;

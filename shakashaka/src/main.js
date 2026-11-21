@@ -25,7 +25,7 @@
   function slices(p, v, i, j) {
     // v: cell values (-1 unknown). Returns 8 slices: 1 white, 0 black, -1 unknown.
     const out = new Array(8);
-    for (const [dr, dc, vc, A, B, cv, ch] of AROUND) {
+    for (const [dr, dc, vc, A, B, cv] of AROUND) {
       const r = i + dr, c = j + dc;
       if (r < 0 || c < 0 || r >= p.n || c >= p.n || p.black[r * p.n + c]) { out[A] = 0; out[B] = 0; continue; }
       const x = v[r * p.n + c];

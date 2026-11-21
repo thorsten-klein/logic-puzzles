@@ -2,7 +2,7 @@
 // row, column or diagonal. Built on the shared Binary game page.
 
 (() => {
-  const { YES, NO } = Binary;
+  const { YES } = Binary;
 
   function model(p) {
     const { R, C, given } = p;

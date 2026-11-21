@@ -11,8 +11,7 @@
   function lines(n) {
     const out = [];
     for (let i = 0; i < n; i++) {
-      out.push([...new Array(n).keys()].map((j) => i * n + j));
-      out.push([...new Array(n).keys()].map((j) => j * n + i));
+      out.push([...new Array(n).keys()].map((j) => i * n + j), [...new Array(n).keys()].map((j) => j * n + i));
     }
     return out;
   }

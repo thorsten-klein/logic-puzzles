@@ -5,7 +5,7 @@
 // p.room: room per cell; p.mark: 0 none, 1 white circle, 2 black circle.
 
 (() => {
-  const { UNKNOWN, LINE, CROSS } = Loop;
+  const { LINE, CROSS } = Loop;
 
   function model(p) {
     const { R, C, room, mark } = p;

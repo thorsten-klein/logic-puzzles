@@ -8,7 +8,8 @@ puzzleTests('spider-web', {
   async workout(page) {
     await page.evaluate(() => {
       const { cfg } = window.__puzzleTest;
-      for (let i = 0; i < 10; i++) cfg.decode(JSON.parse(JSON.stringify(cfg.encode(cfg.generate(cfg.size.min + (i % 2))))));
+      // JSON round trip, like a share link.
+      for (let i = 0; i < 10; i++) cfg.decode(JSON.parse(JSON.stringify(cfg.encode(cfg.generate(cfg.size.min + (i % 2)))))); // NOSONAR
     });
   },
 });

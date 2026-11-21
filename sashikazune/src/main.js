@@ -5,7 +5,6 @@
 
 (() => {
   const STEP = [[-1, 0], [1, 0], [0, -1], [0, 1]];
-  const ARROW = ['↑︎', '↓︎', '←︎', '→︎'];
 
   // L shape info: bend cell and the two legs (cell lists from the bend
   // outward), or null if the cells are not an L.
@@ -48,7 +47,8 @@
           const cells = [k];
           for (let i = 1; i <= a; i++) cells.push((r + v * i) * C + c);
           for (let j = 1; j <= b; j++) cells.push(r * C + c + h * j);
-          out.push(cells.sort((x, y) => x - y));
+          cells.sort((x, y) => x - y);
+          out.push(cells);
         }
       }
       return out;

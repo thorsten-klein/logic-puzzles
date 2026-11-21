@@ -17,7 +17,8 @@
         const cells = [k];
         for (let i = 1; i <= a; i++) cells.push((r + v * i) * C + c);
         for (let j = 1; j <= b; j++) cells.push(r * C + c + h * j);
-        out.push({ cells: cells.sort((x, y) => x - y), a, b });
+        cells.sort((x, y) => x - y);
+        out.push({ cells, a, b });
       }
     }
     return out;

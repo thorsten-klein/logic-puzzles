@@ -94,7 +94,8 @@
       let ok = true;
       const placed = [];
       // Lift from the top stones down, keeping stones apart.
-      for (const cells of stones.sort((a, b) => Math.min(...a) - Math.min(...b))) {
+      stones.sort((a, b) => Math.min(...a) - Math.min(...b));
+      for (const cells of stones) {
         const top = Math.min(...cells.map((k) => Math.floor(k / C)));
         const lifts = PuzzleShell.shuffle(Array.from({ length: top + 1 }, (_, i) => i));
         let done = false;

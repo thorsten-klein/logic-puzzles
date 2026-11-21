@@ -9,7 +9,6 @@
   const one = (m) => m && !(m & (m - 1));
   const low = (m) => 31 - Math.clz32(m & -m);
   const STEP = [[-1, 0], [1, 0], [0, -1], [0, 1]];
-  const GLYPH = ['↑︎', '↓︎', '←︎', '→︎', ''];
 
   function prepare(p) {
     const { n, room, arrow } = p;

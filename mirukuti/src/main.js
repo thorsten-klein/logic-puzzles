@@ -48,7 +48,7 @@
   function settle(p, st, log) {
     for (let changed = true; changed;) {
       changed = false;
-      for (const [x, list] of p.by) {
+      for (const [, list] of p.by) {
         const used = list.filter((i) => st[i] === 1), open = list.filter((i) => st[i] === 0);
         if (used.length > 1 || (!used.length && !open.length)) return false;
         if (!used.length && open.length === 1) {

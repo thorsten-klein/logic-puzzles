@@ -52,8 +52,9 @@
       const has = (a, b) => links.some(([x, y]) => (x === a && y === b) || (x === b && y === a));
       for (let k = 0; k < N; k++) for (const j of near(k)) if (j > k && !has(k, j) && Math.random() < 0.35) links.push([k, j]);
       for (let r = 0; r + 1 < m; r++) for (let c = 0; c + 1 < m; c++) {
-        if (Math.random() < 0.2) links.push([r * m + c, (r + 1) * m + c + 1]);
-        else if (Math.random() < 0.2) links.push([r * m + c + 1, (r + 1) * m + c]);
+        const x = Math.random();
+        if (x < 0.2) links.push([r * m + c, (r + 1) * m + c + 1]);
+        else if (x < 0.36) links.push([r * m + c + 1, (r + 1) * m + c]);
       }
       const adj = edgesOf(m, links);
       // The key word along a random path.

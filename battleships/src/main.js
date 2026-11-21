@@ -3,7 +3,7 @@
 // corner. Built on the shared Binary game page.
 
 (() => {
-  const { UNKNOWN, YES, NO } = Binary;
+  const { YES, NO } = Binary;
 
   function fleetFor(n) {
     if (n <= 6) return [3, 2, 2, 1, 1, 1];
@@ -42,7 +42,10 @@
     for (let k = 0; k < R * C; k++) {
       if (given[k]) cons.push({ cells: [k], min: given[k] === YES ? 1 : 0, max: given[k] === YES ? 1 : 0 });
     }
-    const name = (w, i, n) => `${w} ${i + 1} ${n === 0 ? 'has no ship cells' : `has ${n} ship cell${n === 1 ? '' : 's'}`}`;
+    const name = (w, i, n) => {
+      if (n === 0) return `${w} ${i + 1} has no ship cells`;
+      return `${w} ${i + 1} has ${n} ship ${n === 1 ? 'cell' : 'cells'}`;
+    };
     for (let i = 0; i < R; i++) {
       const cells = Array.from({ length: C }, (_, j) => i * C + j);
       cons.push({ cells, min: rows[i], max: rows[i], area: cells,
@@ -56,8 +59,7 @@
     for (let r = 0; r < R - 1; r++) for (let c = 0; c < C - 1; c++) {
       const k = r * C + c;
       const why = () => 'Ships may not touch at a corner. This cell is water.';
-      cons.push({ cells: [k, k + C + 1], min: 0, max: 1, why });
-      cons.push({ cells: [k + 1, k + C], min: 0, max: 1, why });
+      cons.push({ cells: [k, k + C + 1], min: 0, max: 1, why }, { cells: [k + 1, k + C], min: 0, max: 1, why });
     }
     const maxLen = Math.max(...fleet);
     function check(s, done) {
@@ -118,7 +120,7 @@
       const res = Binary.solve(model(p), 2, 20000);
       if (res.solutions.length === 1 && !res.capped) break;
       const other = res.solutions.find((x) => x.some((v, k) => v !== sol[k]));
-      const diff = [...sol.keys()].filter((k) => !p.given[k] && (!other || other[k] !== sol[k]));
+      const diff = [...sol.keys()].filter((k) => !p.given[k] && (other?.[k] !== sol[k]));
       const k = diff[Math.floor(Math.random() * diff.length)];
       p.given[k] = sol[k];
     }

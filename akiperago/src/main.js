@@ -119,7 +119,9 @@
       islands.push(cells);
       return true;
     };
-    for (let g = 0, fails = 0; fails < 30; g++) {
+    let fails = 0;
+    for (let g = 0; ; g++) {
+      if (fails >= 30) break;
       const starts = [...new Array(N).keys()].filter((k) => id[k] < 0 && around(k, true).every((j) => id[j] < 0));
       if (!starts.length) break;
       const size = 2 + Math.floor(Math.random() * 3);

@@ -57,8 +57,7 @@
         if (r1 !== r2 && c1 !== c2) return false;
         for (let r = r1; r <= r2; r++) for (let c = c1; c <= c2; c++) if (s[r * C + c] === NO) return false;
       }
-      if (!Binary.canConnect(R, C, s, YES)) return false;
-      return true;
+      return Binary.canConnect(R, C, s, YES);
     }
     return { N, cons, propagate, check };
   }

@@ -3,7 +3,7 @@
 // that side. Values: 1..m = letters, m+1 = blank (0 = not filled).
 
 (() => {
-  const letter = (v, m) => (v >= 1 && v <= m ? String.fromCharCode(64 + v) : '');
+  const letter = (v, m) => (v >= 1 && v <= m ? String.fromCodePoint(64 + v) : '');
 
   // Lines as [clue index, cells in viewing order] (top, bottom, left, right).
   function lines(n) {
@@ -167,7 +167,7 @@
     rules: 'Place the letters in the grid so each row and each column holds every letter exactly once. ' +
       'The other cells stay blank. A letter outside the grid is the first letter you meet from that side.',
     controls: 'Click a cell to cycle through the letters and a blank mark (×). Right click cycles back.',
-    size: { min: 4, max: 6, def: 5, text: (n) => `${n} (A–${String.fromCharCode(64 + (n <= 4 ? n - 1 : n - 2))})` },
+    size: { min: 4, max: 6, def: 5, text: (n) => `${n} (A–${String.fromCodePoint(64 + (n <= 4 ? n - 1 : n - 2))})` },
     solvedText: 'Every letter in place — nicely done.',
     generate(n) {
       for (let t = 0; t < 50; t++) { const p = generate(n); if (p) return p; }
@@ -177,7 +177,7 @@
     decode(d) {
       const n = d?.n, m = d?.m;
       if (!Number.isInteger(n) || n < 3 || n > 9 || !Number.isInteger(m) || m < 1 || m > n) throw new Error('Invalid board size');
-      if (typeof d.c !== 'string' || d.c.length !== 4 * n || !/^[0-9]+$/.test(d.c)) throw new Error('Invalid clues');
+      if (typeof d.c !== 'string' || d.c.length !== 4 * n || !/^\d+$/.test(d.c)) throw new Error('Invalid clues');
       const p = { n, m, clues: Array.from(d.c, Number) };
       const res = solve(p, startCand(p), 2, 50000);
       if (res.solutions.length !== 1) throw new Error('Puzzle has no unique solution');

@@ -59,8 +59,7 @@ const Rules = (() => {
       const row = Array.from({ length: n }, (_, j) => i * n + j);
       const col = Array.from({ length: n }, (_, j) => j * n + i);
       cons.push({ cells: row, min: rows[i], max: rows[i], area: row,
-        why: lineWhy(`Row ${i + 1}`, rows[i]) });
-      cons.push({ cells: col, min: cols[i], max: cols[i], area: col,
+        why: lineWhy(`Row ${i + 1}`, rows[i]) }, { cells: col, min: cols[i], max: cols[i], area: col,
         why: lineWhy(`Column ${i + 1}`, cols[i]) });
     }
     for (let r = 0; r < n - 1; r++) for (let c = 0; c < n - 1; c++) {

@@ -9,8 +9,7 @@ puzzleTests('binairo', {
     const { n, solution: s } = p, out = [];
     const lines = [];
     for (let i = 0; i < n; i++) {
-      lines.push(['row', i, Array.from({ length: n }, (_, j) => s[i * n + j])]);
-      lines.push(['column', i, Array.from({ length: n }, (_, j) => s[j * n + i])]);
+      lines.push(['row', i, Array.from({ length: n }, (_, j) => s[i * n + j])], ['column', i, Array.from({ length: n }, (_, j) => s[j * n + i])]);
     }
     for (const [what, i, v] of lines) {
       if (v.filter((x) => x === 1).length * 2 !== n) out.push(`${what} ${i} is not half and half`);

@@ -10,14 +10,17 @@
   const { UNKNOWN, YES, NO } = Binary;
   const DIRS = [[-1, 0], [1, 0], [0, -1], [0, 1]];
 
+  // Cells next to cell k (by a side).
+  function neighbours(R, C, k) {
+    const r = Math.floor(k / C), c = k % C, out = [];
+    for (const [dr, dc] of DIRS) if (r + dr >= 0 && r + dr < R && c + dc >= 0 && c + dc < C) out.push(k + dr * C + dc);
+    return out;
+  }
+
   function model(p) {
     const { R, C, clues } = p;
     const N = R * C;
-    const nb = (k) => {
-      const r = Math.floor(k / C), c = k % C, out = [];
-      for (const [dr, dc] of DIRS) if (r + dr >= 0 && r + dr < R && c + dc >= 0 && c + dc < C) out.push(k + dr * C + dc);
-      return out;
-    };
+    const nb = (k) => neighbours(R, C, k);
     const cons = [];
     for (let r = 0; r < R - 1; r++) for (let c = 0; c < C - 1; c++) {
       cons.push({ cells: [r * C + c, r * C + c + 1, (r + 1) * C + c, (r + 1) * C + c + 1], min: 1, max: 3,
@@ -103,11 +106,7 @@
       const free = model(base);
       const fill = Binary.randomFill({ N, cons: free.cons, check: (s) => Binary.canConnect(R, C, s, NO) }, 0.5, 10);
       if (!fill) continue;
-      const nb = (k) => {
-        const r = Math.floor(k / C), c = k % C, out = [];
-        for (const [dr, dc] of DIRS) if (r + dr >= 0 && r + dr < R && c + dc >= 0 && c + dc < C) out.push(k + dr * C + dc);
-        return out;
-      };
+      const nb = (k) => neighbours(R, C, k);
       const whiteNb = (k) => nb(k).filter((j) => fill[j] === NO).length;
       if ([...fill.keys()].some((k) => fill[k] === NO && whiteNb(k) === 0)) continue;
       // Circles on every dead end, with the number seen.

@@ -80,7 +80,7 @@
         if (t === '.') return;
         num[k] = Number.parseInt(t.slice(0, -1), 36);
         dir[k] = Number(t.slice(-1)) % 4;
-        if (!(num[k] >= 0)) throw new Error('Invalid clues');
+        if (!Number.isInteger(num[k]) || num[k] < 0) throw new Error('Invalid clues');
       });
       return { R, C, num, dir };
     },

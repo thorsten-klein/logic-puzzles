@@ -5,7 +5,7 @@
 // p.room: room per cell; p.clues: count per room (-1 = none).
 
 (() => {
-  const { UNKNOWN, YES, NO } = Binary;
+  const { UNKNOWN, YES } = Binary;
 
   function model(p) {
     const { R, C, room, clues } = p;

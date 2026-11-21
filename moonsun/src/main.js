@@ -33,10 +33,10 @@
         c = mark[k];
       }
       // A circle that is shut off can not be part of the room's colour.
-      const can = [1, 2].filter((m) => !cellsOf[r].some((k) => mark[k] === m && closed(s, k)));
-      if (c) return can.includes(c) ? c : -1;
+      const can = new Set([1, 2].filter((m) => !cellsOf[r].some((k) => mark[k] === m && closed(s, k))));
+      if (c) return can.has(c) ? c : -1;
       const has = [1, 2].filter((m) => cellsOf[r].some((k) => mark[k] === m));
-      const left = has.length ? has.filter((m) => can.includes(m)) : [1, 2];
+      const left = has.length ? has.filter((m) => can.has(m)) : [1, 2];
       if (!left.length) return -1;
       return left.length === 1 && has.length ? left[0] : 0;
     };

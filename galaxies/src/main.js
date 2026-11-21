@@ -46,7 +46,8 @@
     for (let guard = 0; guard < 200; guard++) {
       let changed = false;
       for (let k = 0; k < N; k++) {
-        for (const d of [...cand[k]]) {
+        // Deleting the current entry while iterating a Set is safe.
+        for (const d of cand[k]) {
           const m = mirror(p, k, d);
           if (m < 0 || !cand[m].has(d)) { cand[k].delete(d); changed = true; }
         }

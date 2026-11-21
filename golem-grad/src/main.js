@@ -61,8 +61,7 @@
     for (let k = 0; k < N; k++) {
       if (clues[k]) cons.push({ cells: [k], min: 0, max: 0, why: () => 'Numbered cells stay white.' });
       if (ring[k]) {
-        cons.push({ cells: [k], min: 1, max: 1, why: () => 'Circles are snake ends, so they are shaded.' });
-        cons.push({ cells: nb[k], min: 1, max: nb[k].length, why: () => 'A snake end needs a shaded neighbour.' });
+        cons.push({ cells: [k], min: 1, max: 1, why: () => 'Circles are snake ends, so they are shaded.' }, { cells: nb[k], min: 1, max: nb[k].length, why: () => 'A snake end needs a shaded neighbour.' });
       }
     }
     function check(s, done) {
@@ -107,7 +106,7 @@
         const free = [...new Array(N).keys()].filter((k) => black[k] && !used[k]);
         if (!free.length) break;
         const deg = (k) => nb[k].filter((j) => black[j] && !used[j]).length;
-        const start = free.reduce((a, b) => (deg(b) < deg(a) || (deg(b) === deg(a) && Math.random() < 0.3) ? b : a));
+        const start = free.reduce((a, b) => (deg(b) < deg(a) || (deg(b) === deg(a) && Math.random() < 0.3) ? b : a), free[0]);
         const path = [start];
         used[start] = 1;
         const want = 2 + Math.floor(Math.random() * 6);
@@ -115,7 +114,7 @@
           const x = path.at(-1);
           const opts = nb[x].filter((j) => black[j] && !used[j]);
           if (!opts.length) break;
-          const j = opts.reduce((a, b) => (deg(b) < deg(a) ? b : a));
+          const j = opts.reduce((a, b) => (deg(b) < deg(a) ? b : a), opts[0]);
           used[j] = 1;
           path.push(j);
         }

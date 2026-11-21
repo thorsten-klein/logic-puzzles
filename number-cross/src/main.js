@@ -69,7 +69,7 @@
       if (typeof d.g !== 'string' || d.g.length !== n * n || !/^[1-9]+$/.test(d.g)) throw new Error('Invalid grid');
       const nums = (x) => String(x).split(',').map(Number);
       const rows = nums(d.r), cols = nums(d.c);
-      if (rows.length !== n || cols.length !== n || [...rows, ...cols].some((x) => !(x >= 0))) throw new Error('Invalid sums');
+      if (rows.length !== n || cols.length !== n || [...rows, ...cols].some((x) => !Number.isInteger(x) || x < 0)) throw new Error('Invalid sums');
       return { R: n, C: n, n, g: Int8Array.from(d.g, Number), rows, cols };
     },
     model,

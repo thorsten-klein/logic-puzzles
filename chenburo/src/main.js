@@ -23,7 +23,7 @@
       const ma = Math.min(...q.map((x) => x[0])), mb = Math.min(...q.map((x) => x[1]));
       keys.push(q.map(([a, b]) => `${a - ma},${b - mb}`).sort().join(' '));
     }
-    return keys.sort()[0];
+    return keys.reduce((min, k) => (k < min ? k : min), keys[0]);  // smallest key
   }
 
   function model(p) {
@@ -37,6 +37,8 @@
       if (c < C - 1) out.push(k + 1);
       return out;
     };
+    // True when no cell next to k is still open.
+    const settled = (k, s) => nb(k).every((j) => s[j] !== UNKNOWN);
     const diag = (k) => {
       const r = Math.floor(k / C), c = k % C, out = [];
       for (const [a, b] of [[r - 1, c - 1], [r - 1, c + 1], [r + 1, c - 1], [r + 1, c + 1]]) if (a >= 0 && b >= 0 && a < R && b < C) out.push(a * C + b);
@@ -80,7 +82,7 @@
       const { id, list } = blocks(s);
       const info = list.map((cells) => {
         const cl = cells.filter((x) => clues[x] >= 0);
-        const closed = done || cells.every((k) => nb(k).every((j) => s[j] !== UNKNOWN));
+        const closed = done || cells.every((k) => settled(k, s));
         return { cells, cl, closed };
       });
       for (const b of info) {
@@ -149,7 +151,9 @@
       blocks.push(cells);
       return true;
     };
-    for (let ch = 0, fails = 0; fails < 30; ch++) {
+    let fails = 0;
+    for (let ch = 0; ; ch++) {
+      if (fails >= 30) break;
       const starts = [...new Array(N).keys()].filter((k) => id[k] < 0 && around(k, true).every((j) => id[j] < 0));
       if (!starts.length) break;
       const used = new Set();

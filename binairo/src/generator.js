@@ -2,7 +2,7 @@
 // while logic alone still solves it. Exposes the global `Generator`.
 
 const Generator = (() => {
-  const { UNKNOWN, YES, NO } = Binary;
+  const { UNKNOWN } = Binary;
 
   function randomGrid(n) {
     const s = Binary.randomFill(Rules.model({ n, given: new Uint8Array(n * n) }));

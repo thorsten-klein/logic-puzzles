@@ -11,7 +11,7 @@
   const low = (m) => 31 - Math.clz32(m & -m);
 
   function prepare(p) {
-    const { R, C, region, circle } = p;
+    const { region, circle } = p;
     p.groups = [];
     region.forEach((g, k) => { if (!circle[k]) (p.groups[g] = p.groups[g] || []).push(k); });
     p.groups = p.groups.filter(Boolean);
@@ -156,7 +156,7 @@
         const res = solve(p, startCand(p, given), 2, 5000);
         if (res.solutions.length === 1 && !res.capped) break;
         const other = res.solutions.find((x) => x.some((v, k) => v !== arrow[k]));
-        const diff = [...new Array(N).keys()].filter((k) => !circle[k] && !given[k] && (!other || other[k] !== arrow[k]));
+        const diff = [...new Array(N).keys()].filter((k) => !circle[k] && !given[k] && (other?.[k] !== arrow[k]));
         if (!diff.length) break;
         const k = diff[Math.floor(Math.random() * diff.length)];
         given[k] = arrow[k];

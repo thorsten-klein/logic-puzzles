@@ -170,7 +170,7 @@ const Links = (() => {
       if (pick < 0) pick = s.indexOf(UNKNOWN);
       if (pick < 0) {
         const t = Uint8Array.from(s, (v) => (v === LINE ? LINE : CROSS));
-        if (complete(m, t) && (!m.rule || m.rule(t) !== false)) solutions.push(t);
+        if (complete(m, t) && (m.rule?.(t) !== false)) solutions.push(t);
         return;
       }
       for (const v of [LINE, CROSS]) {

@@ -285,12 +285,14 @@ const Hint = (() => {
       // so the diagonal contact is illegal.
       for (let r = 0; r < size - 1; r++) {
         for (let c = 0; c < size - 1; c++) {
-          checkDiagPair(r, c, r + 1, c + 1, r, c + 1, r + 1, c);
-          checkDiagPair(r, c + 1, r + 1, c, r, c, r + 1, c + 1);
+          checkDiagPair([r, c], [r + 1, c + 1], [r, c + 1], [r + 1, c]);
+          checkDiagPair([r, c + 1], [r + 1, c], [r, c], [r + 1, c + 1]);
         }
       }
 
-      function checkDiagPair(r1, c1, r2, c2, sr1, sc1, sr2, sc2) {
+      // Two diagonal snake cells [r1, c1] and [r2, c2]; the two cells
+      // they share as side neighbours are [sr1, sc1] and [sr2, sc2].
+      function checkDiagPair([r1, c1], [r2, c2], [sr1, sc1], [sr2, sc2]) {
         const k1 = r1 * size + c1, k2 = r2 * size + c2;
         if (!snake.has(k1) || !snake.has(k2)) return;
         const s1 = snake.has(sr1 * size + sc1);
@@ -599,10 +601,7 @@ const Hint = (() => {
       }
       if (parentProp.trace.length > headSteps.length) parts.push('… plus a few more;');
     }
-    parts.push(`Now look at cell (row ${br + 1}, col ${bc + 1}) — it's still undecided, but every choice breaks the rules:`);
-    parts.push(`• if you fill it, ${conflictPhrase(deep.branchFill.conflict)};`);
-    parts.push(`• if you mark it empty, ${conflictPhrase(deep.branchEmpty.conflict)}.`);
-    parts.push(`Both options for (${br + 1}, ${bc + 1}) fail — so the original assumption is wrong, and this cell must be ${ends}.`);
+    parts.push(`Now look at cell (row ${br + 1}, col ${bc + 1}) — it's still undecided, but every choice breaks the rules:`, `• if you fill it, ${conflictPhrase(deep.branchFill.conflict)};`, `• if you mark it empty, ${conflictPhrase(deep.branchEmpty.conflict)}.`, `Both options for (${br + 1}, ${bc + 1}) fail — so the original assumption is wrong, and this cell must be ${ends}.`);
     return parts.join(' ');
   }
 

@@ -69,8 +69,7 @@ const Solver = (() => {
         // No inside cells may appear later; caller enforces via flag.
         return 'closed';
       }
-      if (last && insideParts !== 1) return false;
-      return true;
+      return !last || insideParts === 1;
     }
 
     function rec(k, closed) {

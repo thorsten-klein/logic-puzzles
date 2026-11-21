@@ -15,8 +15,7 @@
     const each = n / 3;
     p.lines = [];
     for (let i = 0; i < n; i++) {
-      p.lines.push(Array.from({ length: n }, (_, c) => i * n + c));
-      p.lines.push(Array.from({ length: n }, (_, r) => r * n + i));
+      p.lines.push(Array.from({ length: n }, (_, c) => i * n + c), Array.from({ length: n }, (_, r) => r * n + i));
     }
     p.lineOk = (vals) => [1, 2, 3].every((v) => vals.filter((x) => x === v).length === each);
     p.lineOk.partial = (vals, i) => [1, 2, 3].every((v) => vals.slice(0, i + 1).filter((x) => x === v).length <= each);

@@ -43,7 +43,7 @@ function oneChangeBreaks(cfg, q, end) {
 
 function logicTests(slug, cfg, extra) {
   const kind = kindOf(slug);
-  const skipKind = extra.skipKind || (SKIP[kind] || {})[slug];
+  const skipKind = extra.skipKind || SKIP[kind]?.[slug];
   for (const n of sizesOf(cfg, full)) {
     test(`size ${n} @logic`, async () => {
       for (let b = 0; b < (full ? 3 : 1); b++) {
@@ -160,7 +160,8 @@ function uiTests(slug) {
       await page.waitForFunction(() => window.__puzzleTest);
       const r = await page.evaluate(() => {
         const { cfg } = window.__puzzleTest;
-        const p = cfg.generate(cfg.size.min) || cfg.generate(cfg.size.min);
+        let p = null;
+        for (let t = 0; t < 2 && !p; t++) p = cfg.generate(cfg.size.min);
         const s = cfg.newState(p);
         for (let i = 0; i < 3000 && !cfg.check(p, s); i++) { const h = cfg.hints(p, s); if (!h.length) break; cfg.applyHint(p, s, h[0]); }
         const view = (st) => cfg.render(p, st, { readonly: true, result: true });

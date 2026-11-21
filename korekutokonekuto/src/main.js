@@ -221,8 +221,9 @@
       if (!readonly) {
         const hit = el('line', { x1, y1, x2, y2, class: 'hs-hit', 'stroke-width': s * 0.5 }, svg);
         const cycle = () => { state[j] = state[j] ? 0 : 1; onChange(); };
-        hit.addEventListener('click', () => cycle(false));
-        hit.addEventListener('contextmenu', (ev) => { ev.preventDefault(); cycle(true); });
+        // Left and right click both switch the line on or off.
+        hit.addEventListener('click', () => cycle());
+        hit.addEventListener('contextmenu', (ev) => { ev.preventDefault(); cycle(); });
       }
     });
     for (const k of p.black || []) { const [cx, cy] = xy(k); el('circle', { cx, cy, r: s * 0.3, class: 'kc-black' }, svg); }

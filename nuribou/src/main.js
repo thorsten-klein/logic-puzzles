@@ -17,6 +17,8 @@
       if (c < C - 1) out.push(k + 1);
       return out;
     };
+    // True when no cell next to k is still open.
+    const settled = (k, s) => nb(k).every((j) => s[j] !== UNKNOWN);
     const cons = [];
     for (let r = 0; r < R - 1; r++) for (let c = 0; c < C - 1; c++) {
       cons.push({ cells: [r * C + c, r * C + c + 1, (r + 1) * C + c, (r + 1) * C + c + 1], min: 0, max: 2, why: () => 'Stripes are straight and never touch by a side.' });
@@ -39,7 +41,7 @@
       const len = black.list.map((cells) => {
         const rows = new Set(cells.map((k) => Math.floor(k / C))), cols = new Set(cells.map((k) => k % C));
         if (rows.size > 1 && cols.size > 1) return -2;
-        const closed = done || cells.every((k) => nb(k).every((j) => s[j] !== UNKNOWN));
+        const closed = done || cells.every((k) => settled(k, s));
         return closed ? cells.length : 0;
       });
       if (len.includes(-2)) return false;
@@ -58,7 +60,7 @@
       for (const cells of white.list) {
         const nums = cells.filter((k) => clues[k] > 0);
         if (nums.length > 1) return false;
-        const closed = done || cells.every((k) => nb(k).every((j) => s[j] !== UNKNOWN));
+        const closed = done || cells.every((k) => settled(k, s));
         if (closed && (nums.length !== 1 || cells.length !== clues[nums[0]])) return false;
         if (nums.length === 1) {
           const v = clues[nums[0]];

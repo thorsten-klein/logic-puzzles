@@ -229,7 +229,7 @@ const Pieces = (() => {
     let path = null;
     const cellAt = (ev) => {
       const el = document.elementFromPoint(ev.clientX, ev.clientY);
-      return el && el.closest('.pc-board') === board && el.dataset.k !== undefined ? Number(el.dataset.k) : null;
+      return el?.closest('.pc-board') === board && el.dataset.k !== undefined ? Number(el.dataset.k) : null;
     };
     board.addEventListener('pointerdown', (ev) => {
       const k = cellAt(ev);

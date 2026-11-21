@@ -6,7 +6,7 @@
 // p.light: 0 none, v + 1 lighthouse with number v.
 
 (() => {
-  const { UNKNOWN, YES, NO } = Binary;
+  const { YES, NO } = Binary;
 
   function fleetFor(n) {
     if (n <= 6) return [3, 2, 1, 1];
@@ -62,8 +62,7 @@
     for (let r = 0; r < R - 1; r++) for (let c = 0; c < C - 1; c++) {
       const k = r * C + c;
       const why = () => 'Ships may not touch at a corner. This cell is water.';
-      cons.push({ cells: [k, k + C + 1], min: 0, max: 1, why });
-      cons.push({ cells: [k + 1, k + C], min: 0, max: 1, why });
+      cons.push({ cells: [k, k + C + 1], min: 0, max: 1, why }, { cells: [k + 1, k + C], min: 0, max: 1, why });
     }
     const maxLen = Math.max(...fleet);
     function check(s, done) {
@@ -129,7 +128,7 @@
       const res = Binary.solve(model(p), 2, 20000);
       if (res.solutions.length === 1 && !res.capped) break;
       const other = res.solutions.find((x) => x.some((v, k) => v !== sol[k]));
-      const diff = [...sol.keys()].filter((k) => !p.given[k] && !light[k] && (!other || other[k] !== sol[k]));
+      const diff = [...sol.keys()].filter((k) => !p.given[k] && !light[k] && (other?.[k] !== sol[k]));
       const k = diff[Math.floor(Math.random() * diff.length)];
       p.given[k] = sol[k];
     }

@@ -82,7 +82,7 @@
     for (let r = 0; r <= R; r++) for (let c = 0; c <= C; c++) {
       const v = clues[r * (C + 1) + c];
       if (v < 0) continue;
-      el('circle', { cx: c * s, cy: r * s, r: s * 0.22, class: 'ck-clue' + (hint && hint.at === r * (C + 1) + c ? ' hint' : '') }, g);
+      el('circle', { cx: c * s, cy: r * s, r: s * 0.22, class: 'ck-clue' + (hint?.at === r * (C + 1) + c ? ' hint' : '') }, g);
       const t = el('text', { x: c * s, y: r * s, 'font-size': s * 0.3, class: 'ck-num' }, g);
       t.textContent = v;
     }
