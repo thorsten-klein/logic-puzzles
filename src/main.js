@@ -18,7 +18,8 @@
   // Remembered choices (may fail in private mode; then use defaults).
   const PREFS_KEY = 'logic-puzzles:hub';
   // favOnly: show only the favourite games (Favs in site.js).
-  let prefs = { view: 'details', sort: 'name', tags: [], favOnly: false };
+  // played: '' (all), 'new' (never played) or 'played' (Played in site.js).
+  let prefs = { view: 'details', sort: 'name', tags: [], favOnly: false, played: '' };
   try { prefs = { ...prefs, ...JSON.parse(localStorage.getItem(PREFS_KEY) || '{}') }; } catch (e) { /* defaults */ }
   const savePrefs = () => { try { localStorage.setItem(PREFS_KEY, JSON.stringify(prefs)); } catch (e) { /* ignore */ } };
 
@@ -44,7 +45,7 @@
           <span class="badge ${badgeClass}">${badgeText}</span>
           <span class="card-tags">${(game.tags || []).map((t) => `<span class="tag">${t}</span>`).join('')}</span>
         </div>
-        ${Favs.html(game.slug)}
+        <span class="card-corner">${isAvailable && !Played.has(game.slug) ? '<span class="badge new">New</span>' : ''}${Favs.html(game.slug)}</span>
       </a>`;
   }
 
@@ -61,8 +62,13 @@
     const chosen = new Set(prefs.tags);
     const count = (t) => GAMES.filter((g) => matchText(g) && (g.tags || []).includes(t)).length;
     const favs = Favs.list().filter((slug) => GAMES.some((g) => g.slug === slug && matchText(g))).length;
-    tagBox.innerHTML = `<button type="button" class="chip" data-tag="" aria-pressed="${!chosen.size && !prefs.favOnly}">All</button>` +
+    const playedSet = new Set(Played.list());
+    const playable = GAMES.filter((g) => g.status === 'available' && matchText(g));
+    const nNew = playable.filter((g) => !playedSet.has(g.slug)).length, nPlayed = playable.length - nNew;
+    tagBox.innerHTML = `<button type="button" class="chip" data-tag="" aria-pressed="${!chosen.size && !prefs.favOnly && !prefs.played}">All</button>` +
       `<button type="button" class="chip chip-fav" data-fav="1" aria-pressed="${!!prefs.favOnly}"><b class="chip-star">★</b> Favourites <span>${favs}</span></button>` +
+      `<button type="button" class="chip" data-played="new" aria-pressed="${prefs.played === 'new'}">New <span>${nNew}</span></button>` +
+      `<button type="button" class="chip" data-played="played" aria-pressed="${prefs.played === 'played'}">Already played <span>${nPlayed}</span></button>` +
       TAGS.map((t) => `<button type="button" class="chip" data-tag="${t}" aria-pressed="${chosen.has(t)}">${t} <span>${count(t)}</span></button>`).join('');
   }
 
@@ -72,8 +78,11 @@
     const matchText = (g) => !q || g.name.toLowerCase().includes(q) || g.description.toLowerCase().includes(q);
     prefs.tags = (prefs.tags || []).filter((t) => TAGS.includes(t));
     const favSet = new Set(Favs.list());
+    const playedSet = new Set(Played.list());
     const filtered = GAMES.filter((g) => matchText(g) && prefs.tags.every((t) => (g.tags || []).includes(t))
-      && (!prefs.favOnly || favSet.has(g.slug)));
+      && (!prefs.favOnly || favSet.has(g.slug))
+      // "New" and "Already played" only count playable games.
+      && (!prefs.played || (g.status === 'available' && (prefs.played === 'played') === playedSet.has(g.slug))));
     renderTags(matchText);
     const sorted = (SORTS[prefs.sort] || SORTS.name)(filtered);
     if (!['icons', 'list', 'details'].includes(prefs.view)) prefs.view = 'details';
@@ -83,7 +92,7 @@
     for (const b of viewBtns) b.setAttribute('aria-pressed', String(b.dataset.view === prefs.view));
     sortPick.value = SORTS[prefs.sort] ? prefs.sort : 'name';
     const playable = filtered.filter((g) => g.status === 'available').length;
-    stats.textContent = q || prefs.tags.length || prefs.favOnly
+    stats.textContent = q || prefs.tags.length || prefs.favOnly || prefs.played
       ? `${filtered.length} of ${GAMES.length} puzzles match, ${playable} playable`
       : `${availableCount} of ${GAMES.length} puzzles playable so far`;
     if (!filtered.length) {
@@ -143,8 +152,10 @@
     const b = ev.target.closest('.chip');
     if (!b) return;
     if (b.dataset.fav) { prefs.favOnly = !prefs.favOnly; savePrefs(); render(); return; }
+    // "New" and "Already played": one at a time, a second click turns it off.
+    if (b.dataset.played) { prefs.played = prefs.played === b.dataset.played ? '' : b.dataset.played; savePrefs(); render(); return; }
     const t = b.dataset.tag;
-    if (!t) { prefs.tags = []; prefs.favOnly = false; }
+    if (!t) { prefs.tags = []; prefs.favOnly = false; prefs.played = ''; }
     else prefs.tags = prefs.tags.includes(t) ? prefs.tags.filter((x) => x !== t) : [...prefs.tags, t];
     savePrefs();
     render();

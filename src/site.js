@@ -156,6 +156,13 @@
   };
   window.Favs = Favs;
 
+  // Games with at least one submitted puzzle (the shell adds them on Submit).
+  const Played = {
+    list() { try { const v = JSON.parse(localStorage.getItem('logic-puzzles:played') || '[]'); return Array.isArray(v) ? v : []; } catch { return []; } },
+    has(slug) { return Played.list().includes(slug); },
+  };
+  window.Played = Played;
+
   // Game pages: a star next to the name in the top bar and on the setup screen.
   function addFavs() {
     const slug = location.pathname.split('/').slice(-2, -1)[0];

@@ -189,6 +189,16 @@ const PuzzleShell = (() => {
     return null;
   }
 
+  // Games with at least one submitted puzzle (game ids), for the "New"
+  // badge on the main page (Played in site.js reads the same key).
+  function markPlayed(id) {
+    try {
+      const key = 'logic-puzzles:played';
+      const list = JSON.parse(localStorage.getItem(key) || '[]');
+      if (Array.isArray(list) && !list.includes(id)) localStorage.setItem(key, JSON.stringify([...list, id]));
+    } catch { /* no storage */ }
+  }
+
   // Wraps cfg.generate: a board that counts as solved while still empty
   // (nothing to do) is thrown away and made again. Used by start(), and
   // by the tests that load a game's cfg without a page.
@@ -434,7 +444,9 @@ const PuzzleShell = (() => {
       showModal('modal-solution');
       keepWide('modal-solution', 'solution-fold');
     }
-    $('submit-btn').addEventListener('click', () => showSubmit(cfg.check(st.puzzle, st.state)));
+    // A submitted puzzle (right or not) makes the game "played": no more
+    // "New" badge on the main page.
+    $('submit-btn').addEventListener('click', () => { markPlayed(cfg.id); showSubmit(cfg.check(st.puzzle, st.state)); });
     $('giveup-btn').addEventListener('click', showSolution);
     // "Get Hint" does the same as the light bulb in the topbar.
     if ($('hint-btn')) $('hint-btn').addEventListener('click', () => $('btn-topbar-hint').click());
