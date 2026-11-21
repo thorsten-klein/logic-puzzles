@@ -1110,3 +1110,8 @@ button.regen-btn:disabled { opacity: 0.6; cursor: wait; }
 .game-grid.is-list .game-card .fav-star { position: static; margin-left: auto; }
 .game-grid.is-list .game-card .card-foot { padding-right: 0; }
 .tag-filter .chip .chip-star { color: #f2b01e; font-weight: normal; }
+
+/* "Clear data…" popup on the main page (src/clear.js). */
+.clear-list { display: flex; flex-direction: column; gap: 10px; margin: 8px 0 16px; text-align: left; }
+.clear-list .toggle.empty { color: var(--muted); }
+#modal-clear button:disabled { opacity: 0.45; cursor: default; }
