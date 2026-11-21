@@ -120,7 +120,52 @@
     apply(false);
   }
 
-  const init = () => { add(); addZoom(); addFooter(); };
+  // Favourite games: a list of game slugs, the same on every page.
+  const FAV_KEY = 'logic-puzzles:favourites';
+  const STAR = '<svg viewBox="0 0 24 24" aria-hidden="true"><polygon points="12 3 14.8 8.9 21.2 9.6 16.4 14 17.8 20.4 12 17.1 6.2 20.4 7.6 14 2.8 9.6 9.2 8.9"/></svg>';
+  const Favs = {
+    list() { try { const v = JSON.parse(localStorage.getItem(FAV_KEY) || '[]'); return Array.isArray(v) ? v : []; } catch { return []; } },
+    has(slug) { return Favs.list().includes(slug); },
+    toggle(slug) {
+      const now = Favs.list();
+      const next = now.includes(slug) ? now.filter((x) => x !== slug) : [...now, slug];
+      try { localStorage.setItem(FAV_KEY, JSON.stringify(next)); } catch { /* no storage */ }
+      // Every star for this game shows the new state.
+      for (const b of doc.querySelectorAll(`.fav-star[data-slug="${slug}"]`)) Favs.paint(b);
+      doc.dispatchEvent(new CustomEvent('favs-change'));
+    },
+    paint(b) {
+      const on = Favs.has(b.dataset.slug);
+      b.setAttribute('aria-pressed', String(on));
+      b.title = on ? 'Remove from favourites' : 'Add to favourites';
+      b.setAttribute('aria-label', b.title);
+    },
+    // Star button HTML (for pages that build HTML strings).
+    html(slug) {
+      const on = Favs.has(slug);
+      const t = on ? 'Remove from favourites' : 'Add to favourites';
+      return `<button type="button" class="fav-star" data-slug="${slug}" aria-pressed="${on}" title="${t}" aria-label="${t}">${STAR}</button>`;
+    },
+    button(slug) {
+      const tmp = doc.createElement('div');
+      tmp.innerHTML = Favs.html(slug);
+      const b = tmp.firstChild;
+      b.addEventListener('click', (ev) => { ev.preventDefault(); ev.stopPropagation(); Favs.toggle(slug); });
+      return b;
+    },
+  };
+  window.Favs = Favs;
+
+  // Game pages: a star next to the name in the top bar and on the setup screen.
+  function addFavs() {
+    const slug = location.pathname.split('/').slice(-2, -1)[0];
+    const name = doc.getElementById('topbar-name');
+    if (name && !name.querySelector('.fav-star')) name.appendChild(Favs.button(slug));
+    const h1 = doc.querySelector('#menu-screen h1');
+    if (h1 && !h1.querySelector('.fav-star')) h1.appendChild(Favs.button(slug));
+  }
+
+  const init = () => { add(); addZoom(); addFooter(); addFavs(); };
   // Loaded at the end of <body>, before the page is done.
   doc.addEventListener('DOMContentLoaded', init);
 })();

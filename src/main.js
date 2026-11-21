@@ -17,7 +17,8 @@
 
   // Remembered choices (may fail in private mode; then use defaults).
   const PREFS_KEY = 'logic-puzzles:hub';
-  let prefs = { view: 'details', sort: 'name', tags: [] };
+  // favOnly: show only the favourite games (Favs in site.js).
+  let prefs = { view: 'details', sort: 'name', tags: [], favOnly: false };
   try { prefs = { ...prefs, ...JSON.parse(localStorage.getItem(PREFS_KEY) || '{}') }; } catch (e) { /* defaults */ }
   const savePrefs = () => { try { localStorage.setItem(PREFS_KEY, JSON.stringify(prefs)); } catch (e) { /* ignore */ } };
 
@@ -43,6 +44,7 @@
           <span class="badge ${badgeClass}">${badgeText}</span>
           <span class="card-tags">${(game.tags || []).map((t) => `<span class="tag">${t}</span>`).join('')}</span>
         </div>
+        ${Favs.html(game.slug)}
       </a>`;
   }
 
@@ -58,7 +60,9 @@
   function renderTags(matchText) {
     const chosen = new Set(prefs.tags);
     const count = (t) => GAMES.filter((g) => matchText(g) && (g.tags || []).includes(t)).length;
-    tagBox.innerHTML = `<button type="button" class="chip" data-tag="" aria-pressed="${!chosen.size}">All</button>` +
+    const favs = Favs.list().filter((slug) => GAMES.some((g) => g.slug === slug && matchText(g))).length;
+    tagBox.innerHTML = `<button type="button" class="chip" data-tag="" aria-pressed="${!chosen.size && !prefs.favOnly}">All</button>` +
+      `<button type="button" class="chip chip-fav" data-fav="1" aria-pressed="${!!prefs.favOnly}"><b class="chip-star">★</b> Favourites <span>${favs}</span></button>` +
       TAGS.map((t) => `<button type="button" class="chip" data-tag="${t}" aria-pressed="${chosen.has(t)}">${t} <span>${count(t)}</span></button>`).join('');
   }
 
@@ -67,7 +71,9 @@
     const q = filterText.trim().toLowerCase();
     const matchText = (g) => !q || g.name.toLowerCase().includes(q) || g.description.toLowerCase().includes(q);
     prefs.tags = (prefs.tags || []).filter((t) => TAGS.includes(t));
-    const filtered = GAMES.filter((g) => matchText(g) && prefs.tags.every((t) => (g.tags || []).includes(t)));
+    const favSet = new Set(Favs.list());
+    const filtered = GAMES.filter((g) => matchText(g) && prefs.tags.every((t) => (g.tags || []).includes(t))
+      && (!prefs.favOnly || favSet.has(g.slug)));
     renderTags(matchText);
     const sorted = (SORTS[prefs.sort] || SORTS.name)(filtered);
     if (!['icons', 'list', 'details'].includes(prefs.view)) prefs.view = 'details';
@@ -77,10 +83,14 @@
     for (const b of viewBtns) b.setAttribute('aria-pressed', String(b.dataset.view === prefs.view));
     sortPick.value = SORTS[prefs.sort] ? prefs.sort : 'name';
     const playable = filtered.filter((g) => g.status === 'available').length;
-    stats.textContent = q || prefs.tags.length
+    stats.textContent = q || prefs.tags.length || prefs.favOnly
       ? `${filtered.length} of ${GAMES.length} puzzles match, ${playable} playable`
       : `${availableCount} of ${GAMES.length} puzzles playable so far`;
-    if (!filtered.length) grid.innerHTML = '<p class="hub-empty">No puzzles match. Try fewer tags or another search.</p>';
+    if (!filtered.length) {
+      grid.innerHTML = prefs.favOnly && !favSet.size
+        ? '<p class="hub-empty">No favourites yet. Click the star on a puzzle to add it.</p>'
+        : '<p class="hub-empty">No puzzles match. Try fewer tags or another search.</p>';
+    }
   }
 
   // "Play random puzzle": open one playable game at random.
@@ -117,13 +127,24 @@
     location.href = `${game.slug}/index.html?game-id=${id}`;
   });
 
+  // Star on a card: toggle the favourite, do not open the game.
+  grid.addEventListener('click', (ev) => {
+    const star = ev.target.closest('.fav-star');
+    if (!star) return;
+    ev.preventDefault();
+    Favs.toggle(star.dataset.slug);
+  });
+  // Counts and the favourites filter follow every change.
+  document.addEventListener('favs-change', render);
+
   search.addEventListener('input', render);
   sortPick.addEventListener('change', () => { prefs.sort = sortPick.value; savePrefs(); render(); });
   tagBox.addEventListener('click', (ev) => {
     const b = ev.target.closest('.chip');
     if (!b) return;
+    if (b.dataset.fav) { prefs.favOnly = !prefs.favOnly; savePrefs(); render(); return; }
     const t = b.dataset.tag;
-    if (!t) prefs.tags = [];
+    if (!t) { prefs.tags = []; prefs.favOnly = false; }
     else prefs.tags = prefs.tags.includes(t) ? prefs.tags.filter((x) => x !== t) : [...prefs.tags, t];
     savePrefs();
     render();
