@@ -1113,3 +1113,8 @@ button.regen-btn:disabled { opacity: 0.6; cursor: wait; }
 .badge.new { background: #fff3cd; color: #8a6100; border: 1px solid #f2d27a; }
 .card-corner .badge { align-self: center; margin-top: 0; }
 .tag-filter .chip .chip-star { color: #f2b01e; font-weight: normal; }
+
+/* "Clear data…" popup on the main page (src/clear.js). */
+.clear-list { display: flex; flex-direction: column; gap: 10px; margin: 8px 0 16px; text-align: left; }
+.clear-list .toggle.empty { color: var(--muted); }
+#modal-clear button:disabled { opacity: 0.45; cursor: default; }
