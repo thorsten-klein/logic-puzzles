@@ -90,8 +90,10 @@ const Generator = (() => {
       const tail = path[path.length - 1];
       const { rows, cols } = Rules.computeClues(path, size);
       const puzzle = { size, head, tail, rowClues: rows, colClues: cols, noTouch };
-      // A search cut off by the deadline proves nothing: try the next one.
-      const sols = Solver.solve(puzzle, 2, { deadline });
+      // A search cut off by its time proves nothing: try the next snake.
+      // Each check gets at most 0.6 s, so one hard snake can not use up
+      // the whole time.
+      const sols = Solver.solve(puzzle, 2, { deadline: Math.min(deadline, Date.now() + 600) });
       if (sols.length === 1 && !sols.capped) {
         puzzle.solution = path;
         return puzzle;

@@ -77,7 +77,9 @@ const PuzzleShell = (() => {
       <div id="menu-example" class="info-example"></div>
       <div class="control"><label>${cfg.size.label || 'Board size'}</label>
         <div class="stepper"><button id="size-dec" type="button">−</button>
-          <span id="size-val"></span><button id="size-inc" type="button">+</button></div></div>
+          <span id="size-val"></span><button id="size-inc" type="button">+</button></div>
+        <span class="size-default">Default: ${cfg.size.text ? cfg.size.text(cfg.size.def) : cfg.size.def}</span>
+        <button id="size-reset" class="icon-btn" type="button" title="Back to the default settings"><svg class="icon" aria-hidden="true"><use href="#icon-reset"/></svg>Reset</button></div>
       ${(cfg.options || []).map((o) => `<div class="control"><label class="toggle">
         <input type="checkbox" id="opt-${o.id}"><span>${o.label}</span></label></div>`).join('')}
       <button id="play-btn" class="success icon-btn" type="button"><svg class="icon" aria-hidden="true"><use href="#icon-play"/></svg>Play</button>
@@ -325,6 +327,9 @@ const PuzzleShell = (() => {
       $('size-val').textContent = cfg.size.text ? cfg.size.text(st.size) : String(st.size);
       $('size-dec').disabled = st.size <= cfg.size.min;
       $('size-inc').disabled = st.size >= cfg.size.max;
+      // Reset is greyed out while size and options are the defaults.
+      const defaults = defaultOpts();
+      $('size-reset').disabled = st.size === cfg.size.def && Object.keys(defaults).every((k) => st.opts[k] === defaults[k]);
     }
     function changeSize(delta) {
       st.size = Math.min(cfg.size.max, Math.max(cfg.size.min, st.size + delta));
@@ -333,8 +338,16 @@ const PuzzleShell = (() => {
     }
     const saveSettings = () => store.set(SETTINGS_KEY, { size: st.size, opts: st.opts });
     for (const o of cfg.options || []) {
-      $(`opt-${o.id}`).addEventListener('change', (ev) => { st.opts[o.id] = ev.target.checked; saveSettings(); });
+      $(`opt-${o.id}`).addEventListener('change', (ev) => { st.opts[o.id] = ev.target.checked; saveSettings(); refreshStepper(); });
     }
+    // Reset: default size and options again.
+    $('size-reset').addEventListener('click', () => {
+      st.size = cfg.size.def;
+      st.opts = defaultOpts();
+      for (const o of cfg.options || []) $(`opt-${o.id}`).checked = st.opts[o.id];
+      refreshStepper();
+      saveSettings();
+    });
     $('size-dec').addEventListener('click', () => changeSize(-1));
     $('size-inc').addEventListener('click', () => changeSize(1));
 

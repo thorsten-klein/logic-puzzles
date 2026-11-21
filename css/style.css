@@ -185,6 +185,8 @@ h1 {
 
 .control {
   display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
   align-items: center;
   gap: 14px;
 }
@@ -196,6 +198,12 @@ h1 {
   cursor: pointer;
   user-select: none;
 }
+
+/* Default size and the Reset button next to the size picker. */
+.control .size-default { color: var(--muted); font-size: 14px; }
+#size-reset { height: 38px; padding: 0 12px; font-size: 14px; }
+#size-reset .icon { width: 16px; height: 16px; }
+#size-reset:disabled { opacity: 0.45; cursor: default; }
 
 .stepper {
   display: inline-flex;
@@ -737,7 +745,8 @@ a.btn:hover {
   background: #fff;
 }
 
-.pz-board .cell.shaded { background: #2b2b2b; color: #777; }
+/* Dark blue, 80% opaque: the grid lines stay visible through filled cells. */
+.pz-board .cell.shaded { background: rgba(21, 67, 140, 0.8); color: #9db4dc; }
 
 .pz-board .cell.marked::after {
   content: '';
@@ -798,11 +807,20 @@ a.btn:hover {
 
 /* Region outlines (PuzzleShell.regionBorders) */
 .pz-regions { gap: 0; background: #fff; border: 2px solid #333; padding: 0; }
-.pz-regions .cell { border: 1px solid #ddd; }
-.pz-regions .cell.bt { border-top: 2px solid #333; }
-.pz-regions .cell.bb { border-bottom: 2px solid #333; }
-.pz-regions .cell.bl { border-left: 2px solid #333; }
-.pz-regions .cell.br { border-right: 2px solid #333; }
+/* Black room borders are real borders. The light grey inner lines are an
+   inset shadow on the top and left of each cell, inside the border, so a
+   grey line never cuts into a black one. No grey line next to a black
+   border (room borders are set on both neighbours). :where() keeps these
+   weak, so result and hint marks (also inset shadows) win. */
+.pz-regions .cell { border: 0 solid #333; }
+.pz-regions .cell.bt { border-top-width: 2px; }
+.pz-regions .cell.bb { border-bottom-width: 2px; }
+.pz-regions .cell.bl { border-left-width: 2px; }
+.pz-regions .cell.br { border-right-width: 2px; }
+:where(.pz-regions .cell) { box-shadow: inset 1px 1px 0 #bbb; }
+:where(.pz-regions .cell.bt) { box-shadow: inset 1px 0 0 #bbb; }
+:where(.pz-regions .cell.bl) { box-shadow: inset 0 1px 0 #bbb; }
+:where(.pz-regions .cell.bt.bl) { box-shadow: none; }
 .pz-board .cell.area { filter: brightness(0.93); }
 .pz-board .clue { background: var(--bg); font-weight: 700; color: #555; }
 
