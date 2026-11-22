@@ -118,80 +118,83 @@
     }));
   }
 
+  function checkPieceTouching(N, C, ks, owner, pieces, t) {
+    for (const k of ks) for (const j of [k - C, k + C, k % C ? k - 1 : -1, (k + 1) % C ? k + 1 : -1]) {
+      if (j >= 0 && j < N && owner[j] >= 0 && kind(C, pieces[owner[j]]) === t) return true;
+    }
+    return false;
+  }
+
+  function tryAddPiece(ctx, anchor) {
+    const { R, C, N, black, owner, pieces } = ctx;
+    for (const sh of PuzzleShell.shuffle(SHAPES.slice())) {
+      const [ar, ac] = sh[Math.floor(Math.random() * 4)];
+      const r0 = Math.floor(anchor / C) - ar, c0 = (anchor % C) - ac;
+      const cells = sh.map(([a, b]) => [r0 + a, c0 + b]);
+      if (cells.some(([a, b]) => a < 0 || b < 0 || a >= R || b >= C || black[a * C + b])) continue;
+      const ks = cells.map(([a, b]) => a * C + b);
+      ks.forEach((k) => { black[k] = 1; });
+      let bad = false;
+      for (let r = 0; r + 1 < R && !bad; r++) for (let c = 0; c + 1 < C && !bad; c++) {
+        if (black[r * C + c] && black[r * C + c + 1] && black[(r + 1) * C + c] && black[(r + 1) * C + c + 1]) bad = true;
+      }
+      if (!bad && checkPieceTouching(N, C, ks, owner, pieces, kind(C, ks))) bad = true;
+      if (bad) { ks.forEach((k) => { black[k] = 0; }); continue; }
+      ks.forEach((k) => { owner[k] = pieces.length; });
+      pieces.push(ks);
+      return true;
+    }
+    return false;
+  }
+
+  function repairRooms(ctx, deadline) {
+    const { p, N, C, sol } = ctx;
+    let unique = false;
+    for (let fix = 0; fix < 30 && !unique && Date.now() < deadline; fix++) {
+      const r = Binary.solve(model(p), 2, 20000);
+      if (r.capped || !r.solutions.length) break;
+      const other = r.solutions.find((x) => x.some((v, k) => v !== sol[k]));
+      if (!other) { unique = true; break; }
+      const cand = PuzzleShell.shuffle([...new Array(N).keys()].filter((k) => other[k] === YES && sol[k] === NO));
+      let moved = false;
+      for (const x of cand) {
+        const g = p.room[x];
+        const to = [x - C, x + C, x % C ? x - 1 : -1, (x + 1) % C ? x + 1 : -1].filter((j) => j >= 0 && j < N && p.room[j] !== g);
+        if (!to.length) continue;
+        const rest = [...new Array(N).keys()].filter((k) => p.room[k] === g && k !== x);
+        const set = new Set(rest), seen = new Set([rest[0]]), st = [rest[0]];
+        while (st.length) { const k = st.pop(); for (const j of [k - C, k + C, k % C ? k - 1 : -1, (k + 1) % C ? k + 1 : -1]) if (set.has(j) && !seen.has(j)) { seen.add(j); st.push(j); } }
+        if (seen.size !== rest.length) continue;
+        p.room[x] = p.room[to[Math.floor(Math.random() * to.length)]];
+        moved = true;
+        break;
+      }
+      if (!moved || model(p).check(sol, true) === false) break;
+    }
+    return unique;
+  }
+
   function generate(n) {
     const deadline = Date.now() + (n > 5 ? 14000 : 8000);
     while (Date.now() < deadline) {
       const R = n, C = n, N = R * C;
-      // A connected chain of tetrominoes, no 2×2, each touching the last.
       const black = new Uint8Array(N);
       const owner = new Int32Array(N).fill(-1);
       const pieces = [];
-      const tryAdd = (anchor) => {
-        for (const sh of PuzzleShell.shuffle(SHAPES.slice())) {
-          const [ar, ac] = sh[Math.floor(Math.random() * 4)];
-          const r0 = Math.floor(anchor / C) - ar, c0 = (anchor % C) - ac;
-          const cells = sh.map(([a, b]) => [r0 + a, c0 + b]);
-          if (cells.some(([a, b]) => a < 0 || b < 0 || a >= R || b >= C || black[a * C + b])) continue;
-          const ks = cells.map(([a, b]) => a * C + b);
-          ks.forEach((k) => { black[k] = 1; });
-          let bad = false;
-          for (let r = 0; r + 1 < R && !bad; r++) for (let c = 0; c + 1 < C && !bad; c++) {
-            if (black[r * C + c] && black[r * C + c + 1] && black[(r + 1) * C + c] && black[(r + 1) * C + c + 1]) bad = true;
-          }
-          // Its cells must not touch other pieces except at one side contact (keep rooms apart).
-          if (!bad) {
-            const t = kind(C, ks);
-            for (const k of ks) for (const j of [k - C, k + C, k % C ? k - 1 : -1, (k + 1) % C ? k + 1 : -1]) {
-              if (j >= 0 && j < N && owner[j] >= 0 && kind(C, pieces[owner[j]]) === t) bad = true;
-            }
-          }
-          if (bad) { ks.forEach((k) => { black[k] = 0; }); continue; }
-          ks.forEach((k) => { owner[k] = pieces.length; });
-          pieces.push(ks);
-          return true;
-        }
-        return false;
-      };
-      // First piece anywhere, then grow from free neighbours of shaded cells.
-      if (!tryAdd(Math.floor(Math.random() * N))) continue;
+      const ctx = { R, C, N, black, owner, pieces };
+      if (!tryAddPiece(ctx, Math.floor(Math.random() * N))) continue;
       for (let t = 0; t < 600 && pieces.length * 4 < N * 0.6; t++) {
         const edge = [];
         for (let k = 0; k < N; k++) if (!black[k] && [k - C, k + C, k % C ? k - 1 : -1, (k + 1) % C ? k + 1 : -1].some((j) => j >= 0 && j < N && black[j])) edge.push(k);
         if (!edge.length) break;
-        tryAdd(edge[Math.floor(Math.random() * edge.length)]);
+        tryAddPiece(ctx, edge[Math.floor(Math.random() * edge.length)]);
       }
-      // Rooms: each piece grows over free cells.
       const room = PuzzleShell.growRegions(R, C, pieces);
       if (!room) continue;
       const p = { R, C, room };
       const sol = Uint8Array.from(black, (v) => (v ? YES : NO));
       if (model(p).check(sol, true) === false) continue;
-      // Repair: while a second answer exists, move one of its extra shaded
-      // cells (white in our answer) into a neighbouring room.
-      let unique = false;
-      for (let fix = 0; fix < 30 && !unique && Date.now() < deadline; fix++) {
-        const r = Binary.solve(model(p), 2, 20000);
-        if (r.capped || !r.solutions.length) break;
-        const other = r.solutions.find((x) => x.some((v, k) => v !== sol[k]));
-        if (!other) { unique = true; break; }
-        const cand = PuzzleShell.shuffle([...new Array(N).keys()].filter((k) => other[k] === YES && sol[k] === NO));
-        let moved = false;
-        for (const x of cand) {
-          const g = room[x];
-          const to = [x - C, x + C, x % C ? x - 1 : -1, (x + 1) % C ? x + 1 : -1].filter((j) => j >= 0 && j < N && room[j] !== g);
-          if (!to.length) continue;
-          // Room g must stay connected without x.
-          const rest = [...new Array(N).keys()].filter((k) => room[k] === g && k !== x);
-          const set = new Set(rest), seen = new Set([rest[0]]), st = [rest[0]];
-          while (st.length) { const k = st.pop(); for (const j of [k - C, k + C, k % C ? k - 1 : -1, (k + 1) % C ? k + 1 : -1]) if (set.has(j) && !seen.has(j)) { seen.add(j); st.push(j); } }
-          if (seen.size !== rest.length) continue;
-          room[x] = room[to[Math.floor(Math.random() * to.length)]];
-          moved = true;
-          break;
-        }
-        if (!moved || model(p).check(sol, true) === false) break;
-      }
-      if (!unique) continue;
+      if (!repairRooms({ p, N, C, sol }, deadline)) continue;
       p.solution = sol;
       return p;
     }

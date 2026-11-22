@@ -74,44 +74,51 @@
     return ((1 << (p.sizeOf[k] + 1)) - 1) & ~1;
   });
 
+  function createRooms(N, n, arrow) {
+    const room = new Int32Array(N).fill(-1);
+    let id = 0;
+    for (const k of PuzzleShell.shuffle([...new Array(N).keys()])) {
+      if (arrow[k] >= 0 || room[k] >= 0) continue;
+      const want = 1 + Math.floor(Math.random() * 5);
+      const cells = [k];
+      room[k] = id;
+      for (let g = 0; g < 30 && cells.length < want; g++) {
+        const x = cells[Math.floor(Math.random() * cells.length)], r = Math.floor(x / n), c = x % n;
+        const opts = STEP.map(([a, b]) => [r + a, c + b]).filter(([a, b]) => a >= 0 && b >= 0 && a < n && b < n && arrow[a * n + b] < 0 && room[a * n + b] < 0);
+        if (!opts.length) continue;
+        const [a, b] = opts[Math.floor(Math.random() * opts.length)];
+        room[a * n + b] = id;
+        cells.push(a * n + b);
+      }
+      id++;
+    }
+    return room;
+  }
+
+  function assignArrows(N, n, arrow, sol) {
+    for (let k = 0; k < N; k++) {
+      if (arrow[k] !== 4) continue;
+      const r = Math.floor(k / n), c = k % n;
+      const around = STEP.map(([a, b], d) => [a + r, b + c, d]).filter(([a, b]) => a >= 0 && b >= 0 && a < n && b < n && arrow[a * n + b] < 0);
+      if (!around.length) continue;
+      const best = Math.max(...around.map(([a, b]) => sol[a * n + b]));
+      const top = around.filter(([a, b]) => sol[a * n + b] === best);
+      if (top.length === 1) arrow[k] = top[0][2];
+    }
+  }
+
   function generate(n) {
     const deadline = Date.now() + 8000;
     while (Date.now() < deadline) {
       const N = n * n;
       const arrow = new Int8Array(N).fill(-1);
       for (const k of PuzzleShell.shuffle([...new Array(N).keys()]).slice(0, Math.round(N * 0.12))) arrow[k] = 4;
-      // Rooms of 1..5 white cells.
-      const room = new Int32Array(N).fill(-1);
-      let id = 0;
-      for (const k of PuzzleShell.shuffle([...new Array(N).keys()])) {
-        if (arrow[k] >= 0 || room[k] >= 0) continue;
-        const want = 1 + Math.floor(Math.random() * 5);
-        const cells = [k];
-        room[k] = id;
-        for (let g = 0; g < 30 && cells.length < want; g++) {
-          const x = cells[Math.floor(Math.random() * cells.length)], r = Math.floor(x / n), c = x % n;
-          const opts = STEP.map(([a, b]) => [r + a, c + b]).filter(([a, b]) => a >= 0 && b >= 0 && a < n && b < n && arrow[a * n + b] < 0 && room[a * n + b] < 0);
-          if (!opts.length) continue;
-          const [a, b] = opts[Math.floor(Math.random() * opts.length)];
-          room[a * n + b] = id;
-          cells.push(a * n + b);
-        }
-        id++;
-      }
+      const room = createRooms(N, n, arrow);
       let p = prepare({ n, room, arrow });
       const fill = solve(p, startCand(p, new Int8Array(N)), 1, 3000, true);
       if (!fill.solutions.length) continue;
       const sol = fill.solutions[0];
-      // Arrows point at the biggest neighbour (only where it is unique).
-      for (let k = 0; k < N; k++) {
-        if (arrow[k] !== 4) continue;
-        const r = Math.floor(k / n), c = k % n;
-        const around = STEP.map(([a, b], d) => [a + r, b + c, d]).filter(([a, b]) => a >= 0 && b >= 0 && a < n && b < n && arrow[a * n + b] < 0);
-        if (!around.length) continue;
-        const best = Math.max(...around.map(([a, b]) => sol[a * n + b]));
-        const top = around.filter(([a, b]) => sol[a * n + b] === best);
-        if (top.length === 1) arrow[k] = top[0][2];
-      }
+      assignArrows(N, n, arrow, sol);
       p = prepare({ n, room, arrow });
       const given = Int8Array.from(sol);
       const solved = () => { const c = startCand(p, given); return propagate(p, c) && c.every((m, k) => arrow[k] >= 0 || one(m)); };
