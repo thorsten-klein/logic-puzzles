@@ -843,7 +843,11 @@ const Binary = (() => {
     const R = n, C = n, N = R * C;
     const black = new Int8Array(N).fill(-1);
     for (let k = 0; k < N; k++) if (Math.random() < 0.18) black[k] = 0;
-    const s = Uint8Array.from({ length: N }, (_, k) => (black[k] >= 0 ? NO : Math.random() < 0.5 ? YES : NO));
+    const s = new Uint8Array(N);
+    for (let k = 0; k < N; k++) {
+      if (black[k] >= 0) s[k] = NO;
+      else s[k] = Math.random() < 0.5 ? YES : NO;
+    }
     const p = { R, C, black };
     const m = wallsModel(p);
     orientLines(s, m, N, black, C, R);
