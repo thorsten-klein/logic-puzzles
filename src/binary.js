@@ -839,23 +839,35 @@ const Binary = (() => {
     return count;
   }
 
-  function tryBuildWallCandidate(n) {
-    const R = n, C = n, N = R * C;
+  function initWallGrid(N) {
     const black = new Int8Array(N).fill(-1);
-    for (let k = 0; k < N; k++) if (Math.random() < 0.18) black[k] = 0;
     const s = new Uint8Array(N);
     for (let k = 0; k < N; k++) {
-      if (black[k] >= 0) s[k] = NO;
-      else s[k] = Math.random() < 0.5 ? YES : NO;
+      if (Math.random() < 0.18) {
+        black[k] = 0;
+        s[k] = NO;
+      } else {
+        s[k] = Math.random() < 0.5 ? YES : NO;
+      }
     }
+    return { black, s };
+  }
+
+  function numberWallClues(p, s) {
+    for (let k = 0; k < p.black.length; k++) {
+      if (p.black[k] >= 0) p.black[k] = WALL_DIRS.reduce((sum, d) => sum + countArm(k, p.R, p.C, p.black, s, d), 0);
+    }
+  }
+
+  function tryBuildWallCandidate(n) {
+    const R = n, C = n, N = R * C;
+    const { black, s } = initWallGrid(N);
     const p = { R, C, black };
     const m = wallsModel(p);
     orientLines(s, m, N, black, C, R);
     if (!m.check(s, true)) return null;
     if (!s.some((v, k) => black[k] < 0 && v === YES)) return null;
-    for (let k = 0; k < N; k++) {
-      if (black[k] >= 0) black[k] = WALL_DIRS.reduce((sum, d) => sum + countArm(k, R, C, black, s, d), 0);
-    }
+    numberWallClues(p, s);
     const t = logicSolve(wallsModel(p));
     if (!t || t.includes(UNKNOWN)) return null;
     p.solution = Uint8Array.from(s, (v, k) => (black[k] >= 0 ? NO : v));
