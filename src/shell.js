@@ -1068,5 +1068,241 @@ const PuzzleShell = (() => {
     return Math.max(min, Math.min(max, Math.floor(avail / cols) - 2));
   }
 
-  return { start, prepare, plural, resultClass, shuffle, gridBoard, colName, cellName, fitCell, digitInput, regionBorders, growRegions, addGivens, dropGivens, TINTS, arrowIcon, figure, shapeFigures };
+  // Graph connectivity: test if all nodes in graph p are connected
+  function graphConnected(p, active) {
+    if (!p.isl?.length) return true;
+    const seen = new Uint8Array(p.isl.length);
+    const stack = [0];
+    seen[0] = 1;
+    while (stack.length) {
+      const i = stack.pop();
+      for (const j of p.of[i]) {
+        if (!active[j]) continue;
+        const o = p.pairs[j].a === i ? p.pairs[j].b : p.pairs[j].a;
+        if (!seen[o]) { seen[o] = 1; stack.push(o); }
+      }
+    }
+    return seen.every(Boolean);
+  }
+
+  // Island degree propagation step (used by Hashiwokakero, Korekutokonekuto, Ichimaga)
+  function updateIslandEdges(p, i, least, most, lo, hi) {
+    const js = p.of[i];
+    const sumLo = js.reduce((a, j) => a + lo[j], 0), sumHi = js.reduce((a, j) => a + hi[j], 0);
+    if (sumLo > most || sumHi < least) return null;
+    const changed = [];
+    for (const j of js) {
+      const minJ = Math.max(lo[j], least - (sumHi - hi[j]));
+      const maxJ = Math.min(hi[j], most - (sumLo - lo[j]));
+      if (minJ > maxJ) return null;
+      if (minJ !== lo[j] || maxJ !== hi[j]) { lo[j] = minJ; hi[j] = maxJ; changed.push(j); }
+    }
+    return { changed, sumLo, sumHi };
+  }
+
+  function islandDegreeStep(p, lo, hi, log, formatReason) {
+    for (let i = 0; i < p.isl.length; i++) {
+      const n = p.isl[i].n;
+      const least = n < 0 ? 1 : n, most = n < 0 ? 99 : n;
+      const res = updateIslandEdges(p, i, least, most, lo, hi);
+      if (!res) return -1;
+      if (res.changed.length) {
+        if (log && formatReason) {
+          log.push({ pairs: res.changed, island: i, reason: formatReason(n, res.sumLo, res.sumHi) });
+        }
+        return res.changed.length;
+      }
+    }
+    return 0;
+  }
+
+  // Backtracking solver for island graphs
+  function solveIslandGraph(p, settleFn, maxCapacity = 2, stopAt = 2, maxNodes = 20000) {
+    const solutions = [];
+    let nodes = 0;
+    (function rec(lo, hi) {
+      if (solutions.length >= stopAt || ++nodes > maxNodes) return;
+      if (!settleFn(p, lo, hi)) return;
+      const j = lo.findIndex((v, i) => v !== hi[i]);
+      if (j < 0) {
+        if (graphConnected(p, lo)) solutions.push(Int8Array.from(lo));
+        return;
+      }
+      for (let v = hi[j]; v >= lo[j]; v--) {
+        const l2 = Int8Array.from(lo), h2 = Int8Array.from(hi);
+        l2[j] = v; h2[j] = v;
+        rec(l2, h2);
+      }
+    })(new Int8Array(p.pairs.length), new Int8Array(p.pairs.length).fill(maxCapacity));
+    return { solutions, capped: nodes > maxNodes };
+  }
+
+  // Grow an island branch (used in Hashiwokakero, Korekutokonekuto)
+  function tryAddIslandBranch(R, C, isl, grid, bridges, maxCount) {
+    const from = isl[Math.floor(Math.random() * isl.length)];
+    const [dr, dc] = [[0, 1], [1, 0], [0, -1], [-1, 0]][Math.floor(Math.random() * 4)];
+    const len = 2 + Math.floor(Math.random() * 4);
+    const r = Math.floor(from.k / C), c = from.k % C;
+    const er = r + dr * len, ec = c + dc * len;
+    if (er < 0 || ec < 0 || er >= R || ec >= C) return;
+    const path = [];
+    for (let i = 1; i < len; i++) path.push((r + dr * i) * C + c + dc * i);
+    const end = er * C + ec;
+    if (path.some((k) => grid[k] !== -1) || grid[end] === -2) return;
+    if (grid[end] === -1) {
+      const nr = [[-1, 0], [1, 0], [0, -1], [0, 1]].some(([a, b]) => {
+        const x = er + a, y = ec + b;
+        return x >= 0 && y >= 0 && x < R && y < C && grid[x * C + y] >= 0 && x * C + y !== path.at(-1);
+      });
+      if (nr) return;
+      grid[end] = isl.length;
+      isl.push({ k: end, n: 0 });
+    } else if (Math.random() < 0.7) return;
+    const a = grid[from.k], b = grid[end];
+    if (bridges.some((x) => (x.a === a && x.b === b) || (x.a === b && x.b === a))) return;
+    const count = maxCount > 1 && Math.random() < 0.35 ? 2 : 1;
+    bridges.push({ a, b, count });
+    path.forEach((k) => { grid[k] = -2; });
+    isl[a].n += count;
+    isl[b].n += count;
+  }
+
+  function growIslandNetwork(R, C, maxCount = 2) {
+    const grid = new Int32Array(R * C).fill(-1);
+    const isl = [];
+    const bridges = [];
+    const startCell = Math.floor(Math.random() * R * C);
+    grid[startCell] = 0;
+    isl.push({ k: startCell, n: 0 });
+    const target = Math.round(R * C * 0.22);
+    for (let tries = 0; tries < 2000 && isl.length < target; tries++) {
+      tryAddIslandBranch(R, C, isl, grid, bridges, maxCount);
+    }
+    if (isl.length < Math.max(4, target * 0.7)) return null;
+    return { isl, grid, bridges };
+  }
+
+  function buildIslandPairs(p, blockedSet) {
+    const { R, C, isl } = p;
+    const at = new Map(isl.map((x, i) => [x.k, i]));
+    p.pairs = [];
+    isl.forEach((x, i) => {
+      const r = Math.floor(x.k / C), c = x.k % C;
+      for (const [dr, dc] of [[0, 1], [1, 0]]) {
+        const cells = [];
+        let nr = r + dr, nc = c + dc;
+        while (nr < R && nc < C && !at.has(nr * C + nc) && !blockedSet?.has(nr * C + nc)) {
+          cells.push(nr * C + nc); nr += dr; nc += dc;
+        }
+        if (nr < R && nc < C && at.has(nr * C + nc)) p.pairs.push({ a: i, b: at.get(nr * C + nc), cells, horiz: dr === 0 });
+      }
+    });
+    p.of = isl.map(() => []);
+    p.pairs.forEach((q, j) => { p.of[q.a].push(j); p.of[q.b].push(j); });
+    p.cross = p.pairs.map(() => []);
+    p.pairs.forEach((q, i) => p.pairs.forEach((o, j) => {
+      if (i < j && q.horiz !== o.horiz && q.cells.some((k) => o.cells.includes(k))) { p.cross[i].push(j); p.cross[j].push(i); }
+    }));
+    return p;
+  }
+
+  function checkCrossingPairs(p, lo, hi, log, noun = 'Bridges') {
+    for (let j = 0; j < p.pairs.length; j++) {
+      if (!lo[j]) continue;
+      for (const o of p.cross[j]) {
+        if (lo[o]) return -1;
+        if (hi[o]) {
+          hi[o] = 0;
+          if (log) log.push({ pairs: [o], reason: `${noun} may not cross. Another already runs across here.` });
+          return 1;
+        }
+      }
+    }
+    return 0;
+  }
+
+  function shapeKey(C, cells) {
+    const pts = cells.map((k) => [Math.floor(k / C), k % C]);
+    const trans = [[1, 0, 0, 1], [0, -1, 1, 0], [-1, 0, 0, -1], [0, 1, -1, 0], [-1, 0, 0, 1], [0, 1, 1, 0], [1, 0, 0, -1], [0, -1, -1, 0]];
+    const forms = trans.map(([a, b, c, d]) => {
+      const q = pts.map(([r, col]) => [a * r + b * col, c * r + d * col]);
+      const minR = Math.min(...q.map((p) => p[0])), minC = Math.min(...q.map((p) => p[1]));
+      return q.map(([r, col]) => `${r - minR},${col - minC}`).sort().join(' ');
+    });
+    forms.sort((x, y) => x.localeCompare(y));
+    return forms[0];
+  }
+
+  function runIslandStep(p, lo, hi, log, formatReason, checkCrossingsFn) {
+    const r = islandDegreeStep(p, lo, hi, log, formatReason);
+    if (r !== 0) return r;
+    const crossRes = checkCrossingsFn ? checkCrossingsFn(p, lo, hi, log) : 0;
+    if (crossRes !== 0) return crossRes;
+    return graphConnected(p, hi) ? 0 : -1;
+  }
+
+  function settleIslandGraph(p, lo, hi, stepFn) {
+    let r = 1;
+    while (r > 0) r = stepFn(p, lo, hi);
+    return r === 0;
+  }
+
+  function graphRegionBorders(g, region) {
+    const border = [];
+    for (let e = 0; e < g.E; e++) {
+      const [a, b] = g.ends[e];
+      if (region[a] === region[b]) continue;
+      border[region[a]] ??= []; border[region[a]].push(e);
+      border[region[b]] ??= []; border[region[b]].push(e);
+    }
+    return border;
+  }
+
+  // Draw region boundary walls on SVG
+  function drawRegionWalls(p, svg, k, x, y, s) {
+    const { R, C, region } = p;
+    const r = Math.floor(k / C), c = k % C;
+    const x0 = x - s / 2, y0 = y - s / 2;
+    const wall = (x1, y1, x2, y2) => {
+      const l = document.createElementNS('http://www.w3.org/2000/svg', 'line');
+      l.setAttribute('x1', x1); l.setAttribute('y1', y1); l.setAttribute('x2', x2); l.setAttribute('y2', y2);
+      l.setAttribute('class', 'lp-wall');
+      svg.appendChild(l);
+    };
+    if (c < C - 1 && region[k + 1] !== region[k]) wall(x0 + s, y0, x0 + s, y0 + s);
+    if (r < R - 1 && region[k + C] !== region[k]) wall(x0, y0 + s, x0 + s, y0 + s);
+  }
+
+  function encodeRegions(p) {
+    return { n: p.R, g: Array.from(p.region, (v) => v.toString(36).padStart(2, '0')).join('') };
+  }
+
+  function decodeRegions(d) {
+    const n = d?.n;
+    if (!Number.isInteger(n) || n < 2 || n > 16) throw new Error('Invalid board size');
+    if (typeof d.g !== 'string' || d.g.length !== 2 * n * n) throw new Error('Invalid regions');
+    return { R: n, C: n, region: Int32Array.from({ length: n * n }, (_, k) => Number.parseInt(d.g.slice(2 * k, 2 * k + 2), 36)) };
+  }
+
+  function findIslandHint(p, state, stepFn, maxCap = 2, defaultReason = 'No simple step is left.') {
+    const lo = Int8Array.from(state), hi = new Int8Array(state.length).fill(maxCap);
+    const log = [];
+    for (let i = 0; i < 50 && !log.some((x) => x.pairs.some((j) => lo[j] > state[j])); i++) {
+      if (stepFn(lo, hi, log) <= 0) break;
+    }
+    const firstUseful = log.find((x) => x.pairs.some((j) => lo[j] > state[j]));
+    if (firstUseful) {
+      return [{
+        pairs: firstUseful.pairs.filter((j) => lo[j] > state[j]),
+        island: firstUseful.island,
+        set: firstUseful.pairs.map((j) => [j, Math.max(lo[j], state[j])]),
+        reason: firstUseful.reason,
+      }];
+    }
+    const j = state.findIndex((v, i) => v < p.solution[i]);
+    if (j >= 0) return [{ pairs: [j], set: [[j, p.solution[j]]], reason: defaultReason }];
+    return [];
+  }
+
+  return { start, prepare, plural, resultClass, shuffle, gridBoard, colName, cellName, fitCell, digitInput, regionBorders, growRegions, addGivens, dropGivens, TINTS, arrowIcon, figure, shapeFigures, graphConnected, islandDegreeStep, solveIslandGraph, growIslandNetwork, buildIslandPairs, checkCrossingPairs, shapeKey, findIslandHint, runIslandStep, settleIslandGraph, graphRegionBorders, drawRegionWalls, encodeRegions, decodeRegions };
 })();

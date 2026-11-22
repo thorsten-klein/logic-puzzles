@@ -425,11 +425,7 @@ const Binary = (() => {
       },
       newState: (p) => new Uint8Array(p.R * p.C),
       saveState: (s) => Array.from(s).join(''),
-      loadState(p, v) {
-        const s = new Uint8Array(p.R * p.C);
-        if (typeof v === 'string' && v.length === s.length) for (let k = 0; k < s.length; k++) s[k] = Number(v[k]) % 3;
-        return s;
-      },
+      loadState: (p, v) => (typeof v === 'string' && v.length === p.R * p.C ? Uint8Array.from(v, (x) => Number(x) % 3) : new Uint8Array(p.R * p.C)),
       render,
       check: isSolved,
       hints: (p, s) => hints(cfg.model(p), full(p, s), p.solution, cfg.noun, cfg.noNoun, (k) => PuzzleShell.cellName(k, p.C)),
@@ -484,6 +480,54 @@ const Binary = (() => {
       }
     }
     return borders;
+  }
+
+  function buildRoomsMap(R, C, room) {
+    const rooms = new Map();
+    for (let k = 0; k < R * C; k++) {
+      if (!rooms.has(room[k])) rooms.set(room[k], []);
+      rooms.get(room[k]).push(k);
+    }
+    return rooms;
+  }
+
+  function noTouchConstraints(R, C, why = () => 'Shaded cells may not touch by a side.') {
+    const cons = [];
+    for (let k = 0; k < R * C; k++) {
+      const r = Math.floor(k / C), c = k % C;
+      if (c < C - 1) cons.push({ cells: [k, k + 1], min: 0, max: 1, why });
+      if (r < R - 1) cons.push({ cells: [k, k + C], min: 0, max: 1, why });
+    }
+    return cons;
+  }
+
+  // Room clue constraints for Binary puzzles (Heyawake, Heyablock)
+  function roomClueConstraints(rooms, clues) {
+    const cons = [];
+    for (const [id, cells] of rooms) {
+      const v = clues[id];
+      if (v < 0) continue;
+      cons.push({
+        cells, min: v, max: v, area: cells,
+        why: (x) => {
+          if (x === YES) return `This room needs ${PuzzleShell.plural(v, 'shaded cell')}, and only these cells are left.`;
+          if (v === 0) return 'This room has a 0. All its cells stay white.';
+          return `This room already has its ${PuzzleShell.plural(v, 'shaded cell')}. The rest stay white.`;
+        },
+      });
+    }
+    return cons;
+  }
+
+  // Straight white segments spanning two room borders
+  function whiteBorderConstraints(R, C, room) {
+    const lines = [];
+    for (let r = 0; r < R; r++) lines.push(Array.from({ length: C }, (_, c) => r * C + c));
+    for (let c = 0; c < C; c++) lines.push(Array.from({ length: R }, (_, r) => r * C + c));
+    return whiteBorders(lines, room).map((cells) => ({
+      cells, min: 1, max: cells.length,
+      why: () => 'A straight white line may not cross two room borders. This cell must be shaded to break it.',
+    }));
   }
 
   // Cells at the four corners of k.
@@ -731,6 +775,22 @@ const Binary = (() => {
     return id;
   }
 
+  function generateRoomClues(n, modelFn, fillRate = 0.3) {
+    const R = n, C = n;
+    const room = splitRooms(R, C);
+    const count = Math.max(...room) + 1;
+    const p = { R, C, room, clues: new Int8Array(count).fill(-1) };
+    const sol = randomFill(modelFn(p), fillRate, 5);
+    if (!sol) return null;
+    for (let k = 0; k < R * C; k++) if (p.clues[room[k]] < 0) p.clues[room[k]] = 0;
+    for (let k = 0; k < R * C; k++) if (sol[k] === YES) p.clues[room[k]]++;
+    const s = logicSolve(modelFn(p));
+    if (!s || s.includes(0)) return null;
+    thinClues(p.clues, -1, () => modelFn(p));
+    p.solution = sol;
+    return p;
+  }
+
   const WALL_DIRS = [[0, -1, YES], [0, 1, YES], [-1, 0, NO], [1, 0, NO]];
 
   function checkArmDir(d, arm, state) {
@@ -926,8 +986,9 @@ const Binary = (() => {
     UNKNOWN, YES, NO, step, settle, lookahead, solve, solveFull, logicSolve, isUnique,
     hints, startGame, thinClues, randomFill, openConnected, canConnect, sideNeighbours,
     cornerNeighbours, whiteBorders, areas, cornerGroups, cornerBuilder,
-    encodeRoomClues, decodeRoomClues, drawRoomClues,
+    encodeRoomClues, decodeRoomClues, drawRoomClues, generateRoomClues,
     encodeDotClues, decodeDotClues, splitRooms,
+    roomClueConstraints, whiteBorderConstraints, buildRoomsMap, noTouchConstraints,
     startWallsGame, generateWalls, wallsModel, encodeWalls, decodeWalls, drawWalls
   };
 })();

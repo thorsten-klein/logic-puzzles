@@ -373,5 +373,173 @@ const Latin = (() => {
     });
   }
 
-  return { bitCount, lowBit, full, values, randomSquare, propagate, solve, startCand, filterGroup, hints, makeGivens, startGame };
+  function prepareStretch(p) {
+    const { R, C, black } = p;
+    p.runs = [];
+    const scan = (cells) => {
+      let cur = [];
+      for (const k of [...cells, -1]) {
+        if (k >= 0 && !black[k]) { cur.push(k); continue; }
+        if (cur.length >= 1) p.runs.push(cur);
+        cur = [];
+      }
+    };
+    for (let r = 0; r < R; r++) scan(Array.from({ length: C }, (_, c) => r * C + c));
+    for (let c = 0; c < C; c++) scan(Array.from({ length: R }, (_, r) => r * C + c));
+    return p;
+  }
+
+  function expandCandidates(cand, k, random) {
+    const vals = [];
+    for (let v = 1; v < 31; v++) if (cand[k] & (1 << v)) vals.push(v);
+    if (random) PuzzleShell.shuffle(vals);
+    else vals.reverse();
+    return vals.map((v) => { const t = Int32Array.from(cand); t[k] = 1 << v; return t; });
+  }
+
+  // For Str8ts and Sutoreto: white cells in stretches split by black cells.
+  function startStretchGame(cfg) {
+    const one = (m) => m && !(m & (m - 1));
+    const low = (m) => 31 - Math.clz32(m & -m);
+
+    function eliminateLineDuplicates(R, C, black, cand) {
+      for (let k = 0; k < R * C; k++) {
+        if (black[k] || !one(cand[k])) continue;
+        const r = Math.floor(k / C), c = k % C;
+        for (let i = 0; i < C; i++) { const j = r * C + i; if (j !== k && !black[j]) cand[j] &= ~cand[k]; }
+        for (let i = 0; i < R; i++) { const j = i * C + c; if (j !== k && !black[j]) cand[j] &= ~cand[k]; }
+      }
+    }
+
+    function propagate(p, cand) {
+      const { R, C, black } = p;
+      for (let guard = 0; guard < 200; guard++) {
+        const before = cand.join(',');
+        if (cfg.uniqueLine) eliminateLineDuplicates(R, C, black, cand);
+        for (const run of p.runs) {
+          if (run.length < 2) continue;
+          const ok = (vals) => Math.max(...vals) - Math.min(...vals) === vals.length - 1;
+          if (!filterGroup(run, cand, ok, true)) return false;
+        }
+        if (cand.some((m, k) => !black[k] && !m)) return false;
+        if (cand.join(',') === before) return true;
+      }
+      return true;
+    }
+
+    function solve(p, start, stopAt = 2, maxNodes = 20000, random = false) {
+      const out = [], stack = [Int32Array.from(start)];
+      let nodes = 0;
+      while (stack.length && out.length < stopAt && ++nodes <= maxNodes) {
+        const cand = stack.pop();
+        if (!propagate(p, cand)) continue;
+        const k = cand.findIndex((m, i) => !p.black[i] && !one(m));
+        if (k < 0) { out.push(Int8Array.from(cand, (m, i) => (p.black[i] ? 0 : low(m)))); continue; }
+        stack.push(...expandCandidates(cand, k, random));
+      }
+      return { solutions: out, capped: nodes > maxNodes };
+    }
+
+    const startCand = (p, given) => Int32Array.from({ length: p.R * p.C }, (_, k) => {
+      if (p.black[k]) return 0;
+      if (given[k]) return 1 << given[k];
+      return ((1 << (p.R + 1)) - 1) & ~1;
+    });
+
+    function reduceGivens(p, black, given) {
+      const solved = () => { const c = startCand(p, given); return propagate(p, c) && c.every((m, k) => black[k] || one(m)); };
+      for (const k of PuzzleShell.shuffle([...new Array(p.R * p.C).keys()])) {
+        if (!given[k]) continue;
+        const v = given[k];
+        given[k] = 0;
+        if (!solved()) given[k] = v;
+      }
+    }
+
+    function generate(n) {
+      const deadline = Date.now() + 8000;
+      while (Date.now() < deadline) {
+        const R = n, C = n, N = R * C;
+        const black = Uint8Array.from({ length: N }, () => (Math.random() < 0.2 ? 1 : 0));
+        const p = prepareStretch({ R, C, black });
+        const fill = solve(p, startCand(p, new Int8Array(N)), 1, 3000, true);
+        if (!fill.solutions.length) continue;
+        const sol = fill.solutions[0];
+        const given = Int8Array.from(sol);
+        reduceGivens(p, black, given);
+        p.given = given;
+        p.solution = sol;
+        return p;
+      }
+      return null;
+    }
+
+    function hints(p, entries) {
+      const val = Int8Array.from(entries, (v, k) => p.given[k] || v);
+      const wrong = [...entries.keys()].find((k) => entries[k] && !p.given[k] && entries[k] !== p.solution[k]);
+      if (wrong !== undefined) return [{ cells: [wrong], v: 0, reason: 'This number is wrong.' }];
+      const cand = startCand(p, val);
+      propagate(p, cand);
+      const forced = [...val.keys()].find((k) => !p.black[k] && !val[k] && one(cand[k]));
+      if (forced !== undefined) return [{ cells: [forced], v: low(cand[forced]), reason: cfg.hintReason(low(cand[forced])) }];
+      const empty = [...val.keys()].find((i) => !p.black[i] && !val[i]);
+      return empty === undefined ? [] : [{ cells: [empty], v: p.solution[empty], reason: `No simple step is left. This cell is ${p.solution[empty]}.` }];
+    }
+
+    function render(p, entries, opts = {}) {
+      const { R, C, black, given, solution } = p;
+      const { readonly, result, hint, onChange } = opts;
+      const hintCells = new Set(hint?.cells ?? []);
+      const cellPx = PuzzleShell.fitCell(C, 46);
+      return PuzzleShell.gridBoard({
+        rows: R, cols: C, cellPx, className: `pz-board ${cfg.boardClass}`, readonly,
+        renderCell(k, el) {
+          if (black[k]) return el.classList.add('blk');
+          if (hintCells.has(k)) el.classList.add('hint');
+          if (given[k]) { el.classList.add('given'); el.textContent = given[k]; return; }
+          if (result) {
+            el.textContent = solution[k];
+            el.classList.add(PuzzleShell.resultClass(entries[k], solution[k]));
+            return;
+          }
+          if (readonly) { el.textContent = entries[k] || ''; return; }
+          el.appendChild(PuzzleShell.digitInput({
+            r: Math.floor(k / C), c: k % C, value: entries[k], max: R,
+            onSet: (v) => { entries[k] = v; onChange(false); },
+          }));
+        },
+      });
+    }
+
+    PuzzleShell.start({
+      id: cfg.id,
+      name: cfg.name,
+      rules: cfg.rules,
+      controls: 'Click a cell and type a number. Arrow keys move between cells.',
+      size: cfg.size,
+      solvedText: cfg.solvedText,
+      generate,
+      encode: (p) => ({ n: p.R, b: Array.from(p.black).join(''), v: Array.from(p.given).join('') }),
+      decode(d) {
+        const n = d?.n;
+        if (!Number.isInteger(n) || n < 3 || n > 15) throw new Error('Invalid size');
+        if (typeof d.b !== 'string' || d.b.length !== n * n || typeof d.v !== 'string' || d.v.length !== n * n) throw new Error('Invalid grid');
+        const p = prepareStretch({ R: n, C: n, black: Uint8Array.from(d.b, Number) });
+        p.given = Int8Array.from(d.v, Number);
+        const res = solve(p, startCand(p, p.given), 2, 50000);
+        if (res.solutions.length !== 1) throw new Error('Puzzle has no unique solution');
+        p.solution = res.solutions[0];
+        return p;
+      },
+      newState: (p) => new Int8Array(p.R * p.C),
+      saveState: (s) => Array.from(s).join(''),
+      loadState: (p, v) => (typeof v === 'string' && v.length === p.R * p.C ? Int8Array.from(v, (x) => Number(x) || 0) : new Int8Array(p.R * p.C)),
+      render,
+      check: (p, s) => s.every((v, k) => p.black[k] || (p.given[k] || v) === p.solution[k]),
+      hints,
+      applyHint(p, s, h) { for (const k of h.cells) if (!p.given[k]) s[k] = h.v; },
+    });
+  }
+
+  return { bitCount, lowBit, full, values, randomSquare, propagate, solve, startCand, filterGroup, hints, makeGivens, startGame, startStretchGame };
 })();

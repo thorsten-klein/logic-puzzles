@@ -10,23 +10,7 @@
   const { UNKNOWN, YES, NO } = Binary;
   const ARROW = ['↑', '↓', '←', '→'];
 
-  // A shape key that is the same for turned or mirrored copies.
-  function shapeKey(C, cells) {
-    const pts = cells.map((k) => [Math.floor(k / C), k % C]);
-    const keys = [];
-    for (let t = 0; t < 8; t++) {
-      const q = pts.map(([r, c]) => {
-        let a = r, b = c;
-        if (t & 1) [a, b] = [b, -a];
-        if (t & 2) [a, b] = [-a, -b];
-        if (t & 4) b = -b;
-        return [a, b];
-      });
-      const r0 = Math.min(...q.map((x) => x[0])), c0 = Math.min(...q.map((x) => x[1]));
-      keys.push(q.map(([a, b]) => `${a - r0},${b - c0}`).sort().join(' '));
-    }
-    return keys.find((k) => !keys.some((o) => o < k));
-  }
+  const shapeKey = (C, cells) => PuzzleShell.shapeKey(C, cells);
 
   function target(C, k, d) {
     const r = Math.floor(k / C), c = k % C;
@@ -43,6 +27,16 @@
       if (closed.length === 2 && shapeKey(C, closed[0].cells) !== shapeKey(C, closed[1].cells)) return false;
       const decided = done || rooms[g].every((k) => s[k] !== UNKNOWN);
       if (decided && (list.length !== 2 || closed.length !== 2)) return false;
+    }
+    return true;
+  }
+
+  function isAreaClosed(cells, nb, s, done) {
+    if (done) return true;
+    for (const x of cells) {
+      for (const j of nb(x)) {
+        if (s[j] === UNKNOWN) return false;
+      }
     }
     return true;
   }
@@ -70,18 +64,12 @@
       if (c < C - 1) out.push(k + 1);
       return out;
     };
-    function check(s, done) {
-      const area = new Int32Array(N).fill(-1);
-      const areas = [];
-      for (let k = 0; k < N; k++) {
-        if (area[k] >= 0 || s[k] !== YES) continue;
-        const cells = [k];
-        area[k] = areas.length;
-        for (const cur of cells) for (const j of nb(cur)) if (area[j] < 0 && s[j] === YES) { area[j] = areas.length; cells.push(j); }
-        const closed = done || cells.every((x) => nb(x).every((j) => s[j] !== UNKNOWN));
-        areas.push({ cells, closed });
-      }
-      // Arrows: size of the pointed area.
+    function collectAreas(s, done) {
+      const { id, list } = Binary.areas(R, C, s);
+      const areas = list.map((cells) => ({ cells, closed: isAreaClosed(cells, nb, s, done) }));
+      return { area: id, areas };
+    }
+    function checkArrows(area, areas) {
       for (let k = 0; k < N; k++) {
         if (!clues[k]) continue;
         const [a, b] = target(C, k, (clues[k] % 10) - 1);
@@ -90,10 +78,30 @@
         const size = Math.floor(clues[k] / 10), A = areas[i];
         if (A.cells.length > size || (A.closed && A.cells.length !== size)) return false;
       }
-      // Rooms: two areas, same shape.
+      return true;
+    }
+    function check(s, done) {
+      const { area, areas } = collectAreas(s, done);
+      if (!checkArrows(area, areas)) return false;
       return checkRooms(rooms, areas, room, s, done, C);
     }
     return { N, cons, check };
+  }
+
+  function tryFindMatchingCopy(ctx, start, a, pts, key) {
+    const { inRoom, blocked, C, R } = ctx;
+    for (let tr = 0; tr < 8; tr++) {
+      const b = pts.map(([r, c]) => {
+        let x = r, y = c;
+        if (tr & 1) [x, y] = [y, -x];
+        if (tr & 2) [x, y] = [-x, -y];
+        if (tr & 4) y = -y;
+        const rr = Math.floor(start / C) + x, cc = (start % C) + y;
+        return rr < 0 || cc < 0 || rr >= R || cc >= C ? -1 : rr * C + cc;
+      });
+      if (b.every((k) => k >= 0 && inRoom.has(k) && !blocked.has(k)) && shapeKey(C, b) === key) return [a, b];
+    }
+    return null;
   }
 
   // Two equal, non-touching areas inside one room (or null).
@@ -109,23 +117,65 @@
       }
       const key = shapeKey(C, a);
       const blocked = new Set(a.concat(a.flatMap(nbs)));
-      // Try copies grown from each free cell with the same shape.
+      const pts = a.map((k) => [Math.floor(k / C) - Math.floor(a[0] / C), (k % C) - (a[0] % C)]);
+      const ctx = { inRoom, blocked, C, R };
       for (const start of PuzzleShell.shuffle(cells.filter((k) => !blocked.has(k)))) {
-        const pts = a.map((k) => [Math.floor(k / C) - Math.floor(a[0] / C), (k % C) - (a[0] % C)]);
-        for (let tr = 0; tr < 8; tr++) {
-          const b = pts.map(([r, c]) => {
-            let x = r, y = c;
-            if (tr & 1) [x, y] = [y, -x];
-            if (tr & 2) [x, y] = [-x, -y];
-            if (tr & 4) y = -y;
-            const rr = Math.floor(start / C) + x, cc = (start % C) + y;
-            return rr < 0 || cc < 0 || rr >= R || cc >= C ? -1 : rr * C + cc;
-          });
-          if (b.every((k) => k >= 0 && inRoom.has(k) && !blocked.has(k)) && shapeKey(C, b) === key) return [a, b];
-        }
+        const pair = tryFindMatchingCopy(ctx, start, a, pts, key);
+        if (pair) return pair;
       }
     }
     return null;
+  }
+
+  function buildRoomPairs(rooms, C, R, sol) {
+    const pairs = [];
+    for (const cells of rooms) {
+      const pair = cells.length >= 3 && placePair(C, R, cells);
+      if (!pair) return null;
+      pairs.push(...pair);
+      pair.flat().forEach((k) => { sol[k] = YES; });
+    }
+    return pairs;
+  }
+
+  function findArrowOpts(area, C, N, sol, clues) {
+    const opts = [];
+    for (const x of area) {
+      for (let d = 0; d < 4; d++) {
+        const from = [x + C, x - C, (x + 1) % C ? x + 1 : -1, x % C ? x - 1 : -1][d];
+        if (from >= 0 && from < N && sol[from] === NO && !clues[from]) opts.push(from * 10 + d);
+      }
+    }
+    return opts;
+  }
+
+  function placeClueArrows(pairs, C, N, sol, clues) {
+    for (const area of pairs) {
+      const opts = findArrowOpts(area, C, N, sol, clues);
+      if (!opts.length) continue;
+      const pick = opts[Math.floor(Math.random() * opts.length)];
+      clues[Math.floor(pick / 10)] = 10 * area.length + (pick % 10) + 1;
+    }
+  }
+
+  function hasTouchingAreasAcrossRooms(N, C, sol, room) {
+    return [...new Array(N).keys()].some((k) => sol[k] === YES && (
+      (k % C < C - 1 && sol[k + 1] === YES && room[k] !== room[k + 1]) ||
+      (k + C < N && sol[k + C] === YES && room[k] !== room[k + C])
+    ));
+  }
+
+  function thinClueArrows(p, clues, N, deadline) {
+    const unique = () => Binary.isUnique(model(p));
+    if (!unique()) return false;
+    for (const k of PuzzleShell.shuffle([...new Array(N).keys()])) {
+      if (!clues[k]) continue;
+      const keep = clues[k];
+      clues[k] = 0;
+      if (!unique()) clues[k] = keep;
+      if (Date.now() > deadline + 3000) break;
+    }
+    return true;
   }
 
   function generate(n) {
@@ -137,39 +187,12 @@
       const rooms = [];
       room.forEach((g, k) => { rooms[g] ??= []; rooms[g].push(k); });
       const sol = new Uint8Array(N).fill(NO);
-      const pairs = [];
-      let ok = true;
-      for (const cells of rooms) {
-        const pair = cells.length >= 3 && placePair(C, R, cells);
-        if (!pair) { ok = false; break; }
-        pairs.push(...pair);
-        pair.flat().forEach((k) => { sol[k] = YES; });
-      }
-      if (!ok) continue;
-      // Areas must not touch across rooms.
-      if ([...new Array(N).keys()].some((k) => sol[k] === YES && ((k % C < C - 1 && sol[k + 1] === YES && room[k] !== room[k + 1]) || (k + C < N && sol[k + C] === YES && room[k] !== room[k + C])))) continue;
-      // An arrow for each area from a white neighbour.
+      const pairs = buildRoomPairs(rooms, C, R, sol);
+      if (!pairs || hasTouchingAreasAcrossRooms(N, C, sol, room)) continue;
       const clues = new Int16Array(N);
-      for (const area of pairs) {
-        const opts = [];
-        for (const x of area) for (let d = 0; d < 4; d++) {
-          const from = [x + C, x - C, (x + 1) % C ? x + 1 : -1, x % C ? x - 1 : -1][d];
-          if (from >= 0 && from < N && sol[from] === NO && !clues[from]) opts.push(from * 10 + d);
-        }
-        if (!opts.length) continue;
-        const pick = opts[Math.floor(Math.random() * opts.length)];
-        clues[Math.floor(pick / 10)] = 10 * area.length + (pick % 10) + 1;
-      }
+      placeClueArrows(pairs, C, N, sol, clues);
       const p = { R, C, room, clues };
-      const unique = () => Binary.isUnique(model(p));
-      if (!unique()) continue;
-      for (const k of PuzzleShell.shuffle([...new Array(N).keys()])) {
-        if (!clues[k]) continue;
-        const keep = clues[k];
-        clues[k] = 0;
-        if (!unique()) clues[k] = keep;
-        if (Date.now() > deadline + 3000) break;
-      }
+      if (!thinClueArrows(p, clues, N, deadline)) continue;
       p.solution = sol;
       return p;
     }

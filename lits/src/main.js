@@ -10,21 +10,92 @@
   // Tetromino type: 'L', 'I', 'T', 'S' (O and others: null).
   function kind(C, cells) {
     if (cells.length !== 4) return null;
-    const pts = cells.map((k) => [Math.floor(k / C), k % C]);
-    const keys = [];
-    for (let t = 0; t < 8; t++) {
-      const q = pts.map(([r, c]) => {
-        let a = r, b = c;
-        if (t & 1) [a, b] = [b, -a];
-        if (t & 2) [a, b] = [-a, -b];
-        if (t & 4) b = -b;
-        return [a, b];
-      });
-      const r0 = Math.min(...q.map((x) => x[0])), c0 = Math.min(...q.map((x) => x[1]));
-      keys.push(q.map(([a, b]) => `${a - r0},${b - c0}`).sort().join(' '));
-    }
-    const key = keys.reduce((min, k) => (k.localeCompare(min) < 0 ? k : min), keys[0]);
+    const key = PuzzleShell.shapeKey(C, cells);
     return { '0,0 0,1 0,2 0,3': 'I', '0,0 0,1 0,2 1,0': 'L', '0,0 0,1 0,2 1,1': 'T', '0,0 0,1 1,1 1,2': 'S' }[key] || null;
+  }
+
+  function findFittingPlacements(roomCells, placements, s) {
+    return placements.filter((ks) => {
+      const on = new Set(ks);
+      return roomCells.every((k) => {
+        if (s[k] === YES) return on.has(k);
+        if (s[k] === NO) return !on.has(k);
+        return true;
+      });
+    });
+  }
+
+  function applyPlacementDeductions(roomCells, fit, s, log) {
+    let set = 0;
+    for (const k of roomCells) {
+      if (s[k] !== UNKNOWN) continue;
+      const inAll = fit.every((ks) => ks.includes(k)), inNone = fit.every((ks) => !ks.includes(k));
+      if (!inAll && !inNone) continue;
+      s[k] = inAll ? YES : NO;
+      set++;
+      if (log) {
+        log.push({ cells: [k], v: s[k], reason: inAll ? 'Every L, I, T or S that still fits this room covers this cell.' : 'No L, I, T or S that still fits this room covers this cell.' });
+        return set;
+      }
+    }
+    return set;
+  }
+
+  function checkRoomConnectivity(black, roomCells, s, C) {
+    if (black.length <= 1) return true;
+    const ok = new Set(roomCells.filter((k) => s[k] !== NO));
+    const seen = new Set([black[0]]), st = [black[0]];
+    while (st.length) {
+      const k = st.pop();
+      for (const j of [k - C, k + C, k % C ? k - 1 : -1, (k + 1) % C ? k + 1 : -1]) {
+        if (ok.has(j) && !seen.has(j)) { seen.add(j); st.push(j); }
+      }
+    }
+    return black.every((k) => seen.has(k));
+  }
+
+  function checkTetrominoKind(black, C) {
+    if (black.length !== 4) return null;
+    const k = kind(C, black);
+    if (!k) return null;
+    const set = new Set(black), st = [black[0]], seen = new Set(st);
+    while (st.length) {
+      const cur = st.pop();
+      for (const j of [cur - C, cur + C, cur % C ? cur - 1 : -1, (cur + 1) % C ? cur + 1 : -1]) {
+        if (set.has(j) && !seen.has(j)) { seen.add(j); st.push(j); }
+      }
+    }
+    return seen.size === 4 ? k : null;
+  }
+
+  function touchesSameKindNeighbor(k, N, C, s, room, type) {
+    for (const j of [k % C < C - 1 ? k + 1 : -1, k + C < N ? k + C : -1]) {
+      if (j >= 0 && s[j] === YES && room[j] !== room[k] && type[room[k]] && type[room[k]] === type[room[j]]) {
+        return true;
+      }
+    }
+    return false;
+  }
+
+  function hasAdjacentSameKind(N, C, s, room, type) {
+    for (let k = 0; k < N; k++) {
+      if (s[k] === YES && touchesSameKindNeighbor(k, N, C, s, room, type)) return true;
+    }
+    return false;
+  }
+
+  // A room's cells: shaded if in every fitting placement, white if in none.
+  function propagatePlacements(place, rooms, s, log) {
+    let set = 0;
+    for (let g = 0; g < rooms.length; g++) {
+      const fit = findFittingPlacements(rooms[g], place[g], s);
+      if (!fit.length) return -1;
+      const r = applyPlacementDeductions(rooms[g], fit, s, log);
+      if (r < 0) return -1;
+      set += r;
+      if (log && r) return set;
+    }
+    return set;
   }
 
   function model(p) {
@@ -50,59 +121,20 @@
       const seen = new Set();
       return out.filter((ks) => { const key = ks.join(','); if (seen.has(key)) { return false; } seen.add(key); return true; });
     });
-    // A room's cells: shaded if in every fitting placement, white if in none.
-    function propagate(s, log) {
-      let set = 0;
-      for (let g = 0; g < rooms.length; g++) {
-        const fit = place[g].filter((ks) => {
-          const on = new Set(ks);
-          return rooms[g].every((k) => {
-            if (s[k] === YES) return on.has(k);
-            if (s[k] === NO) return !on.has(k);
-            return true;
-          });
-        });
-        if (!fit.length) return -1;
-        for (const k of rooms[g]) {
-          if (s[k] !== UNKNOWN) continue;
-          const inAll = fit.every((ks) => ks.includes(k)), inNone = fit.every((ks) => !ks.includes(k));
-          if (!inAll && !inNone) continue;
-          s[k] = inAll ? YES : NO;
-          set++;
-          if (log) { log.push({ cells: [k], v: s[k], reason: inAll ? 'Every L, I, T or S that still fits this room covers this cell.' : 'No L, I, T or S that still fits this room covers this cell.' }); return set; }
-        }
-      }
-      return set;
-    }
     function check(s, done) {
       const type = new Array(rooms.length).fill(null);
       for (let g = 0; g < rooms.length; g++) {
         const black = rooms[g].filter((k) => s[k] === YES);
-        // Shaded cells in a room must be able to join inside the room.
-        if (black.length > 1) {
-          const ok = new Set(rooms[g].filter((k) => s[k] !== NO));
-          const seen = new Set([black[0]]), st = [black[0]];
-          while (st.length) { const k = st.pop(); for (const j of [k - C, k + C, k % C ? k - 1 : -1, (k + 1) % C ? k + 1 : -1]) if (ok.has(j) && !seen.has(j)) { seen.add(j); st.push(j); } }
-          if (black.some((k) => !seen.has(k))) return false;
-        }
+        if (!checkRoomConnectivity(black, rooms[g], s, C)) return false;
         if (black.length === 4) {
-          type[g] = kind(C, black);
+          type[g] = checkTetrominoKind(black, C);
           if (!type[g]) return false;
-          const set = new Set(black), st = [black[0]], seen = new Set(st);
-          while (st.length) { const k = st.pop(); for (const j of [k - C, k + C, k % C ? k - 1 : -1, (k + 1) % C ? k + 1 : -1]) if (set.has(j) && !seen.has(j)) { seen.add(j); st.push(j); } }
-          if (seen.size !== 4) return false;
         }
       }
-      for (let k = 0; k < N; k++) {
-        if (s[k] !== YES) continue;
-        for (const j of [k % C < C - 1 ? k + 1 : -1, k + C < N ? k + C : -1]) {
-          if (j < 0 || s[j] !== YES || room[j] === room[k]) continue;
-          if (type[room[k]] && type[room[k]] === type[room[j]]) return false;
-        }
-      }
+      if (hasAdjacentSameKind(N, C, s, room, type)) return false;
       return Binary.canConnect(R, C, s, YES);
     }
-    return { N, cons, check, propagate };
+    return { N, cons, check, propagate: (s, log) => propagatePlacements(place, rooms, s, log) };
   }
 
   // Shapes of L, I, T, S in all turns.
@@ -188,6 +220,24 @@
     return unique;
   }
 
+  function findPieceEdge(ctx, N, C) {
+    const edge = [];
+    for (let k = 0; k < N; k++) {
+      if (ctx.black[k]) continue;
+      const touchesBlack = [k - C, k + C, k % C ? k - 1 : -1, (k + 1) % C ? k + 1 : -1].some((j) => j >= 0 && j < N && ctx.black[j]);
+      if (touchesBlack) edge.push(k);
+    }
+    return edge;
+  }
+
+  function growPiecesGrid(ctx, N, C) {
+    for (let t = 0; t < 600 && ctx.pieces.length * 4 < N * 0.6; t++) {
+      const edge = findPieceEdge(ctx, N, C);
+      if (!edge.length) break;
+      tryAddPiece(ctx, edge[Math.floor(Math.random() * edge.length)]);
+    }
+  }
+
   function generate(n) {
     const deadline = Date.now() + (n > 5 ? 14000 : 8000);
     while (Date.now() < deadline) {
@@ -197,12 +247,7 @@
       const pieces = [];
       const ctx = { R, C, N, black, owner, pieces };
       if (!tryAddPiece(ctx, Math.floor(Math.random() * N))) continue;
-      for (let t = 0; t < 600 && pieces.length * 4 < N * 0.6; t++) {
-        const edge = [];
-        for (let k = 0; k < N; k++) if (!black[k] && [k - C, k + C, k % C ? k - 1 : -1, (k + 1) % C ? k + 1 : -1].some((j) => j >= 0 && j < N && black[j])) edge.push(k);
-        if (!edge.length) break;
-        tryAddPiece(ctx, edge[Math.floor(Math.random() * edge.length)]);
-      }
+      growPiecesGrid(ctx, N, C);
       const room = PuzzleShell.growRegions(R, C, pieces);
       if (!room) continue;
       const p = { R, C, room };
