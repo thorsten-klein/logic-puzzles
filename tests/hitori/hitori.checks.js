@@ -8,7 +8,7 @@ module.exports = {
   answer(p) {
     const { n, nums, solution: s } = p, out = [];
     // White numbers of a line (cell index by position j).
-    const whites = (at) => [...new Array(n).keys()].map(at).filter((k) => s[k] === 2).map((k) => nums[k]);
+    const whites = (at) => [...new Array(n).keys()].map((j) => at(j)).filter((k) => s[k] === 2).map((k) => nums[k]);
     const repeats = (list) => new Set(list).size !== list.length;
     for (let i = 0; i < n; i++) {
       if (repeats(whites((j) => i * n + j))) out.push(`row ${i} repeats a number`);

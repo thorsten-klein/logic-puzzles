@@ -24,7 +24,7 @@ module.exports = {
         if (b % 20 === 0) { tryIt(() => Solver.solve(p, 2)); tryIt(() => Solver.solve(p, 1, { maxNodes: 5 })); }
       }
       // Random marks: mostly right, a few wrong.
-      function randomMarks(N, sol) {
+      function randomMarks(N, sol) { // NOSONAR: evaluated in browser context
         const filled = new Set(), marked = new Set();
         for (let k = 0; k < N; k++) {
           const x = Math.random();

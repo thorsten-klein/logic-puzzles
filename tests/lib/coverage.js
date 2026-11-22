@@ -231,7 +231,7 @@ async function fuzzCode(page) {
     }
 
     // Odd values that fit the type of v.
-    function oddFor(v) {
+    function oddFor(v) { // NOSONAR: evaluated in browser context
       // Thinned clues (every 2nd or 3rd clue gone) make solvers search.
       const thin = (str, m, blank) => str.replaceAll(/[^,]/g, (ch, i) => (i % m === 0 && /[1-9a-z]/i.test(ch) ? blank : ch));
       if (typeof v === 'string') {
@@ -245,7 +245,7 @@ async function fuzzCode(page) {
 
     // One clue less at a time (string fields): often still one answer, but
     // logic alone stalls, so the decoders' search paths run.
-    function fewerClues({ d0, blankOf }) {
+    function fewerClues({ d0, blankOf }) { // NOSONAR: evaluated in browser context
       const early = [];
       for (const [key, v] of Object.entries(d0 && typeof d0 === 'object' ? d0 : {})) {
         if (typeof v !== 'string') continue;
@@ -301,7 +301,7 @@ async function fuzzCode(page) {
     }
 
     // Engine edge cases: safety limits and "no loop possible".
-    function engineEdges({ tryIt, engine }) {
+    function engineEdges({ tryIt, engine }) { // NOSONAR: evaluated in browser context
       const LoopE = engine('Loop'), LinksE = engine('Links');
       if (!LoopE) return;
       const g = LoopE.grid(2, 2);
@@ -351,7 +351,7 @@ async function fuzzCode(page) {
     }
 
     // Random, part solved, a few wrong, and mostly empty states.
-    function randomStates(end) {
+    function randomStates(end) { // NOSONAR: evaluated in browser context
       const vals = [...new Set([0, ...Array.from(end).filter((v) => typeof v === 'number')])];
       const pick = (a) => a[Math.floor(Math.random() * a.length)];
       const states = [];

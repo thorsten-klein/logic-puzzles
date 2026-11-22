@@ -20,7 +20,7 @@ module.exports = {
         tryIt(() => cfg.decode(cfg.encode(p)));
       }
       // Hint walk: fill the first forced cell until none is left.
-      function hintWalk(p) {
+      function hintWalk(p) { // NOSONAR: evaluated in browser context
         const filled = new Map(Object.entries(p.given).map(([k, v]) => [Number(k), v]));
         for (let i = 0; i < 300; i++) {
           const h = Hint.findAll(p, filled)?.[0];
@@ -29,7 +29,7 @@ module.exports = {
         }
       }
       // White cells: right with chance `right`, a few random digits.
-      function randomFill(p, right) {
+      function randomFill(p, right) { // NOSONAR: evaluated in browser context
         const filled = new Map();
         for (let k = 0; k < p.rows * p.cols; k++) {
           if (p.layout[k]) continue;
