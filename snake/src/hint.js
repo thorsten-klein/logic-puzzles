@@ -233,22 +233,27 @@ const Hint = (() => {
     return hints;
   }
 
+  function checkCellDegreeConflict(puzzle, snake, r, c) {
+    const { size } = puzzle;
+    const ep = isEndpoint(puzzle, r, c);
+    const max = ep ? 1 : 2;
+    const n = countNeighborDegrees(r, c, size, snake);
+    if (n <= max) return null;
+    const which = ep ? endName(puzzle, r, c) : 'body';
+    const reason = ep
+      ? `The ${which} can have at most 1 filled neighbour (it's an endpoint of the snake), but this cell has ${n}.`
+      : `Each snake body cell can have at most 2 filled neighbours, but this cell has ${n}.`;
+    return { r, c, action: 'conflict', reason };
+  }
+
   function findDegreeConflicts(puzzle, snake) {
     const { size } = puzzle;
     const hints = [];
     for (let r = 0; r < size; r++) {
       for (let c = 0; c < size; c++) {
         if (!snake.has(r * size + c)) continue;
-        const ep = isEndpoint(puzzle, r, c);
-        const max = ep ? 1 : 2;
-        const n = countNeighborDegrees(r, c, size, snake);
-        if (n > max) {
-          const which = ep ? endName(puzzle, r, c) : 'body';
-          const reason = ep
-            ? `The ${which} can have at most 1 filled neighbour (it's an endpoint of the snake), but this cell has ${n}.`
-            : `Each snake body cell can have at most 2 filled neighbours, but this cell has ${n}.`;
-          hints.push({ r, c, action: 'conflict', reason });
-        }
+        const h = checkCellDegreeConflict(puzzle, snake, r, c);
+        if (h) hints.push(h);
       }
     }
     return hints;
@@ -441,21 +446,26 @@ const Hint = (() => {
     return { filled, open };
   }
 
+  function addTightLineCandidates(puzzle, prop, isRow, idx, seen, out) {
+    const { size } = puzzle;
+    for (let i = 0; i < size; i++) {
+      const r = isRow ? idx : i, c = isRow ? i : idx;
+      const k = r * size + c;
+      if (prop.snake.has(k) || prop.marked.has(k) || isEndpoint(puzzle, r, c) || seen.has(k)) continue;
+      seen.add(k);
+      out.push([r, c]);
+    }
+  }
+
   function collectTightLineBranchCells(puzzle, prop, isRow, seen, out) {
-    const { size, rowClues, colClues } = puzzle;
+    const { rowClues, colClues } = puzzle;
     const clues = isRow ? rowClues : colClues;
-    for (let idx = 0; idx < size; idx++) {
-      const { filled, open } = countLineCells(prop, isRow, idx, size);
+    for (let idx = 0; idx < puzzle.size; idx++) {
+      const { filled, open } = countLineCells(prop, isRow, idx, puzzle.size);
       if (open === 0) continue;
       const need = clues[idx] - filled;
       if (need <= 0 || open - need > 2) continue;
-      for (let i = 0; i < size; i++) {
-        const r = isRow ? idx : i, c = isRow ? i : idx;
-        const k = r * size + c;
-        if (prop.snake.has(k) || prop.marked.has(k) || isEndpoint(puzzle, r, c) || seen.has(k)) continue;
-        seen.add(k);
-        out.push([r, c]);
-      }
+      addTightLineCandidates(puzzle, prop, isRow, idx, seen, out);
     }
   }
 

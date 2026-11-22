@@ -486,6 +486,25 @@ const Binary = (() => {
     return borders;
   }
 
+  function buildRoomsMap(R, C, room) {
+    const rooms = new Map();
+    for (let k = 0; k < R * C; k++) {
+      if (!rooms.has(room[k])) rooms.set(room[k], []);
+      rooms.get(room[k]).push(k);
+    }
+    return rooms;
+  }
+
+  function noTouchConstraints(R, C, why = () => 'Shaded cells may not touch by a side.') {
+    const cons = [];
+    for (let k = 0; k < R * C; k++) {
+      const r = Math.floor(k / C), c = k % C;
+      if (c < C - 1) cons.push({ cells: [k, k + 1], min: 0, max: 1, why });
+      if (r < R - 1) cons.push({ cells: [k, k + C], min: 0, max: 1, why });
+    }
+    return cons;
+  }
+
   // Room clue constraints for Binary puzzles (Heyawake, Heyablock)
   function roomClueConstraints(rooms, clues) {
     const cons = [];
@@ -957,7 +976,7 @@ const Binary = (() => {
     cornerNeighbours, whiteBorders, areas, cornerGroups, cornerBuilder,
     encodeRoomClues, decodeRoomClues, drawRoomClues,
     encodeDotClues, decodeDotClues, splitRooms,
-    roomClueConstraints, whiteBorderConstraints,
+    roomClueConstraints, whiteBorderConstraints, buildRoomsMap, noTouchConstraints,
     startWallsGame, generateWalls, wallsModel, encodeWalls, decodeWalls, drawWalls
   };
 })();

@@ -8,19 +8,8 @@
 
   function model(p) {
     const { R, C, room, clues } = p;
-    const rooms = new Map();
-    for (let k = 0; k < R * C; k++) {
-      if (!rooms.has(room[k])) rooms.set(room[k], []);
-      rooms.get(room[k]).push(k);
-    }
-    const cons = Binary.roomClueConstraints(rooms, clues);
-    for (let k = 0; k < R * C; k++) {
-      const r = Math.floor(k / C), c = k % C;
-      const why = () => 'Shaded cells may not touch by a side.';
-      if (c < C - 1) cons.push({ cells: [k, k + 1], min: 0, max: 1, why });
-      if (r < R - 1) cons.push({ cells: [k, k + C], min: 0, max: 1, why });
-    }
-    cons.push(...Binary.whiteBorderConstraints(R, C, room));
+    const cons = Binary.roomClueConstraints(Binary.buildRoomsMap(R, C, room), clues);
+    cons.push(...Binary.noTouchConstraints(R, C), ...Binary.whiteBorderConstraints(R, C, room));
     return { N: R * C, cons, check: (s) => Binary.openConnected(R, C, s) };
   }
 

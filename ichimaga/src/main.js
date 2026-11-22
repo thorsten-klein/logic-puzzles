@@ -45,20 +45,6 @@
     return p;
   }
 
-  function checkCrossingLines(p, lo, hi) {
-    for (let j = 0; j < p.pairs.length; j++) {
-      if (!lo[j]) continue;
-      for (const o of p.cross[j]) {
-        if (lo[o]) return -1;
-        if (hi[o]) {
-          hi[o] = 0;
-          return 1;
-        }
-      }
-    }
-    return 0;
-  }
-
   function checkClosedPairs(p, lo, hi) {
     if (p.isl.length <= 2) return 0;
     for (let j = 0; j < p.pairs.length; j++) {
@@ -74,7 +60,7 @@
   }
 
   function checkCrossings(p, lo, hi) {
-    const res = checkCrossingLines(p, lo, hi);
+    const res = PuzzleShell.checkCrossingPairs(p, lo, hi);
     return res !== 0 ? res : checkClosedPairs(p, lo, hi);
   }
 
@@ -108,31 +94,31 @@
     const d2 = (d1 + (Math.random() < 0.5 ? 1 : 3)) % 4, len2 = 1 + Math.floor(Math.random() * 3);
     const cells = [];
     let r = Math.floor(from.k / C), c = from.k % C, ok = true;
-    const walk = (d, len) => {
+    for (const [dir, len] of (turn ? [[d1, len1], [d2, len2]] : [[d1, len1]])) {
       for (let i = 0; i < len; i++) {
-        r += STEP[d][0]; c += STEP[d][1];
-        if (r < 0 || c < 0 || r >= R || c >= C) { ok = false; return; }
+        r += STEP[dir][0]; c += STEP[dir][1];
+        if (r < 0 || c < 0 || r >= R || c >= C) { ok = false; break; }
         cells.push(r * C + c);
       }
-    };
-    walk(d1, len1);
-    if (ok && turn) walk(d2, len2);
+      if (!ok) break;
+    }
     if (!ok || cells.length < 2) return;
     const end = cells.pop();
-    if (cells.some((k) => grid[k] !== -1) || grid[end] === -2) return;
+    if (grid[end] === -2 || cells.some((k) => grid[k] !== -1)) return;
+    const a = grid[from.k];
     if (grid[end] === -1) {
-      const touch = [[-1, 0], [1, 0], [0, -1], [0, 1]].some(([a, b]) => {
-        const x = Math.floor(end / C) + a, y = (end % C) + b;
-        return x >= 0 && y >= 0 && x < R && y < C && grid[x * C + y] >= 0;
+      const touchesAny = [[-1, 0], [1, 0], [0, -1], [0, 1]].some(([dr, dc]) => {
+        const rr = Math.floor(end / C) + dr, cc = (end % C) + dc;
+        return rr >= 0 && cc >= 0 && rr < R && cc < C && grid[rr * C + cc] >= 0;
       });
-      if (touch) return;
+      if (touchesAny) return;
       add(end);
     } else if (Math.random() < 0.7) return;
-    const a = grid[from.k], b = grid[end];
-    const key = Math.min(a, b) + ':' + Math.max(a, b);
+    const b = grid[end];
+    const key = `${Math.min(a, b)}:${Math.max(a, b)}`;
     if (a === b || joined.has(key)) return;
     joined.add(key);
-    cells.forEach((k) => { grid[k] = -2; });
+    for (const k of cells) grid[k] = -2;
     isl[a].n++;
     isl[b].n++;
   }

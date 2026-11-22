@@ -568,5 +568,16 @@ const Loop = (() => {
     if (r < R - 1 && region[k + C] !== region[k]) wall(x0, y0 + s, x0 + s, y0 + s);
   }
 
-  return { UNKNOWN, LINE, CROSS, grid, randomTour, legs, settle, firstChange, lookahead, solve, logicSolve, solvedBy, randomLoop, paths, complete, hints, render, startGame, tourOrder, stepBorder, regionBorders, drawRegionWalls };
+  function encodeRegions(p) {
+    return { n: p.R, g: Array.from(p.region, (v) => v.toString(36).padStart(2, '0')).join('') };
+  }
+
+  function decodeRegions(d) {
+    const n = d?.n;
+    if (!Number.isInteger(n) || n < 2 || n > 16) throw new Error('Invalid board size');
+    if (typeof d.g !== 'string' || d.g.length !== 2 * n * n) throw new Error('Invalid regions');
+    return { R: n, C: n, region: Int32Array.from({ length: n * n }, (_, k) => Number.parseInt(d.g.slice(2 * k, 2 * k + 2), 36)) };
+  }
+
+  return { UNKNOWN, LINE, CROSS, grid, randomTour, legs, settle, firstChange, lookahead, solve, logicSolve, solvedBy, randomLoop, paths, complete, hints, render, startGame, tourOrder, stepBorder, regionBorders, drawRegionWalls, encodeRegions, decodeRegions };
 })();

@@ -9,11 +9,7 @@
 
   function model(p) {
     const { R, C, room, clues } = p;
-    const rooms = new Map();
-    for (let k = 0; k < R * C; k++) {
-      if (!rooms.has(room[k])) rooms.set(room[k], []);
-      rooms.get(room[k]).push(k);
-    }
+    const rooms = Binary.buildRoomsMap(R, C, room);
     const cons = Binary.roomClueConstraints(rooms, clues);
     for (const [, cells] of rooms) cons.push({ cells, min: 1, max: cells.length, why: () => 'Every room has at least one shaded cell.' });
     for (let k = 0; k < R * C; k++) {

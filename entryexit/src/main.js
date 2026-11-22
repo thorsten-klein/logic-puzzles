@@ -58,13 +58,8 @@
     size: { min: 2, max: 5, def: 3, text: (h) => `${2 * h}×${2 * h}` },
     solvedText: 'In and out, once each — nicely done.',
     generate,
-    encode: (p) => ({ n: p.R, g: Array.from(p.region, (v) => v.toString(36).padStart(2, '0')).join('') }),
-    decode(d) {
-      const n = d?.n;
-      if (!Number.isInteger(n) || n < 2 || n > 16) throw new Error('Invalid board size');
-      if (typeof d.g !== 'string' || d.g.length !== 2 * n * n) throw new Error('Invalid regions');
-      return { R: n, C: n, region: Int32Array.from({ length: n * n }, (_, k) => Number.parseInt(d.g.slice(2 * k, 2 * k + 2), 36)) };
-    },
+    encode: Loop.encodeRegions,
+    decode: Loop.decodeRegions,
     model,
     drawCell: (p) => (svg, k, x, y, s) => Loop.drawRegionWalls(p, svg, k, x, y, s),
   });
