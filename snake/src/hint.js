@@ -129,32 +129,26 @@ const Hint = (() => {
     return hints;
   }
 
-  function whyCantBeFilled(puzzle, snake, userMarked, r, c) {
-    const { size, noTouch } = puzzle;
-
-    // Over-connection: a snake cell adjacent to (r, c) already has its
-    // maximum number of snake neighbours.
+  function checkOverConnection(puzzle, snake, r, c) {
+    const { size } = puzzle;
     for (const [dr, dc] of Rules.ORTHO) {
       const nr = r + dr, nc = c + dc;
-      if (!Rules.inBounds(nr, nc, size)) continue;
-      if (!snake.has(nr * size + nc)) continue;
+      if (!Rules.inBounds(nr, nc, size) || !snake.has(nr * size + nc)) continue;
       const maxDeg = isEndpoint(puzzle, nr, nc) ? 1 : 2;
       let deg = 0;
       for (const [dr2, dc2] of Rules.ORTHO) {
         const ar = nr + dr2, ac = nc + dc2;
-        if (!Rules.inBounds(ar, ac, size)) continue;
-        if (snake.has(ar * size + ac)) deg++;
+        if (Rules.inBounds(ar, ac, size) && snake.has(ar * size + ac)) deg++;
       }
       if (deg >= maxDeg) {
         const which = isEndpoint(puzzle, nr, nc) ? `The ${endName(puzzle, nr, nc)}` : 'The adjacent filled cell';
         return `${which} already has its ${PuzzleShell.plural(maxDeg, 'allowed connection')} — filling this cell would over-connect it.`;
       }
     }
+    return null;
+  }
 
-    if (noTouch === false) return null;
-
-    // 2×2 block: three of the other corners of some surrounding 2×2
-    // are already snake; filling this cell closes a forbidden block.
+  function check2x2Block(size, snake, r, c) {
     const groups = [
       [[0, 1], [1, 0], [1, 1]],
       [[0, -1], [1, 0], [1, -1]],
@@ -162,94 +156,88 @@ const Hint = (() => {
       [[0, -1], [-1, 0], [-1, -1]],
     ];
     for (const g of groups) {
-      let ok = true;
-      for (const [dr, dc] of g) {
-        if (!Rules.inBounds(r + dr, c + dc, size) || !snake.has((r + dr) * size + (c + dc))) { ok = false; break; }
-      }
+      const ok = g.every(([dr, dc]) => Rules.inBounds(r + dr, c + dc, size) && snake.has((r + dr) * size + (c + dc)));
       if (ok) return 'Filling this cell would create a 2×2 block of snake cells, which the no-touch rule forbids.';
     }
+    return null;
+  }
 
-    // Diagonal-touch trap: a snake cell sits diagonally and both shared
-    // corner cells are confirmed empty (player-marked or out of bounds),
-    // so no turn corner can ever form between them.
+  function checkDiagonalTrap(puzzle, snake, userMarked, r, c) {
+    const { size } = puzzle;
     for (const [dr, dc] of Rules.DIAG) {
       const nr = r + dr, nc = c + dc;
-      if (!Rules.inBounds(nr, nc, size)) continue;
-      if (!snake.has(nr * size + nc)) continue;
-      const corner1Inside = Rules.inBounds(r, nc, size);
-      const corner2Inside = Rules.inBounds(nr, c, size);
-      const corner1Snake = corner1Inside && snake.has(r * size + nc);
-      const corner2Snake = corner2Inside && snake.has(nr * size + c);
-      if (corner1Snake || corner2Snake) continue; // a valid bend corner already exists
-      const corner1Confirmed = !corner1Inside || userMarked.has(r * size + nc);
-      const corner2Confirmed = !corner2Inside || userMarked.has(nr * size + c);
-      if (corner1Confirmed && corner2Confirmed) {
+      if (!Rules.inBounds(nr, nc, size) || !snake.has(nr * size + nc)) continue;
+      const c1Inside = Rules.inBounds(r, nc, size), c2Inside = Rules.inBounds(nr, c, size);
+      if ((c1Inside && snake.has(r * size + nc)) || (c2Inside && snake.has(nr * size + c))) continue;
+      const c1Confirmed = !c1Inside || userMarked.has(r * size + nc);
+      const c2Confirmed = !c2Inside || userMarked.has(nr * size + c);
+      if (c1Confirmed && c2Confirmed) {
         return 'A snake cell sits diagonally and both possible turn-corner cells are already marked empty — filling this cell would create an illegal diagonal contact.';
       }
     }
-
     return null;
+  }
+
+  function whyCantBeFilled(puzzle, snake, userMarked, r, c) {
+    const connReason = checkOverConnection(puzzle, snake, r, c);
+    if (connReason) return connReason;
+    if (puzzle.noTouch === false) return null;
+    return check2x2Block(puzzle.size, snake, r, c) || checkDiagonalTrap(puzzle, snake, userMarked, r, c);
   }
 
   // --- conflicts (impossible state) --------------------------------
 
-  function findConflicts(puzzle, snake, userMarked, cellState) {
-    const { size, rowClues, colClues, noTouch } = puzzle;
+  function checkLineOverfill(puzzle, cells, clue, axisLabel, snake, hints) {
+    const { size } = puzzle;
+    const filled = cells.filter(([r, c]) => snake.has(r * size + c));
+    if (filled.length <= clue) return;
+    const reason = `${axisLabel} already has ${filled.length} filled cells but the clue says only ${clue} can be filled — one of these is wrong.`;
+    for (const [r, c] of filled) {
+      if (!isEndpoint(puzzle, r, c)) hints.push({ r, c, action: 'conflict', reason });
+    }
+  }
+
+  function checkLineOvermark(cells, clue, axisLabel, cellState, hints) {
+    let filled = 0, open = 0;
+    for (const [r, c] of cells) {
+      const s = cellState(r, c);
+      if (s === 'fill') filled++;
+      else if (s === 'open') open++;
+    }
+    const need = clue - filled;
+    if (need <= open) return;
+    const reason = `${axisLabel} needs ${PuzzleShell.plural(need, 'more filled cell')} but only ${PuzzleShell.plural(open, 'cell')} ${open === 1 ? 'is' : 'are'} still undecided — you have marked too many cells in this line.`;
+    for (const [r, c] of cells) {
+      if (cellState(r, c) === 'mark') hints.push({ r, c, action: 'conflict', reason });
+    }
+  }
+
+  function findLineConflicts(puzzle, snake, cellState) {
+    const { size, rowClues, colClues } = puzzle;
     const hints = [];
-
-    // Row / column overfills: filled cells in a row exceed its clue.
-    function overfillLine(cells, clue, axisLabel) {
-      const filled = cells.filter(([r, c]) => snake.has(r * size + c));
-      if (filled.length <= clue) return;
-      const reason = `${axisLabel} already has ${filled.length} filled cells but the clue says only ${clue} can be filled — one of these is wrong.`;
-      for (const [r, c] of filled) {
-        // Don't flag endpoints; the player can't unfill those.
-        if (isEndpoint(puzzle, r, c)) continue;
-        hints.push({ r, c, action: 'conflict', reason });
-      }
-    }
-
-    // Row / column over-marks: the player has ruled out too many cells.
-    function overmarkLine(cells, clue, axisLabel) {
-      let filled = 0, open = 0;
-      for (const [r, c] of cells) {
-        const s = cellState(r, c);
-        if (s === 'fill') filled++;
-        else if (s === 'open') open++;
-      }
-      const need = clue - filled;
-      if (need <= open) return;
-      const reason = `${axisLabel} needs ${PuzzleShell.plural(need, 'more filled cell')} but only ${PuzzleShell.plural(open, 'cell')} ${open === 1 ? 'is' : 'are'} still undecided — you have marked too many cells in this line.`;
-      for (const [r, c] of cells) {
-        if (cellState(r, c) === 'mark') {
-          hints.push({ r, c, action: 'conflict', reason });
-        }
-      }
-    }
-
     for (let r = 0; r < size; r++) {
-      const cells = [];
-      for (let c = 0; c < size; c++) cells.push([r, c]);
-      overfillLine(cells, rowClues[r], `Row ${r + 1}`);
-      overmarkLine(cells, rowClues[r], `Row ${r + 1}`);
+      const cells = Array.from({ length: size }, (_, c) => [r, c]);
+      checkLineOverfill(puzzle, cells, rowClues[r], `Row ${r + 1}`, snake, hints);
+      checkLineOvermark(cells, rowClues[r], `Row ${r + 1}`, cellState, hints);
     }
     for (let c = 0; c < size; c++) {
-      const cells = [];
-      for (let r = 0; r < size; r++) cells.push([r, c]);
-      overfillLine(cells, colClues[c], `Column ${c + 1}`);
-      overmarkLine(cells, colClues[c], `Column ${c + 1}`);
+      const cells = Array.from({ length: size }, (_, r) => [r, c]);
+      checkLineOverfill(puzzle, cells, colClues[c], `Column ${c + 1}`, snake, hints);
+      checkLineOvermark(cells, colClues[c], `Column ${c + 1}`, cellState, hints);
     }
+    return hints;
+  }
 
-    // Degree conflicts: a snake-body cell has at most 2 orthogonal
-    // snake neighbours; head and tail at most 1.
+  function findDegreeConflicts(puzzle, snake) {
+    const { size } = puzzle;
+    const hints = [];
     for (let r = 0; r < size; r++) {
       for (let c = 0; c < size; c++) {
         if (!snake.has(r * size + c)) continue;
         let n = 0;
         for (const [dr, dc] of Rules.ORTHO) {
           const nr = r + dr, nc = c + dc;
-          if (!Rules.inBounds(nr, nc, size)) continue;
-          if (snake.has(nr * size + nc)) n++;
+          if (Rules.inBounds(nr, nc, size) && snake.has(nr * size + nc)) n++;
         }
         const ep = isEndpoint(puzzle, r, c);
         const max = ep ? 1 : 2;
@@ -262,57 +250,58 @@ const Hint = (() => {
         }
       }
     }
+    return hints;
+  }
 
-    // No 2x2 block of snake cells.
-    if (noTouch !== false) {
-      for (let r = 0; r < size - 1; r++) {
-        for (let c = 0; c < size - 1; c++) {
-          const cells = [[r, c], [r, c + 1], [r + 1, c], [r + 1, c + 1]];
-          if (cells.every(([rr, cc]) => snake.has(rr * size + cc))) {
-            const reason = 'These four cells form a 2×2 block of snake cells. A snake never folds that tightly — at least one of them must not be part of the snake.';
-            for (const [rr, cc] of cells) {
-              if (!isEndpoint(puzzle, rr, cc)) {
-                hints.push({ r: rr, c: cc, action: 'conflict', reason });
-              }
-            }
+  function findBlockConflicts(puzzle, snake) {
+    const { size } = puzzle;
+    const hints = [];
+    for (let r = 0; r < size - 1; r++) {
+      for (let c = 0; c < size - 1; c++) {
+        const cells = [[r, c], [r, c + 1], [r + 1, c], [r + 1, c + 1]];
+        if (cells.every(([rr, cc]) => snake.has(rr * size + cc))) {
+          const reason = 'These four cells form a 2×2 block of snake cells. A snake never folds that tightly — at least one of them must not be part of the snake.';
+          for (const [rr, cc] of cells) {
+            if (!isEndpoint(puzzle, rr, cc)) hints.push({ r: rr, c: cc, action: 'conflict', reason });
           }
         }
       }
+    }
+    return hints;
+  }
 
-      // Diagonal pair of snake cells whose two shared orth neighbours
-      // are both empty/marked. Such a pair can only be legal if it's
-      // the two ends of a single bend (the bend cell would be one of
-      // the shared neighbours and itself a snake cell); here neither is,
-      // so the diagonal contact is illegal.
-      for (let r = 0; r < size - 1; r++) {
-        for (let c = 0; c < size - 1; c++) {
-          checkDiagPair([r, c], [r + 1, c + 1], [r, c + 1], [r + 1, c]);
-          checkDiagPair([r, c + 1], [r + 1, c], [r, c], [r + 1, c + 1]);
-        }
-      }
+  function checkDiagPair(puzzle, snake, userMarked, hints, [r1, c1], [r2, c2], [sr1, sc1], [sr2, sc2]) {
+    const { size } = puzzle;
+    const k1 = r1 * size + c1, k2 = r2 * size + c2;
+    if (!snake.has(k1) || !snake.has(k2)) return;
+    if (snake.has(sr1 * size + sc1) || snake.has(sr2 * size + sc2)) return;
+    if (!userMarked.has(sr1 * size + sc1) || !userMarked.has(sr2 * size + sc2)) return;
+    const reason = 'These two cells touch diagonally and both possible turn-corner cells between them are marked empty — so the snake would touch itself diagonally somewhere other than a turn corner, which the rules forbid.';
+    if (!isEndpoint(puzzle, r1, c1)) hints.push({ r: r1, c: c1, action: 'conflict', reason });
+    if (!isEndpoint(puzzle, r2, c2)) hints.push({ r: r2, c: c2, action: 'conflict', reason });
+  }
 
-      // Two diagonal snake cells [r1, c1] and [r2, c2]; the two cells
-      // they share as side neighbours are [sr1, sc1] and [sr2, sc2].
-      function checkDiagPair([r1, c1], [r2, c2], [sr1, sc1], [sr2, sc2]) {
-        const k1 = r1 * size + c1, k2 = r2 * size + c2;
-        if (!snake.has(k1) || !snake.has(k2)) return;
-        const s1 = snake.has(sr1 * size + sc1);
-        const s2 = snake.has(sr2 * size + sc2);
-        // Bend case: one of the shared orth neighbours is also snake,
-        // forming the corner of a 90° turn. That's legal.
-        if (s1 || s2) return;
-        // Only a conflict if both corner cells are CONFIRMED empty
-        // (marked by the player). If they're still undecided the bend
-        // could yet be filled.
-        const c1Marked = userMarked.has(sr1 * size + sc1);
-        const c2Marked = userMarked.has(sr2 * size + sc2);
-        if (!c1Marked || !c2Marked) return;
-        const reason = 'These two cells touch diagonally and both possible turn-corner cells between them are marked empty — so the snake would touch itself diagonally somewhere other than a turn corner, which the rules forbid.';
-        if (!isEndpoint(puzzle, r1, c1)) hints.push({ r: r1, c: c1, action: 'conflict', reason });
-        if (!isEndpoint(puzzle, r2, c2)) hints.push({ r: r2, c: c2, action: 'conflict', reason });
+  function findDiagConflicts(puzzle, snake, userMarked) {
+    const { size } = puzzle;
+    const hints = [];
+    for (let r = 0; r < size - 1; r++) {
+      for (let c = 0; c < size - 1; c++) {
+        checkDiagPair(puzzle, snake, userMarked, hints, [r, c], [r + 1, c + 1], [r, c + 1], [r + 1, c]);
+        checkDiagPair(puzzle, snake, userMarked, hints, [r, c + 1], [r + 1, c], [r, c], [r + 1, c + 1]);
       }
     }
+    return hints;
+  }
 
+  function findConflicts(puzzle, snake, userMarked, cellState) {
+    const hints = [
+      ...findLineConflicts(puzzle, snake, cellState),
+      ...findDegreeConflicts(puzzle, snake),
+    ];
+    if (puzzle.noTouch !== false) {
+      hints.push(...findBlockConflicts(puzzle, snake));
+      hints.push(...findDiagConflicts(puzzle, snake, userMarked));
+    }
     return hints;
   }
 
@@ -320,102 +309,85 @@ const Hint = (() => {
   // count the open neighbours that COULD still legally become snake.
   // If exactly (max - degree) such candidates remain, every one of them
   // must be filled — the snake has no other way to satisfy the cell.
+  function checkCellForcedExtension(puzzle, snake, userMarked, cellState, r, c) {
+    const { size } = puzzle;
+    const ep = isEndpoint(puzzle, r, c);
+    const maxDeg = ep ? 1 : 2;
+    let deg = 0;
+    for (const [dr, dc] of Rules.ORTHO) {
+      const nr = r + dr, nc = c + dc;
+      if (Rules.inBounds(nr, nc, size) && snake.has(nr * size + nc)) deg++;
+    }
+    const need = maxDeg - deg;
+    if (need <= 0) return [];
+
+    const candidates = [];
+    for (const [dr, dc] of Rules.ORTHO) {
+      const nr = r + dr, nc = c + dc;
+      if (!Rules.inBounds(nr, nc, size) || cellState(nr, nc) !== 'open') continue;
+      if (whyCantBeFilled(puzzle, snake, userMarked, nr, nc)) continue;
+      candidates.push([nr, nc]);
+    }
+    if (candidates.length !== need) return [];
+    const which = ep ? endName(puzzle, r, c) : `the filled cell at row ${r + 1}, column ${c + 1}`;
+    const reason = `${ep ? 'The ' + which : which.charAt(0).toUpperCase() + which.slice(1)} needs ${PuzzleShell.plural(need, 'more snake connection')}, and only ${candidates.length} legal neighbour${candidates.length === 1 ? '' : 's'} remain${candidates.length === 1 ? 's' : ''} — so this cell must continue the snake.`;
+    return candidates.map(([nr, nc]) => ({ r: nr, c: nc, action: 'fill', reason }));
+  }
+
   function scanForcedExtension(puzzle, snake, userMarked, cellState) {
     const { size } = puzzle;
     const hints = [];
     for (let r = 0; r < size; r++) {
       for (let c = 0; c < size; c++) {
         if (!snake.has(r * size + c)) continue;
-        const ep = isEndpoint(puzzle, r, c);
-        const maxDeg = ep ? 1 : 2;
-
-        let deg = 0;
-        for (const [dr, dc] of Rules.ORTHO) {
-          const nr = r + dr, nc = c + dc;
-          if (!Rules.inBounds(nr, nc, size)) continue;
-          if (snake.has(nr * size + nc)) deg++;
-        }
-        const need = maxDeg - deg;
-        if (need <= 0) continue;
-
-        const candidates = [];
-        for (const [dr, dc] of Rules.ORTHO) {
-          const nr = r + dr, nc = c + dc;
-          if (!Rules.inBounds(nr, nc, size)) continue;
-          if (cellState(nr, nc) !== 'open') continue;
-          if (whyCantBeFilled(puzzle, snake, userMarked, nr, nc)) continue;
-          candidates.push([nr, nc]);
-        }
-        if (candidates.length !== need) continue;
-        const which = ep ? endName(puzzle, r, c) : `the filled cell at row ${r + 1}, column ${c + 1}`;
-        const reason = `${ep ? 'The ' + which : which.charAt(0).toUpperCase() + which.slice(1)} needs ${PuzzleShell.plural(need, 'more snake connection')}, and only ${candidates.length} legal neighbour${candidates.length === 1 ? '' : 's'} remain${candidates.length === 1 ? 's' : ''} — so this cell must continue the snake.`;
-        for (const [nr, nc] of candidates) {
-          hints.push({ r: nr, c: nc, action: 'fill', reason });
-        }
+        hints.push(...checkCellForcedExtension(puzzle, snake, userMarked, cellState, r, c));
       }
     }
     return hints;
   }
 
-  // Last-resort: when no structural rule fires on the current board,
-  // walk open cells in a deterministic order. For each, try the two
-  // hypotheses (fill / mark empty), propagate using the SAME structural
-  // rules to a fixpoint, and check whether the propagation hits a
-  // contradiction. If it does, the opposite action is forced — and we
-  // can hand the player the chain of intermediate deductions that led
-  // to the contradiction. That's the concrete explanation.
+  function testCellElimination(puzzle, snake, userMarked, r, c, k) {
+    // Hypothesis A: this cell is filled.
+    const snakeA = new Set(snake); snakeA.add(k);
+    const propA = propagateStructural(puzzle, snakeA, userMarked);
+    if (propA.conflict) {
+      return { r, c, action: 'mark', reason: describeTrace(puzzle, r, c, 'filled', propA, 'mark') };
+    }
+    // Hypothesis B: this cell is marked empty.
+    const markedB = new Set(userMarked); markedB.add(k);
+    const propB = propagateStructural(puzzle, snake, markedB);
+    if (propB.conflict) {
+      return { r, c, action: 'fill', reason: describeTrace(puzzle, r, c, 'empty', propB, 'fill') };
+    }
+    // Depth-2:
+    const deepFilled = depth2Contradiction(puzzle, propA);
+    if (deepFilled) {
+      return { r, c, action: 'mark', reason: describeDepth2(puzzle, r, c, 'filled', propA, deepFilled, 'mark') };
+    }
+    const deepEmpty = depth2Contradiction(puzzle, propB);
+    if (deepEmpty) {
+      return { r, c, action: 'fill', reason: describeDepth2(puzzle, r, c, 'empty', propB, deepEmpty, 'fill') };
+    }
+    // Final fallback (rarely hit).
+    const ifFilled = Solver.solve(puzzle, 1, { mustInclude: snakeA, mustExclude: userMarked });
+    const ifEmpty = Solver.solve(puzzle, 1, { mustInclude: snake, mustExclude: markedB });
+    if (ifFilled.length === 0 && ifEmpty.length > 0) {
+      return { r, c, action: 'mark', reason: describeBestEffort(puzzle, r, c, 'filled', propA, 'mark') };
+    }
+    if (ifEmpty.length === 0 && ifFilled.length > 0) {
+      return { r, c, action: 'fill', reason: describeBestEffort(puzzle, r, c, 'empty', propB, 'fill') };
+    }
+    return null;
+  }
+
   function findOneForcedByElimination(puzzle, snake, userMarked) {
     const { size } = puzzle;
     const order = sweepOrder(puzzle);
-
     for (const [r, c] of order) {
       const k = r * size + c;
-      if (isEndpoint(puzzle, r, c)) continue;
-      if (snake.has(k) || userMarked.has(k)) continue;
-
-      // Hypothesis A: this cell is filled.
-      const snakeA = new Set(snake); snakeA.add(k);
-      const propA = propagateStructural(puzzle, snakeA, userMarked);
-      if (propA.conflict) {
-        return { r, c, action: 'mark',
-          reason: describeTrace(puzzle, r, c, 'filled', propA, 'mark') };
-      }
-
-      // Hypothesis B: this cell is marked empty.
-      const markedB = new Set(userMarked); markedB.add(k);
-      const propB = propagateStructural(puzzle, snake, markedB);
-      if (propB.conflict) {
-        return { r, c, action: 'fill',
-          reason: describeTrace(puzzle, r, c, 'empty', propB, 'fill') };
-      }
-
-      // Depth-2: each hypothesis is rule-consistent on its own, but
-      // maybe one of them collapses when we tentatively try the two
-      // possible values of an *adjacent* still-undecided cell.
-      const deepFilled = depth2Contradiction(puzzle, propA);
-      if (deepFilled) {
-        return { r, c, action: 'mark',
-          reason: describeDepth2(puzzle, r, c, 'filled', propA, deepFilled, 'mark') };
-      }
-      const deepEmpty = depth2Contradiction(puzzle, propB);
-      if (deepEmpty) {
-        return { r, c, action: 'fill',
-          reason: describeDepth2(puzzle, r, c, 'empty', propB, deepEmpty, 'fill') };
-      }
-
-      // Final fallback (rarely hit). Use the solver to confirm the cell
-      // is forced; if so, give the best concrete explanation we have:
-      // the propagation chain we managed to derive so far.
-      const ifFilled = Solver.solve(puzzle, 1, { mustInclude: snakeA, mustExclude: userMarked });
-      const ifEmpty = Solver.solve(puzzle, 1, { mustInclude: snake, mustExclude: markedB });
-      if (ifFilled.length === 0 && ifEmpty.length > 0) {
-        return { r, c, action: 'mark',
-          reason: describeBestEffort(puzzle, r, c, 'filled', propA, 'mark') };
-      }
-      if (ifEmpty.length === 0 && ifFilled.length > 0) {
-        return { r, c, action: 'fill',
-          reason: describeBestEffort(puzzle, r, c, 'empty', propB, 'fill') };
-      }
+      if (isEndpoint(puzzle, r, c) || snake.has(k) || userMarked.has(k)) continue;
+      const res = testCellElimination(puzzle, snake, userMarked, r, c, k);
+      if (res) return res;
     }
     return null;
   }
@@ -440,82 +412,81 @@ const Hint = (() => {
     return null;
   }
 
-  // Pick the open cells most likely to crack the puzzle when branched.
-  // Heuristic: adjacent to a snake cell with degree < max (so each
-  // value materially changes the situation), capped to keep this fast.
-  function pickDepth2BranchCells(puzzle, prop) {
-    const { size, rowClues, colClues } = puzzle;
-    const seen = new Set();
-    const out = [];
-
-    // Tier 1: open cells orthogonally adjacent to a snake cell — these
-    // directly extend or block the snake's path.
+  function collectAdjacentBranchCells(puzzle, prop, seen, out) {
+    const { size } = puzzle;
     for (let r = 0; r < size; r++) {
       for (let c = 0; c < size; c++) {
-        const k = r * size + c;
-        if (!prop.snake.has(k)) continue;
+        if (!prop.snake.has(r * size + c)) continue;
         for (const [dr, dc] of Rules.ORTHO) {
           const nr = r + dr, nc = c + dc;
           if (!Rules.inBounds(nr, nc, size)) continue;
           const nk = nr * size + nc;
-          if (prop.snake.has(nk) || prop.marked.has(nk)) continue;
-          if (isEndpoint(puzzle, nr, nc)) continue;
-          if (seen.has(nk)) continue;
+          if (prop.snake.has(nk) || prop.marked.has(nk) || isEndpoint(puzzle, nr, nc) || seen.has(nk)) continue;
           seen.add(nk);
           out.push([nr, nc]);
         }
       }
     }
+  }
 
-    // Tier 2: open cells in tight rows or columns (clue ≤ 2 or where
-    // only a few cells remain undecided). Picking these tends to
-    // collapse the puzzle quickly when branched.
-    function lineHas(idx, isRow) {
+  function collectTightLineBranchCells(puzzle, prop, isRow, seen, out) {
+    const { size, rowClues, colClues } = puzzle;
+    const clues = isRow ? rowClues : colClues;
+    for (let idx = 0; idx < size; idx++) {
       let filled = 0, open = 0;
       for (let i = 0; i < size; i++) {
         const k = isRow ? idx * size + i : i * size + idx;
         if (prop.snake.has(k)) filled++;
         else if (!prop.marked.has(k)) open++;
       }
-      return { filled, open };
-    }
-    for (let r = 0; r < size; r++) {
-      const info = lineHas(r, true);
-      if (info.open === 0) continue;
-      const need = rowClues[r] - info.filled;
-      if (need > 0 && info.open - need <= 2) {
-        for (let c = 0; c < size; c++) {
-          const k = r * size + c;
-          if (prop.snake.has(k) || prop.marked.has(k)) continue;
-          if (isEndpoint(puzzle, r, c)) continue;
-          if (seen.has(k)) continue;
-          seen.add(k);
-          out.push([r, c]);
-        }
+      if (open === 0) continue;
+      const need = clues[idx] - filled;
+      if (need <= 0 || open - need > 2) continue;
+      for (let i = 0; i < size; i++) {
+        const r = isRow ? idx : i, c = isRow ? i : idx;
+        const k = r * size + c;
+        if (prop.snake.has(k) || prop.marked.has(k) || isEndpoint(puzzle, r, c) || seen.has(k)) continue;
+        seen.add(k);
+        out.push([r, c]);
       }
     }
-    for (let c = 0; c < size; c++) {
-      const info = lineHas(c, false);
-      if (info.open === 0) continue;
-      const need = colClues[c] - info.filled;
-      if (need > 0 && info.open - need <= 2) {
-        for (let r = 0; r < size; r++) {
-          const k = r * size + c;
-          if (prop.snake.has(k) || prop.marked.has(k)) continue;
-          if (isEndpoint(puzzle, r, c)) continue;
-          if (seen.has(k)) continue;
-          seen.add(k);
-          out.push([r, c]);
-        }
-      }
-    }
+  }
+
+  function pickDepth2BranchCells(puzzle, prop) {
+    const seen = new Set();
+    const out = [];
+    collectAdjacentBranchCells(puzzle, prop, seen, out);
+    collectTightLineBranchCells(puzzle, prop, true, seen, out);
+    collectTightLineBranchCells(puzzle, prop, false, seen, out);
     return out.slice(0, 32);
   }
 
-  // Apply every structural rule in a loop until either nothing new can
-  // be deduced or a conflict shows up. Returns the final state plus a
-  // trace of the (cell, action, short label) deductions that fired and
-  // the first conflict, if any.
+  function applyStructuralHint(h, size, snake, marked, trace) {
+    const k = h.r * size + h.c;
+    if (h.action === 'fill') {
+      if (marked.has(k)) {
+        return {
+          conflict: { reason: `the rules try to fill (row ${h.r + 1}, col ${h.c + 1}) but it's already marked empty` },
+        };
+      }
+      if (!snake.has(k)) {
+        snake.add(k);
+        trace.push({ r: h.r, c: h.c, action: 'fill', label: shortLabel(h) });
+      }
+    } else if (h.action === 'mark') {
+      if (snake.has(k)) {
+        return {
+          conflict: { reason: `the rules try to mark (row ${h.r + 1}, col ${h.c + 1}) empty but it's already filled` },
+        };
+      }
+      if (!marked.has(k)) {
+        marked.add(k);
+        trace.push({ r: h.r, c: h.c, action: 'mark', label: shortLabel(h) });
+      }
+    }
+    return null;
+  }
+
   function propagateStructural(puzzle, startSnake, startMarked) {
     const { size } = puzzle;
     const snake = new Set(startSnake);
@@ -532,9 +503,7 @@ const Hint = (() => {
       };
 
       const conflicts = findConflicts(puzzle, snake, marked, cellState);
-      if (conflicts.length > 0) {
-        return { snake, marked, trace, conflict: conflicts[0] };
-      }
+      if (conflicts.length > 0) return { snake, marked, trace, conflict: conflicts[0] };
 
       const newHints = [
         ...scanLines(puzzle, cellState),
@@ -543,28 +512,8 @@ const Hint = (() => {
       ];
 
       for (const h of newHints) {
-        const k = h.r * size + h.c;
-        if (h.action === 'fill') {
-          if (marked.has(k)) {
-            // Implicit contradiction: a rule wants to fill a cell the
-            // player has already marked empty.
-            return { snake, marked, trace, conflict: {
-              reason: `the rules try to fill (row ${h.r + 1}, col ${h.c + 1}) but it's already marked empty`,
-            }};
-          }
-          if (snake.has(k)) continue;
-          snake.add(k);
-          trace.push({ r: h.r, c: h.c, action: 'fill', label: shortLabel(h) });
-        } else if (h.action === 'mark') {
-          if (snake.has(k)) {
-            return { snake, marked, trace, conflict: {
-              reason: `the rules try to mark (row ${h.r + 1}, col ${h.c + 1}) empty but it's already filled`,
-            }};
-          }
-          if (marked.has(k)) continue;
-          marked.add(k);
-          trace.push({ r: h.r, c: h.c, action: 'mark', label: shortLabel(h) });
-        }
+        const err = applyStructuralHint(h, size, snake, marked, trace);
+        if (err) return { snake, marked, trace, ...err };
       }
       if (snake.size + marked.size === beforeSize) break;
     }

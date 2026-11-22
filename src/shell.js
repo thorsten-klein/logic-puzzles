@@ -1068,5 +1068,112 @@ const PuzzleShell = (() => {
     return Math.max(min, Math.min(max, Math.floor(avail / cols) - 2));
   }
 
-  return { start, prepare, plural, resultClass, shuffle, gridBoard, colName, cellName, fitCell, digitInput, regionBorders, growRegions, addGivens, dropGivens, TINTS, arrowIcon, figure, shapeFigures };
+  // Graph connectivity: test if all nodes in graph p are connected
+  function graphConnected(p, active) {
+    if (!p.isl || !p.isl.length) return true;
+    const seen = new Uint8Array(p.isl.length);
+    const stack = [0];
+    seen[0] = 1;
+    while (stack.length) {
+      const i = stack.pop();
+      for (const j of p.of[i]) {
+        if (!active[j]) continue;
+        const o = p.pairs[j].a === i ? p.pairs[j].b : p.pairs[j].a;
+        if (!seen[o]) { seen[o] = 1; stack.push(o); }
+      }
+    }
+    return seen.every(Boolean);
+  }
+
+  // Island degree propagation step (used by Hashiwokakero, Korekutokonekuto, Ichimaga)
+  function islandDegreeStep(p, lo, hi, log, formatReason) {
+    for (let i = 0; i < p.isl.length; i++) {
+      const n = p.isl[i].n, js = p.of[i];
+      const least = n < 0 ? 1 : n, most = n < 0 ? 99 : n;
+      const sumLo = js.reduce((a, j) => a + lo[j], 0), sumHi = js.reduce((a, j) => a + hi[j], 0);
+      if (sumLo > most || sumHi < least) return -1;
+      const changed = [];
+      for (const j of js) {
+        const minJ = Math.max(lo[j], least - (sumHi - hi[j]));
+        const maxJ = Math.min(hi[j], most - (sumLo - lo[j]));
+        if (minJ > maxJ) return -1;
+        if (minJ !== lo[j] || maxJ !== hi[j]) { lo[j] = minJ; hi[j] = maxJ; changed.push(j); }
+      }
+      if (changed.length) {
+        if (log && formatReason) {
+          log.push({ pairs: changed, island: i, reason: formatReason(n, sumLo, sumHi) });
+        }
+        return changed.length;
+      }
+    }
+    return 0;
+  }
+
+  // Backtracking solver for island graphs
+  function solveIslandGraph(p, settleFn, maxCapacity = 2, stopAt = 2, maxNodes = 20000) {
+    const solutions = [];
+    let nodes = 0;
+    (function rec(lo, hi) {
+      if (solutions.length >= stopAt || ++nodes > maxNodes) return;
+      if (!settleFn(p, lo, hi)) return;
+      const j = lo.findIndex((v, i) => v !== hi[i]);
+      if (j < 0) {
+        if (graphConnected(p, lo)) solutions.push(Int8Array.from(lo));
+        return;
+      }
+      for (let v = hi[j]; v >= lo[j]; v--) {
+        const l2 = Int8Array.from(lo), h2 = Int8Array.from(hi);
+        l2[j] = v; h2[j] = v;
+        rec(l2, h2);
+      }
+    })(new Int8Array(p.pairs.length), new Int8Array(p.pairs.length).fill(maxCapacity));
+    return { solutions, capped: nodes > maxNodes };
+  }
+
+  // Grow an island branch (used in Hashiwokakero, Korekutokonekuto)
+  function tryAddIslandBranch(R, C, isl, grid, bridges, maxCount) {
+    const from = isl[Math.floor(Math.random() * isl.length)];
+    const [dr, dc] = [[0, 1], [1, 0], [0, -1], [-1, 0]][Math.floor(Math.random() * 4)];
+    const len = 2 + Math.floor(Math.random() * 4);
+    const r = Math.floor(from.k / C), c = from.k % C;
+    const er = r + dr * len, ec = c + dc * len;
+    if (er < 0 || ec < 0 || er >= R || ec >= C) return;
+    const path = [];
+    for (let i = 1; i < len; i++) path.push((r + dr * i) * C + c + dc * i);
+    const end = er * C + ec;
+    if (path.some((k) => grid[k] !== -1) || grid[end] === -2) return;
+    if (grid[end] === -1) {
+      const nr = [[-1, 0], [1, 0], [0, -1], [0, 1]].some(([a, b]) => {
+        const x = er + a, y = ec + b;
+        return x >= 0 && y >= 0 && x < R && y < C && grid[x * C + y] >= 0 && x * C + y !== path.at(-1);
+      });
+      if (nr) return;
+      grid[end] = isl.length;
+      isl.push({ k: end, n: 0 });
+    } else if (Math.random() < 0.7) return;
+    const a = grid[from.k], b = grid[end];
+    if (bridges.some((x) => (x.a === a && x.b === b) || (x.a === b && x.b === a))) return;
+    const count = maxCount > 1 && Math.random() < 0.35 ? 2 : 1;
+    bridges.push({ a, b, count });
+    path.forEach((k) => { grid[k] = -2; });
+    isl[a].n += count;
+    isl[b].n += count;
+  }
+
+  function growIslandNetwork(R, C, maxCount = 2) {
+    const grid = new Int32Array(R * C).fill(-1);
+    const isl = [];
+    const bridges = [];
+    const startCell = Math.floor(Math.random() * R * C);
+    grid[startCell] = 0;
+    isl.push({ k: startCell, n: 0 });
+    const target = Math.round(R * C * 0.22);
+    for (let tries = 0; tries < 2000 && isl.length < target; tries++) {
+      tryAddIslandBranch(R, C, isl, grid, bridges, maxCount);
+    }
+    if (isl.length < Math.max(4, target * 0.7)) return null;
+    return { isl, grid, bridges };
+  }
+
+  return { start, prepare, plural, resultClass, shuffle, gridBoard, colName, cellName, fitCell, digitInput, regionBorders, growRegions, addGivens, dropGivens, TINTS, arrowIcon, figure, shapeFigures, graphConnected, islandDegreeStep, solveIslandGraph, growIslandNetwork };
 })();

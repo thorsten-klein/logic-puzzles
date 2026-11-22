@@ -9,6 +9,14 @@
   // --- puzzle model ---
   // p = { R, C, isl: [{ k, n }] }. Pairs are islands that see each
   // other along a row or column: { a, b, cells } (cells between them).
+  function findCircleOptions(a, b, C, line, at) {
+    const ra = Math.floor(a / C), ca = a % C, rb = Math.floor(b / C), cb = b % C;
+    const options = [];
+    if (ra === rb || ca === cb) options.push({ cells: line(a, b), corner: -1 });
+    else for (const corner of [ra * C + cb, rb * C + ca]) options.push({ cells: [...line(a, corner), corner, ...line(corner, b)], corner });
+    return options.filter((o) => !o.cells.some((k) => at.has(k)));
+  }
+
   function prepare(p) {
     const { C, isl } = p;
     const at = new Map(isl.map((x, i) => [x.k, i]));
@@ -19,39 +27,22 @@
       return out;
     };
     p.pairs = [];
-    for (let i = 0; i < isl.length; i++) for (let j = i + 1; j < isl.length; j++) {
-      const a = isl[i].k, b = isl[j].k;
-      const ra = Math.floor(a / C), ca = a % C, rb = Math.floor(b / C), cb = b % C;
-      const options = [];
-      if (ra === rb || ca === cb) options.push({ cells: line(a, b), corner: -1 });
-      else for (const corner of [ra * C + cb, rb * C + ca]) options.push({ cells: [...line(a, corner), corner, ...line(corner, b)], corner });
-      for (const o of options) if (!o.cells.some((k) => at.has(k))) p.pairs.push({ a: i, b: j, cells: o.cells, corner: o.corner });
+    for (let i = 0; i < isl.length; i++) {
+      for (let j = i + 1; j < isl.length; j++) {
+        for (const o of findCircleOptions(isl[i].k, isl[j].k, C, line, at)) {
+          p.pairs.push({ a: i, b: j, cells: o.cells, corner: o.corner });
+        }
+      }
     }
     p.of = isl.map(() => []);
     p.pairs.forEach((q, j) => { p.of[q.a].push(j); p.of[q.b].push(j); });
-    // Options that clash: they share a cell, or join the same two circles.
     p.cross = p.pairs.map(() => []);
     p.pairs.forEach((q, i) => p.pairs.forEach((o, j) => {
-      if (i >= j) return;
-      if ((q.a === o.a && q.b === o.b) || q.cells.some((k) => o.cells.includes(k))) { p.cross[i].push(j); p.cross[j].push(i); }
+      if (i < j && ((q.a === o.a && q.b === o.b) || q.cells.some((k) => o.cells.includes(k)))) {
+        p.cross[i].push(j); p.cross[j].push(i);
+      }
     }));
     return p;
-  }
-
-  // Domain per pair: lo[j]..hi[j] bridges (0..2).
-  function connected(p, hi) {
-    const seen = new Uint8Array(p.isl.length);
-    const stack = [0];
-    seen[0] = 1;
-    while (stack.length) {
-      const i = stack.pop();
-      for (const j of p.of[i]) {
-        if (!hi[j]) continue;
-        const o = p.pairs[j].a === i ? p.pairs[j].b : p.pairs[j].a;
-        if (!seen[o]) { seen[o] = 1; stack.push(o); }
-      }
-    }
-    return seen.every(Boolean);
   }
 
   function checkCrossingLines(p, lo, hi) {
@@ -90,24 +81,11 @@
   // One round of forced moves. Returns false on contradiction, else the
   // number of changes.
   function step(p, lo, hi) {
-    const N = p.isl.length;
-    for (let i = 0; i < N; i++) {
-      const n = p.isl[i].n, js = p.of[i];
-      const least = n < 0 ? 1 : n, most = n < 0 ? 99 : n;
-      const sumLo = js.reduce((a, j) => a + lo[j], 0), sumHi = js.reduce((a, j) => a + hi[j], 0);
-      if (sumLo > most || sumHi < least) return -1;
-      const changed = [];
-      for (const j of js) {
-        const minJ = Math.max(lo[j], least - (sumHi - hi[j]));
-        const maxJ = Math.min(hi[j], most - (sumLo - lo[j]));
-        if (minJ > maxJ) return -1;
-        if (minJ !== lo[j] || maxJ !== hi[j]) { lo[j] = minJ; hi[j] = maxJ; changed.push(j); }
-      }
-      if (changed.length) return changed.length;
-    }
+    const r = PuzzleShell.islandDegreeStep(p, lo, hi, null, null);
+    if (r !== 0) return r;
     const crossRes = checkCrossings(p, lo, hi);
     if (crossRes !== 0) return crossRes;
-    if (!connected(p, hi)) return -1;
+    if (!PuzzleShell.graphConnected(p, hi)) return -1;
     return 0;
   }
 
@@ -119,83 +97,73 @@
     }
   }
 
-  function solve(p, stopAt = 2, maxNodes = 20000) {
-    const solutions = [];
-    let nodes = 0;
-    (function rec(lo, hi) {
-      if (solutions.length >= stopAt || ++nodes > maxNodes) return;
-      if (!settle(p, lo, hi)) return;
-      const j = lo.findIndex((v, i) => v !== hi[i]);
-      if (j < 0) {
-        if (connected(p, lo)) solutions.push(Int8Array.from(lo));
-        return;
-      }
-      for (let v = hi[j]; v >= lo[j]; v--) {
-        const l2 = Int8Array.from(lo), h2 = Int8Array.from(hi);
-        l2[j] = v; h2[j] = v;
-        rec(l2, h2);
-      }
-    })(new Int8Array(p.pairs.length), new Int8Array(p.pairs.length).fill(1));
-    return { solutions, capped: nodes > maxNodes };
-  }
+  const solve = (p, stopAt = 2, maxNodes = 20000) => PuzzleShell.solveIslandGraph(p, settle, 1, stopAt, maxNodes);
 
   // --- generator ---
+  function tryAddCirclePath(R, C, isl, grid, joined, add) {
+    const from = isl[Math.floor(Math.random() * isl.length)];
+    const STEP = [[0, 1], [1, 0], [0, -1], [-1, 0]];
+    const d1 = Math.floor(Math.random() * 4), len1 = 1 + Math.floor(Math.random() * 4);
+    const turn = Math.random() < 0.5;
+    const d2 = (d1 + (Math.random() < 0.5 ? 1 : 3)) % 4, len2 = 1 + Math.floor(Math.random() * 3);
+    const cells = [];
+    let r = Math.floor(from.k / C), c = from.k % C, ok = true;
+    const walk = (d, len) => {
+      for (let i = 0; i < len; i++) {
+        r += STEP[d][0]; c += STEP[d][1];
+        if (r < 0 || c < 0 || r >= R || c >= C) { ok = false; return; }
+        cells.push(r * C + c);
+      }
+    };
+    walk(d1, len1);
+    if (ok && turn) walk(d2, len2);
+    if (!ok || cells.length < 2) return;
+    const end = cells.pop();
+    if (cells.some((k) => grid[k] !== -1) || grid[end] === -2) return;
+    if (grid[end] === -1) {
+      const touch = [[-1, 0], [1, 0], [0, -1], [0, 1]].some(([a, b]) => {
+        const x = Math.floor(end / C) + a, y = (end % C) + b;
+        return x >= 0 && y >= 0 && x < R && y < C && grid[x * C + y] >= 0;
+      });
+      if (touch) return;
+      add(end);
+    } else if (Math.random() < 0.7) return;
+    const a = grid[from.k], b = grid[end];
+    const key = Math.min(a, b) + ':' + Math.max(a, b);
+    if (a === b || joined.has(key)) return;
+    joined.add(key);
+    cells.forEach((k) => { grid[k] = -2; });
+    isl[a].n++;
+    isl[b].n++;
+  }
+
+  function thinIchimagaGivens(p, unique, deadline) {
+    for (const x of PuzzleShell.shuffle(p.isl.slice())) {
+      const keep = x.n;
+      x.n = -1;
+      if (!unique()) x.n = keep;
+      if (Date.now() > deadline + 3000) break;
+    }
+  }
+
   function generate(n) {
     const R = n, C = n;
     const deadline = Date.now() + 8000;
     while (Date.now() < deadline) {
-      const grid = new Int32Array(R * C).fill(-1); // circle index, -2 = line
+      const grid = new Int32Array(R * C).fill(-1);
       const isl = [];
       const add = (k) => { grid[k] = isl.length; isl.push({ k, n: 0 }); };
       add(Math.floor(Math.random() * R * C));
       const target = Math.round(R * C * 0.2);
       const joined = new Set();
       for (let tries = 0; tries < 3000 && isl.length < target; tries++) {
-        const from = isl[Math.floor(Math.random() * isl.length)];
-        const STEP = [[0, 1], [1, 0], [0, -1], [-1, 0]];
-        const d1 = Math.floor(Math.random() * 4), len1 = 1 + Math.floor(Math.random() * 4);
-        const turn = Math.random() < 0.5;
-        const d2 = (d1 + (Math.random() < 0.5 ? 1 : 3)) % 4, len2 = 1 + Math.floor(Math.random() * 3);
-        const cells = [];
-        let r = Math.floor(from.k / C), c = from.k % C, ok = true;
-        const walk = (d, len) => {
-          for (let i = 0; i < len; i++) {
-            r += STEP[d][0]; c += STEP[d][1];
-            if (r < 0 || c < 0 || r >= R || c >= C) { ok = false; return; }
-            cells.push(r * C + c);
-          }
-        };
-        walk(d1, len1);
-        if (ok && turn) walk(d2, len2);
-        if (!ok || cells.length < 2) continue;
-        const end = cells.pop();
-        if (cells.some((k) => grid[k] !== -1) || grid[end] === -2) continue;
-        if (grid[end] === -1) {
-          const touch = [[-1, 0], [1, 0], [0, -1], [0, 1]].some(([a, b]) => {
-            const x = Math.floor(end / C) + a, y = (end % C) + b;
-            return x >= 0 && y >= 0 && x < R && y < C && grid[x * C + y] >= 0;
-          });
-          if (touch) continue;
-          add(end);
-        } else if (Math.random() < 0.7) continue;
-        const a = grid[from.k], b = grid[end];
-        const key = Math.min(a, b) + ':' + Math.max(a, b);
-        if (a === b || joined.has(key)) continue;
-        joined.add(key);
-        cells.forEach((k) => { grid[k] = -2; });
-        isl[a].n++;
-        isl[b].n++;
+        tryAddCirclePath(R, C, isl, grid, joined, add);
       }
       if (isl.length < Math.max(4, target * 0.7)) continue;
       const p = prepare({ R, C, isl });
       const unique = () => { const r = solve(p, 2, 8000); return r.solutions.length === 1 && !r.capped; };
       if (!unique()) continue;
-      for (const x of PuzzleShell.shuffle(isl.slice())) {
-        const keep = x.n;
-        x.n = -1;
-        if (!unique()) x.n = keep;
-        if (Date.now() > deadline + 3000) break;
-      }
+      thinIchimagaGivens(p, unique, deadline);
       p.solution = solve(p, 1).solutions[0];
       p.edges = edgesOf(p, p.solution);
       return p;

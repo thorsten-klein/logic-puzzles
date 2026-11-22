@@ -486,6 +486,35 @@ const Binary = (() => {
     return borders;
   }
 
+  // Room clue constraints for Binary puzzles (Heyawake, Heyablock)
+  function roomClueConstraints(rooms, clues) {
+    const cons = [];
+    for (const [id, cells] of rooms) {
+      const v = clues[id];
+      if (v < 0) continue;
+      cons.push({
+        cells, min: v, max: v, area: cells,
+        why: (x) => {
+          if (x === YES) return `This room needs ${PuzzleShell.plural(v, 'shaded cell')}, and only these cells are left.`;
+          if (v === 0) return 'This room has a 0. All its cells stay white.';
+          return `This room already has its ${PuzzleShell.plural(v, 'shaded cell')}. The rest stay white.`;
+        },
+      });
+    }
+    return cons;
+  }
+
+  // Straight white segments spanning two room borders
+  function whiteBorderConstraints(R, C, room) {
+    const lines = [];
+    for (let r = 0; r < R; r++) lines.push(Array.from({ length: C }, (_, c) => r * C + c));
+    for (let c = 0; c < C; c++) lines.push(Array.from({ length: R }, (_, r) => r * C + c));
+    return whiteBorders(lines, room).map((cells) => ({
+      cells, min: 1, max: cells.length,
+      why: () => 'A straight white line may not cross two room borders. This cell must be shaded to break it.',
+    }));
+  }
+
   // Cells at the four corners of k.
   function cornerNeighbours(R, C, k) {
     const r = Math.floor(k / C), c = k % C, out = [];
@@ -928,6 +957,7 @@ const Binary = (() => {
     cornerNeighbours, whiteBorders, areas, cornerGroups, cornerBuilder,
     encodeRoomClues, decodeRoomClues, drawRoomClues,
     encodeDotClues, decodeDotClues, splitRooms,
+    roomClueConstraints, whiteBorderConstraints,
     startWallsGame, generateWalls, wallsModel, encodeWalls, decodeWalls, drawWalls
   };
 })();

@@ -199,11 +199,7 @@
     },
     newState: (p) => new Int8Array(p.R * p.C),
     saveState: (s) => Array.from(s).join(''),
-    loadState(p, v) {
-      const s = new Int8Array(p.R * p.C);
-      if (typeof v === 'string' && v.length === s.length) for (let k = 0; k < s.length; k++) s[k] = Number(v[k]) % 5;
-      return s;
-    },
+    loadState: (p, v) => (typeof v === 'string' && v.length === p.R * p.C ? Int8Array.from(v, (ch) => Number(ch) % 5) : new Int8Array(p.R * p.C)),
     render,
     check: (p, s) => s.every((v, k) => (p.given[k] || (v === 4 ? 0 : v)) === p.solution[k]),
     hints,

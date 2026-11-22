@@ -8,37 +8,19 @@
 
   function model(p) {
     const { R, C, room, clues } = p;
-    const cons = [];
     const rooms = new Map();
     for (let k = 0; k < R * C; k++) {
       if (!rooms.has(room[k])) rooms.set(room[k], []);
       rooms.get(room[k]).push(k);
     }
-    for (const [id, cells] of rooms) {
-      const v = clues[id];
-      if (v < 0) continue;
-      cons.push({ cells, min: v, max: v, area: cells,
-        why: (x) => {
-          if (x === YES) return `This room needs ${PuzzleShell.plural(v, 'shaded cell')}, and only these cells are left.`;
-          if (v === 0) return 'This room has a 0. All its cells stay white.';
-          return `This room already has its ${PuzzleShell.plural(v, 'shaded cell')}. The rest stay white.`;
-        } });
-    }
+    const cons = Binary.roomClueConstraints(rooms, clues);
     for (let k = 0; k < R * C; k++) {
       const r = Math.floor(k / C), c = k % C;
       const why = () => 'Shaded cells may not touch by a side.';
       if (c < C - 1) cons.push({ cells: [k, k + 1], min: 0, max: 1, why });
       if (r < R - 1) cons.push({ cells: [k, k + C], min: 0, max: 1, why });
     }
-    // A white line may not cross two borders: each stretch that runs
-    // through a whole room plus one cell on both sides needs a shade.
-    const lines = [];
-    for (let r = 0; r < R; r++) lines.push(Array.from({ length: C }, (_, c) => r * C + c));
-    for (let c = 0; c < C; c++) lines.push(Array.from({ length: R }, (_, r) => r * C + c));
-    for (const cells of Binary.whiteBorders(lines, room)) {
-      cons.push({ cells, min: 1, max: cells.length,
-        why: () => 'A straight white line may not cross two room borders. This cell must be shaded to break it.' });
-    }
+    cons.push(...Binary.whiteBorderConstraints(R, C, room));
     return { N: R * C, cons, check: (s) => Binary.openConnected(R, C, s) };
   }
 
