@@ -522,5 +522,24 @@ const Loop = (() => {
     return order.slice(shift).concat(order.slice(0, shift));
   }
 
-  return { UNKNOWN, LINE, CROSS, grid, randomTour, legs, settle, firstChange, lookahead, solve, logicSolve, solvedBy, randomLoop, paths, complete, hints, render, startGame, tourOrder };
+  // For EntryExit and DoubleBack: enforce exact number of region border crossings.
+  function stepBorder(edges, limit, s, log, msgCross, msgLine) {
+    const lines = edges.filter((e) => s[e] === LINE).length;
+    const open = edges.filter((e) => s[e] === UNKNOWN);
+    if (lines > limit || lines + open.length < limit) return -1;
+    if (!open.length) return 0;
+    if (lines === limit) {
+      for (const e of open) s[e] = CROSS;
+      if (log) log.push({ edges: open, v: CROSS, reason: msgCross });
+      return open.length;
+    }
+    if (lines + open.length === limit) {
+      for (const e of open) s[e] = LINE;
+      if (log) log.push({ edges: open, v: LINE, reason: msgLine });
+      return open.length;
+    }
+    return 0;
+  }
+
+  return { UNKNOWN, LINE, CROSS, grid, randomTour, legs, settle, firstChange, lookahead, solve, logicSolve, solvedBy, randomLoop, paths, complete, hints, render, startGame, tourOrder, stepBorder };
 })();

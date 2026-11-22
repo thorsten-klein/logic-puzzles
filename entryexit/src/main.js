@@ -5,24 +5,6 @@
 (() => {
   const { UNKNOWN, LINE, CROSS } = Loop;
 
-  function stepBorder(edges, s, log) {
-    const lines = edges.filter((e) => s[e] === LINE).length;
-    const open = edges.filter((e) => s[e] === UNKNOWN);
-    if (lines > 2 || lines + open.length < 2) return -1;
-    if (!open.length) return 0;
-    if (lines === 2) {
-      for (const e of open) s[e] = CROSS;
-      if (log) log.push({ edges: open, v: CROSS, reason: 'This region is already entered and left once. The loop crosses no more of its border.' });
-      return open.length;
-    }
-    if (lines + open.length === 2) {
-      for (const e of open) s[e] = LINE;
-      if (log) log.push({ edges: open, v: LINE, reason: 'The loop must enter and leave this region, and only these border crossings are left.' });
-      return open.length;
-    }
-    return 0;
-  }
-
   function model(p) {
     const g = Loop.grid(p.R, p.C);
     const must = new Uint8Array(p.R * p.C).fill(1);
@@ -37,7 +19,9 @@
     function rule(s, log) {
       for (const edges of border) {
         if (!edges) continue;
-        const res = stepBorder(edges, s, log);
+        const res = Loop.stepBorder(edges, 2, s, log,
+          'This region is already entered and left once. The loop crosses no more of its border.',
+          'The loop must enter and leave this region, and only these border crossings are left.');
         if (res !== 0) return res;
       }
       return 0;

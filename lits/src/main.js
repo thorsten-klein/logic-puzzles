@@ -150,20 +150,24 @@
     return false;
   }
 
+  function isRestConnected(rest, N, C) {
+    const set = new Set(rest), seen = new Set([rest[0]]), st = [rest[0]];
+    while (st.length) {
+      const k = st.pop();
+      for (const j of [k - C, k + C, k % C ? k - 1 : -1, (k + 1) % C ? k + 1 : -1]) {
+        if (set.has(j) && !seen.has(j)) { seen.add(j); st.push(j); }
+      }
+    }
+    return seen.size === rest.length;
+  }
+
   function tryMoveCell(cand, p, N, C) {
     for (const x of cand) {
       const g = p.room[x];
       const to = [x - C, x + C, x % C ? x - 1 : -1, (x + 1) % C ? x + 1 : -1].filter((j) => j >= 0 && j < N && p.room[j] !== g);
       if (!to.length) continue;
       const rest = [...new Array(N).keys()].filter((k) => p.room[k] === g && k !== x);
-      const set = new Set(rest), seen = new Set([rest[0]]), st = [rest[0]];
-      while (st.length) {
-        const k = st.pop();
-        for (const j of [k - C, k + C, k % C ? k - 1 : -1, (k + 1) % C ? k + 1 : -1]) {
-          if (set.has(j) && !seen.has(j)) { seen.add(j); st.push(j); }
-        }
-      }
-      if (seen.size !== rest.length) continue;
+      if (!isRestConnected(rest, N, C)) continue;
       p.room[x] = p.room[to[Math.floor(Math.random() * to.length)]];
       return true;
     }

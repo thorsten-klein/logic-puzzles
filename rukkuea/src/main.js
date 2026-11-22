@@ -40,14 +40,7 @@
   function model(p) {
     const { R, C, clues } = p;
     const N = R * C;
-    const nb = (k) => {
-      const r = Math.floor(k / C), c = k % C, out = [];
-      if (r > 0) out.push(k - C);
-      if (r < R - 1) out.push(k + C);
-      if (c > 0) out.push(k - 1);
-      if (c < C - 1) out.push(k + 1);
-      return out;
-    };
+    const nb = (k) => Binary.sideNeighbours(R, C, k);
     // True when no cell next to k is still open.
     const settled = (k, s) => nb(k).every((j) => s[j] !== UNKNOWN);
     const cons = [];

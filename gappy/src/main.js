@@ -22,6 +22,26 @@
     return fits;
   }
 
+  function stepLine(cells, gap, n, s, name, log) {
+    const fits = findGapFits(cells, gap, n, s);
+    if (!fits.length) return -1;
+    const yes = [], no = [];
+    cells.forEach((k, j) => {
+      if (s[k] !== UNKNOWN) return;
+      const inAll = fits.every(([a, b]) => j === a || j === b);
+      const inAny = fits.some(([a, b]) => j === a || j === b);
+      if (inAll) yes.push(k); else if (!inAny) no.push(k);
+    });
+    if (!yes.length && !no.length) return 0;
+    for (const k of yes) s[k] = YES;
+    for (const k of no) s[k] = NO;
+    if (log) {
+      if (yes.length) log.push({ cells: yes, v: YES, area: cells, reason: `The gap of ${gap} in ${name} only fits with these cells shaded.` });
+      if (no.length) log.push({ cells: no, v: NO, area: cells, reason: `The gap of ${gap} in ${name} can not use these cells.` });
+    }
+    return yes.length + no.length;
+  }
+
   function model(p) {
     const { n, clues } = p;
     const lines = lineCells(n);
@@ -34,26 +54,6 @@
     for (let r = 0; r < n - 1; r++) for (let c = 0; c < n - 1; c++) {
       const k = r * n + c;
       cons.push({ cells: [k, k + 1, k + n, k + n + 1], min: 0, max: 1, why: () => 'Shaded cells never touch, not even at a corner.' });
-    }
-
-    function stepLine(cells, gap, n, s, name, log) {
-      const fits = findGapFits(cells, gap, n, s);
-      if (!fits.length) return -1;
-      const yes = [], no = [];
-      cells.forEach((k, j) => {
-        if (s[k] !== UNKNOWN) return;
-        const inAll = fits.every(([a, b]) => j === a || j === b);
-        const inAny = fits.some(([a, b]) => j === a || j === b);
-        if (inAll) yes.push(k); else if (!inAny) no.push(k);
-      });
-      if (!yes.length && !no.length) return 0;
-      for (const k of yes) s[k] = YES;
-      for (const k of no) s[k] = NO;
-      if (log) {
-        if (yes.length) log.push({ cells: yes, v: YES, area: cells, reason: `The gap of ${gap} in ${name} only fits with these cells shaded.` });
-        if (no.length) log.push({ cells: no, v: NO, area: cells, reason: `The gap of ${gap} in ${name} can not use these cells.` });
-      }
-      return yes.length + no.length;
     }
 
     // Gap clue: the shaded pair is (i, i + gap + 1) for some i.

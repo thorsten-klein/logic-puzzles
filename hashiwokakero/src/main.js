@@ -46,9 +46,9 @@
   }
 
   function checkCrossingBridges(p, lo, hi, log) {
-    for (let j = 0; j < p.pairs.length; j++) {
+    for (const [j, crossings] of p.cross.entries()) {
       if (!lo[j]) continue;
-      for (const o of p.cross[j]) {
+      for (const o of crossings) {
         if (lo[o]) return -1;
         if (hi[o]) {
           hi[o] = 0;
@@ -62,9 +62,8 @@
 
   function checkClosedPairs(p, lo, hi, log) {
     if (p.isl.length <= 2) return 0;
-    for (let j = 0; j < p.pairs.length; j++) {
-      const { a, b } = p.pairs[j];
-      const na = p.isl[a].n, nb = p.isl[b].n;
+    for (const [j, pair] of p.pairs.entries()) {
+      const na = p.isl[pair.a].n, nb = p.isl[pair.b].n;
       if (na === nb && na <= 2 && hi[j] >= na) {
         hi[j] = na - 1;
         if (lo[j] > hi[j]) return -1;

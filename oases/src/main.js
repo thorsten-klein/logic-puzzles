@@ -24,11 +24,9 @@
       for (const j of nb(x)) {
         if (seen.has(j)) continue;
         seen.add(j);
-        if (nums[j] >= 0) {
-          if (x === k || s[x] === NO) lowSet.add(j);
-          continue;
-        }
-        if (s[j] === NO) stack.push(j);
+        const isCircle = nums[j] >= 0;
+        if (isCircle && (x === k || s[x] === NO)) lowSet.add(j);
+        else if (!isCircle && s[j] === NO) stack.push(j);
       }
     }
     return lowSet.size;

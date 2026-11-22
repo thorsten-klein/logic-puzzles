@@ -7,7 +7,9 @@
   const { UNKNOWN, YES, NO } = Binary;
   const DIRS = [[0, -1, YES], [0, 1, YES], [-1, 0, NO], [1, 0, NO]];
 
-  function checkArmDir(d, dirs, v, can, got, max, min, k, s, log) {
+  function checkArmDir(d, arm, state) {
+    const { dirs, v, can, got, max, min } = arm;
+    const { k, s, log } = state;
     const [cells, want] = dirs[d];
     const need = v - (max - can[d]);
     const forced = cells.slice(0, Math.max(0, need)).filter((j) => s[j] === UNKNOWN);
@@ -31,8 +33,10 @@
     const can = dirs.map(([cells, want]) => { let i = 0; while (i < cells.length && s[cells[i]] !== (want === YES ? NO : YES)) { i++; } return i; });
     const min = got.reduce((a, b) => a + b, 0), max = can.reduce((a, b) => a + b, 0);
     if (min > v || max < v) return -1;
+    const arm = { dirs, v, can, got, max, min };
+    const state = { k, s, log };
     for (let d = 0; d < 4; d++) {
-      const res = checkArmDir(d, dirs, v, can, got, max, min, k, s, log);
+      const res = checkArmDir(d, arm, state);
       if (res !== 0) return res;
     }
     return 0;
