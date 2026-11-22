@@ -21,16 +21,16 @@
       if (s[k] !== YES || seen[k]) continue;
       const r = Math.floor(k / C), c = k % C;
       const horiz = c + 1 < C && s[k + 1] === YES;
-      const vert = r + 1 < R && s[k + C] === YES;
+      // Walk right (horiz) or down; ship cells are marked as seen.
+      const [dr, dc] = horiz ? [0, 1] : [1, 0];
       let len = 0;
-      while (horiz ? (c + len < C && s[k + len] === YES) : (r + len < R && s[k + len * C] === YES)) {
-        seen[horiz ? k + len : k + len * C] = 1;
+      while (!water(r + len * dr, c + len * dc) && s[k + len * (dr * C + dc)] === YES) {
+        seen[k + len * (dr * C + dc)] = 1;
         len++;
       }
-      let closed;
-      if (horiz) closed = water(r, c - 1) && water(r, c + len);
-      else if (vert) closed = water(r - 1, c) && water(r + len, c);
-      else closed = water(r, c - 1) && water(r, c + 1) && water(r - 1, c) && water(r + 1, c);
+      // Closed: water at both ends (and at the sides of a 1-cell ship).
+      let closed = water(r - dr, c - dc) && water(r + len * dr, c + len * dc);
+      if (len === 1) closed = closed && water(r, c - 1) && water(r, c + 1);
       out.push({ len, closed });
     }
     return out;

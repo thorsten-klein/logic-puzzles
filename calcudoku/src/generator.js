@@ -5,28 +5,28 @@
 const Generator = (() => {
   const shuffle = PuzzleShell.shuffle;
 
+  // Cells next to k that are in no cage yet.
+  function freeSides(n, cage, k) {
+    const kr = Math.floor(k / n), kc = k % n, out = [];
+    for (const [dr, dc] of [[-1, 0], [1, 0], [0, -1], [0, 1]]) {
+      const nr = kr + dr, nc = kc + dc;
+      if (nr >= 0 && nc >= 0 && nr < n && nc < n && cage[nr * n + nc] < 0) out.push(nr * n + nc);
+    }
+    return out;
+  }
+
   function makeCages(n) {
     const cage = new Int32Array(n * n).fill(-1);
     let id = 0;
     for (const start of shuffle([...new Array(n * n).keys()])) {
       if (cage[start] >= 0) continue;
+      // Size 1 to 4; 2 and 3 are the most common.
       const r = Math.random();
-      let size;
-      if (r < 0.08) size = 1;
-      else if (r < 0.5) size = 2;
-      else if (r < 0.85) size = 3;
-      else size = 4;
+      const size = 1 + [0.08, 0.5, 0.85].filter((x) => r >= x).length;
       const cells = [start];
       cage[start] = id;
       while (cells.length < size) {
-        const opts = [];
-        for (const k of cells) {
-          const kr = Math.floor(k / n), kc = k % n;
-          for (const [dr, dc] of [[-1, 0], [1, 0], [0, -1], [0, 1]]) {
-            const nr = kr + dr, nc = kc + dc;
-            if (nr >= 0 && nc >= 0 && nr < n && nc < n && cage[nr * n + nc] < 0) opts.push(nr * n + nc);
-          }
-        }
+        const opts = cells.flatMap((k) => freeSides(n, cage, k));
         if (!opts.length) break;
         const k = opts[Math.floor(Math.random() * opts.length)];
         cage[k] = id;

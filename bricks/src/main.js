@@ -21,19 +21,24 @@
     };
   }
 
+  // Bricks: pairs of cells side by side in a row, one odd and one even
+  // number. Rows are staggered like a wall. mate[k] = the other cell.
+  function bricksOf(n, sol) {
+    const mate = new Int32Array(n * n).fill(-1);
+    for (let r = 0; r < n; r++) {
+      let c = r % 2 && Math.random() < 0.7 ? 1 : 0;
+      while (c < n - 1) {
+        const a = r * n + c, b = a + 1;
+        if ((sol[a] + sol[b]) % 2 === 1) { mate[a] = b; mate[b] = a; c += 2; } else c++;
+      }
+    }
+    return mate;
+  }
+
   function generate(n) {
     for (let t = 0; t < 30; t++) {
       const sol = Latin.randomSquare(n);
-      const mate = new Int32Array(n * n).fill(-1);
-      for (let r = 0; r < n; r++) {
-        // Stagger rows like a wall; pair cells with mixed parity.
-        let c = r % 2 && Math.random() < 0.7 ? 1 : 0;
-        while (c < n - 1) {
-          const a = r * n + c, b = a + 1;
-          if ((sol[a] + sol[b]) % 2 === 1) { mate[a] = b; mate[b] = a; c += 2; } else c++;
-        }
-      }
-      const p = { n, mate, solution: sol };
+      const p = { n, mate: bricksOf(n, sol), solution: sol };
       const given = Latin.makeGivens(n, sol, prune(p));
       if (!given) continue;
       p.given = given;

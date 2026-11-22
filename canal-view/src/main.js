@@ -28,6 +28,23 @@
       const k = r * C + c;
       cons.push({ cells: [k, k + 1, k + C, k + C + 1], min: 0, max: 3, why: () => 'A 2×2 block may not be fully shaded.' });
     }
+    // One direction of clue k (value v): the first `need` cells must be
+    // shaded; with `most` shaded cells seen, the next one is white.
+    function rayStep(s, log, k, cells, need, black, most) {
+      const v = clues[k];
+      const forced = cells.slice(0, Math.max(0, need)).filter((j) => s[j] === UNKNOWN);
+      if (forced.length) {
+        for (const j of forced) s[j] = YES;
+        if (log) log.push({ cells: forced, v: YES, at: k, reason: `This ${v} can not see enough shaded cells in the other directions. These cells must be shaded.` });
+        return forced.length;
+      }
+      const next = cells[black];
+      if (black !== most || next === undefined || s[next] !== UNKNOWN) return 0;
+      s[next] = NO;
+      if (log) log.push({ cells: [next], v: NO, at: k, reason: `This ${v} already sees enough shaded cells this way. The next cell must be white.` });
+      return 1;
+    }
+
     function propagate(s, log) {
       for (const [k, dirs] of rays) {
         const v = clues[k];
@@ -36,21 +53,8 @@
         const min = black.reduce((a, b) => a + b, 0), max = open.reduce((a, b) => a + b, 0);
         if (min > v || max < v) return false;
         for (let d = 0; d < 4; d++) {
-          const cells = dirs[d];
-          const need = v - (max - open[d]);
-          const forced = cells.slice(0, Math.max(0, need)).filter((j) => s[j] === UNKNOWN);
-          if (forced.length) {
-            for (const j of forced) s[j] = YES;
-            if (log) log.push({ cells: forced, v: YES, at: k, reason: `This ${v} can not see enough shaded cells in the other directions. These cells must be shaded.` });
-            return forced.length;
-          }
-          const most = v - (min - black[d]);
-          const next = cells[black[d]];
-          if (black[d] === most && next !== undefined && s[next] === UNKNOWN) {
-            s[next] = NO;
-            if (log) log.push({ cells: [next], v: NO, at: k, reason: `This ${v} already sees enough shaded cells this way. The next cell must be white.` });
-            return 1;
-          }
+          const r = rayStep(s, log, k, dirs[d], v - (max - open[d]), black[d], v - (min - black[d]));
+          if (r) return r;
         }
       }
       return 0;
@@ -64,11 +68,11 @@
       const p = { R, C, clues: new Int8Array(R * C).fill(-1) };
       const sol = Binary.randomFill(model(p), 0.55, 5);
       if (!sol) continue;
+      // Shaded cells seen from k in a row, per direction.
+      const run = (cells) => { const i = cells.findIndex((j) => sol[j] !== YES); return i < 0 ? cells.length : i; };
       for (let k = 0; k < R * C; k++) {
         if (sol[k] === YES || Math.random() < 0.3) continue;
-        let v = 0;
-        for (const d of DIRS) for (const j of ray(R, C, k, d)) { if (sol[j] !== YES) { break; } v++; }
-        p.clues[k] = v;
+        p.clues[k] = DIRS.reduce((t, d) => t + run(ray(R, C, k, d)), 0);
       }
       const s = Binary.logicSolve(model(p));
       if (!s || s.includes(UNKNOWN)) continue;

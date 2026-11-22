@@ -48,14 +48,13 @@
         if (nums.every((v, k) => got[k] === v)) out.push(Int8Array.from(pick));
         return;
       }
-      const seen = new Set();
-      S[i].opts.forEach((o) => o.cells.forEach((k) => seen.add(k)));
+      const seen = new Set(S[i].opts.flatMap((o) => o.cells));
+      // A cell count still fits: not too many, and enough can still come.
+      const fits = (k) => got[k] <= nums[k] && got[k] + maybe[k] >= nums[k];
       for (const k of seen) maybe[k]--;
       for (const o of S[i].opts) {
-        let ok = true;
         for (const k of o.cells) got[k]++;
-        for (const k of seen) if (got[k] > nums[k] || got[k] + maybe[k] < nums[k]) { ok = false; break; }
-        if (ok) { pick[i] = o.d; rec(i + 1); }
+        if ([...seen].every(fits)) { pick[i] = o.d; rec(i + 1); }
         for (const k of o.cells) got[k]--;
       }
       for (const k of seen) maybe[k]++;

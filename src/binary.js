@@ -532,11 +532,12 @@ const Binary = (() => {
   }
 
   // Generator helper: true if the model has exactly one answer. Logic
-  // first, then a short search (at most maxNodes) from where it stops.
+  // first (its answer must pass the full check), then a short search
+  // (at most maxNodes) from where it stops.
   function isUnique(model, maxNodes = 3000) {
     const t = logicSolve(model);
     if (!t) return false;
-    if (!t.includes(UNKNOWN)) return true;
+    if (!t.includes(UNKNOWN)) return model.check?.(t, true) !== false;
     const r = solve(model, 2, maxNodes, t);
     return r.solutions.length === 1 && !r.capped;
   }
