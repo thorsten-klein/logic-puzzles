@@ -14,19 +14,7 @@
   }
 
   function tryOnce(n) {
-    const R = n, C = n;
-    const room = splitRooms(R, C);
-    const count = Math.max(...room) + 1;
-    const p = { R, C, room, clues: new Int8Array(count).fill(-1) };
-    const sol = Binary.randomFill(model(p), 0.3, 5);
-    if (!sol) return null;
-    for (let k = 0; k < R * C; k++) if (p.clues[room[k]] < 0) p.clues[room[k]] = 0;
-    for (let k = 0; k < R * C; k++) if (sol[k] === YES) p.clues[room[k]]++;
-    const s = Binary.logicSolve(model(p));
-    if (!s || s.includes(0)) return null;
-    Binary.thinClues(p.clues, -1, () => model(p));
-    p.solution = sol;
-    return p;
+    return Binary.generateRoomClues(n, model, 0.3);
   }
 
   Binary.startGame({

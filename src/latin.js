@@ -420,17 +420,18 @@ const Latin = (() => {
     }
 
     function solve(p, start, stopAt = 2, maxNodes = 20000, random = false) {
-      const out = [];
+      const out = [], stack = [Int32Array.from(start)];
       let nodes = 0;
-      (function rec(cand) {
-        if (out.length >= stopAt || ++nodes > maxNodes) return;
-        if (!propagate(p, cand)) return;
+      while (stack.length && out.length < stopAt && ++nodes <= maxNodes) {
+        const cand = stack.pop();
+        if (!propagate(p, cand)) continue;
         const k = cand.findIndex((m, i) => !p.black[i] && !one(m));
-        if (k < 0) { out.push(Int8Array.from(cand, (m, i) => (p.black[i] ? 0 : low(m)))); return; }
+        if (k < 0) { out.push(Int8Array.from(cand, (m, i) => (p.black[i] ? 0 : low(m)))); continue; }
         const vals = [];
         for (let v = 1; v < 31; v++) if (cand[k] & (1 << v)) vals.push(v);
-        for (const v of random ? PuzzleShell.shuffle(vals) : vals) { const t = Int32Array.from(cand); t[k] = 1 << v; rec(t); }
-      })(Int32Array.from(start));
+        const order = random ? PuzzleShell.shuffle(vals) : vals.reverse();
+        for (const v of order) { const t = Int32Array.from(cand); t[k] = 1 << v; stack.push(t); }
+      }
       return { solutions: out, capped: nodes > maxNodes };
     }
 
@@ -470,35 +471,37 @@ const Latin = (() => {
 
     function hints(p, entries) {
       const val = Int8Array.from(entries, (v, k) => p.given[k] || v);
-      for (let k = 0; k < val.length; k++) if (entries[k] && !p.given[k] && entries[k] !== p.solution[k]) return [{ cells: [k], v: 0, reason: 'This number is wrong.' }];
+      const wrong = [...entries.keys()].find((k) => entries[k] && !p.given[k] && entries[k] !== p.solution[k]);
+      if (wrong !== undefined) return [{ cells: [wrong], v: 0, reason: 'This number is wrong.' }];
       const cand = startCand(p, val);
       propagate(p, cand);
-      for (let k = 0; k < val.length; k++) {
-        if (p.black[k] || val[k] || !one(cand[k])) continue;
-        return [{ cells: [k], v: low(cand[k]), reason: cfg.hintReason(low(cand[k])) }];
-      }
-      const k = [...val.keys()].find((i) => !p.black[i] && !val[i]);
-      return k === undefined ? [] : [{ cells: [k], v: p.solution[k], reason: `No simple step is left. This cell is ${p.solution[k]}.` }];
+      const forced = [...val.keys()].find((k) => !p.black[k] && !val[k] && one(cand[k]));
+      if (forced !== undefined) return [{ cells: [forced], v: low(cand[forced]), reason: cfg.hintReason(low(cand[forced])) }];
+      const empty = [...val.keys()].find((i) => !p.black[i] && !val[i]);
+      return empty === undefined ? [] : [{ cells: [empty], v: p.solution[empty], reason: `No simple step is left. This cell is ${p.solution[empty]}.` }];
     }
 
     function render(p, entries, opts = {}) {
       const { R, C, black, given, solution } = p;
       const { readonly, result, hint, onChange } = opts;
-      const hintCells = new Set(hint ? hint.cells : []);
+      const hintCells = new Set(hint?.cells ?? []);
+      const cellPx = PuzzleShell.fitCell(C, 46);
       return PuzzleShell.gridBoard({
-        rows: R, cols: C, cellPx: PuzzleShell.fitCell(C, 46), className: `pz-board ${cfg.boardClass}`, readonly,
+        rows: R, cols: C, cellPx, className: `pz-board ${cfg.boardClass}`, readonly,
         renderCell(k, el) {
-          if (black[k]) { el.classList.add('blk'); return; }
+          if (black[k]) return el.classList.add('blk');
           if (hintCells.has(k)) el.classList.add('hint');
           if (given[k]) { el.classList.add('given'); el.textContent = given[k]; return; }
           if (result) {
             el.textContent = solution[k];
             el.classList.add(PuzzleShell.resultClass(entries[k], solution[k]));
-          } else if (readonly) el.textContent = entries[k] || '';
-          else {
-            el.appendChild(PuzzleShell.digitInput({ r: Math.floor(k / C), c: k % C, value: entries[k], max: p.R,
-              onSet: (v) => { entries[k] = v; onChange(false); } }));
+            return;
           }
+          if (readonly) { el.textContent = entries[k] || ''; return; }
+          el.appendChild(PuzzleShell.digitInput({
+            r: Math.floor(k / C), c: k % C, value: entries[k], max: R,
+            onSet: (v) => { entries[k] = v; onChange(false); },
+          }));
         },
       });
     }
@@ -525,11 +528,7 @@ const Latin = (() => {
       },
       newState: (p) => new Int8Array(p.R * p.C),
       saveState: (s) => Array.from(s).join(''),
-      loadState(p, v) {
-        const s = new Int8Array(p.R * p.C);
-        if (typeof v === 'string' && v.length === s.length) for (let k = 0; k < s.length; k++) s[k] = Number(v[k]) || 0;
-        return s;
-      },
+      loadState: (p, v) => (typeof v === 'string' && v.length === p.R * p.C ? Int8Array.from(v, (x) => Number(x) || 0) : new Int8Array(p.R * p.C)),
       render,
       check: (p, s) => s.every((v, k) => p.black[k] || (p.given[k] || v) === p.solution[k]),
       hints,

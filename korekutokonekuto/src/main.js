@@ -29,29 +29,15 @@
     return res !== 0 ? res : checkClosedPairs(p, lo, hi, log);
   }
 
-  // One round of forced moves. Returns false on contradiction, else the
-  // number of changes. `log` gets { pairs, reason } for hints.
-  function step(p, lo, hi, log) {
-    const formatReason = (n, sumLo, sumHi) => {
-      const need = n < 0 ? 1 : n;
-      if (n < 0) return 'This circle needs at least one line, and only this one is left.';
-      if (sumHi === need) return `This ${need} needs every line it can still get.`;
-      if (sumLo === need) return `This ${need} already has all its lines.`;
-      return `This ${need} can only reach its number with these lines.`;
-    };
-    const r = PuzzleShell.islandDegreeStep(p, lo, hi, log, formatReason);
-    if (r !== 0) return r;
-    const crossRes = checkCrossings(p, lo, hi, log);
-    if (crossRes !== 0) return crossRes;
-    if (!PuzzleShell.graphConnected(p, hi)) return -1;
-    return 0;
-  }
-
-  function settle(p, lo, hi) {
-    let r = 1;
-    while (r > 0) r = step(p, lo, hi);
-    return r === 0;
-  }
+  const formatIslandReason = (n, sumLo, sumHi) => {
+    const need = n < 0 ? 1 : n;
+    if (n < 0) return 'This circle needs at least one line, and only this one is left.';
+    if (sumHi === need) return `This ${need} needs every line it can still get.`;
+    if (sumLo === need) return `This ${need} already has all its lines.`;
+    return `This ${need} can only reach its number with these lines.`;
+  };
+  const step = (p, lo, hi, log) => PuzzleShell.runIslandStep(p, lo, hi, log, formatIslandReason, checkCrossings);
+  const settle = (p, lo, hi) => PuzzleShell.settleIslandGraph(p, lo, hi, step);
 
   const solve = (p, stopAt = 2, maxNodes = 20000) => PuzzleShell.solveIslandGraph(p, settle, 1, stopAt, maxNodes);
 

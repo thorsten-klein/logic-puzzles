@@ -7,7 +7,7 @@
   function model(p) {
     const g = Loop.grid(p.R, p.C);
     const must = new Uint8Array(p.R * p.C).fill(1);
-    const border = Loop.regionBorders(g, p.region);
+    const border = PuzzleShell.graphRegionBorders(g, p.region);
     function rule(s, log) {
       for (const edges of border) {
         if (!edges) continue;
@@ -74,9 +74,9 @@
     size: { min: 2, max: 3, def: 3, text: (h) => `${2 * h}×${2 * h}` },
     solvedText: 'Every region visited twice — nicely done.',
     generate,
-    encode: Loop.encodeRegions,
-    decode: Loop.decodeRegions,
+    encode: PuzzleShell.encodeRegions,
+    decode: PuzzleShell.decodeRegions,
     model,
-    drawCell: (p) => (svg, k, x, y, s) => Loop.drawRegionWalls(p, svg, k, x, y, s),
+    drawCell: (p) => (svg, k, x, y, s) => PuzzleShell.drawRegionWalls(p, svg, k, x, y, s),
   });
 })();

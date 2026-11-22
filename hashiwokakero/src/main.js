@@ -27,25 +27,13 @@
 
   // One round of forced moves. Returns false on contradiction, else the
   // number of changes. `log` gets { pairs, reason } for hints.
-  function step(p, lo, hi, log) {
-    const formatReason = (need, sumLo, sumHi) => {
-      if (sumHi === need) return `This ${need} needs every bridge it can still get.`;
-      if (sumLo === need) return `This ${need} already has all its bridges.`;
-      return `This ${need} can only reach its number if these bridges are built.`;
-    };
-    const r = PuzzleShell.islandDegreeStep(p, lo, hi, log, formatReason);
-    if (r !== 0) return r;
-    const crossRes = checkCrossings(p, lo, hi, log);
-    if (crossRes !== 0) return crossRes;
-    if (!PuzzleShell.graphConnected(p, hi)) return -1;
-    return 0;
-  }
-
-  function settle(p, lo, hi) {
-    let r = 1;
-    while (r > 0) r = step(p, lo, hi);
-    return r === 0;
-  }
+  const formatIslandReason = (need, sumLo, sumHi) => {
+    if (sumHi === need) return `This ${need} needs every bridge it can still get.`;
+    if (sumLo === need) return `This ${need} already has all its bridges.`;
+    return `This ${need} can only reach its number if these bridges are built.`;
+  };
+  const step = (p, lo, hi, log) => PuzzleShell.runIslandStep(p, lo, hi, log, formatIslandReason, checkCrossings);
+  const settle = (p, lo, hi) => PuzzleShell.settleIslandGraph(p, lo, hi, step);
 
   const solve = (p, stopAt = 2, maxNodes = 20000) => PuzzleShell.solveIslandGraph(p, settle, 2, stopAt, maxNodes);
 

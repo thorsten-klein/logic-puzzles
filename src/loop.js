@@ -541,43 +541,5 @@ const Loop = (() => {
     return 0;
   }
 
-  // Collect edges on each region's border
-  function regionBorders(g, region) {
-    const border = [];
-    for (let e = 0; e < g.E; e++) {
-      const [a, b] = g.ends[e];
-      if (region[a] === region[b]) continue;
-      border[region[a]] ??= []; border[region[a]].push(e);
-      border[region[b]] ??= []; border[region[b]].push(e);
-    }
-    return border;
-  }
-
-  // Draw region boundary walls on SVG
-  function drawRegionWalls(p, svg, k, x, y, s) {
-    const { R, C, region } = p;
-    const r = Math.floor(k / C), c = k % C;
-    const x0 = x - s / 2, y0 = y - s / 2;
-    const wall = (x1, y1, x2, y2) => {
-      const l = document.createElementNS('http://www.w3.org/2000/svg', 'line');
-      l.setAttribute('x1', x1); l.setAttribute('y1', y1); l.setAttribute('x2', x2); l.setAttribute('y2', y2);
-      l.setAttribute('class', 'lp-wall');
-      svg.appendChild(l);
-    };
-    if (c < C - 1 && region[k + 1] !== region[k]) wall(x0 + s, y0, x0 + s, y0 + s);
-    if (r < R - 1 && region[k + C] !== region[k]) wall(x0, y0 + s, x0 + s, y0 + s);
-  }
-
-  function encodeRegions(p) {
-    return { n: p.R, g: Array.from(p.region, (v) => v.toString(36).padStart(2, '0')).join('') };
-  }
-
-  function decodeRegions(d) {
-    const n = d?.n;
-    if (!Number.isInteger(n) || n < 2 || n > 16) throw new Error('Invalid board size');
-    if (typeof d.g !== 'string' || d.g.length !== 2 * n * n) throw new Error('Invalid regions');
-    return { R: n, C: n, region: Int32Array.from({ length: n * n }, (_, k) => Number.parseInt(d.g.slice(2 * k, 2 * k + 2), 36)) };
-  }
-
-  return { UNKNOWN, LINE, CROSS, grid, randomTour, legs, settle, firstChange, lookahead, solve, logicSolve, solvedBy, randomLoop, paths, complete, hints, render, startGame, tourOrder, stepBorder, regionBorders, drawRegionWalls, encodeRegions, decodeRegions };
+  return { UNKNOWN, LINE, CROSS, grid, randomTour, legs, settle, firstChange, lookahead, solve, logicSolve, solvedBy, randomLoop, paths, complete, hints, render, startGame, tourOrder, stepBorder };
 })();
