@@ -29,21 +29,26 @@ const RegionNum = (() => {
   function propagate(p, cand, rule) {
     for (let guard = 0; guard < 1000; guard++) {
       const before = cand.join(',');
-      for (const cells of p.groups) {
-        for (const k of cells) {
-          if (!cand[k]) return false;
-          if (bitCount(cand[k]) !== 1) continue;
-          for (const j of cells) if (j !== k) cand[j] &= ~cand[k];
-        }
-        for (let v = 1; v <= cells.length; v++) {
-          const where = cells.filter((k) => cand[k] & (1 << v));
-          if (!where.length) return false;
-          if (where.length === 1) cand[where[0]] = 1 << v;
-        }
-      }
+      if (!p.groups.every((cells) => groupStep(cells, cand))) return false;
       if (rule(p, cand) === false) return false;
       if (cand.some((m) => !m)) return false;
       if (cand.join(',') === before) return true;
+    }
+    return true;
+  }
+
+  // One region: a fixed number leaves the other cells; a number with one
+  // place left goes there. Returns false on contradiction.
+  function groupStep(cells, cand) {
+    for (const k of cells) {
+      if (!cand[k]) return false;
+      if (bitCount(cand[k]) !== 1) continue;
+      for (const j of cells) if (j !== k) cand[j] &= ~cand[k];
+    }
+    for (let v = 1; v <= cells.length; v++) {
+      const where = cells.filter((k) => cand[k] & (1 << v));
+      if (!where.length) return false;
+      if (where.length === 1) cand[where[0]] = 1 << v;
     }
     return true;
   }
@@ -81,18 +86,24 @@ const RegionNum = (() => {
     const val = new Int8Array(N);
     let steps = 0;
 
+    // Free cells below, left and right of the region (each may repeat).
+    function growOptions(cells) {
+      const opts = [];
+      for (const k of cells) {
+        const r = Math.floor(k / C), c = k % C;
+        if (r < R - 1 && region[k + C] < 0) opts.push(k + C);
+        if (c > 0 && region[k - 1] < 0) opts.push(k - 1);
+        if (c < C - 1 && region[k + 1] < 0) opts.push(k + 1);
+      }
+      return opts;
+    }
+
     function tryRegion(start, id) {
       const size = 1 + Math.floor(Math.random() * maxSize);
       const cells = [start];
       region[start] = id;
       while (cells.length < size) {
-        const opts = [];
-        for (const k of cells) {
-          const r = Math.floor(k / C), c = k % C;
-          if (r < R - 1 && region[k + C] < 0) opts.push(k + C);
-          if (c > 0 && region[k - 1] < 0) opts.push(k - 1);
-          if (c < C - 1 && region[k + 1] < 0) opts.push(k + 1);
-        }
+        const opts = growOptions(cells);
         if (!opts.length) break;
         const k = opts[Math.floor(Math.random() * opts.length)];
         region[k] = id;
