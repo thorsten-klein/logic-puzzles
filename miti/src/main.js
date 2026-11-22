@@ -39,7 +39,7 @@
         if (dot[k]) {
           // Three walls: the road crosses pieces - 3 borders here.
           const need = pieces - 3;
-          if (lines > need || lines + open.length < need) return false;
+          if (lines > need || lines + open.length < need) return -1;
           if (!open.length) continue;
           const v = lines === need ? CROSS : lines + open.length === need ? LINE : 0;
           if (!v) continue;
@@ -48,7 +48,7 @@
           changed++;
         } else {
           const need = pieces - 2;
-          if (lines + open.length < need) return false;
+          if (lines + open.length < need) return -1;
           if (open.length && lines + open.length === need) {
             for (const e of open) s[e] = LINE;
             if (log) { log.push({ edges: open, v: LINE, reason: 'At most two walls meet at a point without a dot, so the road must cross the open borders here.' }); return 1; }

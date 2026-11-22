@@ -52,12 +52,12 @@
     for (let i = 0; i < N; i++) {
       const need = p.isl[i].n, js = p.of[i];
       const sumLo = js.reduce((a, j) => a + lo[j], 0), sumHi = js.reduce((a, j) => a + hi[j], 0);
-      if (sumLo > need || sumHi < need) return false;
+      if (sumLo > need || sumHi < need) return -1;
       const changed = [];
       for (const j of js) {
         const minJ = Math.max(lo[j], need - (sumHi - hi[j]));
         const maxJ = Math.min(hi[j], need - (sumLo - lo[j]));
-        if (minJ > maxJ) return false;
+        if (minJ > maxJ) return -1;
         if (minJ !== lo[j] || maxJ !== hi[j]) { lo[j] = minJ; hi[j] = maxJ; changed.push(j); }
       }
       if (changed.length) {
@@ -71,7 +71,7 @@
     for (let j = 0; j < p.pairs.length; j++) {
       if (!lo[j]) continue;
       for (const o of p.cross[j]) {
-        if (lo[o]) return false;
+        if (lo[o]) return -1;
         if (hi[o]) {
           hi[o] = 0;
           if (log) log.push({ pairs: [o], reason: 'Bridges may not cross. A bridge already runs across here.' });
@@ -86,20 +86,20 @@
         const na = p.isl[a].n, nb = p.isl[b].n;
         if (na === nb && na <= 2 && hi[j] >= na) {
           hi[j] = na - 1;
-          if (lo[j] > hi[j]) return false;
+          if (lo[j] > hi[j]) return -1;
           if (log) log.push({ pairs: [j], reason: `Two ${na}s joined by ${na} bridge${na === 1 ? '' : 's'} would form a closed group. So they can not be joined that way.` });
           return 1;
         }
       }
     }
-    if (!connected(p, hi)) return false;
+    if (!connected(p, hi)) return -1;
     return 0;
   }
 
   function settle(p, lo, hi) {
     for (;;) {
       const r = step(p, lo, hi);
-      if (r === false) return false;
+      if (r < 0) return false;
       if (r === 0) return true;
     }
   }
@@ -237,7 +237,7 @@
     const lo = Int8Array.from(state), hi = new Int8Array(state.length).fill(2);
     const log = [];
     for (let i = 0; i < 50 && !log.some((x) => x.pairs.some((j) => lo[j] > state[j])); i++) {
-      if (!step(p, lo, hi, log)) break;
+      if (step(p, lo, hi, log) <= 0) break; // nothing more, or a contradiction
     }
     const firstUseful = log.find((x) => x.pairs.some((j) => lo[j] > state[j]));
     if (firstUseful) {

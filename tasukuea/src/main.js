@@ -33,7 +33,7 @@
         const cells = [r * C + c, r * C + c + 1, (r + 1) * C + c, (r + 1) * C + c + 1];
         const yes = cells.filter((k) => s[k] === YES).length, no = cells.filter((k) => s[k] === NO).length;
         const open = cells.filter((k) => s[k] === UNKNOWN);
-        if (yes === 3 && no === 1) return false;
+        if (yes === 3 && no === 1) return -1;
         if (open.length !== 1) continue;
         if (yes === 3) { s[open[0]] = YES; if (log) { log.push({ cells: open, v: YES, reason: 'Shaded areas are squares. Three shaded cells in a 2×2 block need the fourth.' }); } return 1; }
         if (yes === 2 && no === 1) { s[open[0]] = NO; if (log) { log.push({ cells: open, v: NO, reason: 'Shaded areas are squares. This cell would make an L shape.' }); } return 1; }

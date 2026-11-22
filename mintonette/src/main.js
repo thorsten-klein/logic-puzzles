@@ -30,10 +30,10 @@
         const v = p.circle[k] - 1;
         if (v < 0) continue;
         const w = walk(s, k);
-        if (w.turns > v) return false;
-        if (w.end !== k && label[w.end] >= 0 && w.turns !== v) return false;
+        if (w.turns > v) return -1;
+        if (w.end !== k && label[w.end] >= 0 && w.turns !== v) return -1;
         // The partner circle's number (if any) must match too.
-        if (w.end !== k && p.circle[w.end] > 0 && p.circle[w.end] !== p.circle[k]) return false;
+        if (w.end !== k && p.circle[w.end] > 0 && p.circle[w.end] !== p.circle[k]) return -1;
       }
       return 0;
     }

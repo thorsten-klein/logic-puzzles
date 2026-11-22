@@ -24,12 +24,12 @@
         while (st.length) {
           const x = st.pop();
           used++;
-          if (nums.has(num[x])) return false;
+          if (nums.has(num[x])) return -1;
           nums.add(num[x]);
           g.cellEdges[x].forEach((e, d) => { if (e >= 0 && s[e] === LINE && !seenCell[x + step[d]]) { seenCell[x + step[d]] = 1; st.push(x + step[d]); } });
         }
       }
-      if (used > top) return false;
+      if (used > top) return -1;
       // Walk from the start: numbers met must all differ.
       const seen = new Set([num[0]]);
       let x = 0, from = -1;
@@ -38,11 +38,11 @@
         if (d === undefined) break;
         x += step[d];
         from = d ^ 1;
-        if (seen.has(num[x])) return false;
+        if (seen.has(num[x])) return -1;
         seen.add(num[x]);
       }
-      if (seen.size > top) return false;
-      if (x === R * C - 1 && seen.size !== top) return false;
+      if (seen.size > top) return -1;
+      if (x === R * C - 1 && seen.size !== top) return -1;
       return 0;
     }
     return { g, label, fill: false, rule };

@@ -71,16 +71,19 @@ const Pieces = (() => {
 
   // One logic step (see Rects): a clue with one piece left, or a cell
   // only one clue can cover. Returns a move, null, or false.
+  // step() result for a contradiction (no option left).
+  const FAIL = { fail: true };
+
   function step(p, st) {
     for (let i = 0; i < st.opts.length; i++) {
-      if (!st.opts[i].length) return false;
+      if (!st.opts[i].length) return FAIL;
       if (!st.chosen[i] && st.opts[i].length === 1) return { i, cells: st.opts[i][0], why: 'one' };
     }
     const N = p.R * p.C;
     const who = Array.from({ length: N }, () => new Set());
     st.opts.forEach((list, i) => list.forEach((cells) => { for (const j of cells) who[j].add(i); }));
     for (let j = 0; j < N; j++) {
-      if (!who[j].size) { if (p.partial) { continue; } return false; }
+      if (!who[j].size) { if (p.partial) { continue; } return FAIL; }
       // In partial games a cell may stay empty, so no "only cover" step.
       if (who[j].size !== 1 || p.partial) continue;
       const i = [...who[j]][0];
@@ -98,7 +101,7 @@ const Pieces = (() => {
   function settle(p, st) {
     for (;;) {
       const m = step(p, st);
-      if (m === false) return false;
+      if (m === FAIL) return false;
       if (!m) return true;
       if (m.cells) choose(st, m.i, m.cells);
     }

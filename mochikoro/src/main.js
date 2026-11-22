@@ -33,7 +33,7 @@
         const cells = [r * C + c, r * C + c + 1, (r + 1) * C + c, (r + 1) * C + c + 1];
         const white = cells.filter((k) => s[k] === NO).length, black = cells.filter((k) => s[k] === YES).length;
         const open = cells.filter((k) => s[k] === UNKNOWN);
-        if (black === 4 || (white === 3 && black === 1)) return false;
+        if (black === 4 || (white === 3 && black === 1)) return -1;
         if (open.length !== 1) continue;
         let v = 0, why = '';
         if (white === 3) { v = NO; why = 'White areas are rectangles. Three white cells in a 2×2 block need the fourth.'; }

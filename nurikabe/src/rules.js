@@ -96,8 +96,8 @@ const Rules = (() => {
       const isl = islands(s);
       for (let i = 0; i < isl.list.length; i++) {
         const v = isl.num[i], cells = isl.list[i];
-        if (v < 0) return false;
-        if (v > 0 && cells.length > v) return false;
+        if (v < 0) return -1;
+        if (v > 0 && cells.length > v) return -1;
         if (v > 0 && cells.length === v) {
           const around = [...new Set(cells.flatMap((k) => nb[k]))].filter((j) => s[j] === UNKNOWN);
           if (around.length) {
@@ -112,7 +112,7 @@ const Rules = (() => {
         const v = isl.num[i], cells = isl.list[i];
         if (v > 0 && cells.length >= v) continue;
         const exits = [...new Set(cells.flatMap((k) => nb[k]))].filter((j) => s[j] === UNKNOWN);
-        if (exits.length === 0) return false;
+        if (exits.length === 0) return -1;
         if (exits.length === 1) {
           s[exits[0]] = NO;
           if (log) log.push({ cells: exits, v: NO, reason: v
@@ -126,7 +126,7 @@ const Rules = (() => {
       if (sea.list.length > 1) {
         for (const cells of sea.list) {
           const exits = [...new Set(cells.flatMap((k) => nb[k]))].filter((j) => s[j] === UNKNOWN);
-          if (exits.length === 0) return false;
+          if (exits.length === 0) return -1;
           if (exits.length === 1) {
             s[exits[0]] = YES;
             if (log) log.push({ cells: exits, v: YES, reason: 'This part of the sea must connect to the rest, and this is its only way out.' });
@@ -148,7 +148,7 @@ const Rules = (() => {
       const far = [];
       for (let k = 0; k < N; k++) if (s[k] === UNKNOWN && !reach[k]) far.push(k);
       // A white cell no numbered island can reach is broken.
-      for (let k = 0; k < N; k++) if (s[k] === NO && !reach[k]) return false;
+      for (let k = 0; k < N; k++) if (s[k] === NO && !reach[k]) return -1;
       if (far.length) {
         for (const j of far) s[j] = YES;
         if (log) log.push({ cells: far, v: YES, reason: 'No island can reach these cells. They must be sea.' });

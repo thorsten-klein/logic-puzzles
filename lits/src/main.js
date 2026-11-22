@@ -58,7 +58,7 @@
           const on = new Set(ks);
           return rooms[g].every((k) => (s[k] === YES ? on.has(k) : s[k] === NO ? !on.has(k) : true));
         });
-        if (!fit.length) return false;
+        if (!fit.length) return -1;
         for (const k of rooms[g]) {
           if (s[k] !== UNKNOWN) continue;
           const inAll = fit.every((ks) => ks.includes(k)), inNone = fit.every((ks) => !ks.includes(k));

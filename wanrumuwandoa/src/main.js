@@ -34,7 +34,7 @@
       // Once two rooms have a door, no second door may open between them.
       for (const pairs of walls.values()) {
         const doors = pairs.filter(([a, b]) => s[a] === NO && s[b] === NO);
-        if (doors.length > 1) return false;
+        if (doors.length > 1) return -1;
         if (doors.length !== 1) continue;
         for (const [a, b] of pairs) {
           if (pairs === doors || (s[a] === NO && s[b] === NO)) continue;

@@ -35,17 +35,17 @@
         const legs = dirs.map((d) => leg(s, k, d));
         for (const l of legs) {
           // Too long in any case (also a straight stretch would be longer).
-          if (l.len > v) return false;
+          if (l.len > v) return -1;
         }
         if (dirs.length === 2) {
           if (dirs[0] === OPP[dirs[1]]) {
             const sum = legs[0].len + legs[1].len;
-            if (sum > v || (legs[0].final && legs[1].final && sum !== v)) return false;
-          } else if (legs.some((l) => l.final && l.len !== v)) return false;
+            if (sum > v || (legs[0].final && legs[1].final && sum !== v)) return -1;
+          } else if (legs.some((l) => l.final && l.len !== v)) return -1;
         } else if (dirs.length === 1 && legs[0].final && legs[0].len !== v) {
           // A short leg that ends needs the loop to go straight through.
           const o = g.cellEdges[k][OPP[dirs[0]]];
-          if (o < 0 || s[o] === CROSS) return false;
+          if (o < 0 || s[o] === CROSS) return -1;
         }
       }
       return 0;

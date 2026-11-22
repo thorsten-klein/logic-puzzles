@@ -9,6 +9,8 @@
 
 const Loop = (() => {
   const UNKNOWN = 0, LINE = 1, CROSS = 2;
+  // A step result that means "contradiction": -1 (or false, the old form).
+  const failed = (r) => r === false || r < 0;
 
   // Precomputed grid data: edge ends and the edges of each cell
   // (as [up, down, left, right], -1 at the border).
@@ -39,8 +41,8 @@ const Loop = (() => {
       const es = g.cellEdges[k].filter((e) => e >= 0);
       const lines = es.filter((e) => s[e] === LINE).length;
       const open = es.filter((e) => s[e] === UNKNOWN);
-      if (lines > 2) return false;
-      if (lines + open.length < (must?.[k] ? 2 : lines ? 2 : 0)) return false;
+      if (lines > 2) return -1;
+      if (lines + open.length < (must?.[k] ? 2 : lines ? 2 : 0)) return -1;
       if (!open.length) continue;
       let v = 0, why = '';
       if (lines === 2) { v = CROSS; why = 'This cell already has two lines. No more lines can touch it.'; }
@@ -88,12 +90,12 @@ const Loop = (() => {
   // path is crossed, unless that would finish the whole puzzle.
   function loopStep(g, s, must, log) {
     const info = paths(g, s);
-    if (info.loops > 1) return false;
+    if (info.loops > 1) return -1;
     if (info.loops === 1) {
       // A closed loop must be everything.
-      if (info.open.length) return false;
+      if (info.open.length) return -1;
       if (must) for (let k = 0; k < must.length; k++) {
-        if (must[k] && g.cellEdges[k].every((e) => e < 0 || s[e] !== LINE)) return false;
+        if (must[k] && g.cellEdges[k].every((e) => e < 0 || s[e] !== LINE)) return -1;
       }
       return 0;
     }
@@ -116,15 +118,15 @@ const Loop = (() => {
   function settle(m, s, log) {
     for (let guard = 0; guard < 10000; guard++) {
       let r = cellStep(m.g, s, m.must, log);
-      if (r === false) return false;
+      if (failed(r)) return false;
       if (r) { if (log) { return true; } continue; }
       if (m.rule) {
         r = m.rule(s, log);
-        if (r === false) return false;
+        if (failed(r)) return false;
         if (r) { if (log) { return true; } continue; }
       }
       r = loopStep(m.g, s, m.must, log);
-      if (r === false) return false;
+      if (failed(r)) return false;
       if (r) { if (log) { return true; } continue; }
       return true;
     }

@@ -44,14 +44,14 @@
       const col = [];
       for (let r = 0; r < count; r++) {
         const cross = border[r].filter((e) => s[e] === LINE).length;
-        if (cross > 2) return false;
-        if (border[r].every((e) => s[e] !== UNKNOWN) && cross !== 2) return false;
+        if (cross > 2) return -1;
+        if (border[r].every((e) => s[e] !== UNKNOWN) && cross !== 2) return -1;
         col[r] = colour(s, r);
-        if (col[r] < 0) return false;
+        if (col[r] < 0) return -1;
         // Circles of the other colour stay off the loop.
-        if (col[r]) for (const k of cellsOf[r]) if (mark[k] && mark[k] !== col[r] && lines(s, k)) return false;
+        if (col[r]) for (const k of cellsOf[r]) if (mark[k] && mark[k] !== col[r] && lines(s, k)) return -1;
       }
-      for (const [e, a, b] of between) if (s[e] === LINE && col[a] && col[a] === col[b]) return false;
+      for (const [e, a, b] of between) if (s[e] === LINE && col[a] && col[a] === col[b]) return -1;
       return 0;
     }
     return { g, must: null, rule };

@@ -36,7 +36,7 @@
           if (t === 1) turns++;
           else if (t === -1) open++;
         }
-        if (turns > v || turns + open < v) return false;
+        if (turns > v || turns + open < v) return -1;
       }
       return 0;
     }

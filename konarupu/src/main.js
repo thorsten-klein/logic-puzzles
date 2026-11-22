@@ -29,7 +29,7 @@
         if (v < 0) continue;
         let turns = 0, open = 0;
         for (const d of corners(k)) { const t = turnOf(s, d); if (t === 1) turns++; else if (t < 0) open++; }
-        if (turns > v || turns + open < v) return false;
+        if (turns > v || turns + open < v) return -1;
       }
       return 0;
     }

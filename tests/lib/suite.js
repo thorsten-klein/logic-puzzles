@@ -1,5 +1,6 @@
-// The tests every puzzle gets. Each puzzle has its own spec file in
-// tests/<slug>/, which calls `puzzleTests(slug, extra)`.
+// The tests every puzzle gets. tests/games.spec.js calls
+// `puzzleTests(slug, extra)` for each playable puzzle; `extra` comes from
+// tests/<slug>/<slug>.checks.js when that file exists.
 //
 // Test names carry a tag: @logic (Node, no browser) or @ui (Chrome).
 //
@@ -16,9 +17,9 @@ const path = require('node:path');
 const { root, loadGame, sizesOf, checkBoard, OWN_PAGE, isEmpty, ser, clone } = require('./games');
 const { kindOf, CHECKS, SKIP, MARKS_STATE } = require('./kinds');
 const { workout } = require('./coverage');
+const { times } = require('./steps');
 
 const full = !!process.env.FULL;
-const only = (process.env.GAMES || '').split(',').filter(Boolean);
 const MAX_CHANGES = 400;
 
 // Change one cell of the solved state at a time, to another value the
@@ -42,49 +43,50 @@ function oneChangeBreaks(cfg, q, end) {
 }
 
 function logicTests(slug, cfg, extra) {
+  for (const n of sizesOf(cfg, full)) {
+    test(`size ${n} @logic`, () => times(full ? 3 : 1, () => checkOneBoard(slug, cfg, extra, n)));
+  }
+}
+
+// All logic checks for one new board of size n.
+async function checkOneBoard(slug, cfg, extra, n) {
   const kind = kindOf(slug);
   const skipKind = extra.skipKind || SKIP[kind]?.[slug];
-  for (const n of sizesOf(cfg, full)) {
-    test(`size ${n} @logic`, async () => {
-      for (let b = 0; b < (full ? 3 : 1); b++) {
-        const r = await test.step('board, unique answer, hints', () => checkBoard(cfg, n, expect));
-        for (const w of r.warnings) test.info().annotations.push({ type: 'warning', description: w });
-        test.info().annotations.push({ type: 'hints', description: `${r.steps} hints, ${r.reveals} reveals, made in ${r.ms} ms` });
-        expect(r.peeks, 'hints that use the hidden answer without saying so').toEqual([]);
+  const r = await test.step('board, unique answer, hints', () => checkBoard(cfg, n, expect));
+  for (const w of r.warnings) test.info().annotations.push({ type: 'warning', description: w });
+  test.info().annotations.push({ type: 'hints', description: `${r.steps} hints, ${r.reveals} reveals, made in ${r.ms} ms` });
+  expect(r.peeks, 'hints that use the hidden answer without saying so').toEqual([]);
 
-        await test.step('share code is stable', () => {
-          const code = ser(cfg.encode(r.q));
-          expect(ser(cfg.encode(cfg.decode(clone(cfg.encode(r.q))))), 'encode(decode(code))').toBe(code);
-        });
+  await test.step('share code is stable', () => {
+    const code = ser(cfg.encode(r.q));
+    expect(ser(cfg.encode(cfg.decode(clone(cfg.encode(r.q))))), 'encode(decode(code))').toBe(code);
+  });
 
-        if (CHECKS[kind] && !skipKind) {
-          await test.step(`answer fits the ${kind} rules`, () => {
-            expect(CHECKS[kind](r.q, cfg), `${kind} rules`).toEqual([]);
-          });
-        }
-
-        const { given, solution } = r.q;
-        if (!extra.givenNotAnswer && given && solution && given.length === solution.length && typeof given[0] === 'number') {
-          await test.step('given cells match the answer', () => {
-            const bad = [];
-            for (let k = 0; k < given.length; k++) if (given[k] > 0 && given[k] !== solution[k]) bad.push(`cell ${k}: given ${given[k]}, answer ${solution[k]}`);
-            expect(bad, 'givens that differ from the answer').toEqual([]);
-          });
-        }
-
-        if (extra.answer) {
-          await test.step('answer fits the puzzle rules', () => {
-            expect(extra.answer(r.q, cfg), `${slug} rules`).toEqual([]);
-          });
-        }
-
-        if (!MARKS_STATE.has(kind)) await test.step('one change breaks the answer', () => {
-          const bad = oneChangeBreaks(cfg, r.q, r.end);
-          if (bad) expect(bad, 'changes that still count as solved').toEqual([]);
-        });
-      }
+  if (CHECKS[kind] && !skipKind) {
+    await test.step(`answer fits the ${kind} rules`, () => {
+      expect(CHECKS[kind](r.q, cfg), `${kind} rules`).toEqual([]);
     });
   }
+
+  const { given, solution } = r.q;
+  if (!extra.givenNotAnswer && given && solution && given.length === solution.length && typeof given[0] === 'number') {
+    await test.step('given cells match the answer', () => {
+      const bad = [];
+      for (let k = 0; k < given.length; k++) if (given[k] > 0 && given[k] !== solution[k]) bad.push(`cell ${k}: given ${given[k]}, answer ${solution[k]}`);
+      expect(bad, 'givens that differ from the answer').toEqual([]);
+    });
+  }
+
+  if (extra.answer) {
+    await test.step('answer fits the puzzle rules', () => {
+      expect(extra.answer(r.q, cfg), `${slug} rules`).toEqual([]);
+    });
+  }
+
+  if (!MARKS_STATE.has(kind)) await test.step('one change breaks the answer', () => {
+    const bad = oneChangeBreaks(cfg, r.q, r.end);
+    if (bad) expect(bad, 'changes that still count as solved').toEqual([]);
+  });
 }
 
 const url = (slug) => 'file://' + path.join(root, slug, 'index.html');
@@ -134,13 +136,16 @@ function uiTests(slug) {
       await play(page);
       const applied = await page.evaluate(async () => {
         const $ = (s) => document.querySelector(s);
-        let n = 0;
-        for (; n < 1000; n++) {
+        // Open the hint, apply it, again: until no hint is left (n = hints applied).
+        const next = async (n) => {
+          if (n >= 1000) return n;
           $('#btn-topbar-hint').click();
           await new Promise((r) => setTimeout(r, 0));
-          if ($('#btn-hint-apply').hidden) break;
+          if ($('#btn-hint-apply').hidden) return n;
           $('#btn-hint-apply').click();
-        }
+          return next(n + 1);
+        };
+        const n = await next(0);
         $('#btn-hint-close').click();
         return n;
       });
@@ -236,21 +241,22 @@ function uiTests(slug) {
   });
 }
 
+// Group name of a puzzle's tests, like "lits (binary)".
+const title = (slug) => `${slug} (${kindOf(slug)})`;
+
+// Adds the tests of one puzzle (call it inside its test.describe).
 function puzzleTests(slug, extra = {}) {
-  if (only.length && !only.includes(slug)) return;
-  test.describe(`${slug} (${kindOf(slug)})`, () => {
-    const cfg = loadGame(slug);
-    if (cfg) logicTests(slug, cfg, extra); // own pages: browser tests only
-    uiTests(slug);
-    // Code coverage: only with COVERAGE=1 (npm run test:coverage).
-    if (process.env.COVERAGE) {
-      test('coverage workout @coverage', async ({ page }) => {
-        test.setTimeout(600000);
-        const errors = await workout(page, slug, extra.workout);
-        test.info().annotations.push({ type: 'page errors', description: String(errors.length) });
-      });
-    }
-  });
+  const cfg = loadGame(slug);
+  if (cfg) logicTests(slug, cfg, extra); // own pages: browser tests only
+  uiTests(slug);
+  // Code coverage: only with COVERAGE=1 (npm run test:coverage).
+  if (process.env.COVERAGE) {
+    test('coverage workout @coverage', async ({ page }) => {
+      test.setTimeout(600000);
+      const errors = await workout(page, slug, extra.workout);
+      test.info().annotations.push({ type: 'page errors', description: String(errors.length) });
+    });
+  }
 }
 
-module.exports = { puzzleTests, test, expect };
+module.exports = { puzzleTests, title, test, expect };

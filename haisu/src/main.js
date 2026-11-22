@@ -21,7 +21,7 @@
       let x = start, from = -1, prev = -1;
       for (let guard = 0; guard <= R * C; guard++) {
         if (room[x] !== prev) { visits[room[x]]++; prev = room[x]; }
-        if (entry[x] && entry[x] !== visits[room[x]]) return false;
+        if (entry[x] && entry[x] !== visits[room[x]]) return -1;
         const d = [0, 1, 2, 3].find((q) => q !== from && g.cellEdges[x][q] >= 0 && s[g.cellEdges[x][q]] === LINE);
         if (d === undefined) break;
         x += step[d];
@@ -30,8 +30,8 @@
       const finished = x === goal;
       for (let i = 0; i < count.length; i++) {
         if (count[i] < 0) continue;
-        if (visits[i] > count[i]) return false;
-        if (finished && visits[i] !== count[i]) return false;
+        if (visits[i] > count[i]) return -1;
+        if (finished && visits[i] !== count[i]) return -1;
       }
       return 0;
     }

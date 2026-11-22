@@ -36,12 +36,12 @@
           A collection of classic pen-and-paper logic puzzles, playable entirely offline.
           Every puzzle is generated with a unique solution. Pick a game to start.
         </p>
-        <input id="game-search" type="search" placeholder="Search puzzles…" autocomplete="off">
+        <input id="game-search" type="search" placeholder="Search puzzles…" aria-label="Search puzzles" autocomplete="off">
         <p class="coffee"><b>You like this work?</b>
           <a class="coffee-badge" href="https://buymeacoffee.com/thorsten.klein" target="_blank" rel="noopener">
             <img src="img/buy-me-a-coffee.svg" alt="Buy me a coffee" height="40"></a></p>
         <div class="hub-tools">
-          <div class="view-switch" role="group" aria-label="View">
+          <fieldset class="view-switch" aria-label="View">
             <button type="button" data-view="details" title="Details view with an example of each puzzle">
               <svg class="icon" viewBox="0 0 24 24" aria-hidden="true"><rect x="4" y="4" width="16" height="9"/><line x1="4" y1="17" x2="20" y2="17"/><line x1="4" y1="20" x2="14" y2="20"/></svg>
               Details</button>
@@ -51,7 +51,7 @@
             <button type="button" data-view="list" title="List view">
               <svg class="icon" viewBox="0 0 24 24" aria-hidden="true"><line x1="4" y1="6" x2="20" y2="6"/><line x1="4" y1="12" x2="20" y2="12"/><line x1="4" y1="18" x2="20" y2="18"/></svg>
               List</button>
-          </div>
+          </fieldset>
           <label class="sort-pick">Sort
             <select id="game-sort">
               <option value="name">Name (A–Z)</option>
@@ -61,7 +61,7 @@
             </select>
           </label>
         </div>
-        <div id="tag-filter" class="tag-filter" role="group" aria-label="Filter by tag"></div>
+        <fieldset id="tag-filter" class="tag-filter" aria-label="Filter by tag"></fieldset>
         <p id="hub-stats" class="hub-stats"></p>
         <p class="random-pick"><b>You can't decide?</b>
           <button id="random-btn" class="success icon-btn" type="button">
@@ -91,7 +91,7 @@
 
 <div id="modal-paste" class="modal" hidden><div class="modal-content">
   <h2>Play a shared puzzle</h2><p>Paste a game ID or a shared URL.</p>
-  <textarea id="paste-input" rows="3" placeholder="Paste here…"></textarea>
+  <textarea id="paste-input" rows="3" placeholder="Paste here…" aria-label="Game ID or shared URL"></textarea>
   <p id="paste-status" class="status"></p>
   <div class="actions"><button id="btn-paste-start" class="primary" type="button">Start</button>
     <button id="btn-paste-cancel" type="button">Cancel</button></div>

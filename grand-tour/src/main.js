@@ -10,7 +10,7 @@
     const must = new Uint8Array(p.R * p.C).fill(1);
     function rule(s, log) {
       for (const e of p.given) {
-        if (s[e] === CROSS) return false;
+        if (s[e] === CROSS) return -1;
         if (s[e] === UNKNOWN) {
           s[e] = LINE;
           if (log) log.push({ edges: [e], v: LINE, reason: 'This connection is given.' });

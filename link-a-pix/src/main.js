@@ -16,7 +16,7 @@
       for (let k = 0; k < R * C; k++) {
         if (num[k] !== 1) continue;
         const own = g.cellEdges[k].filter((e) => e >= 0 && s[e] !== CROSS);
-        if (own.some((e) => s[e] === LINE)) return false;
+        if (own.some((e) => s[e] === LINE)) return -1;
         if (own.length) {
           own.forEach((e) => { s[e] = CROSS; });
           if (log) log.push({ edges: own, v: CROSS, reason: 'A 1 is a path on its own; no line touches it.' });
@@ -35,8 +35,8 @@
           from = d ^ 1;
           len++;
         }
-        if (len > v) return false;
-        if (x !== k && num[x] > 1 && len !== v) return false;
+        if (len > v) return -1;
+        if (x !== k && num[x] > 1 && len !== v) return -1;
       }
       return 0;
     }

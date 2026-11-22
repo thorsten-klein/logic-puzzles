@@ -25,11 +25,11 @@
           x += step[d];
           from = d ^ 1;
           if (!num[x]) continue;
-          if (num[x] !== want) return false;
+          if (num[x] !== want) return -1;
           want++;
         }
         // A line that reached an end must have met every number.
-        if (x !== k && num[x] === top && want !== top + 1) return false;
+        if (x !== k && num[x] === top && want !== top + 1) return -1;
       }
       return 0;
     }

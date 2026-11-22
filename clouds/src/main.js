@@ -29,8 +29,8 @@
         const v = cells.map((k) => s[k]);
         const yes = v.filter((x) => x === YES).length, no = v.filter((x) => x === NO).length;
         if ((v[0] === YES && v[3] === YES && (v[1] === NO || v[2] === NO)) ||
-            (v[1] === YES && v[2] === YES && (v[0] === NO || v[3] === NO))) return false;
-        if (yes === 3 && no === 1) return false;
+            (v[1] === YES && v[2] === YES && (v[0] === NO || v[3] === NO))) return -1;
+        if (yes === 3 && no === 1) return -1;
         const open = cells.filter((k) => s[k] === UNKNOWN);
         if (yes === 3 && open.length === 1) {
           s[open[0]] = YES;
@@ -51,7 +51,7 @@
           const vals = pair.map(([a, b]) => at(s, a, b));
           if (vals.includes(YES)) continue;
           const open = pair.filter(([a, b], i) => vals[i] === UNKNOWN).map(([a, b]) => a * C + b);
-          if (!open.length) return false;
+          if (!open.length) return -1;
           if (open.length === 1) {
             s[open[0]] = YES;
             if (log) log.push({ cells: open, v: YES, reason: 'A cloud is at least two cells wide and high. This cloud can only grow here.' });

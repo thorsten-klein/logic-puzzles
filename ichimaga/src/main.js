@@ -62,12 +62,12 @@
       const n = p.isl[i].n, js = p.of[i];
       const least = n < 0 ? 1 : n, most = n < 0 ? 99 : n;
       const sumLo = js.reduce((a, j) => a + lo[j], 0), sumHi = js.reduce((a, j) => a + hi[j], 0);
-      if (sumLo > most || sumHi < least) return false;
+      if (sumLo > most || sumHi < least) return -1;
       const changed = [];
       for (const j of js) {
         const minJ = Math.max(lo[j], least - (sumHi - hi[j]));
         const maxJ = Math.min(hi[j], most - (sumLo - lo[j]));
-        if (minJ > maxJ) return false;
+        if (minJ > maxJ) return -1;
         if (minJ !== lo[j] || maxJ !== hi[j]) { lo[j] = minJ; hi[j] = maxJ; changed.push(j); }
       }
       if (changed.length) return changed.length;
@@ -75,7 +75,7 @@
     for (let j = 0; j < p.pairs.length; j++) {
       if (!lo[j]) continue;
       for (const o of p.cross[j]) {
-        if (lo[o]) return false;
+        if (lo[o]) return -1;
         if (hi[o]) {
           hi[o] = 0;
           return 1;
@@ -89,19 +89,19 @@
         const na = p.isl[a].n, nb = p.isl[b].n;
         if (na === 1 && nb === 1 && hi[j] >= 1) {
           hi[j] = 0;
-          if (lo[j] > hi[j]) return false;
+          if (lo[j] > hi[j]) return -1;
           return 1;
         }
       }
     }
-    if (!connected(p, hi)) return false;
+    if (!connected(p, hi)) return -1;
     return 0;
   }
 
   function settle(p, lo, hi) {
     for (;;) {
       const r = step(p, lo, hi);
-      if (r === false) return false;
+      if (r < 0) return false;
       if (r === 0) return true;
     }
   }

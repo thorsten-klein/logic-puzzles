@@ -26,7 +26,7 @@
         if (s[k] !== YES) continue;
         const n = nb(k);
         const yes = n.filter((j) => s[j] === YES), open = n.filter((j) => s[j] === UNKNOWN);
-        if (yes.length > 1 || (!yes.length && !open.length)) return false;
+        if (yes.length > 1 || (!yes.length && !open.length)) return -1;
         if (yes.length === 1 && open.length) {
           open.forEach((j) => { s[j] = NO; });
           if (log) log.push({ cells: open, v: NO, reason: 'This domino is complete. Dominoes never touch by a side.' });

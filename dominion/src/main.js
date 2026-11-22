@@ -25,14 +25,14 @@
       for (let k = 0; k < R * C; k++) {
         if (s[k] !== YES) continue;
         const shaded = nb[k].filter((j) => s[j] === YES), open = nb[k].filter((j) => s[j] === UNKNOWN);
-        if (shaded.length > 1) return false;
+        if (shaded.length > 1) return -1;
         if (shaded.length === 1 && open.length) {
           for (const j of open) s[j] = NO;
           if (log) log.push({ cells: open, v: NO, reason: 'This domino is complete. Cells next to it stay white.' });
           return open.length;
         }
         if (!shaded.length) {
-          if (!open.length) return false;
+          if (!open.length) return -1;
           if (open.length === 1) {
             s[open[0]] = YES;
             if (log) log.push({ cells: open, v: YES, reason: 'This shaded cell needs a partner, and only one neighbour is left.' });

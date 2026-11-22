@@ -2,5 +2,5 @@
 .hm2-board .cell { position: relative; font-weight: 700; }
 .hm2-board .cell.hm2-land { background: #37474f; color: #fff; }
 .hm2-board .hm2-start { position: absolute; top: 3px; left: 5px; font-size: calc(var(--cell) * 0.32); color: #263238; }
-.hm2-board .cell .hm2-start:not(.moved) { position: static; font-size: calc(var(--cell) * 0.45); background: #90a4ae; color: #fff; width: 100%; height: 100%; display: flex; align-items: center; justify-content: center; }
+.hm2-board .cell .hm2-start:not(.moved) { position: static; font-size: calc(var(--cell) * 0.45); background: #90a4ae; color: #263238; width: 100%; height: 100%; display: flex; align-items: center; justify-content: center; }
 .hm2-board .cell .pz-arrow { width: 40%; height: 40%; color: var(--accent); }

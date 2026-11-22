@@ -54,16 +54,19 @@ const Rects = (() => {
 
   // One logic step: a clue with one rectangle left, or a cell that only
   // one clue can cover. Returns a move, null, or false (broken).
+  // step() result for a contradiction (no option left).
+  const FAIL = { fail: true };
+
   function step(p, st) {
     for (let i = 0; i < st.opts.length; i++) {
-      if (!st.opts[i].length) return false;
+      if (!st.opts[i].length) return FAIL;
       if (!st.chosen[i] && st.opts[i].length === 1) return { i, rect: st.opts[i][0], why: 'one' };
     }
     const N = p.R * p.C;
     const who = Array.from({ length: N }, () => new Set());
     st.opts.forEach((list, i) => list.forEach((rect) => { for (const j of cellsOf(rect, p.C)) who[j].add(i); }));
     for (let j = 0; j < N; j++) {
-      if (!who[j].size) return false;
+      if (!who[j].size) return FAIL;
       if (who[j].size !== 1) continue;
       const i = [...who[j]][0];
       if (st.chosen[i]) continue;
@@ -80,7 +83,7 @@ const Rects = (() => {
   function settle(p, st) {
     for (;;) {
       const m = step(p, st);
-      if (m === false) return false;
+      if (m === FAIL) return false;
       if (!m) return true;
       if (m.rect) choose(st, m.i, m.rect);
     }

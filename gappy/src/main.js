@@ -37,7 +37,7 @@
           const b = a + gap + 1;
           if (cells.every((k, j) => (j === a || j === b ? s[k] !== NO : s[k] !== YES))) fits.push([a, b]);
         }
-        if (!fits.length) return false;
+        if (!fits.length) return -1;
         const yes = [], no = [];
         cells.forEach((k, j) => {
           if (s[k] !== UNKNOWN) return;

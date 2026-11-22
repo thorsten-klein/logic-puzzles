@@ -32,16 +32,16 @@
         if (!mark[k]) continue;
         const dirs = linesAt(s, k);
         // Straight through the circle.
-        if (dirs.length === 2 && (dirs[0] >> 1) !== (dirs[1] >> 1)) return false;
+        if (dirs.length === 2 && (dirs[0] >> 1) !== (dirs[1] >> 1)) return -1;
         if (dirs.length === 1) {
           const o = g.cellEdges[k][dirs[0] ^ 1];
-          if (o < 0 || s[o] === CROSS) return false;
+          if (o < 0 || s[o] === CROSS) return -1;
         }
         for (const d of dirs) {
           const w = walk(s, k, d);
           const need = w.end >= 0 ? (mark[w.end] === mark[k] ? 0 : 1) : 1;
-          if (w.turns > need) return false;
-          if (w.end >= 0 && w.turns !== need) return false;
+          if (w.turns > need) return -1;
+          if (w.end >= 0 && w.turns !== need) return -1;
         }
       }
       return 0;

@@ -62,7 +62,7 @@ const Rules = (() => {
         const open = dirs.map((cells) => { let i = 0; while (i < cells.length && s[cells[i]] !== YES) { i++; } return i; });
         const min = 1 + white.reduce((a, b) => a + b, 0);
         const max = 1 + open.reduce((a, b) => a + b, 0);
-        if (min > v || max < v) return false;
+        if (min > v || max < v) return -1;
         for (let d = 0; d < 4; d++) {
           const cells = dirs[d];
           // Must see at least `need` cells this way.
@@ -98,7 +98,7 @@ const Rules = (() => {
     const t = Uint8Array.from(s, (v, k) => (v === YES && !p.clues[k] ? YES : NO));
     const m = model(p);
     if (!m.cons.every((con) => con.cells.filter((j) => t[j] === YES).length <= con.max)) return false;
-    if (m.propagate(t) === false) return false;
+    if (m.propagate(t) < 0) return false;
     return openConnected(p.n, t);
   }
 

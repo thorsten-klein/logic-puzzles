@@ -29,7 +29,7 @@
       for (let k = 0; k < R * C; k++) {
         if (mark[k] !== 2) continue;
         const own = g.cellEdges[k].filter((e) => e >= 0 && s[e] !== CROSS);
-        if (own.some((e) => s[e] === LINE)) return false;
+        if (own.some((e) => s[e] === LINE)) return -1;
         if (own.length) {
           own.forEach((e) => { s[e] = CROSS; });
           if (log) log.push({ edges: own, v: CROSS, reason: 'The loop never enters a black circle.', at: k });
@@ -39,7 +39,7 @@
       for (const cells of whites) {
         if (!cells) continue;
         const kinds = new Set(cells.map((k) => shape(s, k)).filter(Boolean));
-        if (kinds.size > 1) return false;
+        if (kinds.size > 1) return -1;
       }
       return 0;
     }

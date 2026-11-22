@@ -7,6 +7,7 @@
 const fs = require('node:fs');
 const path = require('node:path');
 const { root } = require('./games');
+const { inOrder, times } = require('./steps');
 
 const RAW = path.join(root, 'coverage', 'raw');
 const url = (slug, q = '') => 'file://' + path.join(root, slug, 'index.html') + q;
@@ -14,6 +15,10 @@ const visible = (sel) => `(() => { const e = document.querySelector('${sel}'); r
 
 async function clickIf(page, sel) {
   if (await page.evaluate(visible(sel))) await page.evaluate((s) => document.querySelector(s).click(), sel);
+}
+// Clicks every element that matches sel, one after the other.
+async function clickAll(page, sel) {
+  await inOrder(await page.locator(sel).all(), (b) => b.click().catch(() => {}));
 }
 async function closeModals(page) {
   await page.evaluate(() => { for (const m of document.querySelectorAll('.modal:not([hidden])')) m.hidden = true; });
@@ -35,60 +40,62 @@ async function fuzzBoard(page) {
   });
   const { R, C } = dims;
   const at = (i, j) => [box.x + (box.width * j) / (2 * C), box.y + (box.height * i) / (2 * R)];
-  for (const button of ['left', 'right', 'left']) {
-    for (let i = 0; i <= 2 * R; i++) for (let j = 0; j <= 2 * C; j++) {
-      const [x, y] = at(i, j);
-      await page.mouse.click(Math.min(x, box.x + box.width - 2), Math.min(y, box.y + box.height - 2), { button });
-    }
+  // Clicks on every cell, edge and corner: left, right, left again.
+  const spots = [];
+  for (let i = 0; i <= 2 * R; i++) for (let j = 0; j <= 2 * C; j++) spots.push(at(i, j));
+  await inOrder(['left', 'right', 'left'], async (button) => {
+    await inOrder(spots, ([x, y]) => page.mouse.click(Math.min(x, box.x + box.width - 2), Math.min(y, box.y + box.height - 2), { button }));
     await closeModals(page);
-  }
+  });
   // Drags: from each cell centre to the right and down.
+  const drags = [];
   for (let i = 1; i < 2 * R; i += 2) for (let j = 1; j < 2 * C; j += 2) {
-    for (const [di, dj] of [[0, 2], [2, 0], [2, 2]]) {
-      const [x, y] = at(i, j), [x2, y2] = at(Math.min(i + di, 2 * R - 1), Math.min(j + dj, 2 * C - 1));
-      await page.mouse.move(x, y);
-      await page.mouse.down();
-      await page.mouse.move(x2, y2, { steps: 3 });
-      await page.mouse.up();
-    }
+    for (const [di, dj] of [[0, 2], [2, 0], [2, 2]]) drags.push([at(i, j), at(Math.min(i + di, 2 * R - 1), Math.min(j + dj, 2 * C - 1))]);
   }
+  await inOrder(drags, async ([[x, y], [x2, y2]]) => {
+    await page.mouse.move(x, y);
+    await page.mouse.down();
+    await page.mouse.move(x2, y2, { steps: 3 });
+    await page.mouse.up();
+  });
   // A long drag through the whole board.
   await page.mouse.move(...at(1, 1));
   await page.mouse.down();
-  for (let i = 1; i < 2 * R; i += 2) await page.mouse.move(...at(i, i % 4 === 1 ? 2 * C - 1 : 1), { steps: 4 });
+  const longPath = [];
+  for (let i = 1; i < 2 * R; i += 2) longPath.push(at(i, i % 4 === 1 ? 2 * C - 1 : 1));
+  await inOrder(longPath, ([x, y]) => page.mouse.move(x, y, { steps: 4 }));
   await page.mouse.up();
   await closeModals(page);
   // Keys on a selected cell and in digit inputs.
   const keys = ['1', '2', '3', '5', '9', '0', 'a', 'x', ' ', 'Enter', 'Backspace', 'Delete', 'ArrowUp', 'ArrowDown', 'ArrowLeft', 'ArrowRight', 'Escape'];
-  for (const [i, j] of [[1, 1], [3, 3], [2 * R - 1, 2 * C - 1]]) {
+  await inOrder([[1, 1], [3, 3], [2 * R - 1, 2 * C - 1]], async ([i, j]) => {
     await page.mouse.click(...at(i, j));
-    for (const k of keys) await page.keyboard.press(k);
-    for (const k of ['Shift+ArrowUp', 'Control+ArrowRight']) await page.keyboard.press(k);
-  }
+    await inOrder([...keys, 'Shift+ArrowUp', 'Control+ArrowRight'], (k) => page.keyboard.press(k));
+  });
   // Keys on focusable cells (focus is lost when the board redraws, so
   // focus again before each key).
   const focusable = page.locator('#board-wrap [tabindex]');
   const nf = await focusable.count();
-  for (const i of [...new Set([0, 1, Math.floor(nf / 2), nf - 1])].filter((x) => x >= 0 && x < nf)) {
-    for (const k of keys) {
-      await focusable.nth(i).focus().catch(() => {});
-      await page.keyboard.press(k);
-    }
-  }
+  const picked = [...new Set([0, 1, Math.floor(nf / 2), nf - 1])].filter((x) => x >= 0 && x < nf);
+  const pressOn = async (i, k) => {
+    await focusable.nth(i).focus().catch(() => {});
+    await page.keyboard.press(k);
+  };
+  await inOrder(picked, (i) => inOrder(keys, (k) => pressOn(i, k)));
   const inputs = page.locator('#board-wrap input');
   const n = await inputs.count();
-  for (let i = 0; i < Math.min(n, 6); i++) {
-    for (const v of ['1', '12', '99', 'a', 'a1', 'B2', 'z9', '']) { await inputs.nth(i).fill(v); }
+  await times(Math.min(n, 6), async (i) => {
+    await inOrder(['1', '12', '99', 'a', 'a1', 'B2', 'z9', ''], (v) => inputs.nth(i).fill(v));
     await inputs.nth(i).press('ArrowRight');
     await inputs.nth(i).press('ArrowDown');
-  }
+  });
   await closeModals(page);
 }
 
 // All buttons and popups of the game screen.
 async function buttons(page) {
   await clickIf(page, '#btn-topbar-hint');
-  for (let i = 0; i < 3; i++) await clickIf(page, '#btn-hint-next');
+  await times(3, () => clickIf(page, '#btn-hint-next'));
   await clickIf(page, '#btn-hint-prev');
   await clickIf(page, '#btn-hint-apply');
   await closeModals(page);
@@ -103,11 +110,11 @@ async function buttons(page) {
   await page.waitForTimeout(50);
   await clickIf(page, '#btn-info-close');
   await clickIf(page, '#btn-topbar-share');
-  for (const b of await page.locator('.modal:not([hidden]) [data-copy]').all()) await b.click().catch(() => {});
+  await clickAll(page, '.modal:not([hidden]) [data-copy]');
   await clickIf(page, '#btn-share-close');
-  for (let i = 0; i < 14; i++) await clickIf(page, '#btn-zoom-in');
-  for (let i = 0; i < 14; i++) await clickIf(page, '#btn-zoom-out');
-  for (let i = 0; i < 5; i++) await clickIf(page, '#btn-zoom-in');
+  await times(14, () => clickIf(page, '#btn-zoom-in'));
+  await times(14, () => clickIf(page, '#btn-zoom-out'));
+  await times(5, () => clickIf(page, '#btn-zoom-in'));
   await clickIf(page, '#giveup-btn');
   await clickIf(page, '#solution-x');
   await clickIf(page, '#giveup-btn');
@@ -121,12 +128,16 @@ async function solveByHints(page) {
   await page.evaluate(async () => {
     const $ = (s) => document.querySelector(s);
     if (!$('#btn-hint-apply')) return;
-    for (let n = 0; n < 1500; n++) {
+    // Open the hint, apply it, again: until no hint is left.
+    const next = async (n) => {
+      if (n >= 1500) return;
       $('#btn-topbar-hint').click();
       await new Promise((r) => setTimeout(r, 0));
-      if ($('#btn-hint-apply').hidden) break;
+      if ($('#btn-hint-apply').hidden) return;
       $('#btn-hint-apply').click();
-    }
+      await next(n + 1);
+    };
+    await next(0);
     $('#btn-hint-close').click();
   });
   await clickIf(page, '#submit-btn');
@@ -328,15 +339,16 @@ async function playSize(page, n) {
   await clickIf(page, '#size-dec');
   await clickIf(page, '#size-inc');
   if (n !== null) await page.evaluate((n) => { window.__puzzleTest.st.size = n; }, n);
-  for (let t = 0; t < 3; t++) {
+  const tryPlay = async (t) => {
+    if (t >= 3) return false;
     await clickIf(page, '#play-btn');
     const ok = await page.waitForFunction(() => {
       if (!document.getElementById('game-screen').hidden && document.querySelector('#board-wrap > *')) return 'board';
       return /Could not/.test(document.getElementById('menu-status').textContent) && 'failed';
     }, null, { timeout: 90000 }).then((h) => h.jsonValue()).catch(() => 'timeout');
-    if (ok === 'board') return true;
-  }
-  return false;
+    return ok === 'board' || tryPlay(t + 1);
+  };
+  return tryPlay(0);
 }
 
 async function workout(page, slug, more) {
@@ -349,8 +361,8 @@ async function workout(page, slug, more) {
   await page.goto(url(slug, '?game-id=broken'));
   await page.goto(url(slug));
   await page.waitForSelector('#menu-example figure', { timeout: 60000 });
-  for (let i = 0; i < 30; i++) await clickIf(page, '#size-dec');
-  for (let i = 0; i < 30; i++) await clickIf(page, '#size-inc');
+  await times(30, () => clickIf(page, '#size-dec'));
+  await times(30, () => clickIf(page, '#size-inc'));
   await clickIf(page, '#btn-topbar-info');
   await page.waitForTimeout(100);
   await clickIf(page, '#btn-info-close');
@@ -372,8 +384,8 @@ async function workout(page, slug, more) {
     return all.length <= 5 ? all : [...new Set([min, min + 1, t.cfg.size.def, max - 1, max])].sort((a, b) => a - b);
   });
   let fuzzed = false;
-  for (const [i, n] of sizes.entries()) {
-    if (!(await playSize(page, n))) continue;
+  await inOrder(sizes, async (n, i) => {
+    if (!(await playSize(page, n))) return;
     if (!fuzzed) {
       fuzzed = true;
       await fuzzBoard(page);
@@ -390,7 +402,7 @@ async function workout(page, slug, more) {
       await clickIf(page, '#btn-topbar-back');
       await clickIf(page, '#btn-back-confirm');
     }
-  }
+  });
 
   // Paste a real game ID (as a link) and a broken one.
   const ids = await page.evaluate(() => {
@@ -401,32 +413,32 @@ async function workout(page, slug, more) {
     return { link: location.href.split('?')[0] + '?game-id=' + good, broken: good.slice(0, -6) + 'AAAAAA' };
   });
   if (ids) {
-    for (const text of [ids.broken, ids.link]) {
+    await inOrder([ids.broken, ids.link], async (text) => {
       await clickIf(page, '#play-shared-btn');
       await page.fill('#paste-input', text);
       await clickIf(page, '#btn-paste-start');
-    }
+    });
     await waitBoard(page).catch(() => {});
     // Copy with a clipboard API that works, then with one that fails.
-    for (const ok of [true, false]) {
+    await inOrder([true, false], async (ok) => {
       await page.evaluate((ok) => { Object.defineProperty(navigator, 'clipboard', { value: { writeText: () => (ok ? Promise.resolve() : Promise.reject(new Error('no'))) }, configurable: true }); }, ok);
       await clickIf(page, '#btn-topbar-share');
-      for (const b of await page.locator('.modal:not([hidden]) [data-copy], .modal:not([hidden]) .copy-btn').all()) await b.click().catch(() => {});
+      await clickAll(page, '.modal:not([hidden]) [data-copy], .modal:not([hidden]) .copy-btn');
       await page.waitForTimeout(50);
       await closeModals(page);
-    }
+    });
     // Copy without the clipboard API: the page falls back to a hidden text box.
     await page.evaluate(() => { try { Object.defineProperty(navigator, 'clipboard', { value: undefined, configurable: true }); } catch {} });
     await clickIf(page, '#btn-topbar-share');
-    for (const b of await page.locator('.modal:not([hidden]) [data-copy]').all()) await b.click().catch(() => {});
+    await clickAll(page, '.modal:not([hidden]) [data-copy]');
     await page.evaluate(() => { document.execCommand = () => { throw new Error('no copy'); }; });
-    for (const b of await page.locator('.modal:not([hidden]) [data-copy]').all()) await b.click().catch(() => {});
+    await clickAll(page, '.modal:not([hidden]) [data-copy]');
     await closeModals(page);
     await clickIf(page, '#btn-topbar-back');
     await clickIf(page, '#btn-back-confirm');
   }
   // Fullscreen button (site.js), twice.
-  for (let i = 0; i < 2; i++) await page.locator('#topbar-actions button[title*="ullscreen"]').first().click({ timeout: 2000 }).catch(() => {});
+  await times(2, () => page.locator('#topbar-actions button[title*="ullscreen"]').first().click({ timeout: 2000 }).catch(() => {}));
 
   // Play when no board can be made in time: the page says so.
   await page.evaluate(() => {
@@ -480,11 +492,11 @@ async function startNew(page, slug) {
     Date.now = () => (fake += 60000);
     setTimeout(() => { Date.now = realNow; }, 3000);
   });
-  for (const q of ['?start=new', '?start=new&fakeclock=1']) {
+  await inOrder(['?start=new', '?start=new&fakeclock=1'], async (q) => {
     await page.evaluate(() => { try { localStorage.clear(); } catch {} });
     await page.goto(url(slug, q));
     await page.waitForTimeout(3200);
-  }
+  });
 }
 
 async function finish(page, slug, errors, more) {

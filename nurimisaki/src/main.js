@@ -61,7 +61,7 @@
           if (log) { log.push({ cells: [k], v: YES, reason: 'A white cell without a circle needs two white neighbours. This one can not get them.' }); return set; }
         }
         if (s[k] === NO) {
-          if (maybe.length < 2) return false;
+          if (maybe.length < 2) return -1;
           const open = maybe.filter((j) => s[j] === UNKNOWN);
           if (maybe.length === 2 && open.length) {
             open.forEach((j) => { s[j] = NO; });
@@ -73,7 +73,7 @@
       for (let k = 0; k < N; k++) {
         if (clues[k] <= 0) continue;
         const w = ways(s, k);
-        if (!w.length) return false;
+        if (!w.length) return -1;
         if (w.length > 1) continue;
         const open = w[0].white.filter((j) => s[j] === UNKNOWN);
         const end = w[0].end >= 0 && s[w[0].end] === UNKNOWN ? [w[0].end] : [];

@@ -64,7 +64,7 @@
       for (let k = 0; k < N; k++) {
         if (!clues[k]) continue;
         const fits = fitsOf(s, k);
-        if (!fits.length) return false;
+        if (!fits.length) return -1;
         const all = fits.reduce((a, b) => a & b, 255), any = fits.reduce((a, b) => a | b, 0);
         const yes = [], no = [];
         rings[k].forEach((j, i) => {

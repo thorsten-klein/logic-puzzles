@@ -45,7 +45,7 @@
           const seen = yes > v ? yes : yes + open.length;
           const sees = yes > v ? `already sees ${seen}` : `can see at most ${seen}`;
           if (log) log.push({ fail: true, at: k, reason: `This white clue must be true, but it ${sees} shaded ${seen === 1 ? 'cell' : 'cells'}, not ${v}.` });
-          return false;
+          return -1;
         }
         if (!open.length) continue;
         if (yes === v) {

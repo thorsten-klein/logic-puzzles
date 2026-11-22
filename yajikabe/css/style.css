@@ -1,3 +1,2 @@
 /* Yajikabe board. Shared styles live in ../css/style.css. */
-.yk2-board .cell { font-weight: 700; font-size: calc(var(--cell) * 0.36); }
-.yk2-board .cell { font-family: "Noto Sans", Arial, sans-serif; }
+.yk2-board .cell { font-weight: 700; font-size: calc(var(--cell) * 0.36); font-family: "Noto Sans", Arial, sans-serif; }

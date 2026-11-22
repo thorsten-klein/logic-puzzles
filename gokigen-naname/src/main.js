@@ -45,12 +45,12 @@
     }
     function propagate(s, log) {
       const find = roots(s);
-      if (!find) return false;
+      if (!find) return -1;
       for (let k = 0; k < R * C; k++) {
         if (s[k] !== UNKNOWN) continue;
         const loopYes = (() => { const [a, b] = ends(k, YES); return find(a) === find(b); })();
         const loopNo = (() => { const [a, b] = ends(k, NO); return find(a) === find(b); })();
-        if (loopYes && loopNo) return false;
+        if (loopYes && loopNo) return -1;
         if (loopYes || loopNo) {
           s[k] = loopYes ? NO : YES;
           if (log) log.push({ cells: [k], v: s[k], reason: 'The other diagonal would close a loop, so this one goes here.' });

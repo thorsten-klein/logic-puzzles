@@ -161,7 +161,7 @@ const PuzzleShell = (() => {
 </div></div>
 <div id="modal-paste" class="modal" hidden><div class="modal-content">
   <h2>Play a shared puzzle</h2><p>Paste a game ID or a shared URL.</p>
-  <textarea id="paste-input" rows="3" placeholder="Paste here…"></textarea>
+  <textarea id="paste-input" rows="3" placeholder="Paste here…" aria-label="Game ID or shared URL"></textarea>
   <p id="paste-status" class="status"></p>
   <div class="actions"><button id="btn-paste-start" class="primary" type="button">Start</button>
     <button id="btn-paste-cancel" type="button">Cancel</button></div>

@@ -23,7 +23,7 @@ const Solver = (() => {
         if (s[j] === FILLED) filled++;
         else if (s[j] === UNKNOWN) open.push(j);
       }
-      if (filled > con.sum || filled + open.length < con.sum) return false;
+      if (filled > con.sum || filled + open.length < con.sum) return -1;
       if (!open.length) continue;
       const v = filled === con.sum ? EMPTY : filled + open.length === con.sum ? FILLED : 0;
       if (!v) continue;
@@ -72,7 +72,7 @@ const Solver = (() => {
     const s = start ? Uint8Array.from(start) : new Uint8Array(p.R * p.C);
     for (;;) {
       const r = step(cons, s);
-      if (r === false) return null;
+      if (r < 0) return null;
       if (r > 0) continue;
       if (pairStep(cons, s) === 0) break;
     }
@@ -88,7 +88,7 @@ const Solver = (() => {
       if (solutions.length >= stopAt || ++nodes > maxNodes) return;
       for (;;) {
         const r = step(cons, s);
-        if (r === false) return;
+        if (r < 0) return;
         if (r === 0) break;
       }
       const pick = s.indexOf(UNKNOWN);

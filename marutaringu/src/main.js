@@ -35,7 +35,7 @@
         if (s[k] !== YES) continue;
         const n = nb(k);
         const yes = n.filter((j) => s[j] === YES), open = n.filter((j) => s[j] === UNKNOWN);
-        if (yes.length > 2 || yes.length + open.length < 2) return false;
+        if (yes.length > 2 || yes.length + open.length < 2) return -1;
         if (!open.length) continue;
         let v = 0;
         if (yes.length === 2) v = NO;

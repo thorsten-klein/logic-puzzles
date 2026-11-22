@@ -26,12 +26,15 @@
 
   // st: 0 open, 1 chosen, 2 ruled out. Returns false on contradiction,
   // else { e, why } for the first forced choice found, or null.
+  // forced() result for a contradiction.
+  const FAIL = { fail: true };
+
   function forced(p, st) {
     for (let k = 0; k < p.R * p.C; k++) {
       const es = p.cellEdges[k];
       if (es.some((e) => st[e] === 1)) continue;
       const open = es.filter((e) => st[e] === 0);
-      if (!open.length) return false;
+      if (!open.length) return FAIL;
       if (open.length === 1) return { e: open[0], why: 'cell', k };
     }
     const byType = new Map();
@@ -43,8 +46,8 @@
     });
     for (let a = 0; a <= p.n; a++) for (let b = a; b <= p.n; b++) {
       const list = byType.get(typeOf(p.n, a, b)) || [];
-      if (!list.length) return false;
-      if (list.filter((e) => st[e] === 1).length > 1) return false;
+      if (!list.length) return FAIL;
+      if (list.filter((e) => st[e] === 1).length > 1) return FAIL;
       if (list.length === 1 && st[list[0]] === 0) return { e: list[0], why: 'type', a, b };
     }
     return null;
@@ -61,7 +64,7 @@
   function settle(p, st) {
     for (;;) {
       const f = forced(p, st);
-      if (f === false) return false;
+      if (f === FAIL) return false;
       if (!f) return true;
       choose(p, st, f.e);
     }

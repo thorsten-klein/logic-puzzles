@@ -14,9 +14,9 @@
 .snake-board .clue.done { color: #2e7d32; font-weight: 700; }
 .snake-board .corner { background: var(--bg); }
 
-.snake-board .cell { background: #fff; cursor: pointer; color: #fff; font-weight: 700; }
+.snake-board .cell { background: #fff; cursor: pointer; color: var(--fg); font-weight: 700; }
 .snake-board .cell.filled { background: #222; }
-.snake-board .cell.endpoint { background: #222; cursor: not-allowed; }
+.snake-board .cell.endpoint { background: #222; color: #fff; cursor: not-allowed; }
 
 /* Right-click X: two diagonal lines that scale with the cell. */
 .snake-board .cell.marked::before,

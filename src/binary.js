@@ -8,15 +8,17 @@
 //          With `w` (weights per cell) the YES weights are summed instead.
 //   check  optional (state, done) -> false if the state is broken.
 //          `done` is true when no cell is unknown.
-//   propagate  optional (state, log) -> false on contradiction, else the
+//   propagate  optional (state, log) -> -1 on contradiction, else the
 //          number of cells it set. For game rules that are not counts.
 //          Log entries are { cells, v, reason }.
 // Cell states: 0 = unknown, 1 = yes, 2 = no.
 
 const Binary = (() => {
   const UNKNOWN = 0, YES = 1, NO = 2;
+  // A step result that means "contradiction": -1 (or false, the old form).
+  const failed = (r) => r === false || r < 0;
 
-  // One pass over the count rules. Returns false on contradiction,
+  // One pass over the count rules. Returns -1 on contradiction,
   // else the number of cells set. `log` gets { con, cells, v }, and
   // { con, fail: true } for the broken rule.
   function step(model, s, log) {
@@ -24,7 +26,7 @@ const Binary = (() => {
     for (const con of model.cons) {
       if (con.w) {
         const r = weightedStep(con, s, log);
-        if (r === false) { if (log) { log.push({ con, fail: true }); } return false; }
+        if (failed(r)) { if (log) { log.push({ con, fail: true }); } return -1; }
         set += r;
         continue;
       }
@@ -34,7 +36,7 @@ const Binary = (() => {
         if (s[k] === YES) yes++;
         else if (s[k] === UNKNOWN) open.push(k);
       }
-      if (yes > con.max || yes + open.length < con.min) { if (log) { log.push({ con, fail: true }); } return false; }
+      if (yes > con.max || yes + open.length < con.min) { if (log) { log.push({ con, fail: true }); } return -1; }
       if (!open.length) continue;
       let v = 0;
       if (yes === con.max) v = NO;
@@ -57,7 +59,7 @@ const Binary = (() => {
       const w = con.w[i];
       if (s[k] === YES) { lo += w; hi += w; } else if (s[k] === UNKNOWN) { if (w > 0) hi += w; else lo += w; }
     });
-    if (lo > con.max || hi < con.min) return false;
+    if (lo > con.max || hi < con.min) return -1;
     const yes = [], no = [];
     con.cells.forEach((k, i) => {
       if (s[k] !== UNKNOWN) return;
@@ -71,7 +73,7 @@ const Binary = (() => {
       else if (!yesOk) no.push(k);
       else if (!noOk) yes.push(k);
     });
-    if (yes.includes(-1)) return false;
+    if (yes.includes(-1)) return -1;
     for (const k of no) s[k] = NO;
     for (const k of yes) s[k] = YES;
     if (log && no.length) log.push({ con, cells: no, v: NO });
@@ -83,11 +85,11 @@ const Binary = (() => {
   function settle(model, s) {
     for (;;) {
       const r = step(model, s);
-      if (r === false) return false;
+      if (failed(r)) return false;
       if (r > 0) continue;
       if (!model.propagate) break;
       const q = model.propagate(s);
-      if (q === false) return false;
+      if (failed(q)) return false;
       if (q === 0) break;
     }
     return model.check?.(s, !s.includes(UNKNOWN)) !== false;
@@ -204,7 +206,7 @@ const Binary = (() => {
           } else lines.push(`Then ${becomes(st.cells, st.v)}${since(text, at)}.`);
           last = st.fail ? null : { at, v: st.v, text, cells: [...st.cells] };
         }
-        if (r === false) {
+        if (failed(r)) {
           if (!log.some((st) => st.fail)) lines.push('Now a rule is broken.');
           return lines;
         }
@@ -339,7 +341,7 @@ const Binary = (() => {
         const y = con.cells.reduce((a, k, i) => a + (s[k] === YES ? (con.w ? con.w[i] : 1) : 0), 0);
         if (y < con.min || y > con.max) return false;
       }
-      if (m.propagate?.(Uint8Array.from(s)) === false) return false;
+      if (failed(m.propagate?.(Uint8Array.from(s)))) return false;
       return m.check?.(s, true) !== false;
     }
 

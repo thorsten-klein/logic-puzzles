@@ -17,7 +17,7 @@
         const [up, down, left, right] = g.cellEdges[k];
         for (const [a, b] of [[up, down], [left, right]]) {
           if (a < 0 || b < 0) continue;
-          if (s[a] === LINE && s[b] === LINE) return false;
+          if (s[a] === LINE && s[b] === LINE) return -1;
           const other = s[a] === LINE ? b : s[b] === LINE ? a : -1;
           if (other < 0 || s[other] !== UNKNOWN) continue;
           s[other] = CROSS;

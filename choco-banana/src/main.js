@@ -24,7 +24,7 @@
         if (clues[k] < 0 || s[k] === UNKNOWN) continue;
         for (const j of nb(k)) {
           if (clues[j] < 0 || clues[j] === clues[k]) continue;
-          if (s[j] === s[k]) return false;
+          if (s[j] === s[k]) return -1;
           if (s[j] !== UNKNOWN) continue;
           s[j] = s[k] === YES ? NO : YES;
           if (log) log.push({ cells: [j], v: s[j], reason: `Next-door numbers ${clues[k]} and ${clues[j]} differ, so these cells are in different areas and have different colours.` });

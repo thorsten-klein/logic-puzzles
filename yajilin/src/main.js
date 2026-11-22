@@ -37,7 +37,7 @@
     const needLoop = (s, k, log, why) => {
       const es = edges(k);
       const lines = es.filter((e) => s[e] === LINE).length, open = es.filter((e) => s[e] === UNKNOWN);
-      if (lines + open.length < 2) return false;
+      if (lines + open.length < 2) return -1;
       if (lines < 2 && lines + open.length === 2) {
         for (const e of open) s[e] = LINE;
         if (log) log.push({ edges: open, v: LINE, reason: why, at: k });
@@ -50,7 +50,7 @@
       for (let k = 0; k < R * C; k++) {
         if (isArrow(k)) {
           const open = edges(k).filter((e) => s[e] !== CROSS);
-          if (open.some((e) => s[e] === LINE)) return false;
+          if (open.some((e) => s[e] === LINE)) return -1;
           if (open.length) {
             for (const e of open) s[e] = CROSS;
             if (log) log.push({ edges: open, v: CROSS, reason: 'The loop never passes through an arrow cell.', at: k });
@@ -62,21 +62,21 @@
         // Black: neighbours are not black, so they are on the loop.
         for (const j of nbs(k)) {
           if (isArrow(j)) continue;
-          if (black(s, j)) return false;
+          if (black(s, j)) return -1;
           const r = needLoop(s, j, log, 'Black cells never touch. This cell must be on the loop, and only two sides are open.');
-          if (r === false) return false;
+          if (r < 0) return -1;
           if (r) return r;
         }
       }
       for (const [, n, cells] of rays) {
         const known = cells.filter((j) => black(s, j)).length;
         const maybe = cells.filter((j) => !black(s, j) && !onLoop(s, j)).length;
-        if (known > n || known + maybe < n) return false;
+        if (known > n || known + maybe < n) return -1;
         if (known === n) {
           for (const j of cells) {
             if (black(s, j) || onLoop(s, j)) continue;
             const r = needLoop(s, j, log, `This arrow already sees its ${n} black cell${n === 1 ? '' : 's'}. The other cells that way are on the loop.`);
-            if (r === false) return false;
+            if (r < 0) return -1;
             if (r) return r;
           }
         }

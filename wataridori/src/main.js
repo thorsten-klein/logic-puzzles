@@ -29,11 +29,11 @@
       for (let k = 0; k < R * C; k++) {
         if (circle[k] < 0) continue;
         const w = walk(s, k);
-        if (new Set(w.rooms).size !== w.rooms.length) return false;
+        if (new Set(w.rooms).size !== w.rooms.length) return -1;
         const v = circle[k];
-        if (v > 0 && w.rooms.length > v) return false;
+        if (v > 0 && w.rooms.length > v) return -1;
         const done = w.end !== k && circle[w.end] >= 0;
-        if (done && v > 0 && w.rooms.length !== v) return false;
+        if (done && v > 0 && w.rooms.length !== v) return -1;
       }
       return 0;
     }

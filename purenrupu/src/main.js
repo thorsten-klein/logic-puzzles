@@ -11,7 +11,7 @@
       for (let k = 0; k < p.R * p.C; k++) {
         if (!p.black[k]) continue;
         const open = g.cellEdges[k].filter((e) => e >= 0 && s[e] !== CROSS);
-        if (open.some((e) => s[e] === LINE)) return false;
+        if (open.some((e) => s[e] === LINE)) return -1;
         if (open.length) {
           for (const e of open) s[e] = CROSS;
           if (log) log.push({ edges: open, v: CROSS, reason: 'The loop never enters a black cell.', at: k });

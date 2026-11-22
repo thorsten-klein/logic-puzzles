@@ -12,6 +12,8 @@
 
 const Links = (() => {
   const { UNKNOWN, LINE, CROSS } = Loop;
+  // A step result that means "contradiction": -1 (or false, the old form).
+  const failed = (r) => r === false || r < 0;
 
   // Degree rules per cell: end cells have one line, others 0 or 2.
   function cellStep(m, s, log) {
@@ -24,13 +26,13 @@ const Links = (() => {
       const isEnd = label[k] >= 0;
       let v = 0, why = '';
       if (isEnd) {
-        if (lines > 1 || (!lines && !open.length)) return false;
+        if (lines > 1 || (!lines && !open.length)) return -1;
         if (!open.length) continue;
         if (lines === 1) { v = CROSS; why = 'An end cell has exactly one line, and it has it.'; }
         else if (open.length === 1) { v = LINE; why = 'An end cell needs one line, and only this side is open.'; }
       } else {
-        if (lines > 2 || (lines === 1 && !open.length)) return false;
-        if (fill && lines + open.length < 2) return false;
+        if (lines > 2 || (lines === 1 && !open.length)) return -1;
+        if (fill && lines + open.length < 2) return -1;
         if (!open.length) continue;
         if (lines === 2) { v = CROSS; why = 'This cell already has two lines.'; }
         else if (lines === 1 && open.length === 1) { v = LINE; why = 'The line must go on, and this is its only way out.'; }
@@ -83,8 +85,8 @@ const Links = (() => {
     const { g } = m;
     const { id, list } = pieces(m, s);
     for (const pc of list) {
-      if (pc.loop) return false;
-      if (!labelsFit(m, pc.ends)) return false;
+      if (pc.loop) return -1;
+      if (!labelsFit(m, pc.ends)) return -1;
     }
     for (let e = 0; e < g.E; e++) {
       if (s[e] !== UNKNOWN) continue;
@@ -109,15 +111,15 @@ const Links = (() => {
   function settle(m, s, log) {
     for (let guard = 0; guard < 10000; guard++) {
       let r = cellStep(m, s, log);
-      if (r === false) return false;
+      if (failed(r)) return false;
       if (r) { if (log) { return true; } continue; }
       if (m.rule) {
         r = m.rule(s, log);
-        if (r === false) return false;
+        if (failed(r)) return false;
         if (r) { if (log) { return true; } continue; }
       }
       r = pathStep(m, s, log);
-      if (r === false) return false;
+      if (failed(r)) return false;
       if (r) { if (log) { return true; } continue; }
       return true;
     }
@@ -170,7 +172,7 @@ const Links = (() => {
       if (pick < 0) pick = s.indexOf(UNKNOWN);
       if (pick < 0) {
         const t = Uint8Array.from(s, (v) => (v === LINE ? LINE : CROSS));
-        if (complete(m, t) && (m.rule?.(t) !== false)) solutions.push(t);
+        if (complete(m, t) && !failed(m.rule?.(t))) solutions.push(t);
         return;
       }
       for (const v of [LINE, CROSS]) {
