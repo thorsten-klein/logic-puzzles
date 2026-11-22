@@ -389,6 +389,14 @@ const Latin = (() => {
     return p;
   }
 
+  function expandCandidates(cand, k, random) {
+    const vals = [];
+    for (let v = 1; v < 31; v++) if (cand[k] & (1 << v)) vals.push(v);
+    if (random) PuzzleShell.shuffle(vals);
+    else vals.reverse();
+    return vals.map((v) => { const t = Int32Array.from(cand); t[k] = 1 << v; return t; });
+  }
+
   // For Str8ts and Sutoreto: white cells in stretches split by black cells.
   function startStretchGame(cfg) {
     const one = (m) => m && !(m & (m - 1));
@@ -427,11 +435,7 @@ const Latin = (() => {
         if (!propagate(p, cand)) continue;
         const k = cand.findIndex((m, i) => !p.black[i] && !one(m));
         if (k < 0) { out.push(Int8Array.from(cand, (m, i) => (p.black[i] ? 0 : low(m)))); continue; }
-        const vals = [];
-        for (let v = 1; v < 31; v++) if (cand[k] & (1 << v)) vals.push(v);
-        if (random) PuzzleShell.shuffle(vals);
-        else vals.reverse();
-        for (const v of vals) { const t = Int32Array.from(cand); t[k] = 1 << v; stack.push(t); }
+        stack.push(...expandCandidates(cand, k, random));
       }
       return { solutions: out, capped: nodes > maxNodes };
     }
