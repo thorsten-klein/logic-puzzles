@@ -706,6 +706,17 @@ const Binary = (() => {
     };
   }
 
+  function measureRoomDim(R, C, id, r, c) {
+    let maxW = 0;
+    while (c + maxW < C && id[r * C + c + maxW] < 0 && maxW < 4) maxW++;
+    const w = 1 + Math.floor(Math.random() * maxW);
+    let maxH = 0;
+    while (r + maxH < R && maxH < 4 && [...new Array(w).keys()].every((i) => id[(r + maxH) * C + c + i] < 0)) maxH++;
+    let h = 1 + Math.floor(Math.random() * maxH);
+    if (w * h === 1 && maxH > 1) h = 2;
+    return { w, h };
+  }
+
   // Random split into rectangles of side 1..4 (no 1x1 rooms).
   function splitRooms(R, C) {
     const id = new Int32Array(R * C).fill(-1);
@@ -713,13 +724,7 @@ const Binary = (() => {
     for (let k = 0; k < R * C; k++) {
       if (id[k] >= 0) continue;
       const r = Math.floor(k / C), c = k % C;
-      let maxW = 0;
-      while (c + maxW < C && id[r * C + c + maxW] < 0 && maxW < 4) maxW++;
-      const w = 1 + Math.floor(Math.random() * maxW);
-      let maxH = 0;
-      while (r + maxH < R && maxH < 4 && [...new Array(w).keys()].every((i) => id[(r + maxH) * C + c + i] < 0)) maxH++;
-      let h = 1 + Math.floor(Math.random() * maxH);
-      if (w * h === 1 && maxH > 1) h = 2;
+      const { w, h } = measureRoomDim(R, C, id, r, c);
       for (let i = 0; i < h; i++) for (let j = 0; j < w; j++) id[(r + i) * C + c + j] = count;
       count++;
     }
@@ -834,30 +839,30 @@ const Binary = (() => {
     return count;
   }
 
+  function tryBuildWallCandidate(n) {
+    const R = n, C = n, N = R * C;
+    const black = new Int8Array(N).fill(-1);
+    for (let k = 0; k < N; k++) if (Math.random() < 0.18) black[k] = 0;
+    const s = Uint8Array.from({ length: N }, (_, k) => (black[k] >= 0 ? NO : Math.random() < 0.5 ? YES : NO));
+    const p = { R, C, black };
+    const m = wallsModel(p);
+    orientLines(s, m, N, black, C, R);
+    if (!m.check(s, true)) return null;
+    if (!s.some((v, k) => black[k] < 0 && v === YES)) return null;
+    for (let k = 0; k < N; k++) {
+      if (black[k] >= 0) black[k] = WALL_DIRS.reduce((sum, d) => sum + countArm(k, R, C, black, s, d), 0);
+    }
+    const t = logicSolve(wallsModel(p));
+    if (!t || t.includes(UNKNOWN)) return null;
+    p.solution = Uint8Array.from(s, (v, k) => (black[k] >= 0 ? NO : v));
+    return p;
+  }
+
   function generateWalls(n) {
     const deadline = Date.now() + 8000;
     while (Date.now() < deadline) {
-      const R = n, C = n, N = R * C;
-      const black = new Int8Array(N).fill(-1);
-      for (let k = 0; k < N; k++) if (Math.random() < 0.18) black[k] = 0;
-      const s = Uint8Array.from({ length: N }, (_, k) => {
-        if (black[k] >= 0) return NO;
-        if (Math.random() < 0.5) return YES;
-        return NO;
-      });
-      const p = { R, C, black };
-      const m = wallsModel(p);
-      orientLines(s, m, N, black, C, R);
-      if (!m.check(s, true)) continue;
-      if (!s.some((v, k) => black[k] < 0 && v === YES)) continue;
-      for (let k = 0; k < N; k++) {
-        if (black[k] < 0) continue;
-        black[k] = WALL_DIRS.reduce((sum, d) => sum + countArm(k, R, C, black, s, d), 0);
-      }
-      const t = logicSolve(wallsModel(p));
-      if (!t || t.includes(UNKNOWN)) continue;
-      p.solution = Uint8Array.from(s, (v, k) => (black[k] >= 0 ? NO : v));
-      return p;
+      const p = tryBuildWallCandidate(n);
+      if (p) return p;
     }
     return null;
   }
