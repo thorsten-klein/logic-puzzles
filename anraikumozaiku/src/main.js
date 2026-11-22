@@ -5,6 +5,12 @@
 
 (() => {
   const sizeOf = (id, g) => { let n = 0; for (const v of id) { if (v === g) { n++; } } return n; };
+  // Cells of the h x w rectangle with top-left cell (r0, c0).
+  const rectCells = (C, r0, c0, h, w) => {
+    const cells = [];
+    for (let r = r0; r < r0 + h; r++) for (let c = c0; c < c0 + w; c++) cells.push(r * C + c);
+    return cells;
+  };
 
   Parts.startGame({
     id: 'anraikumozaiku',
@@ -20,18 +26,13 @@
       const { R, C } = p;
       const r0 = Math.floor(k / C), c0 = k % C;
       const out = [];
+      const taken = (x) => p.black[x] || (id[x] !== -1 && x !== k);
       for (let h = 1; r0 + h <= R; h++) {
         for (let w = 1; w <= C - c0; w++) {
-          const cells = [];
-          let circles = 0, bad = false;
-          for (let r = r0; r < r0 + h && !bad; r++) for (let c = c0; c < c0 + w && !bad; c++) {
-            const x = r * C + c;
-            if (p.black[x] || (id[x] !== -1 && x !== k)) bad = true;
-            circles += p.clues[x] ? 1 : 0;
-            cells.push(x);
-          }
-          if (bad) break;
-          if (circles > 1) break;
+          // Wider ones only get worse: stop at a taken cell or a 2nd circle.
+          const cells = rectCells(C, r0, c0, h, w);
+          const circles = cells.filter((x) => p.clues[x]).length;
+          if (cells.some(taken) || circles > 1) break;
           if (circles === 1) out.push(cells);
         }
       }
@@ -49,23 +50,24 @@
       const id = new Int32Array(N).fill(-1);
       const black = new Uint8Array(N);
       const rects = [];
+      // A random rectangle (up to 3 x 3) at top-left k that fits, or null.
+      const tryRect = (k) => {
+        const h = 1 + Math.floor(Math.random() * 3), w = 1 + Math.floor(Math.random() * 3);
+        const r0 = Math.floor(k / C), c0 = k % C;
+        if (r0 + h > R || c0 + w > C) return null;
+        const cells = rectCells(C, r0, c0, h, w);
+        if (cells.some((x) => id[x] >= 0 || black[x])) return null;
+        const n = cells.length;
+        const sameNext = cells.some((x) => Parts.nbs(R, C, x).some((j) => id[j] >= 0 && rects[id[j]].length === n));
+        return sameNext ? null : cells;
+      };
       for (let k = 0; k < N; k++) {
         if (id[k] >= 0 || black[k]) continue;
-        let placed = false;
-        for (let t = 0; t < 12 && !placed; t++) {
-          const h = 1 + Math.floor(Math.random() * 3), w = 1 + Math.floor(Math.random() * 3);
-          const r0 = Math.floor(k / C), c0 = k % C;
-          if (r0 + h > R || c0 + w > C) continue;
-          const cells = [];
-          for (let r = r0; r < r0 + h; r++) for (let c = c0; c < c0 + w; c++) cells.push(r * C + c);
-          if (cells.some((x) => id[x] >= 0 || black[x])) continue;
-          const n = cells.length;
-          if (cells.some((x) => Parts.nbs(R, C, x).some((j) => id[j] >= 0 && rects[id[j]].length === n))) continue;
-          cells.forEach((x) => { id[x] = rects.length; });
-          rects.push(cells);
-          placed = true;
-        }
-        if (!placed) black[k] = 1;
+        let cells = null;
+        for (let t = 0; t < 12 && !cells; t++) cells = tryRect(k);
+        if (!cells) { black[k] = 1; continue; }
+        cells.forEach((x) => { id[x] = rects.length; });
+        rects.push(cells);
       }
       if (black.reduce((a, b) => a + b, 0) > N * 0.15) return null;
       rects.black = black;

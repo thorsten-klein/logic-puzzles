@@ -22,13 +22,18 @@
       used[path[0]] = 1;
       const dir = new Int8Array(N).fill(-1);
       let ok = true;
+      // Free cells k can reach, as [cell, direction].
+      const moves = (k) => {
+        const out = [];
+        for (let d = 0; d < 8; d++) for (const j of ray(n, k, d)) if (!used[j]) out.push([j, d]);
+        return out;
+      };
       while (path.length < N) {
         const k = path.at(-1);
-        const opts = [];
-        for (let d = 0; d < 8; d++) for (const j of ray(n, k, d)) if (!used[j]) opts.push([j, d]);
+        const opts = moves(k);
         if (!opts.length) { ok = false; break; }
         // Prefer cells with few onward moves (keeps the walk going).
-        const onward = (j) => { let c = 0; for (let d = 0; d < 8; d++) { for (const x of ray(n, j, d)) { if (!used[x] && x !== j) { c++; } } } return c; };
+        const onward = (j) => moves(j).filter(([x]) => x !== j).length;
         opts.sort((a, b) => onward(a[0]) - onward(b[0]) + (Math.random() - 0.5) * 6);
         const [j, d] = opts[0];
         dir[k] = d;
@@ -81,23 +86,10 @@
       const p = { n, dir: rp.dir, given: new Int32Array(N) };
       p.given[rp.path[0]] = 1;
       p.given[rp.path[N - 1]] = N;
-      for (let guard = 0; guard < N; guard++) {
-        const res = solve(p, 2, 50000);
-        if (res.solutions.length === 1 && !res.capped) break;
-        const other = res.solutions.find((x) => x.some((v, k) => v !== sol[k]));
-        const diff = [...new Array(N).keys()].filter((k) => !p.given[k] && (other?.[k] !== sol[k]));
-        if (!diff.length) break;
-        const k = diff[Math.floor(Math.random() * diff.length)];
-        p.given[k] = sol[k];
-      }
+      PuzzleShell.addGivens(p.given, sol, () => solve(p, 2, 50000));
       const unique = () => { const r = solve(p, 2, 50000); return r.solutions.length === 1 && !r.capped; };
       if (!unique()) continue;
-      for (const k of PuzzleShell.shuffle([...new Array(N).keys()])) {
-        const v = p.given[k];
-        if (!v || v === 1 || v === N) continue;
-        p.given[k] = 0;
-        if (!unique()) p.given[k] = v;
-      }
+      PuzzleShell.dropGivens(p.given, unique, { keep: (k) => p.given[k] === 1 || p.given[k] === N });
       p.solution = sol;
       return p;
     }

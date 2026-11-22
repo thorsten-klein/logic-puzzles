@@ -164,6 +164,7 @@ async function fuzzCode(page) {
       Fillo: typeof Fillo === 'undefined' ? null : Fillo,
       Moves: typeof Moves === 'undefined' ? null : Moves,
       LegLoop: typeof LegLoop === 'undefined' ? null : LegLoop,
+      Flow: typeof Flow === 'undefined' ? null : Flow,
     };
     const engine = (name) => ENGINES[name] || null;
     // Blank mark of a share string: '.', '-', or else '0'.
@@ -274,7 +275,7 @@ async function fuzzCode(page) {
       Date.now = () => (fake += 60000);
       try {
         for (let n = cfg.size.min; n <= Math.min(cfg.size.max, cfg.size.min + 1); n++) tryIt(() => cfg.generate(n));
-        for (const name of ['Binary', 'Latin', 'Loop', 'Links', 'Parts', 'Pieces', 'Rects', 'RegionNum', 'NumberPath', 'Fillo', 'Moves', 'LegLoop']) {
+        for (const name of ['Binary', 'Latin', 'Loop', 'Links', 'Parts', 'Pieces', 'Rects', 'RegionNum', 'NumberPath', 'Fillo', 'Moves', 'LegLoop', 'Flow']) {
           const eng = engine(name);
           if (eng) failingHelpers(eng);
         }

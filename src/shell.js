@@ -971,6 +971,33 @@ const PuzzleShell = (() => {
     return out;
   }
 
+  // Generator helper: while `solveAll()` finds a second answer, give the
+  // answer at one random cell where that answer differs. `skip(k)` marks
+  // cells that never get a given. Stops after `limit` tries or at `until`.
+  function addGivens(given, sol, solveAll, { skip = () => false, limit = sol.length, until = Infinity } = {}) {
+    for (let t = 0; t < limit && Date.now() < until; t++) {
+      const res = solveAll();
+      if (res.solutions.length === 1 && !res.capped) return;
+      const other = res.solutions.find((x) => x.some((v, k) => !skip(k) && v !== sol[k]));
+      const diff = [...sol.keys()].filter((k) => !skip(k) && !given[k] && other?.[k] !== sol[k]);
+      if (!diff.length) return;
+      const k = diff[Math.floor(Math.random() * diff.length)];
+      given[k] = sol[k];
+    }
+  }
+
+  // Generator helper: drops givens in random order while `unique()`
+  // holds. `keep(k)` marks givens that stay. Stops at the time `until`.
+  function dropGivens(given, unique, { keep = () => false, until = Infinity } = {}) {
+    for (const k of shuffle([...given.keys()])) {
+      if (!given[k] || keep(k)) continue;
+      const v = given[k];
+      given[k] = 0;
+      if (!unique()) given[k] = v;
+      if (Date.now() > until) return;
+    }
+  }
+
   // Region tints for coloured region boards.
   const TINTS = ['#fde2e4', '#e2ece9', '#fff1e6', '#dfe7fd', '#f0efeb', '#e9edc9', '#fad2e1', '#cddafd',
     '#eae4e9', '#d8e2dc', '#fce1b6', '#d0f4de'];
@@ -1041,5 +1068,5 @@ const PuzzleShell = (() => {
     return Math.max(min, Math.min(max, Math.floor(avail / cols) - 2));
   }
 
-  return { start, prepare, plural, resultClass, shuffle, gridBoard, colName, cellName, fitCell, digitInput, regionBorders, growRegions, TINTS, arrowIcon, figure, shapeFigures };
+  return { start, prepare, plural, resultClass, shuffle, gridBoard, colName, cellName, fitCell, digitInput, regionBorders, growRegions, addGivens, dropGivens, TINTS, arrowIcon, figure, shapeFigures };
 })();
