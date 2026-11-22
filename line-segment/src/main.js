@@ -126,7 +126,7 @@
     name: 'Line Segment',
     rules: 'Cover every cell with straight segments of 3 or 4 cells — horizontal, vertical or diagonal. Each cell belongs ' +
       'to exactly one segment. A letter shows the direction of its cell\'s segment: H horizontal, V vertical, D diagonal.',
-    controls: 'Click a cell to cycle its direction: —, |, \\, /, none. Right click cycles back.',
+    controls: String.raw`Click a cell to cycle its direction: —, |, \, /, none. Right click cycles back.`,
     size: { min: 4, max: 8, def: 6 },
     solvedText: 'All lined up — nicely done.',
     generate,

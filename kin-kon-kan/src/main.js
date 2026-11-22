@@ -200,10 +200,10 @@
   PuzzleShell.start({
     id: 'kin-kon-kan',
     name: 'Kin-Kon-Kan',
-    rules: 'Put exactly one mirror (/ or \\) in each outlined room. A beam sent in at a lettered spot on the edge comes out ' +
+    rules: String.raw`Put exactly one mirror (/ or \) in each outlined room. A beam sent in at a lettered spot on the edge comes out ` +
       'at the other spot with the same letter, and the number tells how many mirrors it bounces off on the way. Every ' +
       'mirror bounces at least one of these beams.',
-    controls: 'Click a cell to cycle: /, \\, empty. Right click cycles back.',
+    controls: String.raw`Click a cell to cycle: /, \, empty. Right click cycles back.`,
     size: { min: 4, max: 6, def: 5 },
     solvedText: 'Every beam on target — nicely done.',
     generate,

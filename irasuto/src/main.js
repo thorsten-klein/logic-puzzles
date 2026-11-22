@@ -110,7 +110,7 @@
       const parts = String(d.g).split(',');
       if (parts.length !== R * C || parts.some((t) => t !== '.' && !/^[bw][0-9a-z]+$/.test(t))) throw new Error('Invalid clues');
       const num = new Int8Array(R * C).fill(-1), col = new Uint8Array(R * C);
-      parts.forEach((t, k) => { if (t !== '.') { col[k] = t[0] === 'b' ? YES : NO; num[k] = Number.parseInt(t.slice(1), 36); } });
+      parts.forEach((t, k) => { if (t !== '.') { col[k] = t.startsWith('b') ? YES : NO; num[k] = Number.parseInt(t.slice(1), 36); } });
       return { R, C, num, col };
     },
     model,

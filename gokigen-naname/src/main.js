@@ -134,14 +134,14 @@
     return svg;
   }
 
-  const hints = (p, state) => Binary.hints(model(p), state, p.solution, '"\\" line', '"/" line');
+  const hints = (p, state) => Binary.hints(model(p), state, p.solution, String.raw`"\" line`, '"/" line');
 
   PuzzleShell.start({
     id: 'gokigen-naname',
     name: 'Gokigen Naname',
     rules: 'Draw one diagonal line in every cell. A number on a corner tells how many lines touch that corner. ' +
       'The lines may never form a closed loop.',
-    controls: 'Click a cell to draw "\\", again for "/", again to clear. Right click cycles the other way.',
+    controls: String.raw`Click a cell to draw "\", again for "/", again to clear. Right click cycles the other way.`,
     size: { min: 4, max: 10, def: 6 },
     solvedText: 'No loops anywhere — nicely done.',
     generate,

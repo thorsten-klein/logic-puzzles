@@ -23,7 +23,7 @@
       const r0 = Math.min(...q.map((x) => x[0])), c0 = Math.min(...q.map((x) => x[1]));
       keys.push(q.map(([a, b]) => `${a - r0},${b - c0}`).sort().join(' '));
     }
-    return keys.reduce((min, k) => (k < min ? k : min), keys[0]);  // smallest key
+    return keys.reduce((min, k) => (k < min ? k : min));  // smallest key
   }
 
   function model(p) {
