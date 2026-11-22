@@ -650,5 +650,284 @@ const Binary = (() => {
     return solve(model, 2, maxNodes, t || undefined);
   }
 
-  return { UNKNOWN, YES, NO, step, settle, lookahead, solve, solveFull, logicSolve, isUnique, hints, startGame, thinClues, randomFill, openConnected, canConnect, sideNeighbours, cornerNeighbours, whiteBorders, areas, cornerGroups, cornerBuilder };
+  function encodeRoomClues(p) {
+    return {
+      r: p.R,
+      c: p.C,
+      g: Array.from(p.room, (v) => v.toString(36).padStart(2, '0')).join(''),
+      n: Array.from(p.clues).join(','),
+    };
+  }
+
+  function decodeRoomClues(d) {
+    const R = d?.r, C = d?.c;
+    if (![R, C].every((x) => Number.isInteger(x) && x >= 2 && x <= 20)) throw new Error('Invalid board size');
+    if (typeof d.g !== 'string' || d.g.length !== 2 * R * C) throw new Error('Invalid rooms');
+    const room = Int32Array.from({ length: R * C }, (_, k) => Number.parseInt(d.g.slice(2 * k, 2 * k + 2), 36));
+    const clues = Int8Array.from(String(d.n).split(','), Number);
+    if (room.some((v) => !(v >= 0 && v < clues.length))) throw new Error('Invalid rooms');
+    return { R, C, room, clues };
+  }
+
+  function drawRoomClues(p, k, el) {
+    PuzzleShell.regionBorders(el, k, p.room, p.R, p.C);
+    if (p.room.indexOf(p.room[k]) === k && p.clues[p.room[k]] >= 0) {
+      const lab = document.createElement('span');
+      lab.className = 'room-clue';
+      lab.textContent = p.clues[p.room[k]];
+      el.appendChild(lab);
+    }
+  }
+
+  function encodeDotClues(p) {
+    return {
+      r: p.R,
+      c: p.C,
+      g: Array.from(p.clues, (v) => {
+        if (v < 0) return '.';
+        if (v === 0) return '?';
+        return v.toString(36);
+      }).join(''),
+    };
+  }
+
+  function decodeDotClues(d) {
+    const R = d?.r, C = d?.c;
+    if (![R, C].every((x) => Number.isInteger(x) && x >= 3 && x <= 20)) throw new Error('Invalid board size');
+    if (typeof d.g !== 'string' || d.g.length !== R * C) throw new Error('Invalid clues');
+    return {
+      R,
+      C,
+      clues: Int8Array.from(d.g, (ch) => {
+        if (ch === '.') return -1;
+        if (ch === '?') return 0;
+        return Number.parseInt(ch, 36);
+      }),
+    };
+  }
+
+  function measureRoomDim(R, C, id, r, c) {
+    let maxW = 0;
+    while (c + maxW < C && id[r * C + c + maxW] < 0 && maxW < 4) maxW++;
+    const w = 1 + Math.floor(Math.random() * maxW);
+    let maxH = 0;
+    while (r + maxH < R && maxH < 4 && [...new Array(w).keys()].every((i) => id[(r + maxH) * C + c + i] < 0)) maxH++;
+    let h = 1 + Math.floor(Math.random() * maxH);
+    if (w * h === 1 && maxH > 1) h = 2;
+    return { w, h };
+  }
+
+  // Random split into rectangles of side 1..4 (no 1x1 rooms).
+  function splitRooms(R, C) {
+    const id = new Int32Array(R * C).fill(-1);
+    let count = 0;
+    for (let k = 0; k < R * C; k++) {
+      if (id[k] >= 0) continue;
+      const r = Math.floor(k / C), c = k % C;
+      const { w, h } = measureRoomDim(R, C, id, r, c);
+      for (let i = 0; i < h; i++) for (let j = 0; j < w; j++) id[(r + i) * C + c + j] = count;
+      count++;
+    }
+    return id;
+  }
+
+  const WALL_DIRS = [[0, -1, YES], [0, 1, YES], [-1, 0, NO], [1, 0, NO]];
+
+  function checkArmDir(d, arm, state) {
+    const { dirs, v, can, got, max, min } = arm;
+    const { k, s, log } = state;
+    const [cells, want] = dirs[d];
+    const need = v - (max - can[d]);
+    const forced = cells.slice(0, Math.max(0, need)).filter((j) => s[j] === UNKNOWN);
+    if (forced.length) {
+      for (const j of forced) s[j] = want;
+      if (log) log.push({ cells: forced, v: want, at: k, reason: `This ${v} can not reach its total in the other directions. These lines must run out from it.` });
+      return forced.length;
+    }
+    const most = v - (min - got[d]);
+    const next = cells[got[d]];
+    if (got[d] === most && next !== undefined && s[next] === UNKNOWN) {
+      s[next] = want === YES ? NO : YES;
+      if (log) log.push({ cells: [next], v: s[next], at: k, reason: `This ${v} already has enough length this way. The next cell turns the other way.` });
+      return 1;
+    }
+    return 0;
+  }
+
+  function stepArm(dirs, v, k, s, log) {
+    const got = dirs.map(([cells, want]) => { let i = 0; while (i < cells.length && s[cells[i]] === want) { i++; } return i; });
+    const can = dirs.map(([cells, want]) => { let i = 0; while (i < cells.length && s[cells[i]] !== (want === YES ? NO : YES)) { i++; } return i; });
+    const min = got.reduce((a, b) => a + b, 0), max = can.reduce((a, b) => a + b, 0);
+    if (min > v || max < v) return -1;
+    const arm = { dirs, v, can, got, max, min };
+    const state = { k, s, log };
+    for (let d = 0; d < 4; d++) {
+      const res = checkArmDir(d, arm, state);
+      if (res !== 0) return res;
+    }
+    return 0;
+  }
+
+  function reachesBlack(x, k, R, C, black) {
+    const [d1, d2] = x[k] === YES ? [[0, -1], [0, 1]] : [[-1, 0], [1, 0]];
+    return [d1, d2].some(([dr, dc]) => {
+      let r = Math.floor(k / C) + dr, c = (k % C) + dc;
+      while (r >= 0 && c >= 0 && r < R && c < C) {
+        const j = r * C + c;
+        if (black[j] >= 0) return true;
+        if (x[j] !== x[k]) return false;
+        r += dr; c += dc;
+      }
+      return false;
+    });
+  }
+
+  function orientLines(s, m, N, black, C, R) {
+    for (let it = 0; it < 50 && !m.check(s, true); it++) {
+      for (let k = 0; k < N; k++) {
+        if (black[k] >= 0) continue;
+        const t = Uint8Array.from(s);
+        t[k] = s[k] === YES ? NO : YES;
+        if (!reachesBlack(s, k, R, C, black) && reachesBlack(t, k, R, C, black)) s[k] = t[k];
+      }
+    }
+  }
+
+  function wallsModel(p) {
+    const { R, C, black } = p;
+    const N = R * C;
+    const isBlack = (k) => black[k] >= 0;
+    const ray = (k, [dr, dc]) => {
+      const out = [];
+      let r = Math.floor(k / C) + dr, c = (k % C) + dc;
+      while (r >= 0 && c >= 0 && r < R && c < C && !isBlack(r * C + c)) { out.push(r * C + c); r += dr; c += dc; }
+      return out;
+    };
+    const cons = [];
+    const arms = [];
+    for (let k = 0; k < N; k++) {
+      if (!isBlack(k)) continue;
+      cons.push({ cells: [k], min: 0, max: 0 });
+      arms.push([k, WALL_DIRS.map((d) => [ray(k, d), d[2]])]);
+    }
+    function propagate(s, log) {
+      for (const [k, dirs] of arms) {
+        const res = stepArm(dirs, black[k], k, s, log);
+        if (res !== 0) return res;
+      }
+      return 0;
+    }
+    function check(s, done) {
+      if (!done) return true;
+      for (let k = 0; k < N; k++) {
+        if (isBlack(k)) continue;
+        if (!reachesBlack(s, k, R, C, black)) return false;
+      }
+      return true;
+    }
+    return { N, cons, propagate, check };
+  }
+
+  function countArm(k, R, C, black, s, [dr, dc, want]) {
+    let count = 0;
+    let r = Math.floor(k / C) + dr, c = (k % C) + dc;
+    while (r >= 0 && c >= 0 && r < R && c < C && black[r * C + c] < 0 && s[r * C + c] === want) {
+      count++;
+      r += dr;
+      c += dc;
+    }
+    return count;
+  }
+
+  function initWallGrid(N) {
+    const black = new Int8Array(N).fill(-1);
+    const s = new Uint8Array(N);
+    for (let k = 0; k < N; k++) {
+      if (Math.random() < 0.18) {
+        black[k] = 0;
+        s[k] = NO;
+      } else {
+        s[k] = Math.random() < 0.5 ? YES : NO;
+      }
+    }
+    return { black, s };
+  }
+
+  function numberWallClues(p, s) {
+    for (let k = 0; k < p.black.length; k++) {
+      if (p.black[k] >= 0) p.black[k] = WALL_DIRS.reduce((sum, d) => sum + countArm(k, p.R, p.C, p.black, s, d), 0);
+    }
+  }
+
+  function tryBuildWallCandidate(n) {
+    const R = n, C = n, N = R * C;
+    const { black, s } = initWallGrid(N);
+    const p = { R, C, black };
+    const m = wallsModel(p);
+    orientLines(s, m, N, black, C, R);
+    if (!m.check(s, true)) return null;
+    if (!s.some((v, k) => black[k] < 0 && v === YES)) return null;
+    numberWallClues(p, s);
+    const t = logicSolve(wallsModel(p));
+    if (!t || t.includes(UNKNOWN)) return null;
+    p.solution = Uint8Array.from(s, (v, k) => (black[k] >= 0 ? NO : v));
+    return p;
+  }
+
+  function generateWalls(n) {
+    const deadline = Date.now() + 8000;
+    while (Date.now() < deadline) {
+      const p = tryBuildWallCandidate(n);
+      if (p) return p;
+    }
+    return null;
+  }
+
+  function encodeWalls(p) {
+    return { r: p.R, c: p.C, g: Array.from(p.black, (v) => (v < 0 ? '..' : v.toString(36).padStart(2, '0'))).join('') };
+  }
+
+  function decodeWalls(d) {
+    const R = d?.r, C = d?.c;
+    if (![R, C].every((x) => Number.isInteger(x) && x >= 3 && x <= 20)) throw new Error('Invalid board size');
+    if (typeof d.g !== 'string' || d.g.length !== 2 * R * C) throw new Error('Invalid grid');
+    return { R, C, black: Int8Array.from({ length: R * C }, (_, k) => (d.g[2 * k] === '.' ? -1 : Number.parseInt(d.g.slice(2 * k, 2 * k + 2), 36))) };
+  }
+
+  function drawWalls(p, k, el, v) {
+    if (p.black[k] >= 0) { el.textContent = p.black[k]; el.classList.add('wall-num'); return; }
+    if (v === YES) el.classList.add('h-line');
+    if (v === NO) el.classList.add('v-line');
+  }
+
+  function startWallsGame(cfg) {
+    startGame({
+      id: cfg.id,
+      name: cfg.name,
+      rules: cfg.rules,
+      controls: 'Click a cell for a horizontal line, again for a vertical line, again to clear. Right click cycles the other way.',
+      size: { min: 4, max: 8, def: 6 },
+      solvedText: cfg.solvedText,
+      generate: generateWalls,
+      encode: encodeWalls,
+      decode: decodeWalls,
+      model: wallsModel,
+      fixed: (p, k) => (p.black[k] >= 0 ? NO : 0),
+      draw: drawWalls,
+      noun: 'horizontal line',
+      noNoun: 'vertical line',
+      className: 'wl-board',
+      yesClass: 'hl',
+      noClass: 'vl',
+    });
+  }
+
+  return {
+    UNKNOWN, YES, NO, step, settle, lookahead, solve, solveFull, logicSolve, isUnique,
+    hints, startGame, thinClues, randomFill, openConnected, canConnect, sideNeighbours,
+    cornerNeighbours, whiteBorders, areas, cornerGroups, cornerBuilder,
+    encodeRoomClues, decodeRoomClues, drawRoomClues,
+    encodeDotClues, decodeDotClues, splitRooms,
+    startWallsGame, generateWalls, wallsModel, encodeWalls, decodeWalls, drawWalls
+  };
 })();

@@ -6,31 +6,31 @@ const Solver = (() => {
 
   // Applies forced moves until nothing changes.
   // Returns false on a contradiction.
-  function propagate(nums, n, s, nb, pr) {
+  function propagate(nums, n, state, nb, pr) {
     const total = n * n;
     let changed = true;
     while (changed) {
       changed = false;
       for (let k = 0; k < total; k++) {
-        if (s[k] === BLACK) {
+        if (state[k] === BLACK) {
           for (const j of nb[k]) {
-            if (s[j] === BLACK) return false;
-            if (s[j] === UNKNOWN) { s[j] = WHITE; changed = true; }
+            if (state[j] === BLACK) return false;
+            if (state[j] === UNKNOWN) { state[j] = WHITE; changed = true; }
           }
           // A shaded number must repeat a possible white cell.
-          if (!pr[k].some((j) => s[j] !== BLACK && nums[j] === nums[k])) return false;
-        } else if (s[k] === WHITE) {
+          if (!pr[k].some((j) => state[j] !== BLACK && nums[j] === nums[k])) return false;
+        } else if (state[k] === WHITE) {
           for (const j of pr[k]) {
             if (nums[j] !== nums[k]) continue;
-            if (s[j] === WHITE) return false;
-            if (s[j] === UNKNOWN) { s[j] = BLACK; changed = true; }
+            if (state[j] === WHITE) return false;
+            if (state[j] === UNKNOWN) { state[j] = BLACK; changed = true; }
           }
-        } else if (!pr[k].some((j) => s[j] !== BLACK && nums[j] === nums[k])) {
+        } else if (!pr[k].some((j) => state[j] !== BLACK && nums[j] === nums[k])) {
           // Unknown: white if its number has no open twin in its lines.
-          s[k] = WHITE; changed = true;
+          state[k] = WHITE; changed = true;
         }
       }
-      if (!openConnected(s, n)) return false;
+      if (!openConnected(state, n)) return false;
     }
     return true;
   }

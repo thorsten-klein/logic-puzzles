@@ -24,6 +24,14 @@ const Generator = (() => {
     return a;
   }
 
+  function fixRun(runs, layout) {
+    for (const run of runs) {
+      if (run.cells.length === 1) { layout[run.cells[0]] = 1; return true; }
+      if (run.cells.length > 9) { layout[run.cells[9]] = 1; return true; }
+    }
+    return false;
+  }
+
   // Fix up runs that are too short (length 1) or too long (>9) by
   // flipping individual white cells to black, re-scanning until stable.
   // Mutates `layout` in place. Each round turns one white cell black, so
@@ -31,19 +39,22 @@ const Generator = (() => {
   function stabilizeLayout(layout, rows, cols) {
     for (;;) {
       const { rowRuns, colRuns } = Rules.computeRuns(layout, rows, cols);
-      let changed = false;
+      if (fixRun(rowRuns, layout) || fixRun(colRuns, layout)) continue;
+      return;
+    }
+  }
 
-      for (const run of rowRuns) {
-        if (run.cells.length === 1) { layout[run.cells[0]] = 1; changed = true; break; }
-        if (run.cells.length > 9) { layout[run.cells[9]] = 1; changed = true; break; }
+  function pushWhiteNeighbors(k, rows, cols, layout, seen, stack) {
+    const r = Math.floor(k / cols), c = k % cols;
+    const neighbors = [[r - 1, c], [r + 1, c], [r, c - 1], [r, c + 1]];
+    for (const [nr, nc] of neighbors) {
+      if (Rules.inBounds(nr, nc, rows, cols)) {
+        const nk = Rules.idx(nr, nc, cols);
+        if (!layout[nk] && !seen[nk]) {
+          seen[nk] = 1;
+          stack.push(nk);
+        }
       }
-      if (changed) continue;
-
-      for (const run of colRuns) {
-        if (run.cells.length === 1) { layout[run.cells[0]] = 1; changed = true; break; }
-        if (run.cells.length > 9) { layout[run.cells[9]] = 1; changed = true; break; }
-      }
-      if (!changed) return;
     }
   }
 
@@ -65,15 +76,7 @@ const Generator = (() => {
     while (stack.length) {
       const k = stack.pop();
       visited++;
-      const r = Math.floor(k / cols), c = k % cols;
-      const neighbors = [[r - 1, c], [r + 1, c], [r, c - 1], [r, c + 1]];
-      for (const [nr, nc] of neighbors) {
-        if (!Rules.inBounds(nr, nc, rows, cols)) continue;
-        const nk = Rules.idx(nr, nc, cols);
-        if (layout[nk] || seen[nk]) continue;
-        seen[nk] = 1;
-        stack.push(nk);
-      }
+      pushWhiteNeighbors(k, rows, cols, layout, seen, stack);
     }
     return visited === whiteCount;
   }
@@ -138,6 +141,25 @@ const Generator = (() => {
     return clues;
   }
 
+  function findDiffCell(other, solved, layout, given) {
+    for (let k = 0; k < other.length; k++) {
+      if (!layout[k] && !given[k] && other[k] !== solved[k]) return k;
+    }
+    return -1;
+  }
+
+  function repairStep(puzzle, solved, given, maxReveals) {
+    const { solutions: sols, capped } = Solver.solve(puzzle, 2, { maxNodes: 300000 });
+    if (capped || sols.length === 0) return -1;
+    if (sols.length === 1) return 1;
+    const other = sols.find((s) => s.some((d, i) => d !== solved[i]));
+    if (!other) return -1;
+    const diffIdx = findDiffCell(other, solved, puzzle.layout, given);
+    if (diffIdx === -1) return -1;
+    given[diffIdx] = solved[diffIdx];
+    return Object.keys(given).length > maxReveals ? -1 : 0;
+  }
+
   // Given a layout + a valid full solution, try to reach uniqueness by
   // revealing cells as givens where two solutions disagree. Returns the
   // given-set (possibly empty) on success, or null if it didn't converge
@@ -152,23 +174,34 @@ const Generator = (() => {
 
     for (let iter = 0; iter < 80 && Date.now() < deadline; iter++) {
       const puzzle = { size, rows, cols, layout, cellRow, cellCol, rowRuns, colRuns, given };
-      const { solutions: sols, capped } = Solver.solve(puzzle, 2, { maxNodes: 300000 });
-      if (capped) return null;
-      if (sols.length === 1) return given;
-      if (sols.length === 0) return null; // shouldn't happen — ground truth always fits
-
-      const other = sols.find((s) => s.some((d, i) => d !== solved[i]));
-      if (!other) return null;
-      let diffIdx = -1;
-      for (let k = 0; k < other.length; k++) {
-        if (!layout[k] && !given[k] && other[k] !== solved[k]) { diffIdx = k; break; }
-      }
-      if (diffIdx === -1) return null;
-
-      given[diffIdx] = solved[diffIdx];
-      if (Object.keys(given).length > maxReveals) return null;
+      const res = repairStep(puzzle, solved, given, maxReveals);
+      if (res === 1) return given;
+      if (res === -1) return null;
     }
     return null;
+  }
+
+  function solveLayout(built, deadline) {
+    const { rows, cols, layout } = built;
+    const { cellRow, cellCol, rowRuns, colRuns } = Rules.computeRuns(layout, rows, cols);
+    for (let attempt = 0; attempt < 200 && Date.now() < deadline; attempt++) {
+      const solved = fillSolution(rows, cols, layout, cellRow, cellCol, rowRuns, colRuns);
+      if (solved) return solved;
+    }
+    return null;
+  }
+
+  function makeCandidate(size, built, solved, given) {
+    const { rows, cols, layout } = built;
+    const { rowStartAt, colStartAt, cellRow, cellCol, rowRuns, colRuns } = Rules.computeRuns(layout, rows, cols);
+    for (const run of rowRuns) run.sum = run.cells.reduce((s, k) => s + solved[k], 0);
+    for (const run of colRuns) run.sum = run.cells.reduce((s, k) => s + solved[k], 0);
+    return {
+      size, rows, cols, layout, cellRow, cellCol, rowRuns, colRuns,
+      clues: buildClues(layout, rows, cols, rowStartAt, colStartAt),
+      given,
+      solution: solved,
+    };
   }
 
   // At most 45% black cells: every cell that is not white counts, the
@@ -178,40 +211,18 @@ const Generator = (() => {
   function generate(size, deadlineMs = 6000) {
     const density = 0.16;
     const deadline = Date.now() + deadlineMs;
-    // Keep searching for a while even after the first hit — fewer givens
-    // makes for a better puzzle — but don't chase perfection forever.
-    // Bigger boards with few black cells need more givens.
     const goodEnoughGivens = Math.max(5, 2 * size - 6);
     let best = null;
 
     while (Date.now() < deadline) {
       const built = buildLayout(size, density, 1 - MAX_BLACK, 0.95);
       if (!built) continue;
-      const { rows, cols, layout } = built;
-
-      let solved = null;
-      {
-        const { cellRow, cellCol, rowRuns, colRuns } = Rules.computeRuns(layout, rows, cols);
-        for (let attempt = 0; attempt < 200 && Date.now() < deadline; attempt++) {
-          solved = fillSolution(rows, cols, layout, cellRow, cellCol, rowRuns, colRuns);
-          if (solved) break;
-        }
-      }
+      const solved = solveLayout(built, deadline);
       if (!solved) continue;
-
-      const given = repairWithGivens(size, rows, cols, layout, solved, deadline);
+      const given = repairWithGivens(size, built.rows, built.cols, built.layout, solved, deadline);
       if (!given) continue;
 
-      const { rowStartAt, colStartAt, cellRow, cellCol, rowRuns, colRuns } = Rules.computeRuns(layout, rows, cols);
-      for (const run of rowRuns) run.sum = run.cells.reduce((s, k) => s + solved[k], 0);
-      for (const run of colRuns) run.sum = run.cells.reduce((s, k) => s + solved[k], 0);
-
-      const candidate = {
-        size, rows, cols, layout, cellRow, cellCol, rowRuns, colRuns,
-        clues: buildClues(layout, rows, cols, rowStartAt, colStartAt),
-        given,
-        solution: solved,
-      };
+      const candidate = makeCandidate(size, built, solved, given);
       if (!best || Object.keys(given).length < Object.keys(best.given).length) best = candidate;
       if (Object.keys(given).length <= goodEnoughGivens) break;
     }

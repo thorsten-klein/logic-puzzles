@@ -5,27 +5,7 @@
 // white line crosses two room borders. Built on the shared Binary page.
 
 (() => {
-  const { YES, NO } = Binary;
-
-  // Random split into rectangles of side 1..4 (no 1x1 rooms).
-  function split(R, C) {
-    const id = new Int32Array(R * C).fill(-1);
-    let count = 0;
-    for (let k = 0; k < R * C; k++) {
-      if (id[k] >= 0) continue;
-      const r = Math.floor(k / C), c = k % C;
-      let maxW = 0;
-      while (c + maxW < C && id[r * C + c + maxW] < 0 && maxW < 4) maxW++;
-      const w = 1 + Math.floor(Math.random() * maxW);
-      let maxH = 0;
-      while (r + maxH < R && maxH < 4 && [...new Array(w).keys()].every((i) => id[(r + maxH) * C + c + i] < 0)) maxH++;
-      let h = 1 + Math.floor(Math.random() * maxH);
-      if (w * h === 1 && maxH > 1) h = 2;
-      for (let i = 0; i < h; i++) for (let j = 0; j < w; j++) id[(r + i) * C + c + j] = count;
-      count++;
-    }
-    return id;
-  }
+  const { YES, NO, splitRooms } = Binary;
 
   function model(p) {
     const { R, C, room, clues } = p;
@@ -85,7 +65,7 @@
 
   function tryOnce(n) {
     const R = n, C = n;
-    const room = split(R, C);
+    const room = splitRooms(R, C);
     const count = Math.max(...room) + 1;
     const p = { R, C, room, clues: new Int8Array(count).fill(-1) };
     const sol = Binary.randomFill(model(p), 0.35, 5);
@@ -113,31 +93,10 @@
       while (Date.now() < deadline) { const p = tryOnce(n); if (p) return p; }
       return null;
     },
-    encode: (p) => ({
-      r: p.R, c: p.C,
-      g: Array.from(p.room, (v) => v.toString(36).padStart(2, '0')).join(''),
-      n: Array.from(p.clues).join(','),
-    }),
-    decode(d) {
-      const R = d?.r, C = d?.c;
-      if (![R, C].every((x) => Number.isInteger(x) && x >= 2 && x <= 20)) throw new Error('Invalid board size');
-      if (typeof d.g !== 'string' || d.g.length !== 2 * R * C) throw new Error('Invalid rooms');
-      const room = Int32Array.from({ length: R * C }, (_, k) => Number.parseInt(d.g.slice(2 * k, 2 * k + 2), 36));
-      const clues = Int8Array.from(String(d.n).split(','), Number);
-      if (room.some((v) => !(v >= 0 && v < clues.length))) throw new Error('Invalid rooms');
-      return { R, C, room, clues };
-    },
+    encode: Binary.encodeRoomClues,
+    decode: Binary.decodeRoomClues,
     model,
-    draw(p, k, el) {
-      PuzzleShell.regionBorders(el, k, p.room, p.R, p.C);
-      const first = p.room.indexOf(p.room[k]) === k;
-      if (first && p.clues[p.room[k]] >= 0) {
-        const lab = document.createElement('span');
-        lab.className = 'room-clue';
-        lab.textContent = p.clues[p.room[k]];
-        el.appendChild(lab);
-      }
-    },
+    draw: Binary.drawRoomClues,
     noun: 'shaded cell', noNoun: 'white cell',
     className: 'pz-regions hb-board',
   });

@@ -62,26 +62,10 @@
     size: { min: 5, max: 6, def: 6 },
     solvedText: 'No long runs anywhere — nicely done.',
     generate,
-    encode: (p) => ({ r: p.R, c: p.C, g: Array.from(p.room, (v) => v.toString(36).padStart(2, '0')).join(''), n: Array.from(p.clues).join(',') }),
-    decode(d) {
-      const R = d?.r, C = d?.c;
-      if (![R, C].every((x) => Number.isInteger(x) && x >= 2 && x <= 20)) throw new Error('Invalid board size');
-      if (typeof d.g !== 'string' || d.g.length !== 2 * R * C) throw new Error('Invalid rooms');
-      const room = Int32Array.from({ length: R * C }, (_, k) => Number.parseInt(d.g.slice(2 * k, 2 * k + 2), 36));
-      const clues = Int8Array.from(String(d.n).split(','), Number);
-      if (room.some((v) => !(v >= 0 && v < clues.length))) throw new Error('Invalid rooms');
-      return { R, C, room, clues };
-    },
+    encode: Binary.encodeRoomClues,
+    decode: Binary.decodeRoomClues,
     model,
-    draw(p, k, el) {
-      PuzzleShell.regionBorders(el, k, p.room, p.R, p.C);
-      if (p.room.indexOf(p.room[k]) === k && p.clues[p.room[k]] >= 0) {
-        const lab = document.createElement('span');
-        lab.className = 'room-clue';
-        lab.textContent = p.clues[p.room[k]];
-        el.appendChild(lab);
-      }
-    },
+    draw: Binary.drawRoomClues,
     noun: 'shaded cell', noNoun: 'white cell',
     className: 'pz-regions ck-board',
   });

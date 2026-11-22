@@ -157,21 +157,8 @@
     size: { min: 5, max: 6, def: 6 },
     solvedText: 'Every chain unbroken — nicely done.',
     generate,
-    encode: (p) => ({ r: p.R, c: p.C, g: Array.from(p.clues, (v) => {
-      if (v < 0) return '.';
-      if (v === 0) return '?';
-      return v.toString(36);
-    }).join('') }),
-    decode(d) {
-      const R = d?.r, C = d?.c;
-      if (![R, C].every((x) => Number.isInteger(x) && x >= 3 && x <= 20)) throw new Error('Invalid board size');
-      if (typeof d.g !== 'string' || d.g.length !== R * C) throw new Error('Invalid clues');
-      return { R, C, clues: Int8Array.from(d.g, (ch) => {
-        if (ch === '.') return -1;
-        if (ch === '?') return 0;
-        return Number.parseInt(ch, 36);
-      }) };
-    },
+    encode: Binary.encodeDotClues,
+    decode: Binary.decodeDotClues,
     model,
     fixed: (p, k) => (p.clues[k] >= 0 ? YES : 0),
     draw(p, k, el) { if (p.clues[k] >= 0) el.textContent = p.clues[k] || '?'; },
