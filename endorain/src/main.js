@@ -61,7 +61,8 @@
     return { N: cands.length, cons, check };
   }
 
-  function buildStraightLine(n, room, used, r, c, dr, dc, len) {
+  function buildStraightLine(grid, r, c, [dr, dc], len) {
+    const { n, room, used } = grid;
     const cells = [];
     for (let i = 0; i < len; i++) {
       const a = r + dr * i, b = c + dc * i;
@@ -72,10 +73,11 @@
   }
 
   function findLineOptions(n, room, used, r, c) {
+    const grid = { n, room, used };
     const opts = [];
-    for (const [dr, dc] of [[0, 1], [1, 0]]) {
+    for (const dir of [[0, 1], [1, 0]]) {
       for (const len of [2, 3, 4]) {
-        const cells = buildStraightLine(n, room, used, r, c, dr, dc, len);
+        const cells = buildStraightLine(grid, r, c, dir, len);
         if (cells) opts.push(cells);
       }
     }

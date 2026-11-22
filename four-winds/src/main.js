@@ -7,27 +7,33 @@
   const { UNKNOWN, YES, NO } = Binary;
   const DIRS = [[0, -1, YES], [0, 1, YES], [-1, 0, NO], [1, 0, NO]];
 
+  function checkArmDir(d, dirs, v, can, got, max, min, k, s, log) {
+    const [cells, want] = dirs[d];
+    const need = v - (max - can[d]);
+    const forced = cells.slice(0, Math.max(0, need)).filter((j) => s[j] === UNKNOWN);
+    if (forced.length) {
+      for (const j of forced) s[j] = want;
+      if (log) log.push({ cells: forced, v: want, at: k, reason: `This ${v} can not reach its total in the other directions. These lines must run out from it.` });
+      return forced.length;
+    }
+    const most = v - (min - got[d]);
+    const next = cells[got[d]];
+    if (got[d] === most && next !== undefined && s[next] === UNKNOWN) {
+      s[next] = want === YES ? NO : YES;
+      if (log) log.push({ cells: [next], v: s[next], at: k, reason: `This ${v} already has enough length this way. The next cell turns the other way.` });
+      return 1;
+    }
+    return 0;
+  }
+
   function stepArm(dirs, v, k, s, log) {
     const got = dirs.map(([cells, want]) => { let i = 0; while (i < cells.length && s[cells[i]] === want) { i++; } return i; });
     const can = dirs.map(([cells, want]) => { let i = 0; while (i < cells.length && s[cells[i]] !== (want === YES ? NO : YES)) { i++; } return i; });
     const min = got.reduce((a, b) => a + b, 0), max = can.reduce((a, b) => a + b, 0);
     if (min > v || max < v) return -1;
     for (let d = 0; d < 4; d++) {
-      const [cells, want] = dirs[d];
-      const need = v - (max - can[d]);
-      const forced = cells.slice(0, Math.max(0, need)).filter((j) => s[j] === UNKNOWN);
-      if (forced.length) {
-        for (const j of forced) s[j] = want;
-        if (log) log.push({ cells: forced, v: want, at: k, reason: `This ${v} can not reach its total in the other directions. These lines must run out from it.` });
-        return forced.length;
-      }
-      const most = v - (min - got[d]);
-      const next = cells[got[d]];
-      if (got[d] === most && next !== undefined && s[next] === UNKNOWN) {
-        s[next] = want === YES ? NO : YES;
-        if (log) log.push({ cells: [next], v: s[next], at: k, reason: `This ${v} already has enough length this way. The next cell turns the other way.` });
-        return 1;
-      }
+      const res = checkArmDir(d, dirs, v, can, got, max, min, k, s, log);
+      if (res !== 0) return res;
     }
     return 0;
   }

@@ -7,24 +7,32 @@
 (() => {
   const { UNKNOWN, YES, NO } = Binary;
 
-  function checkSquareSight(list, size, id, s, R, C) {
-    for (let a = 0; a < list.length; a++) {
-      if (!size[a]) continue;
-      for (const k of list[a]) {
-        const r = Math.floor(k / C), c = k % C;
-        for (const [dr, dc] of [[-1, 0], [1, 0], [0, -1], [0, 1]]) {
-          let x = r + dr, y = c + dc;
-          while (x >= 0 && y >= 0 && x < R && y < C) {
-            const j = x * C + y;
-            if (s[j] === UNKNOWN) break;
-            if (s[j] === YES) {
-              if (id[j] !== a && size[id[j]] === size[a]) return false;
-              break;
-            }
-            x += dr; y += dc;
-          }
-        }
+  function raySeesSameSize(r, c, dr, dc, a, ctx) {
+    const { R, C, s, id, size } = ctx;
+    let x = r + dr, y = c + dc;
+    while (x >= 0 && y >= 0 && x < R && y < C) {
+      const j = x * C + y;
+      if (s[j] === UNKNOWN) break;
+      if (s[j] === YES) return id[j] !== a && size[id[j]] === size[a];
+      x += dr; y += dc;
+    }
+    return false;
+  }
+
+  function squareSeesSameSize(cells, a, ctx) {
+    for (const k of cells) {
+      const r = Math.floor(k / ctx.C), c = k % ctx.C;
+      for (const [dr, dc] of [[-1, 0], [1, 0], [0, -1], [0, 1]]) {
+        if (raySeesSameSize(r, c, dr, dc, a, ctx)) return true;
       }
+    }
+    return false;
+  }
+
+  function checkSquareSight(list, size, id, s, R, C) {
+    const ctx = { R, C, s, id, size };
+    for (let a = 0; a < list.length; a++) {
+      if (size[a] && squareSeesSameSize(list[a], a, ctx)) return false;
     }
     return true;
   }

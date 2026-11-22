@@ -113,17 +113,22 @@
     return { solutions, capped: nodes > maxNodes };
   }
 
+  function findGalaxyFrontier(p, owner, N, d) {
+    const front = [];
+    for (let k = 0; k < N; k++) {
+      if (owner[k] !== d) continue;
+      for (const j of neighbours(p, k)) {
+        const m = mirror(p, j, d);
+        if (owner[j] < 0 && m >= 0 && owner[m] < 0) front.push(j);
+      }
+    }
+    return front;
+  }
+
   function expandGalaxy(p, owner, N, d, size, initialCells) {
     let cells = initialCells;
     for (let t = 0; t < 40 && cells < size; t++) {
-      const front = [];
-      for (let k = 0; k < N; k++) {
-        if (owner[k] !== d) continue;
-        for (const j of neighbours(p, k)) {
-          const m = mirror(p, j, d);
-          if (owner[j] < 0 && m >= 0 && owner[m] < 0) front.push(j);
-        }
-      }
+      const front = findGalaxyFrontier(p, owner, N, d);
       if (!front.length) break;
       const j = front[Math.floor(Math.random() * front.length)];
       const m = mirror(p, j, d);

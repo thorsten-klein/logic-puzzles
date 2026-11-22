@@ -13,6 +13,15 @@
     return out;
   }
 
+  function findGapFits(cells, gap, n, s) {
+    const fits = [];
+    for (let a = 0; a + gap + 1 < n; a++) {
+      const b = a + gap + 1;
+      if (cells.every((k, j) => (j === a || j === b ? s[k] !== NO : s[k] !== YES))) fits.push([a, b]);
+    }
+    return fits;
+  }
+
   function model(p) {
     const { n, clues } = p;
     const lines = lineCells(n);
@@ -25,14 +34,6 @@
     for (let r = 0; r < n - 1; r++) for (let c = 0; c < n - 1; c++) {
       const k = r * n + c;
       cons.push({ cells: [k, k + 1, k + n, k + n + 1], min: 0, max: 1, why: () => 'Shaded cells never touch, not even at a corner.' });
-    }
-    function findGapFits(cells, gap, n, s) {
-      const fits = [];
-      for (let a = 0; a + gap + 1 < n; a++) {
-        const b = a + gap + 1;
-        if (cells.every((k, j) => (j === a || j === b ? s[k] !== NO : s[k] !== YES))) fits.push([a, b]);
-      }
-      return fits;
     }
 
     function stepLine(cells, gap, n, s, name, log) {

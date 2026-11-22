@@ -66,6 +66,21 @@
     }
   }
 
+  function tryMoveDominoCell(cand, p, side, N) {
+    for (const x of cand) {
+      const g = p.room[x];
+      const to = side(x).filter((j) => p.room[j] !== g);
+      if (!to.length) continue;
+      const rest = [...new Array(N).keys()].filter((k) => p.room[k] === g && k !== x);
+      const set = new Set(rest), seen = new Set([rest[0]]), st = [rest[0]];
+      while (st.length) { const k = st.pop(); for (const j of side(k)) if (set.has(j) && !seen.has(j)) { seen.add(j); st.push(j); } }
+      if (seen.size !== rest.length) continue;
+      p.room[x] = p.room[to[Math.floor(Math.random() * to.length)]];
+      return true;
+    }
+    return false;
+  }
+
   function repairDominoRooms(ctx, deadline) {
     const { p, N, sol, side } = ctx;
     let ok = false;
@@ -77,20 +92,8 @@
       if (r.capped) break;
       const other = r.solutions.find((x) => x.some((v, k) => v !== sol[k]));
       if (!other) { ok = r.solutions.length === 1; break; }
-      let moved = false;
-      for (const x of PuzzleShell.shuffle([...new Array(N).keys()].filter((k) => other[k] === YES && sol[k] === NO))) {
-        const g = p.room[x];
-        const to = side(x).filter((j) => p.room[j] !== g);
-        if (!to.length) continue;
-        const rest = [...new Array(N).keys()].filter((k) => p.room[k] === g && k !== x);
-        const set = new Set(rest), seen = new Set([rest[0]]), st = [rest[0]];
-        while (st.length) { const k = st.pop(); for (const j of side(k)) if (set.has(j) && !seen.has(j)) { seen.add(j); st.push(j); } }
-        if (seen.size !== rest.length) continue;
-        p.room[x] = p.room[to[Math.floor(Math.random() * to.length)]];
-        moved = true;
-        break;
-      }
-      if (!moved) break;
+      const cand = PuzzleShell.shuffle([...new Array(N).keys()].filter((k) => other[k] === YES && sol[k] === NO));
+      if (!tryMoveDominoCell(cand, p, side, N)) break;
     }
     return ok;
   }

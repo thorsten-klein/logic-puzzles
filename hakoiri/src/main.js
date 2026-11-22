@@ -44,15 +44,19 @@
     return [...new Array(N).keys()].every((k) => !sure(k) || seen[k]);
   }
 
+  function pruneRoomValue(cells, cand, bit) {
+    const fixed = cells.filter((k) => cand[k] === bit);
+    if (fixed.length > 1) return false;
+    if (fixed.length === 1) for (const k of cells) if (k !== fixed[0]) cand[k] &= ~bit;
+    const where = cells.filter((k) => cand[k] & bit);
+    if (!where.length) return false;
+    if (where.length === 1) cand[where[0]] = bit;
+    return true;
+  }
+
   function propagateRoom(cells, cand) {
     for (let v = 1; v <= 3; v++) {
-      const bit = 1 << v;
-      const fixed = cells.filter((k) => cand[k] === bit);
-      if (fixed.length > 1) return false;
-      if (fixed.length === 1) for (const k of cells) if (k !== fixed[0]) cand[k] &= ~bit;
-      const where = cells.filter((k) => cand[k] & bit);
-      if (!where.length) return false;
-      if (where.length === 1) cand[where[0]] = bit;
+      if (!pruneRoomValue(cells, cand, 1 << v)) return false;
     }
     return true;
   }

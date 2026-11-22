@@ -24,6 +24,13 @@
     }
   }
 
+  function pruneLineCell(cand, k, low, high) {
+    for (let v = 1; v < 31; v++) {
+      if ((cand[k] & (1 << v)) && (v < low || v > high)) cand[k] &= ~(1 << v);
+    }
+    return Boolean(cand[k]);
+  }
+
   function filterLineSums(p, cand) {
     for (const [want, cells] of lines(p)) {
       if (cells.some((k) => !cand[k])) return false;
@@ -32,8 +39,7 @@
       if (sMin > want || sMax < want) return false;
       for (const k of cells) {
         const low = want - (sMax - hi(cand[k])), high = want - (sMin - lo(cand[k]));
-        for (let v = 1; v < 31; v++) if ((cand[k] & (1 << v)) && (v < low || v > high)) cand[k] &= ~(1 << v);
-        if (!cand[k]) return false;
+        if (!pruneLineCell(cand, k, low, high)) return false;
       }
     }
     return true;

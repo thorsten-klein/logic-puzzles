@@ -18,21 +18,22 @@
     return { N: R * C, cons, check: (s) => Binary.canConnect(R, C, s, YES) };
   }
 
+  function lineRunLength(s, n, r, c, dr, dc) {
+    let run = 1;
+    for (let i = 1; i < 4; i++) {
+      const nr = r + dr * i, nc = c + dc * i;
+      if (nr < n && nc < n && s[nr * n + nc] === YES) run++; else break;
+    }
+    for (let i = 1; i < 4; i++) {
+      const nr = r - dr * i, nc = c - dc * i;
+      if (nr >= 0 && nc >= 0 && s[nr * n + nc] === YES) run++; else break;
+    }
+    return run;
+  }
+
   function hasFour(s, n, k) {
     const r = Math.floor(k / n), c = k % n;
-    for (const [dr, dc] of [[0, 1], [1, 0]]) {
-      let run = 1;
-      for (let i = 1; i < 4; i++) {
-        const nr = r + dr * i, nc = c + dc * i;
-        if (nr < n && nc < n && s[nr * n + nc] === YES) run++; else break;
-      }
-      for (let i = 1; i < 4; i++) {
-        const nr = r - dr * i, nc = c - dc * i;
-        if (nr >= 0 && nc >= 0 && s[nr * n + nc] === YES) run++; else break;
-      }
-      if (run >= 4) return true;
-    }
-    return false;
+    return [[0, 1], [1, 0]].some(([dr, dc]) => lineRunLength(s, n, r, c, dr, dc) >= 4);
   }
 
   function findFrontier(s, n, N) {

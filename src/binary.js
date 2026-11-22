@@ -470,6 +470,22 @@ const Binary = (() => {
     return seen;
   }
 
+  // For Heyawake and Heyablock: straight segments spanning two room borders.
+  function whiteBorders(lines, room) {
+    const borders = [];
+    for (const line of lines) {
+      const parts = [];
+      for (const k of line) {
+        if (parts.length && room[parts.at(-1)[0]] === room[k]) parts.at(-1).push(k);
+        else parts.push([k]);
+      }
+      for (let i = 1; i + 1 < parts.length; i++) {
+        borders.push([parts[i - 1][parts[i - 1].length - 1], ...parts[i], parts[i + 1][0]]);
+      }
+    }
+    return borders;
+  }
+
   // Cells at the four corners of k.
   function cornerNeighbours(R, C, k) {
     const r = Math.floor(k / C), c = k % C, out = [];
@@ -634,5 +650,5 @@ const Binary = (() => {
     return solve(model, 2, maxNodes, t || undefined);
   }
 
-  return { UNKNOWN, YES, NO, step, settle, lookahead, solve, solveFull, logicSolve, isUnique, hints, startGame, thinClues, randomFill, openConnected, canConnect, sideNeighbours, cornerNeighbours, areas, cornerGroups, cornerBuilder };
+  return { UNKNOWN, YES, NO, step, settle, lookahead, solve, solveFull, logicSolve, isUnique, hints, startGame, thinClues, randomFill, openConnected, canConnect, sideNeighbours, cornerNeighbours, whiteBorders, areas, cornerGroups, cornerBuilder };
 })();

@@ -84,7 +84,7 @@
         }
       }
       for (const [, n, cells] of rays) {
-        const res = checkRayClue(n, cells, log);
+        const res = checkRayClue(n, cells);
         if (res !== 0) return res;
       }
       return 0;

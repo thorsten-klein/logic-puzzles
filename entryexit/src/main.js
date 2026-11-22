@@ -45,26 +45,6 @@
     return { g, must, rule };
   }
 
-  function tourOrder(sol, g, n) {
-    const next = Array.from({ length: n * n }, () => []);
-    for (let e = 0; e < g.E; e++) {
-      if (sol[e] === LINE) {
-        const [a, b] = g.ends[e];
-        next[a].push(b);
-        next[b].push(a);
-      }
-    }
-    const order = [0];
-    for (let prev = -1, cur = 0; order.length < n * n;) {
-      const nx = next[cur].find((x) => x !== prev);
-      prev = cur;
-      cur = nx;
-      order.push(cur);
-    }
-    const shift = Math.floor(Math.random() * order.length);
-    return order.slice(shift).concat(order.slice(0, shift));
-  }
-
   function partitionRegions(rot, n) {
     const region = new Int32Array(n * n);
     let id = 0;
@@ -83,7 +63,7 @@
     while (Date.now() < deadline) {
       const sol = Loop.randomTour(n);
       const g = Loop.grid(n, n);
-      const rot = tourOrder(sol, g, n);
+      const rot = Loop.tourOrder(sol, g, n);
       const region = partitionRegions(rot, n);
       const p = { R: n, C: n, region };
       const res = Loop.solve(model(p), 2, 20000);

@@ -9,25 +9,38 @@
   const { UNKNOWN, YES, NO } = Binary;
   const side = (C, N, k) => [k - C, k + C, k % C ? k - 1 : -1, (k + 1) % C ? k + 1 : -1].filter((j) => j >= 0 && j < N);
 
+  function isRoomConnected(cells, targetSet, C, N) {
+    if (!cells.length) return false;
+    const seen = new Set([cells[0]]), st = [cells[0]];
+    while (st.length) {
+      const k = st.pop();
+      for (const j of side(C, N, k)) {
+        if (targetSet.has(j) && !seen.has(j)) { seen.add(j); st.push(j); }
+      }
+    }
+    return cells.every((k) => seen.has(k));
+  }
+
+  function validateRoomBlack(cells, s, done, C, N) {
+    const black = cells.filter((k) => s[k] === YES);
+    if (black.length > 1) {
+      const ok = new Set(cells.filter((k) => s[k] !== NO));
+      if (!isRoomConnected(black, ok, C, N)) return -1;
+    }
+    if (done || cells.every((k) => s[k] !== UNKNOWN)) {
+      if (!black.length || !isRoomConnected(black, new Set(black), C, N)) return -1;
+      return black.length;
+    }
+    return null;
+  }
+
   function checkRoomSizes(rooms, count, s, near, done, C, N) {
     for (let g = 0; g < rooms.length; g++) {
       const cells = rooms[g];
       if (!cells) continue;
-      const black = cells.filter((k) => s[k] === YES);
-      if (black.length > 1) {
-        const ok = new Set(cells.filter((k) => s[k] !== NO));
-        const seen = new Set([black[0]]), st = [black[0]];
-        while (st.length) { const k = st.pop(); for (const j of side(C, N, k)) if (ok.has(j) && !seen.has(j)) { seen.add(j); st.push(j); } }
-        if (black.some((k) => !seen.has(k))) return false;
-      }
-      if (done || cells.every((k) => s[k] !== UNKNOWN)) {
-        const set = new Set(black);
-        if (!black.length) return false;
-        const seen = new Set([black[0]]), st = [black[0]];
-        while (st.length) { const k = st.pop(); for (const j of side(C, N, k)) if (set.has(j) && !seen.has(j)) { seen.add(j); st.push(j); } }
-        if (seen.size !== black.length) return false;
-        count[g] = black.length;
-      }
+      const res = validateRoomBlack(cells, s, done, C, N);
+      if (res === -1) return false;
+      if (res !== null) count[g] = res;
     }
     for (let g = 0; g < rooms.length; g++) {
       if (count[g] < 0) continue;

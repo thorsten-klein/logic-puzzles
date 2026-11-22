@@ -45,7 +45,7 @@
     return seen.every(Boolean);
   }
 
-  function checkCrossings(p, lo, hi, log) {
+  function checkCrossingBridges(p, lo, hi, log) {
     for (let j = 0; j < p.pairs.length; j++) {
       if (!lo[j]) continue;
       for (const o of p.cross[j]) {
@@ -57,20 +57,27 @@
         }
       }
     }
-    // Two islands that would close off a group: 1-1, or 2=2.
-    if (p.isl.length > 2) {
-      for (let j = 0; j < p.pairs.length; j++) {
-        const { a, b } = p.pairs[j];
-        const na = p.isl[a].n, nb = p.isl[b].n;
-        if (na === nb && na <= 2 && hi[j] >= na) {
-          hi[j] = na - 1;
-          if (lo[j] > hi[j]) return -1;
-          if (log) log.push({ pairs: [j], reason: `Two ${na}s joined by ${PuzzleShell.plural(na, 'bridge')} would form a closed group. So they can not be joined that way.` });
-          return 1;
-        }
+    return 0;
+  }
+
+  function checkClosedPairs(p, lo, hi, log) {
+    if (p.isl.length <= 2) return 0;
+    for (let j = 0; j < p.pairs.length; j++) {
+      const { a, b } = p.pairs[j];
+      const na = p.isl[a].n, nb = p.isl[b].n;
+      if (na === nb && na <= 2 && hi[j] >= na) {
+        hi[j] = na - 1;
+        if (lo[j] > hi[j]) return -1;
+        if (log) log.push({ pairs: [j], reason: `Two ${na}s joined by ${PuzzleShell.plural(na, 'bridge')} would form a closed group. So they can not be joined that way.` });
+        return 1;
       }
     }
     return 0;
+  }
+
+  function checkCrossings(p, lo, hi, log) {
+    const res = checkCrossingBridges(p, lo, hi, log);
+    return res !== 0 ? res : checkClosedPairs(p, lo, hi, log);
   }
 
   // One round of forced moves. Returns false on contradiction, else the

@@ -125,6 +125,13 @@
     return false;
   }
 
+  function has2x2Block(black, R, C) {
+    for (let r = 0; r + 1 < R; r++) for (let c = 0; c + 1 < C; c++) {
+      if (black[r * C + c] && black[r * C + c + 1] && black[(r + 1) * C + c] && black[(r + 1) * C + c + 1]) return true;
+    }
+    return false;
+  }
+
   function tryAddPiece(ctx, anchor) {
     const { R, C, N, black, owner, pieces } = ctx;
     for (const sh of PuzzleShell.shuffle(SHAPES.slice())) {
@@ -134,14 +141,30 @@
       if (cells.some(([a, b]) => a < 0 || b < 0 || a >= R || b >= C || black[a * C + b])) continue;
       const ks = cells.map(([a, b]) => a * C + b);
       ks.forEach((k) => { black[k] = 1; });
-      let bad = false;
-      for (let r = 0; r + 1 < R && !bad; r++) for (let c = 0; c + 1 < C && !bad; c++) {
-        if (black[r * C + c] && black[r * C + c + 1] && black[(r + 1) * C + c] && black[(r + 1) * C + c + 1]) bad = true;
-      }
-      if (!bad && checkPieceTouching(N, C, ks, owner, pieces, kind(C, ks))) bad = true;
+      const bad = has2x2Block(black, R, C) || checkPieceTouching(N, C, ks, owner, pieces, kind(C, ks));
       if (bad) { ks.forEach((k) => { black[k] = 0; }); continue; }
       ks.forEach((k) => { owner[k] = pieces.length; });
       pieces.push(ks);
+      return true;
+    }
+    return false;
+  }
+
+  function tryMoveCell(cand, p, N, C) {
+    for (const x of cand) {
+      const g = p.room[x];
+      const to = [x - C, x + C, x % C ? x - 1 : -1, (x + 1) % C ? x + 1 : -1].filter((j) => j >= 0 && j < N && p.room[j] !== g);
+      if (!to.length) continue;
+      const rest = [...new Array(N).keys()].filter((k) => p.room[k] === g && k !== x);
+      const set = new Set(rest), seen = new Set([rest[0]]), st = [rest[0]];
+      while (st.length) {
+        const k = st.pop();
+        for (const j of [k - C, k + C, k % C ? k - 1 : -1, (k + 1) % C ? k + 1 : -1]) {
+          if (set.has(j) && !seen.has(j)) { seen.add(j); st.push(j); }
+        }
+      }
+      if (seen.size !== rest.length) continue;
+      p.room[x] = p.room[to[Math.floor(Math.random() * to.length)]];
       return true;
     }
     return false;
@@ -156,20 +179,7 @@
       const other = r.solutions.find((x) => x.some((v, k) => v !== sol[k]));
       if (!other) { unique = true; break; }
       const cand = PuzzleShell.shuffle([...new Array(N).keys()].filter((k) => other[k] === YES && sol[k] === NO));
-      let moved = false;
-      for (const x of cand) {
-        const g = p.room[x];
-        const to = [x - C, x + C, x % C ? x - 1 : -1, (x + 1) % C ? x + 1 : -1].filter((j) => j >= 0 && j < N && p.room[j] !== g);
-        if (!to.length) continue;
-        const rest = [...new Array(N).keys()].filter((k) => p.room[k] === g && k !== x);
-        const set = new Set(rest), seen = new Set([rest[0]]), st = [rest[0]];
-        while (st.length) { const k = st.pop(); for (const j of [k - C, k + C, k % C ? k - 1 : -1, (k + 1) % C ? k + 1 : -1]) if (set.has(j) && !seen.has(j)) { seen.add(j); st.push(j); } }
-        if (seen.size !== rest.length) continue;
-        p.room[x] = p.room[to[Math.floor(Math.random() * to.length)]];
-        moved = true;
-        break;
-      }
-      if (!moved || model(p).check(sol, true) === false) break;
+      if (!tryMoveCell(cand, p, N, C) || model(p).check(sol, true) === false) break;
     }
     return unique;
   }
