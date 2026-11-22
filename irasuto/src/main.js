@@ -41,6 +41,21 @@
     return { N, cons, check };
   }
 
+  function computeSeen(N, C, R, sol, num) {
+    for (let j = 0; j < N; j++) {
+      if (num[j] < 0) continue;
+      let seen = 0;
+      for (const [dr, dc] of DIRS) {
+        let r = Math.floor(j / C) + dr, c = (j % C) + dc;
+        while (r >= 0 && c >= 0 && r < R && c < C && sol[r * C + c] === sol[j]) {
+          if (num[r * C + c] < 0) { seen++; }
+          r += dr; c += dc;
+        }
+      }
+      num[j] = seen;
+    }
+  }
+
   function generate(n) {
     const deadline = Date.now() + 8000;
     while (Date.now() < deadline) {
@@ -49,15 +64,7 @@
       // Numbers on about a third of the cells, then thin.
       const num = new Int8Array(N).fill(-1), col = new Uint8Array(N);
       for (let k = 0; k < N; k++) if (Math.random() < 0.35) { num[k] = 0; col[k] = sol[k]; }
-      for (let k = 0; k < N; k++) {
-        if (num[k] < 0) continue;
-        let seen = 0;
-        for (const [dr, dc] of DIRS) {
-          let r = Math.floor(k / C) + dr, c = (k % C) + dc;
-          while (r >= 0 && c >= 0 && r < R && c < C && sol[r * C + c] === sol[k]) { if (num[r * C + c] < 0) { seen++; } r += dr; c += dc; }
-        }
-        num[k] = seen;
-      }
+      computeSeen(N, C, R, sol, num);
       const p = { R, C, num, col };
       const s = Binary.logicSolve(model(p));
       if (!s || s.includes(UNKNOWN)) continue;
@@ -68,19 +75,8 @@
         const keep = num[k];
         num[k] = -1;
         // Removing a number changes what the others see; recount.
-        const recount = () => {
-          for (let j = 0; j < N; j++) {
-            if (num[j] < 0) continue;
-            let seen = 0;
-            for (const [dr, dc] of DIRS) {
-              let r = Math.floor(j / C) + dr, c = (j % C) + dc;
-              while (r >= 0 && c >= 0 && r < R && c < C && sol[r * C + c] === sol[j]) { if (num[r * C + c] < 0) { seen++; } r += dr; c += dc; }
-            }
-            num[j] = seen;
-          }
-        };
         const before = Int8Array.from(num);
-        recount();
+        computeSeen(N, C, R, sol, num);
         const t = Binary.logicSolve(model(p));
         if (!t || t.includes(UNKNOWN)) { num.set(before); num[k] = keep; }
       }

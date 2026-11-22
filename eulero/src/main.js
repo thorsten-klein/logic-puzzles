@@ -10,30 +10,38 @@
   const low = (m) => 31 - Math.clz32(m & -m);
   const bits = (m) => { let c = 0; while (m) { m &= m - 1; c++; } return c; };
 
+  function eliminateFromCell(n, cand, k, N, all) {
+    const v = low(cand[k]), a = Math.floor(v / n), b = v % n;
+    const r = Math.floor(k / n), c = k % n;
+    let mask = 0;
+    for (let d = 0; d < n; d++) { mask |= 1 << (a * n + d); mask |= 1 << (d * n + b); }
+    for (let j = 0; j < N; j++) {
+      if (j === k) continue;
+      cand[j] &= ~(1 << v); // each pair once
+      if (Math.floor(j / n) === r || j % n === c) cand[j] &= ~mask & all;
+    }
+  }
+
+  function assignUniquePairs(cand, N) {
+    for (let v = 0; v < N; v++) {
+      const where = [];
+      for (let k = 0; k < N; k++) if (cand[k] & (1 << v)) where.push(k);
+      if (!where.length) return false;
+      if (where.length === 1) cand[where[0]] = 1 << v;
+    }
+    return true;
+  }
+
   function propagate(n, cand) {
     const N = n * n;
     const all = (1 << N) - 1;
     for (let guard = 0; guard < 100; guard++) {
       const before = cand.join(',');
       for (let k = 0; k < N; k++) {
-        if (!one(cand[k])) continue;
-        const v = low(cand[k]), a = Math.floor(v / n), b = v % n;
-        const r = Math.floor(k / n), c = k % n;
-        let mask = 0;
-        for (let d = 0; d < n; d++) { mask |= 1 << (a * n + d); mask |= 1 << (d * n + b); }
-        for (let j = 0; j < N; j++) {
-          if (j === k) continue;
-          cand[j] &= ~(1 << v); // each pair once
-          if (Math.floor(j / n) === r || j % n === c) cand[j] &= ~mask & all;
-        }
+        if (one(cand[k])) eliminateFromCell(n, cand, k, N, all);
       }
       // Each pair appears once: if only one cell can hold it, it goes there.
-      for (let v = 0; v < N; v++) {
-        const where = [];
-        for (let k = 0; k < N; k++) if (cand[k] & (1 << v)) where.push(k);
-        if (!where.length) return false;
-        if (where.length === 1) cand[where[0]] = 1 << v;
-      }
+      if (!assignUniquePairs(cand, N)) return false;
       if (cand.some((m) => !m)) return false;
       if (cand.join(',') === before) return true;
     }

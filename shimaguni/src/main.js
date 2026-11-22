@@ -9,6 +9,33 @@
   const { UNKNOWN, YES, NO } = Binary;
   const side = (C, N, k) => [k - C, k + C, k % C ? k - 1 : -1, (k + 1) % C ? k + 1 : -1].filter((j) => j >= 0 && j < N);
 
+  function checkRoomSizes(rooms, count, s, near, done, C, N) {
+    for (let g = 0; g < rooms.length; g++) {
+      const cells = rooms[g];
+      if (!cells) continue;
+      const black = cells.filter((k) => s[k] === YES);
+      if (black.length > 1) {
+        const ok = new Set(cells.filter((k) => s[k] !== NO));
+        const seen = new Set([black[0]]), st = [black[0]];
+        while (st.length) { const k = st.pop(); for (const j of side(C, N, k)) if (ok.has(j) && !seen.has(j)) { seen.add(j); st.push(j); } }
+        if (black.some((k) => !seen.has(k))) return false;
+      }
+      if (done || cells.every((k) => s[k] !== UNKNOWN)) {
+        const set = new Set(black);
+        if (!black.length) return false;
+        const seen = new Set([black[0]]), st = [black[0]];
+        while (st.length) { const k = st.pop(); for (const j of side(C, N, k)) if (set.has(j) && !seen.has(j)) { seen.add(j); st.push(j); } }
+        if (seen.size !== black.length) return false;
+        count[g] = black.length;
+      }
+    }
+    for (let g = 0; g < rooms.length; g++) {
+      if (count[g] < 0) continue;
+      for (const h of near[g]) if (count[h] === count[g]) return false;
+    }
+    return true;
+  }
+
   function model(p) {
     const { R, C, room, clues } = p;
     const N = R * C;
@@ -63,31 +90,7 @@
     }
     function check(s, done) {
       const count = rooms.map(() => -1);
-      for (let g = 0; g < rooms.length; g++) {
-        const cells = rooms[g];
-        if (!cells) continue;
-        const black = cells.filter((k) => s[k] === YES);
-        // Shaded cells must be able to join inside the room.
-        if (black.length > 1) {
-          const ok = new Set(cells.filter((k) => s[k] !== NO));
-          const seen = new Set([black[0]]), st = [black[0]];
-          while (st.length) { const k = st.pop(); for (const j of side(C, N, k)) if (ok.has(j) && !seen.has(j)) { seen.add(j); st.push(j); } }
-          if (black.some((k) => !seen.has(k))) return false;
-        }
-        if (done || cells.every((k) => s[k] !== UNKNOWN)) {
-          const set = new Set(black);
-          if (!black.length) return false;
-          const seen = new Set([black[0]]), st = [black[0]];
-          while (st.length) { const k = st.pop(); for (const j of side(C, N, k)) if (set.has(j) && !seen.has(j)) { seen.add(j); st.push(j); } }
-          if (seen.size !== black.length) return false;
-          count[g] = black.length;
-        }
-      }
-      for (let g = 0; g < rooms.length; g++) {
-        if (count[g] < 0) continue;
-        for (const h of near[g]) if (count[h] === count[g]) return false;
-      }
-      return true;
+      return checkRoomSizes(rooms, count, s, near, done, C, N);
     }
     return { N, cons, check, propagate };
   }

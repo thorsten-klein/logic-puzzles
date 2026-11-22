@@ -7,6 +7,28 @@
 (() => {
   const { UNKNOWN, YES, NO } = Binary;
 
+  function checkSquareSight(list, size, id, s, R, C) {
+    for (let a = 0; a < list.length; a++) {
+      if (!size[a]) continue;
+      for (const k of list[a]) {
+        const r = Math.floor(k / C), c = k % C;
+        for (const [dr, dc] of [[-1, 0], [1, 0], [0, -1], [0, 1]]) {
+          let x = r + dr, y = c + dc;
+          while (x >= 0 && y >= 0 && x < R && y < C) {
+            const j = x * C + y;
+            if (s[j] === UNKNOWN) break;
+            if (s[j] === YES) {
+              if (id[j] !== a && size[id[j]] === size[a]) return false;
+              break;
+            }
+            x += dr; y += dc;
+          }
+        }
+      }
+    }
+    return true;
+  }
+
   function model(p) {
     const { R, C, clues } = p;
     const N = R * C;
@@ -57,27 +79,7 @@
         return r2 - r1 === c2 - c1 && cells.length === (r2 - r1 + 1) * (c2 - c1 + 1) ? r2 - r1 + 1 : -2;
       });
       if (size.includes(-2)) return false;
-      // Sight: from each closed square, the first shaded cell seen along
-      // a row or column must not belong to a closed square of equal size.
-      for (let a = 0; a < list.length; a++) {
-        if (!size[a]) continue;
-        for (const k of list[a]) {
-          const r = Math.floor(k / C), c = k % C;
-          for (const [dr, dc] of [[-1, 0], [1, 0], [0, -1], [0, 1]]) {
-            let x = r + dr, y = c + dc;
-            while (x >= 0 && y >= 0 && x < R && y < C) {
-              const j = x * C + y;
-              if (s[j] === UNKNOWN) break;
-              if (s[j] === YES) {
-                if (id[j] !== a && size[id[j]] === size[a]) return false;
-                break;
-              }
-              x += dr; y += dc;
-            }
-          }
-        }
-      }
-      return true;
+      return checkSquareSight(list, size, id, s, R, C);
     }
     return { N, cons, propagate, check };
   }

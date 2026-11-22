@@ -9,6 +9,38 @@
   const { UNKNOWN, NO } = Binary;
   const STEP = [[-1, 0], [1, 0], [0, -1], [0, 1]];
 
+  function hasWhiteLoop(s, N, to) {
+    const parent = Int32Array.from({ length: N }, (_, i) => i);
+    const find = (x) => { while (parent[x] !== x) { parent[x] = parent[parent[x]]; x = parent[x]; } return x; };
+    for (let k = 0; k < N; k++) {
+      if (s[k] !== NO) continue;
+      for (const d of [1, 3]) {
+        const j = to(k, d);
+        if (j < 0 || s[j] !== NO) continue;
+        const a = find(k), b = find(j);
+        if (a === b) return true;
+        parent[a] = b;
+      }
+    }
+    return false;
+  }
+
+  function computeDistances(s, star, N, to) {
+    const dist = new Int32Array(N).fill(-1);
+    dist[star] = 0;
+    const queue = [star];
+    for (const cur of queue) {
+      for (let d = 0; d < 4; d++) {
+        const j = to(cur, d);
+        if (j >= 0 && s[j] === NO && dist[j] < 0) {
+          dist[j] = dist[cur] + 1;
+          queue.push(j);
+        }
+      }
+    }
+    return dist;
+  }
+
   function model(p) {
     const { R, C, arrow, star } = p;
     const N = R * C;
@@ -26,31 +58,10 @@
       }
     }
     function check(s, done) {
-      // No loop of white cells (union-find on white-white sides).
-      const parent = Int32Array.from({ length: N }, (_, i) => i);
-      const find = (x) => { while (parent[x] !== x) { parent[x] = parent[parent[x]]; x = parent[x]; } return x; };
-      for (let k = 0; k < N; k++) {
-        if (s[k] !== NO) continue;
-        for (const d of [1, 3]) {
-          const j = to(k, d);
-          if (j < 0 || s[j] !== NO) continue;
-          const a = find(k), b = find(j);
-          if (a === b) return false;
-          parent[a] = b;
-        }
-      }
+      if (hasWhiteLoop(s, N, to)) return false;
       if (!Binary.canConnect(R, C, s, NO)) return false;
       if (!done) return true;
-      // Arrows: the first step from each arrow toward the star.
-      const dist = new Int32Array(N).fill(-1);
-      dist[star] = 0;
-      const queue = [star];
-      for (const cur of queue) {
-        for (let d = 0; d < 4; d++) {
-          const j = to(cur, d);
-          if (j >= 0 && s[j] === NO && dist[j] < 0) { dist[j] = dist[cur] + 1; queue.push(j); }
-        }
-      }
+      const dist = computeDistances(s, star, N, to);
       for (let k = 0; k < N; k++) {
         if (arrow[k] < 0) continue;
         const j = to(k, arrow[k]);
@@ -70,20 +81,11 @@
       if (!fill) continue;
       const whites = [...fill.keys()].filter((k) => fill[k] === NO);
       const star = whites[Math.floor(Math.random() * whites.length)];
-      // Arrows from the tree of white cells.
-      const dist = new Int32Array(N).fill(-1);
-      dist[star] = 0;
-      const queue = [star];
       const to = (k, d) => {
         const r = Math.floor(k / n) + STEP[d][0], c = (k % n) + STEP[d][1];
         return r >= 0 && c >= 0 && r < n && c < n ? r * n + c : -1;
       };
-      for (const cur of queue) {
-        for (let d = 0; d < 4; d++) {
-          const j = to(cur, d);
-          if (j >= 0 && fill[j] === NO && dist[j] < 0) { dist[j] = dist[cur] + 1; queue.push(j); }
-        }
-      }
+      const dist = computeDistances(fill, star, N, to);
       const arrow = new Int8Array(N).fill(-1);
       for (const k of whites) {
         if (k === star) continue;

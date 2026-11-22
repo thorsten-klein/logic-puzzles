@@ -17,6 +17,35 @@
 
   const firstSeen = (vals, m) => vals.find((v) => v <= m) || 0;
 
+  function createLineValidator(n, m, want) {
+    const ok = (vals) => {
+      let used = 0, blanks = 0;
+      for (const v of vals) {
+        if (v > m) blanks++;
+        else {
+          if (used & (1 << v)) return false;
+          used |= 1 << v;
+        }
+      }
+      return blanks === n - m && (!want || firstSeen(vals, m) === want);
+    };
+    ok.partial = (vals, j) => {
+      let used = 0, blanks = 0, first = 0;
+      for (let x = 0; x <= j; x++) {
+        const v = vals[x];
+        if (v > m) blanks++;
+        else {
+          if (used & (1 << v)) return false;
+          used |= 1 << v;
+          if (!first) first = v;
+        }
+      }
+      if (blanks > n - m) return false;
+      return !want || !first || first === want;
+    };
+    return ok;
+  }
+
   // Keeps only candidates that fit some valid filling of each line.
   function propagate(p, cand) {
     const { n, m, clues } = p;
@@ -24,29 +53,7 @@
     for (let guard = 0; guard < 100; guard++) {
       const before = cand.join(',');
       for (const [i, cells] of all) {
-        const want = clues[i];
-        const ok = (vals) => {
-          let used = 0, blanks = 0;
-          for (const v of vals) {
-            if (v > m) blanks++;
-            else { if (used & (1 << v)) { return false; } used |= 1 << v; }
-          }
-          return blanks === n - m && (!want || firstSeen(vals, m) === want);
-        };
-        ok.partial = (vals, j) => {
-          let used = 0, blanks = 0, first = 0;
-          for (let x = 0; x <= j; x++) {
-            const v = vals[x];
-            if (v > m) blanks++;
-            else {
-              if (used & (1 << v)) return false;
-              used |= 1 << v;
-              if (!first) first = v;
-            }
-          }
-          if (blanks > n - m) return false;
-          return !want || !first || first === want;
-        };
+        const ok = createLineValidator(n, m, clues[i]);
         if (!Latin.filterGroup(cells, cand, ok, false)) return false;
       }
       if (cand.some((x) => !x)) return false;

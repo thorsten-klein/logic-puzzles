@@ -8,6 +8,18 @@
 (() => {
   const { UNKNOWN, YES, NO } = Binary;
 
+  function checkStraightRooms(rooms, s, C) {
+    for (const cells of rooms) {
+      const yes = cells.filter((k) => s[k] === YES);
+      if (!yes.length) continue;
+      const rows = yes.map((k) => Math.floor(k / C)), cols = yes.map((k) => k % C);
+      const r1 = Math.min(...rows), r2 = Math.max(...rows), c1 = Math.min(...cols), c2 = Math.max(...cols);
+      if (r1 !== r2 && c1 !== c2) return false;
+      for (let r = r1; r <= r2; r++) for (let c = c1; c <= c2; c++) if (s[r * C + c] === NO) return false;
+    }
+    return true;
+  }
+
   function model(p) {
     const { R, C, room, clues } = p;
     const N = R * C;
@@ -49,14 +61,7 @@
     }
     function check(s, done) {
       // Shaded cells of a room: one straight piece.
-      for (const cells of rooms) {
-        const yes = cells.filter((k) => s[k] === YES);
-        if (!yes.length) continue;
-        const rows = yes.map((k) => Math.floor(k / C)), cols = yes.map((k) => k % C);
-        const r1 = Math.min(...rows), r2 = Math.max(...rows), c1 = Math.min(...cols), c2 = Math.max(...cols);
-        if (r1 !== r2 && c1 !== c2) return false;
-        for (let r = r1; r <= r2; r++) for (let c = c1; c <= c2; c++) if (s[r * C + c] === NO) return false;
-      }
+      if (!checkStraightRooms(rooms, s, C)) return false;
       return Binary.canConnect(R, C, s, YES);
     }
     return { N, cons, propagate, check };

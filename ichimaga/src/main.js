@@ -54,6 +54,32 @@
     return seen.every(Boolean);
   }
 
+  function checkCrossings(p, lo, hi) {
+    for (let j = 0; j < p.pairs.length; j++) {
+      if (!lo[j]) continue;
+      for (const o of p.cross[j]) {
+        if (lo[o]) return -1;
+        if (hi[o]) {
+          hi[o] = 0;
+          return 1;
+        }
+      }
+    }
+    // Two islands that would close off a group: 1-1, or 2=2.
+    if (p.isl.length > 2) {
+      for (let j = 0; j < p.pairs.length; j++) {
+        const { a, b } = p.pairs[j];
+        const na = p.isl[a].n, nb = p.isl[b].n;
+        if (na === 1 && nb === 1 && hi[j] >= 1) {
+          hi[j] = 0;
+          if (lo[j] > hi[j]) return -1;
+          return 1;
+        }
+      }
+    }
+    return 0;
+  }
+
   // One round of forced moves. Returns false on contradiction, else the
   // number of changes.
   function step(p, lo, hi) {
@@ -72,28 +98,8 @@
       }
       if (changed.length) return changed.length;
     }
-    for (let j = 0; j < p.pairs.length; j++) {
-      if (!lo[j]) continue;
-      for (const o of p.cross[j]) {
-        if (lo[o]) return -1;
-        if (hi[o]) {
-          hi[o] = 0;
-          return 1;
-        }
-      }
-    }
-    // Two islands that would close off a group: 1-1, or 2=2.
-    if (N > 2) {
-      for (let j = 0; j < p.pairs.length; j++) {
-        const { a, b } = p.pairs[j];
-        const na = p.isl[a].n, nb = p.isl[b].n;
-        if (na === 1 && nb === 1 && hi[j] >= 1) {
-          hi[j] = 0;
-          if (lo[j] > hi[j]) return -1;
-          return 1;
-        }
-      }
-    }
+    const crossRes = checkCrossings(p, lo, hi);
+    if (crossRes !== 0) return crossRes;
     if (!connected(p, hi)) return -1;
     return 0;
   }

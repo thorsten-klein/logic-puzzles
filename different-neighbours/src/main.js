@@ -31,15 +31,27 @@
   const one = (m) => m && !(m & (m - 1));
   const low = (m) => 31 - Math.clz32(m & -m);
 
+  function stepRegion(p, cand, g) {
+    let changed = false;
+    for (const h of p.adj[g]) {
+      if (cand[h] & cand[g]) {
+        cand[h] &= ~cand[g];
+        changed = true;
+        if (!cand[h]) return null;
+      }
+    }
+    return changed;
+  }
+
   function propagate(p, cand) {
     for (let changed = true; changed;) {
       changed = false;
       for (let g = 0; g < cand.length; g++) {
         if (!cand[g]) return false;
         if (!one(cand[g])) continue;
-        for (const h of p.adj[g]) {
-          if (cand[h] & cand[g]) { cand[h] &= ~cand[g]; changed = true; if (!cand[h]) return false; }
-        }
+        const res = stepRegion(p, cand, g);
+        if (res === null) return false;
+        if (res) changed = true;
       }
     }
     return true;
@@ -69,6 +81,27 @@
 
   const startCand = (p) => Int32Array.from(p.groups, (_, g) => (p.given[g] ? 1 << p.given[g] : ALL));
 
+  function addGivens(p, sol) {
+    const rounds = p.groups.length;
+    for (let guard = 0; guard < rounds; guard++) {
+      const res = solve(p, startCand(p), 2);
+      if (res.solutions.length === 1 && !res.capped) break;
+      const other = res.solutions.find((x) => x.some((v, g) => v !== sol[g]));
+      const diff = [...sol.keys()].filter((g) => !p.given[g] && (other?.[g] !== sol[g]));
+      const g = diff[Math.floor(Math.random() * diff.length)];
+      p.given[g] = sol[g];
+    }
+  }
+
+  function thinGivens(p, sol) {
+    for (const g of PuzzleShell.shuffle([...sol.keys()])) {
+      if (!p.given[g]) continue;
+      p.given[g] = 0;
+      const res = solve(p, startCand(p), 2);
+      if (res.solutions.length !== 1 || res.capped) p.given[g] = sol[g];
+    }
+  }
+
   function generate(n) {
     for (let t = 0; t < 50; t++) {
       const R = n, C = n, N = R * C;
@@ -79,22 +112,8 @@
       const fill = solve(p, startCand(p), 1, 5000, true);
       if (!fill.solutions.length) continue;
       const sol = fill.solutions[0];
-      // At most one round per entry.
-      const rounds = p.groups.length;
-      for (let guard = 0; guard < rounds; guard++) {
-        const res = solve(p, startCand(p), 2);
-        if (res.solutions.length === 1 && !res.capped) break;
-        const other = res.solutions.find((x) => x.some((v, g) => v !== sol[g]));
-        const diff = [...sol.keys()].filter((g) => !p.given[g] && (other?.[g] !== sol[g]));
-        const g = diff[Math.floor(Math.random() * diff.length)];
-        p.given[g] = sol[g];
-      }
-      for (const g of PuzzleShell.shuffle([...sol.keys()])) {
-        if (!p.given[g]) continue;
-        p.given[g] = 0;
-        const res = solve(p, startCand(p), 2);
-        if (res.solutions.length !== 1 || res.capped) p.given[g] = sol[g];
-      }
+      addGivens(p, sol);
+      thinGivens(p, sol);
       // Every region given: nothing is left to do. Try again.
       if (Array.from(p.given).every((v) => v > 0)) continue;
       p.solution = sol;

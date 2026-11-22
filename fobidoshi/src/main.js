@@ -18,32 +18,47 @@
     return { N: R * C, cons, check: (s) => Binary.canConnect(R, C, s, YES) };
   }
 
+  function hasFour(s, n, k) {
+    const r = Math.floor(k / n), c = k % n;
+    for (const [dr, dc] of [[0, 1], [1, 0]]) {
+      let run = 1;
+      for (let i = 1; i < 4; i++) {
+        const nr = r + dr * i, nc = c + dc * i;
+        if (nr < n && nc < n && s[nr * n + nc] === YES) run++; else break;
+      }
+      for (let i = 1; i < 4; i++) {
+        const nr = r - dr * i, nc = c - dc * i;
+        if (nr >= 0 && nc >= 0 && s[nr * n + nc] === YES) run++; else break;
+      }
+      if (run >= 4) return true;
+    }
+    return false;
+  }
+
+  function findFrontier(s, n, N) {
+    const front = [];
+    for (let k = 0; k < N; k++) {
+      if (s[k] !== NO) continue;
+      const r = Math.floor(k / n), c = k % n;
+      const touches = [[r - 1, c], [r + 1, c], [r, c - 1], [r, c + 1]]
+        .some(([a, b]) => a >= 0 && b >= 0 && a < n && b < n && s[a * n + b] === YES);
+      if (touches) front.push(k);
+    }
+    return front;
+  }
+
   // Circles: grow a connected group while no line of four appears.
   function grow(n) {
     const N = n * n;
     const s = new Uint8Array(N).fill(NO);
-    const four = (k) => {
-      const r = Math.floor(k / n), c = k % n;
-      for (const [dr, dc] of [[0, 1], [1, 0]]) {
-        let run = 1;
-        for (let i = 1; i < 4; i++) { const nr = r + dr * i, nc = c + dc * i; if (nr < n && nc < n && s[nr * n + nc] === YES) run++; else break; }
-        for (let i = 1; i < 4; i++) { const nr = r - dr * i, nc = c - dc * i; if (nr >= 0 && nc >= 0 && s[nr * n + nc] === YES) run++; else break; }
-        if (run >= 4) return true;
-      }
-      return false;
-    };
     s[Math.floor(Math.random() * N)] = YES;
     const target = Math.round(N * (0.5 + Math.random() * 0.1));
     let size = 1;
     for (let fails = 0; size < target && fails < 500;) {
-      const front = [];
-      for (let k = 0; k < N; k++) {
-        const r = Math.floor(k / n), c = k % n;
-        if (s[k] === NO && [[r - 1, c], [r + 1, c], [r, c - 1], [r, c + 1]].some(([a, b]) => a >= 0 && b >= 0 && a < n && b < n && s[a * n + b] === YES)) front.push(k);
-      }
+      const front = findFrontier(s, n, N);
       const k = front[Math.floor(Math.random() * front.length)];
       s[k] = YES;
-      if (four(k)) { s[k] = NO; fails++; } else size++;
+      if (hasFour(s, n, k)) { s[k] = NO; fails++; } else size++;
     }
     return size >= target * 0.9 ? s : null;
   }

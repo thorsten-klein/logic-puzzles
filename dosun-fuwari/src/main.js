@@ -21,21 +21,24 @@
     return p;
   }
 
+  function stepGravity(n, room, cand, k) {
+    const r = Math.floor(k / n);
+    // A balloon needs a roof: top row, black cell or balloon above.
+    if (r > 0 && room[k - n] >= 0 && !(cand[k - n] & 4)) cand[k] &= ~4;
+    // An iron ball needs a floor: bottom row, black cell or iron below.
+    if (r < n - 1 && room[k + n] >= 0 && !(cand[k + n] & 8)) cand[k] &= ~8;
+    // A balloon below a sure balloon-free cell can not float there, and
+    // a cell above a sure balloon must hold a balloon or be a roof.
+    if (r < n - 1 && room[k + n] >= 0 && cand[k + n] === 4) cand[k] &= 4;
+    if (r > 0 && room[k - n] >= 0 && cand[k - n] === 8) cand[k] &= 8;
+  }
+
   function propagate(p, cand) {
     const { n, room } = p;
     for (let guard = 0; guard < 100; guard++) {
       const before = cand.join(',');
       for (let k = 0; k < n * n; k++) {
-        if (room[k] < 0) continue;
-        const r = Math.floor(k / n);
-        // A balloon needs a roof: top row, black cell or balloon above.
-        if (r > 0 && room[k - n] >= 0 && !(cand[k - n] & 4)) cand[k] &= ~4;
-        // An iron ball needs a floor: bottom row, black cell or iron below.
-        if (r < n - 1 && room[k + n] >= 0 && !(cand[k + n] & 8)) cand[k] &= ~8;
-        // A balloon below a sure balloon-free cell can not float there, and
-        // a cell above a sure balloon must hold a balloon or be a roof.
-        if (r < n - 1 && room[k + n] >= 0 && cand[k + n] === 4) cand[k] &= 4;
-        if (r > 0 && room[k - n] >= 0 && cand[k - n] === 8) cand[k] &= 8;
+        if (room[k] >= 0) stepGravity(n, room, cand, k);
       }
       for (const cells of p.rooms) if (!Latin.filterGroup(cells, cand, p.roomOk, false)) return false;
       if (cand.some((m, k) => room[k] >= 0 && !m)) return false;
@@ -60,31 +63,46 @@
 
   const startCand = (p) => Int32Array.from({ length: p.n * p.n }, (_, k) => (p.room[k] < 0 ? 0 : ALL));
 
+  function growRoom(n, room, black, start, id) {
+    const want = 2 + Math.floor(Math.random() * 4);
+    const cells = [start];
+    room[start] = id;
+    for (let g = 0; g < 30 && cells.length < want; g++) {
+      const x = cells[Math.floor(Math.random() * cells.length)];
+      const r = Math.floor(x / n), c = x % n;
+      const opts = [[r - 1, c], [r + 1, c], [r, c - 1], [r, c + 1]]
+        .filter(([a, b]) => a >= 0 && b >= 0 && a < n && b < n && !black[a * n + b] && room[a * n + b] < 0);
+      if (!opts.length) continue;
+      const [a, b] = opts[Math.floor(Math.random() * opts.length)];
+      room[a * n + b] = id;
+      cells.push(a * n + b);
+    }
+    if (cells.length < 2) {
+      room[start] = -1;
+      black[start] = 1;
+      return false;
+    }
+    return true;
+  }
+
+  function generateRooms(n, black) {
+    const N = n * n;
+    const room = new Int32Array(N).fill(-1);
+    let id = 0;
+    for (const k of PuzzleShell.shuffle([...new Array(N).keys()])) {
+      if (black[k] || room[k] >= 0) continue;
+      if (growRoom(n, room, black, k, id)) id++;
+    }
+    return room;
+  }
+
   function generate(n) {
     const deadline = Date.now() + 8000;
     while (Date.now() < deadline) {
       const N = n * n;
       const black = new Uint8Array(N);
       for (const k of PuzzleShell.shuffle([...new Array(N).keys()]).slice(0, Math.round(N * 0.12))) black[k] = 1;
-      // Rooms of 2..5 white cells.
-      const room = new Int32Array(N).fill(-1);
-      let id = 0;
-      for (const k of PuzzleShell.shuffle([...new Array(N).keys()])) {
-        if (black[k] || room[k] >= 0) continue;
-        const want = 2 + Math.floor(Math.random() * 4);
-        const cells = [k];
-        room[k] = id;
-        for (let g = 0; g < 30 && cells.length < want; g++) {
-          const x = cells[Math.floor(Math.random() * cells.length)], r = Math.floor(x / n), c = x % n;
-          const opts = [[r - 1, c], [r + 1, c], [r, c - 1], [r, c + 1]].filter(([a, b]) => a >= 0 && b >= 0 && a < n && b < n && !black[a * n + b] && room[a * n + b] < 0);
-          if (!opts.length) continue;
-          const [a, b] = opts[Math.floor(Math.random() * opts.length)];
-          room[a * n + b] = id;
-          cells.push(a * n + b);
-        }
-        if (cells.length < 2) { room[k] = -1; black[k] = 1; continue; }
-        id++;
-      }
+      const room = generateRooms(n, black);
       const p = prepare({ n, room });
       const res = solve(p, startCand(p), 2, 20000);
       if (res.solutions.length !== 1 || res.capped) continue;

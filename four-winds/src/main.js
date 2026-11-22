@@ -7,6 +7,56 @@
   const { UNKNOWN, YES, NO } = Binary;
   const DIRS = [[0, -1, YES], [0, 1, YES], [-1, 0, NO], [1, 0, NO]];
 
+  function stepArm(dirs, v, k, s, log) {
+    const got = dirs.map(([cells, want]) => { let i = 0; while (i < cells.length && s[cells[i]] === want) { i++; } return i; });
+    const can = dirs.map(([cells, want]) => { let i = 0; while (i < cells.length && s[cells[i]] !== (want === YES ? NO : YES)) { i++; } return i; });
+    const min = got.reduce((a, b) => a + b, 0), max = can.reduce((a, b) => a + b, 0);
+    if (min > v || max < v) return -1;
+    for (let d = 0; d < 4; d++) {
+      const [cells, want] = dirs[d];
+      const need = v - (max - can[d]);
+      const forced = cells.slice(0, Math.max(0, need)).filter((j) => s[j] === UNKNOWN);
+      if (forced.length) {
+        for (const j of forced) s[j] = want;
+        if (log) log.push({ cells: forced, v: want, at: k, reason: `This ${v} can not reach its total in the other directions. These lines must run out from it.` });
+        return forced.length;
+      }
+      const most = v - (min - got[d]);
+      const next = cells[got[d]];
+      if (got[d] === most && next !== undefined && s[next] === UNKNOWN) {
+        s[next] = want === YES ? NO : YES;
+        if (log) log.push({ cells: [next], v: s[next], at: k, reason: `This ${v} already has enough length this way. The next cell turns the other way.` });
+        return 1;
+      }
+    }
+    return 0;
+  }
+
+  function reachesBlack(x, k, R, C, black) {
+    const [d1, d2] = x[k] === YES ? [[0, -1], [0, 1]] : [[-1, 0], [1, 0]];
+    return [d1, d2].some(([dr, dc]) => {
+      let r = Math.floor(k / C) + dr, c = (k % C) + dc;
+      while (r >= 0 && c >= 0 && r < R && c < C) {
+        const j = r * C + c;
+        if (black[j] >= 0) return true;
+        if (x[j] !== x[k]) return false;
+        r += dr; c += dc;
+      }
+      return false;
+    });
+  }
+
+  function orientLines(s, m, N, black, C, R) {
+    for (let it = 0; it < 50 && !m.check(s, true); it++) {
+      for (let k = 0; k < N; k++) {
+        if (black[k] >= 0) continue;
+        const t = Uint8Array.from(s);
+        t[k] = s[k] === YES ? NO : YES;
+        if (!reachesBlack(s, k, R, C, black) && reachesBlack(t, k, R, C, black)) s[k] = t[k];
+      }
+    }
+  }
+
   function model(p) {
     const { R, C, black } = p;
     const N = R * C;
@@ -26,28 +76,8 @@
     }
     function propagate(s, log) {
       for (const [k, dirs] of arms) {
-        const v = black[k];
-        const got = dirs.map(([cells, want]) => { let i = 0; while (i < cells.length && s[cells[i]] === want) { i++; } return i; });
-        const can = dirs.map(([cells, want]) => { let i = 0; while (i < cells.length && s[cells[i]] !== (want === YES ? NO : YES)) { i++; } return i; });
-        const min = got.reduce((a, b) => a + b, 0), max = can.reduce((a, b) => a + b, 0);
-        if (min > v || max < v) return false;
-        for (let d = 0; d < 4; d++) {
-          const [cells, want] = dirs[d];
-          const need = v - (max - can[d]);
-          const forced = cells.slice(0, Math.max(0, need)).filter((j) => s[j] === UNKNOWN);
-          if (forced.length) {
-            for (const j of forced) s[j] = want;
-            if (log) log.push({ cells: forced, v: want, at: k, reason: `This ${v} can not reach its total in the other directions. These lines must run out from it.` });
-            return forced.length;
-          }
-          const most = v - (min - got[d]);
-          const next = cells[got[d]];
-          if (got[d] === most && next !== undefined && s[next] === UNKNOWN) {
-            s[next] = want === YES ? NO : YES;
-            if (log) log.push({ cells: [next], v: s[next], at: k, reason: `This ${v} already has enough length this way. The next cell turns the other way.` });
-            return 1;
-          }
-        }
+        const res = stepArm(dirs, black[k], k, s, log);
+        if (res !== 0) return res;
       }
       return 0;
     }
@@ -56,18 +86,7 @@
       if (!done) return true;
       for (let k = 0; k < N; k++) {
         if (isBlack(k)) continue;
-        const [d1, d2] = s[k] === YES ? [[0, -1], [0, 1]] : [[-1, 0], [1, 0]];
-        const reaches = [d1, d2].some(([dr, dc]) => {
-          let r = Math.floor(k / C) + dr, c = (k % C) + dc;
-          while (r >= 0 && c >= 0 && r < R && c < C) {
-            const j = r * C + c;
-            if (isBlack(j)) return true;
-            if (s[j] !== s[k]) return false;
-            r += dr; c += dc;
-          }
-          return false;
-        });
-        if (!reaches) return false;
+        if (!reachesBlack(s, k, R, C, black)) return false;
       }
       return true;
     }
@@ -88,26 +107,7 @@
       const p = { R, C, black };
       // Flip unattached lines until all reach a black cell (or give up).
       const m = model(p);
-      for (let it = 0; it < 50 && !m.check(s, true); it++) {
-        for (let k = 0; k < N; k++) {
-          if (black[k] >= 0) continue;
-          const t = Uint8Array.from(s); t[k] = s[k] === YES ? NO : YES;
-          const ok = (x) => {
-            const [d1, d2] = x[k] === YES ? [[0, -1], [0, 1]] : [[-1, 0], [1, 0]];
-            return [d1, d2].some(([dr, dc]) => {
-              let r = Math.floor(k / C) + dr, c = (k % C) + dc;
-              while (r >= 0 && c >= 0 && r < R && c < C) {
-                const j = r * C + c;
-                if (black[j] >= 0) return true;
-                if (x[j] !== x[k]) return false;
-                r += dr; c += dc;
-              }
-              return false;
-            });
-          };
-          if (!ok(s) && ok(t)) s[k] = t[k];
-        }
-      }
+      orientLines(s, m, N, black, C, R);
       if (!m.check(s, true)) continue;
       // An answer with no across line would count as solved on an empty board.
       if (!s.some((v, k) => black[k] < 0 && v === YES)) continue;
