@@ -152,7 +152,7 @@
         const q = v - 1;
         const pts = [C[q], C[(q + 1) % 4], C[(q + 3) % 4]];
         let cls = '';
-        if (result) cls = state[k] === solution[k] ? ' ok' : state[k] ? ' bad' : ' show';
+        if (result) cls = ' ' + PuzzleShell.resultClass(state[k], solution[k]);
         el('polygon', { points: pts.map((c) => c.join(',')).join(' '), class: 'sk-tri' + cls }, g);
       } else if (result && state[k]) {
         el('circle', { cx: x + s / 2, cy: y + s / 2, r: s * 0.12, class: 'sk-tri bad' }, g);
@@ -164,7 +164,10 @@
         hit.addEventListener('click', (ev) => {
           const b = hit.getBoundingClientRect();
           const fx = (ev.clientX - b.left) / b.width, fy = (ev.clientY - b.top) / b.height;
-          const q = fy < 0.5 ? (fx < 0.5 ? 0 : 1) : (fx < 0.5 ? 3 : 2);
+          let q;
+          if (fy < 0.5) q = fx < 0.5 ? 0 : 1;
+          else if (fx < 0.5) q = 3;
+          else q = 2;
           state[k] = state[k] === q + 1 ? 0 : q + 1;
           onChange();
         });

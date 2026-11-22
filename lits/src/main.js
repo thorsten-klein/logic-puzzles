@@ -56,7 +56,11 @@
       for (let g = 0; g < rooms.length; g++) {
         const fit = place[g].filter((ks) => {
           const on = new Set(ks);
-          return rooms[g].every((k) => (s[k] === YES ? on.has(k) : s[k] === NO ? !on.has(k) : true));
+          return rooms[g].every((k) => {
+            if (s[k] === YES) return on.has(k);
+            if (s[k] === NO) return !on.has(k);
+            return true;
+          });
         });
         if (!fit.length) return -1;
         for (const k of rooms[g]) {

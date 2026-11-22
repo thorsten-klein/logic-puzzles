@@ -36,10 +36,10 @@
     const isAvailable = game.status === 'available';
     const badgeClass = isAvailable ? 'available' : 'placeholder';
     const badgeText = isAvailable ? 'Play' : 'Coming soon';
-    const pic = prefs.view !== 'details' ? ''
-      : isAvailable
-        ? `<div class="card-pic"><img src="thumbs/${game.slug}.webp" alt="Example of ${game.name} and its solution" loading="lazy" onerror="this.parentNode.classList.add('none')"></div>`
-        : '<div class="card-pic none"></div>';
+    let pic;
+    if (prefs.view !== 'details') pic = '';
+    else if (isAvailable) pic = `<div class="card-pic"><img src="thumbs/${game.slug}.webp" alt="Example of ${game.name} and its solution" loading="lazy" onerror="this.parentNode.classList.add('none')"></div>`;
+    else pic = '<div class="card-pic none"></div>';
     return `
       <a class="game-card${isAvailable ? '' : ' is-placeholder'}" href="${game.slug}/index.html">
         ${pic}
@@ -128,7 +128,10 @@
   document.getElementById('btn-paste-start').addEventListener('click', () => {
     const t = pasteInput.value.trim();
     const m = t.match(/[?&]game-id=([A-Za-z0-9_-]+)/);
-    const id = m ? m[1] : /^[A-Za-z0-9_-]+$/.test(t) ? t : null;
+    let id;
+    if (m) id = m[1];
+    else if (/^[A-Za-z0-9_-]+$/.test(t)) id = t;
+    else id = null;
     if (!id) { pasteStatus.textContent = 'No game ID found in that text.'; return; }
     let slug = null;
     try {

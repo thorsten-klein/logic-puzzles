@@ -25,7 +25,10 @@ const Solver = (() => {
       }
       if (filled > con.sum || filled + open.length < con.sum) return -1;
       if (!open.length) continue;
-      const v = filled === con.sum ? EMPTY : filled + open.length === con.sum ? FILLED : 0;
+      let v;
+      if (filled === con.sum) v = EMPTY;
+      else if (filled + open.length === con.sum) v = FILLED;
+      else v = 0;
       if (!v) continue;
       for (const j of open) s[j] = v;
       set += open.length;

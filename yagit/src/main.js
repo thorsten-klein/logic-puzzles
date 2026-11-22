@@ -106,7 +106,7 @@
           if (p.dot[k]) {
             if (usedDot.has(k) || dotsHere.includes(k)) { ok = false; break; }
             dotsHere.push(k);
-            if (Math.random() < 0.6) d = d < 2 ? (Math.random() < 0.5 ? 2 : 3) : (Math.random() < 0.5 ? 0 : 1);
+            if (Math.random() < 0.6) d = (d < 2 ? 2 : 0) + (Math.random() < 0.5 ? 0 : 1);
           }
         }
         if (!ok || !segs.length) continue;

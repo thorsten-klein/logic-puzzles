@@ -67,7 +67,10 @@
       return [[r - 1, c], [r + 1, c], [r, c - 1], [r, c + 1]].some(([a, b]) => a >= 0 && b >= 0 && a < n && b < n && white[a * n + b]);
     };
     for (let t = 0; t < n * 8; t++) {
-      const size = Math.random() < 0.45 ? 1 : Math.random() < 0.7 ? 2 : 3;
+      let size;
+      if (Math.random() < 0.45) size = 1;
+      else if (Math.random() < 0.7) size = 2;
+      else size = 3;
       const r = Math.floor(Math.random() * (n - size + 1)), c = Math.floor(Math.random() * (n - size + 1));
       const cells = [];
       for (let i = 0; i < size; i++) for (let j = 0; j < size; j++) cells.push((r + i) * n + c + j);
@@ -121,7 +124,11 @@
       return { R, C, clues: Uint8Array.from(d.g, Number) };
     },
     model,
-    fixed: (p, k) => (p.clues[k] === 1 ? YES : p.clues[k] === 2 ? NO : 0),
+    fixed: (p, k) => {
+      if (p.clues[k] === 1) return YES;
+      if (p.clues[k] === 2) return NO;
+      return 0;
+    },
     draw(p, k, el) {
       if (!p.clues[k]) return;
       const o = document.createElement('span');

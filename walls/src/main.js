@@ -81,7 +81,11 @@
       const R = n, C = n, N = R * C;
       const black = new Int8Array(N).fill(-1);
       for (let k = 0; k < N; k++) if (Math.random() < 0.18) black[k] = 0;
-      const s = Uint8Array.from({ length: N }, (_, k) => (black[k] >= 0 ? NO : Math.random() < 0.5 ? YES : NO));
+      const s = Uint8Array.from({ length: N }, (_, k) => {
+        if (black[k] >= 0) return NO;
+        if (Math.random() < 0.5) return YES;
+        return NO;
+      });
       const p = { R, C, black };
       // Flip unattached lines until all reach a black cell (or give up).
       const m = model(p);

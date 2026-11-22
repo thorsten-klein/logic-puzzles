@@ -193,10 +193,16 @@ const Binary = (() => {
         if (r === 0 && model.propagate) r = model.propagate(t, log);
         for (const st of log) {
           // The clue cell behind this step, if there is one.
-          const at = st.at != null ? st.at : st.con?.at != null ? st.con.at : null;
+          let at;
+          if (st.at != null) at = st.at;
+          else if (st.con?.at != null) at = st.con.at;
+          else at = null;
           const text = why(st);
           if (st.fail) {
-            const where = at != null ? ` at ${name(at)}` : st.con ? ` at ${names(st.con.cells)}` : '';
+            let where;
+            if (at != null) where = ` at ${name(at)}`;
+            else if (st.con) where = ` at ${names(st.con.cells)}`;
+            else where = '';
             const tail = text ? `: ${text}` : '.';
             lines.push(`Now a rule is broken${where}${tail}`);
           } else if (last && at == null && last.at == null && last.v === st.v && last.text === text) {
@@ -218,9 +224,10 @@ const Binary = (() => {
     const out = [];
     for (let k = 0; k < model.N; k++) {
       if (state[k] === UNKNOWN || state[k] === solution[k]) continue;
-      out.push({ cells: [k], v: solution[k],
-        reason: state[k] === YES ? `This ${noun} is wrong.`
-          : noNoun ? `This ${noNoun} is wrong.` : `This cell is marked empty, but it needs ${a(noun)}.` });
+      let reason = `This cell is marked empty, but it needs ${a(noun)}.`;
+      if (state[k] === YES) reason = `This ${noun} is wrong.`;
+      else if (noNoun) reason = `This ${noNoun} is wrong.`;
+      out.push({ cells: [k], v: solution[k], reason });
     }
     if (out.length) return out;
     const s = Uint8Array.from(state);
@@ -229,7 +236,10 @@ const Binary = (() => {
     if (!log.length && model.propagate) model.propagate(s, log);
     for (const st of log) {
       if (st.reason) { out.push(st); continue; }
-      const why = st.con.why ? st.con.why(st.v) : (st.v === YES ? `These cells need ${a(noun)}.` : `No ${noun} can go here.`);
+      let why;
+      if (st.con.why) why = st.con.why(st.v);
+      else if (st.v === YES) why = `These cells need ${a(noun)}.`;
+      else why = `No ${noun} can go here.`;
       out.push({ cells: st.cells, v: st.v, area: st.con.area, at: st.con.at, reason: why });
     }
     if (!out.length) {
@@ -293,7 +303,10 @@ const Binary = (() => {
           const r = Math.floor(K / (C + offC)) - offR, c = (K % (C + offC)) - offC;
           if (r < 0 || c < 0) {
             el.className = 'clue' + (r < 0 ? ' clue-top' : ' clue-left');
-            const item = r < 0 && c >= 0 ? top[c] : c < 0 && r >= 0 ? left[r] : null;
+            let item;
+            if (r < 0 && c >= 0) item = top[c];
+            else if (c < 0 && r >= 0) item = left[r];
+            else item = null;
             if (item != null) {
               const [text, done] = Array.isArray(item) ? item : [item, false];
               el.textContent = text;
@@ -338,7 +351,8 @@ const Binary = (() => {
       const s = Uint8Array.from(full(p, state), (v) => (v === YES ? YES : NO));
       const m = cfg.model(p);
       for (const con of m.cons) {
-        const y = con.cells.reduce((a, k, i) => a + (s[k] === YES ? (con.w ? con.w[i] : 1) : 0), 0);
+        const weight = (i) => (con.w ? con.w[i] : 1);
+        const y = con.cells.reduce((a, k, i) => a + (s[k] === YES ? weight(i) : 0), 0);
         if (y < con.min || y > con.max) return false;
       }
       if (failed(m.propagate?.(Uint8Array.from(s)))) return false;

@@ -90,7 +90,7 @@
     const verb = { fill: 'Fill this cell. ', mark: 'Mark this cell with X. ', clear: 'Clear this cell. ' };
     return Hint.findAll(p, filled, marked).map((h) => ({
       cells: [h.r * p.size + h.c],
-      v: h.action === 'fill' ? FILL : h.action === 'mark' ? MARK : OPEN,
+      v: { fill: FILL, mark: MARK }[h.action] ?? OPEN,
       reason: (verb[h.action] || '') + cellNames(h.reason || ''),
     }));
   }

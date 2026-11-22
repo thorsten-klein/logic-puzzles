@@ -25,9 +25,11 @@
       const v = black[k];
       if (v < 0) continue;
       cons.push({ cells: [k], min: 0, max: 0 }, { cells: seen(p, k), min: v, max: v, at: k,
-        why: (x) => (x === YES ? `This ${v} needs a star in every open cell it sees.`
-          : v === 0 ? 'This 0 sees no stars. Every cell it sees is empty.'
-            : `This ${v} already sees ${v} star${v === 1 ? '' : 's'}. The other cells it sees are empty.`) });
+        why: (x) => {
+          if (x === YES) return `This ${v} needs a star in every open cell it sees.`;
+          if (v === 0) return 'This 0 sees no stars. Every cell it sees is empty.';
+          return `This ${v} already sees ${PuzzleShell.plural(v, 'star')}. The other cells it sees are empty.`;
+        } });
     }
     return { N: R * C, cons };
   }

@@ -67,10 +67,13 @@
         if (minJ !== lo[j] || maxJ !== hi[j]) { lo[j] = minJ; hi[j] = maxJ; changed.push(j); }
       }
       if (changed.length) {
-        if (log) log.push({ pairs: changed, island: i, reason: n < 0 ? 'This circle needs at least one line, and only this one is left.'
-          : sumHi === need ? `This ${need} needs every line it can still get.`
-            : sumLo === need ? `This ${need} already has all its lines.`
-              : `This ${need} can only reach its number with these lines.` });
+        if (log) {
+          let reason = `This ${need} can only reach its number with these lines.`;
+          if (n < 0) reason = 'This circle needs at least one line, and only this one is left.';
+          else if (sumHi === need) reason = `This ${need} needs every line it can still get.`;
+          else if (sumLo === need) reason = `This ${need} already has all its lines.`;
+          log.push({ pairs: changed, island: i, reason });
+        }
         return changed.length;
       }
     }

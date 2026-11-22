@@ -49,8 +49,8 @@
             const { cells, v: val } = f;
             for (const j of cells) s[j] = val;
             if (log) log.push({ cells, v: val, at: k, reason: s[k] === NO
-              ? `This white ${v} needs exactly ${v} shaded side neighbour${v === 1 ? '' : 's'}.`
-              : `This shaded ${v} needs exactly ${v} shaded corner neighbour${v === 1 ? '' : 's'}.` });
+              ? `This white ${v} needs exactly ${PuzzleShell.plural(v, 'shaded side neighbour')}.`
+              : `This shaded ${v} needs exactly ${PuzzleShell.plural(v, 'shaded corner neighbour')}.` });
             return cells.length;
           }
         } else {

@@ -65,7 +65,10 @@
       const dominoes = [];
       for (let t = 0; t < N * 3; t++) {
         const k = Math.floor(Math.random() * N), r = Math.floor(k / C), c = k % C;
-        const j = Math.random() < 0.5 ? (c < C - 1 ? k + 1 : -1) : (r < R - 1 ? k + C : -1);
+        let j;
+        if (Math.random() < 0.5) j = c < C - 1 ? k + 1 : -1;
+        else if (r < R - 1) j = k + C;
+        else j = -1;
         if (j < 0 || !free(k) || !free(j)) continue;
         shade[k] = shade[j] = 1;
         dominoes.push([k, j]);

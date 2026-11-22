@@ -137,9 +137,10 @@ const NumberPath = (() => {
       if (a >= 0) opts = opts.filter((k) => nb[a].includes(k));
       if (b >= 0) opts = opts.filter((k) => nb[b].includes(k));
       if (opts.length === 1) {
+        const near = a >= 0 ? v - 1 : v + 1;
         out.push({ cells: opts, v, reason: a >= 0 && b >= 0
           ? `${v} sits between ${v - 1} and ${v + 1}. Only one free cell touches both.`
-          : `${v} must touch ${a >= 0 ? v - 1 : v + 1}, and only one free cell does.` });
+          : `${v} must touch ${near}, and only one free cell does.` });
       }
     }
     if (!out.length) {

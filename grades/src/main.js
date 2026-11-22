@@ -120,7 +120,11 @@
       const e = entries[k];
       if (e && !p.given[k] && val(e) !== p.solution[k]) return [{ cells: [k], v: 0, reason: e === 10 ? 'This cell is not empty.' : 'This digit is wrong.' }];
     }
-    const cand = Int32Array.from(entries, (e, k) => (p.given[k] ? 1 << (p.given[k] + 1) : e ? 1 << (val(e) + 1) : ALL));
+    const cand = Int32Array.from(entries, (e, k) => {
+      if (p.given[k]) return 1 << (p.given[k] + 1);
+      if (e) return 1 << (val(e) + 1);
+      return ALL;
+    });
     propagate(p, cand);
     for (let k = 0; k < cand.length; k++) {
       if (entries[k] || p.given[k] || !one(cand[k])) continue;

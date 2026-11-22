@@ -20,8 +20,11 @@
       const v = clues[r * (C + 1) + c];
       if (v < 0) continue;
       cons.push({ cells: cornerCells(p, r, c), min: v, max: v, at: r * (C + 1) + c,
-        why: (x) => (x === YES ? `This ${v} needs every open cell around it shaded.`
-          : v === 0 ? 'A 0 means no shaded cells around this corner.' : `This ${v} already has ${v} shaded cell${v === 1 ? '' : 's'} around it.`) });
+        why: (x) => {
+          if (x === YES) return `This ${v} needs every open cell around it shaded.`;
+          if (v === 0) return 'A 0 means no shaded cells around this corner.';
+          return `This ${v} already has ${PuzzleShell.plural(v, 'shaded cell')} around it.`;
+        } });
     }
     return { N: R * C, cons, check: (s) => Binary.canConnect(R, C, s, NO) };
   }

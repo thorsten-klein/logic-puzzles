@@ -17,8 +17,11 @@
       const v = p.clues[k];
       if (v < 0) continue;
       cons.push({ cells: corners(p, k), min: v, max: v, at: k,
-        why: (x) => (x === YES ? `This ${v} needs every open corner dot black.`
-          : v === 0 ? 'A 0 means all four corner dots are white.' : `This ${v} already has ${v} black dot${v === 1 ? '' : 's'}. The other corners are white.`) });
+        why: (x) => {
+          if (x === YES) return `This ${v} needs every open corner dot black.`;
+          if (v === 0) return 'A 0 means all four corner dots are white.';
+          return `This ${v} already has ${PuzzleShell.plural(v, 'black dot')}. The other corners are white.`;
+        } });
     }
     return { N: (p.R + 1) * (p.C + 1), cons };
   }
@@ -67,7 +70,7 @@
     for (let r = 0; r <= R; r++) for (let c = 0; c <= C; c++) {
       const d = r * (C + 1) + c;
       const v = result ? solution[d] : state[d];
-      let cls = 'sq-dot' + (v === YES ? ' black' : v === NO ? ' white' : '');
+      let cls = 'sq-dot' + ({ [YES]: ' black', [NO]: ' white' }[v] ?? '');
       if (hintSet.has(d)) cls += ' hint';
       if (result && state[d]) cls += state[d] === solution[d] ? ' ok' : ' bad';
       else if (result && solution[d] === YES) cls += ' miss'; // not entered yet

@@ -166,6 +166,8 @@ async function fuzzCode(page) {
       LegLoop: typeof LegLoop === 'undefined' ? null : LegLoop,
     };
     const engine = (name) => ENGINES[name] || null;
+    // Blank mark of a share string: '.', '-', or else '0'.
+    const blankOf = (v) => ['.', '-'].find((ch) => v.includes(ch)) ?? '0';
     const t = window.__puzzleTest;
     if (!t) return;
     const { cfg } = t;
@@ -187,10 +189,12 @@ async function fuzzCode(page) {
         const v = obj[k];
         // Thinned clues (every 2nd or 3rd clue gone) make solvers search.
         const thin = (str, m, blank) => str.replaceAll(/[^,]/g, (ch, i) => (i % m === 0 && /[1-9a-z]/i.test(ch) ? blank : ch));
-        const extra = typeof v === 'string' ? [v.slice(0, Math.floor(v.length / 2)), v + ',1', v.replace(/^./, '#'), v.replace(/\d/, '9'),
-          thin(v, 2, '0'), thin(v, 3, '0'), thin(v, 2, '.'), thin(v, 3, '.'), thin(v, 2, '-')]
-          : Array.isArray(v) ? [v.slice(1), v.concat(v), v.map(() => -1), v.map((x, i) => (i % 2 ? 0 : x)), v.filter((_, i) => i % 2)]
-            : typeof v === 'number' ? [v + 1, -v, v * 100] : [];
+        let extra;
+        if (typeof v === 'string') extra = [v.slice(0, Math.floor(v.length / 2)), v + ',1', v.replace(/^./, '#'), v.replace(/\d/, '9'),
+          thin(v, 2, '0'), thin(v, 3, '0'), thin(v, 2, '.'), thin(v, 3, '.'), thin(v, 2, '-')];
+        else if (Array.isArray(v)) extra = [v.slice(1), v.concat(v), v.map(() => -1), v.map((x, i) => (i % 2 ? 0 : x)), v.filter((_, i) => i % 2)];
+        else if (typeof v === 'number') extra = [v + 1, -v, v * 100];
+        else extra = [];
         for (const w of odd.concat(extra)) variants.push(set(k, w));
         walk(v, (k2, w) => set(k, (() => { const c = clone(v); c[k2] = w; return c; })()), depth + 1);
       }
@@ -213,11 +217,11 @@ async function fuzzCode(page) {
         continue;
       }
       // All clues blank, too.
-      early.push({ ...d0, [key]: v.replaceAll(/[1-9a-z]/gi, v.includes('.') ? '.' : v.includes('-') ? '-' : '0') });
+      early.push({ ...d0, [key]: v.replaceAll(/[1-9a-z]/gi, blankOf(v)) });
       let made = 0;
       for (let i = 0; i < v.length && made < 40; i++) {
         if (!/[1-9a-z]/i.test(v[i])) continue;
-        for (const blank of v.includes('.') ? ['.'] : v.includes('-') ? ['-'] : ['0']) {
+        for (const blank of [blankOf(v)]) {
           early.push({ ...d0, [key]: v.slice(0, i) + blank + v.slice(i + 1) });
           made++;
         }
@@ -314,7 +318,11 @@ async function fuzzCode(page) {
     for (let i = 0; i < 25; i++) states.push(Array.from(end, () => pick(vals))); // random
     for (let i = 0; i < 25; i++) states.push(Array.from(end, (v) => (Math.random() < 0.5 ? v : 0))); // part solved
     for (let i = 0; i < 25; i++) states.push(Array.from(end, (v) => (Math.random() < 0.15 ? pick(vals) : v))); // a few wrong
-    for (let i = 0; i < 25; i++) states.push(Array.from(end, (v) => (Math.random() < 0.6 ? 0 : Math.random() < 0.2 ? pick(vals) : v)));
+    for (let i = 0; i < 25; i++) states.push(Array.from(end, (v) => {
+      if (Math.random() < 0.6) return 0;
+      if (Math.random() < 0.2) return pick(vals);
+      return v;
+    }));
     for (const raw of states) {
       if (Date.now() > stop + 6000) break;
       const st = tryIt(() => { const x = cfg.newState(p); raw.forEach((v, i) => { x[i] = v; }); return x; });

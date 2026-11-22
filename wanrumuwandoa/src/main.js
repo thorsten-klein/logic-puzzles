@@ -38,7 +38,10 @@
         if (doors.length !== 1) continue;
         for (const [a, b] of pairs) {
           if (pairs === doors || (s[a] === NO && s[b] === NO)) continue;
-          const open = s[a] === NO && s[b] === UNKNOWN ? b : s[b] === NO && s[a] === UNKNOWN ? a : -1;
+          let open;
+          if (s[a] === NO && s[b] === UNKNOWN) open = b;
+          else if (s[b] === NO && s[a] === UNKNOWN) open = a;
+          else open = -1;
           if (open < 0) continue;
           s[open] = YES;
           if (log) log.push({ cells: [open], v: YES, reason: 'These two rooms already share a door. A second door between them is not allowed.' });

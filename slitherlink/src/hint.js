@@ -30,7 +30,7 @@ const Hint = (() => {
       const lines = es.filter((e) => edges[e] === LINE).length;
       const open = es.filter((e) => edges[e] === EMPTY);
       if (!open.length) continue;
-      if (lines === cl) add(open, CROSS, `This ${cl} already has ${cl} line${cl === 1 ? '' : 's'}. The other sides get crosses.`);
+      if (lines === cl) add(open, CROSS, `This ${cl} already has ${PuzzleShell.plural(cl, 'line')}. The other sides get crosses.`);
       else if (lines + open.length === cl) add(open, LINE, `This ${cl} needs a line on every side that is still open.`);
     }
 

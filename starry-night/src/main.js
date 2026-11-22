@@ -15,7 +15,9 @@
   const relation = (vals) => {
     const s = vals.indexOf(2), m = vals.indexOf(3), t = vals.indexOf(4);
     const a = Math.abs(s - t), b = Math.abs(m - t);
-    return a < b ? 1 : a > b ? 2 : 3;
+    if (a < b) return 1;
+    if (a > b) return 2;
+    return 3;
   };
 
   function prepare(p) {
@@ -140,8 +142,11 @@
         const r = Math.floor(K / W) - 1, c = (K % W) - 1;
         if (r < 0 || c < 0) {
           el.className = 'clue';
-          const v = r < 0 && c >= 0 ? p.colClue[c] : c < 0 && r >= 0 ? p.rowClue[r] : 0;
-          if (v) el.append(figureEl(v === 1 ? 2 : v === 2 ? 3 : 4));
+          let v;
+          if (r < 0 && c >= 0) v = p.colClue[c];
+          else if (c < 0 && r >= 0) v = p.rowClue[r];
+          else v = 0;
+          if (v) el.append(figureEl(Math.min(v + 1, 4))); // 1 → 2, 2 → 3, else 4
           return;
         }
         const k = r * n + c;

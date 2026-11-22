@@ -110,7 +110,8 @@
       let cls = 'sw-node';
       // Result: answer circles the player has on the path are ok, the rest
       // are not entered yet.
-      if (path.includes(k)) cls += result ? (Array.from(s).includes(k) ? ' ok' : ' miss') : solved ? ' ok' : ' on';
+      if (path.includes(k) && result) cls += Array.from(s).includes(k) ? ' ok' : ' miss';
+      else if (path.includes(k)) cls += solved ? ' ok' : ' on';
       if (hintSet.has(k)) cls += ' hint';
       const c = el('circle', { cx: x, cy: y, r: gap * 0.3, class: cls }, svg);
       el('text', { x, y, 'font-size': gap * 0.32, class: 'sw-letter' }, svg).textContent = letters[k];

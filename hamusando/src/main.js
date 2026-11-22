@@ -106,7 +106,11 @@
       const e = entries[i];
       if (e && !p.given[i] && e !== p.solution[i]) return [{ cells: [i], v: 0, reason: e === 1 ? 'This cell is not empty.' : 'This figure is wrong.' }];
     }
-    const cand = Int32Array.from(entries, (e, i) => (p.given[i] ? 1 << p.given[i] : e ? 1 << e : ALL));
+    const cand = Int32Array.from(entries, (e, i) => {
+      if (p.given[i]) return 1 << p.given[i];
+      if (e) return 1 << e;
+      return ALL;
+    });
     propagate(p, cand);
     for (let i = 0; i < cand.length; i++) {
       if (entries[i] || p.given[i] || !one(cand[i])) continue;
@@ -127,7 +131,10 @@
         const r = Math.floor(K / W) - 1, c = (K % W) - 1;
         if (r < 0 || c < 0) {
           el.className = 'clue';
-          const v = r < 0 && c >= 0 ? p.top[c] : c < 0 && r >= 0 ? p.left[r] : -1;
+          let v;
+          if (r < 0 && c >= 0) v = p.top[c];
+          else if (c < 0 && r >= 0) v = p.left[r];
+          else v = -1;
           if (v >= 0) el.textContent = v;
           return;
         }

@@ -11,13 +11,21 @@ PuzzleShell.start({
   generate: (n) => Generator.generate(n),
   encode: (p) => ({
     r: p.R, c: p.C,
-    g: Array.from(p.walls, (v) => (v === Rules.WHITE ? '.' : v === Rules.BLACK ? '#' : String(v))).join(''),
+    g: Array.from(p.walls, (v) => {
+      if (v === Rules.WHITE) return '.';
+      if (v === Rules.BLACK) return '#';
+      return String(v);
+    }).join(''),
   }),
   decode(d) {
     const R = d?.r, C = d?.c;
     if (![R, C].every((x) => Number.isInteger(x) && x >= 2 && x <= 30)) throw new Error('Invalid board size');
     if (typeof d.g !== 'string' || d.g.length !== R * C || !/^[.#0-4]+$/.test(d.g)) throw new Error('Invalid grid');
-    const walls = Int8Array.from(d.g, (ch) => (ch === '.' ? Rules.WHITE : ch === '#' ? Rules.BLACK : Number(ch)));
+    const walls = Int8Array.from(d.g, (ch) => {
+      if (ch === '.') return Rules.WHITE;
+      if (ch === '#') return Rules.BLACK;
+      return Number(ch);
+    });
     const p = Rules.prepare({ R, C, walls });
     const { solutions } = Solver.solve(p, 2);
     if (solutions.length !== 1) throw new Error('Puzzle has no unique solution');

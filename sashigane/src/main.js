@@ -123,7 +123,9 @@
       }
       return true;
     },
-    cellText: (p, k) => { const v = p.clues[k]; return v >= 40 ? ARROW[v - 40] : v > 1 ? String(v - 1) : ''; },
+    cellText: (p, k) => { const v = p.clues[k]; if (v >= 40) return ARROW[v - 40];
+    if (v > 1) return String(v - 1);
+    return ''; },
     decorate(p, k, g, x, y, s) {
       const v = p.clues[k];
       if (!v || v >= 40) return;

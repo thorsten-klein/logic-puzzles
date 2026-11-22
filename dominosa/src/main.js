@@ -192,10 +192,10 @@
     const st = new Uint8Array(p.edges.length);
     state.forEach((v, e) => { if (v === 1) choose(p, st, e); });
     const f = forced(p, st);
-    if (f && f.why === 'cell') {
+    if (f?.why === 'cell') {
       return [{ edges: [f.e], v: 1, reason: `This ${p.g[f.k]} has only one neighbour left to pair with.` }];
     }
-    if (f && f.why === 'type') {
+    if (f?.why === 'type') {
       return [{ edges: [f.e], v: 1, reason: `The ${f.a}-${f.b} domino can only go here.` }];
     }
     const e = p.solution.findIndex((v, i) => v && !state[i]);

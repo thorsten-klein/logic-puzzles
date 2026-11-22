@@ -75,7 +75,7 @@
         if (known === n) {
           for (const j of cells) {
             if (black(s, j) || onLoop(s, j)) continue;
-            const r = needLoop(s, j, log, `This arrow already sees its ${n} black cell${n === 1 ? '' : 's'}. The other cells that way are on the loop.`);
+            const r = needLoop(s, j, log, `This arrow already sees its ${PuzzleShell.plural(n, 'black cell')}. The other cells that way are on the loop.`);
             if (r < 0) return -1;
             if (r) return r;
           }

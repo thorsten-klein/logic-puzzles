@@ -766,6 +766,11 @@ const PuzzleShell = (() => {
     });
   }
 
+  // "1 star", "3 stars": a count with its word, plural when not 1.
+  function plural(n, word) {
+    return `${n} ${word}${n === 1 ? '' : 's'}`;
+  }
+
   // Class for a cell in the result view: right ('ok'), wrong ('bad'),
   // or not entered yet ('show'). `entered` tells if the player set it.
   function resultClass(mine, answer, entered = Boolean(mine)) {
@@ -992,5 +997,5 @@ const PuzzleShell = (() => {
     return Math.max(min, Math.min(max, Math.floor(avail / cols) - 2));
   }
 
-  return { start, prepare, resultClass, shuffle, gridBoard, colName, cellName, fitCell, digitInput, regionBorders, growRegions, TINTS, arrowIcon, figure, shapeFigures };
+  return { start, prepare, plural, resultClass, shuffle, gridBoard, colName, cellName, fitCell, digitInput, regionBorders, growRegions, TINTS, arrowIcon, figure, shapeFigures };
 })();

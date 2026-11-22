@@ -52,7 +52,7 @@
       const v = clues[k];
       if (v < 0) continue;
       cons.push({ cells: [k], min: 0, max: 0 }, { cells: around(k), min: v, max: v, at: k,
-        why: (x) => (x === YES ? `This ${v} needs a ship part in every open cell around it.` : `This ${v} already has its ${v} ship part${v === 1 ? '' : 's'} around it. The other cells are water.`) });
+        why: (x) => (x === YES ? `This ${v} needs a ship part in every open cell around it.` : `This ${v} already has its ${PuzzleShell.plural(v, 'ship part')} around it. The other cells are water.`) });
     }
     for (let r = 0; r < R - 1; r++) for (let c = 0; c < C - 1; c++) {
       const k = r * C + c;

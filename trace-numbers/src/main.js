@@ -12,7 +12,7 @@
     const g = Loop.grid(R, C);
     const top = Math.max(...num);
     // Ends: every 1 and every top number; they pair 1 with top.
-    const label = Int8Array.from(num, (v) => (v === 1 ? 0 : v === top ? 0 : -1));
+    const label = Int8Array.from(num, (v) => (v === 1 || v === top ? 0 : -1));
     const step = [-C, C, -1, 1];
     function rule(s) {
       for (let k = 0; k < R * C; k++) {

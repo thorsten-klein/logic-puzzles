@@ -119,7 +119,11 @@
     return { solutions: out, capped: nodes > maxNodes };
   }
 
-  const startCand = (p, given) => Int32Array.from({ length: p.R * p.C }, (_, k) => (p.circle[k] ? 0 : given[k] ? 1 << given[k] : ALL));
+  const startCand = (p, given) => Int32Array.from({ length: p.R * p.C }, (_, k) => {
+    if (p.circle[k]) return 0;
+    if (given[k]) return 1 << given[k];
+    return ALL;
+  });
 
   function generate(n) {
     const deadline = Date.now() + 8000;

@@ -44,7 +44,11 @@
       let set = 0;
       for (let g = 0; g < rooms.length; g++) {
         if (!blocks[g]) continue;
-        const fit = blocks[g].filter((ks) => rooms[g].every((k) => (s[k] === YES ? ks.includes(k) : s[k] === NO ? !ks.includes(k) : true)));
+        const fit = blocks[g].filter((ks) => rooms[g].every((k) => {
+          if (s[k] === YES) return ks.includes(k);
+          if (s[k] === NO) return !ks.includes(k);
+          return true;
+        }));
         if (!fit.length) return -1;
         for (const k of rooms[g]) {
           if (s[k] !== UNKNOWN) continue;

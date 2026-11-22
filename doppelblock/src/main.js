@@ -138,7 +138,10 @@
         const R = Math.floor(K / (n + 1)) - 1, C = (K % (n + 1)) - 1;
         if (R < 0 || C < 0) {
           el.className = 'clue';
-          const v = R < 0 && C >= 0 ? clues[C] : C < 0 && R >= 0 ? clues[n + R] : -1;
+          let v;
+          if (R < 0 && C >= 0) v = clues[C];
+          else if (C < 0 && R >= 0) v = clues[n + R];
+          else v = -1;
           el.textContent = v >= 0 ? v : '';
           return;
         }

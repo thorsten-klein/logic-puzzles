@@ -158,8 +158,13 @@
     clues.forEach((x, i) => {
       if (!x) return;
       const side = Math.floor(i / n), j = i % n;
-      const [cx, cy] = side === 0 ? [o + j * s + s / 2, s / 2] : side === 1 ? [o + j * s + s / 2, o + n * s + s / 2]
-        : side === 2 ? [s / 2, o + j * s + s / 2] : [o + n * s + s / 2, o + j * s + s / 2];
+      // Label spot by side: top, bottom, left, right.
+      const [cx, cy] = [
+        [o + j * s + s / 2, s / 2],
+        [o + j * s + s / 2, o + n * s + s / 2],
+        [s / 2, o + j * s + s / 2],
+        [o + n * s + s / 2, o + j * s + s / 2],
+      ][side];
       el('text', { x: cx, y: cy, 'font-size': s * 0.38, class: 'pt-clue kk-label' }, g).textContent = LET[x[0]] + x[1];
     });
     for (let k = 0; k < n * n; k++) {
@@ -167,7 +172,7 @@
       const v = result ? solution[k] : state[k];
       if (v) {
         let cls = '';
-        if (result) cls = state[k] === solution[k] ? ' ok' : state[k] ? ' bad' : ' show';
+        if (result) cls = ' ' + PuzzleShell.resultClass(state[k], solution[k]);
         const [a, b] = v === 1 ? [[x + d, y + s - d], [x + s - d, y + d]] : [[x + d, y + d], [x + s - d, y + s - d]];
         el('line', { x1: a[0], y1: a[1], x2: b[0], y2: b[1], class: 'kk-mirror' + cls }, g);
       } else if (result && state[k]) {

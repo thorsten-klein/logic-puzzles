@@ -173,7 +173,11 @@ function uiTests(slug) {
         const bad = (st) => (cfg.mistakes ? cfg.mistakes(p, st) : view(st).querySelectorAll('.bad, .wrong, [class*="-bad"]').length);
         const miss = (st) => view(st).querySelectorAll('.show, .miss, [class*="-miss"]').length;
         if (!Array.isArray(s) && !ArrayBuffer.isView(s)) return { skip: true };
-        const copy = (x) => (typeof x[0] === 'object' ? x.map((y) => y.slice()) : x.slice ? x.slice() : Array.from(x));
+        const copy = (x) => {
+          if (typeof x[0] === 'object') return x.map((y) => y.slice());
+          if (x.slice) return x.slice();
+          return Array.from(x);
+        };
         const empty = cfg.newState(p);
         let half;
         if (typeof s[0] === 'object') half = s.filter((_, j) => j % 2);

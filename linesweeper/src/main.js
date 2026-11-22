@@ -43,7 +43,7 @@
           const es = [...new Set(open.flatMap(edgesOf))].filter((e) => s[e] === UNKNOWN);
           if (es.length) {
             return push(es, CROSS, v === 0 ? 'A 0 means the loop avoids every cell around it.'
-              : `This ${v} already sees the loop in ${v} cell${v === 1 ? '' : 's'}. The loop avoids the other cells around it.`, k);
+              : `This ${v} already sees the loop in ${PuzzleShell.plural(v, 'cell')}. The loop avoids the other cells around it.`, k);
           }
         }
         if (yes.length + open.length === v) {

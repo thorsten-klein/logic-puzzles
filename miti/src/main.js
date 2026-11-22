@@ -41,7 +41,10 @@
           const need = pieces - 3;
           if (lines > need || lines + open.length < need) return -1;
           if (!open.length) continue;
-          const v = lines === need ? CROSS : lines + open.length === need ? LINE : 0;
+          let v;
+          if (lines === need) v = CROSS;
+          else if (lines + open.length === need) v = LINE;
+          else v = 0;
           if (!v) continue;
           for (const e of open) s[e] = v;
           if (log) { log.push({ edges: open, v, reason: v === CROSS ? 'Three walls meet at this dot, so the road crosses no more borders here.' : 'Three walls meet at this dot, so the road must cross the open borders here.' }); return 1; }

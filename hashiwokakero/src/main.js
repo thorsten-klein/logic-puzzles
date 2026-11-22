@@ -61,10 +61,12 @@
         if (minJ !== lo[j] || maxJ !== hi[j]) { lo[j] = minJ; hi[j] = maxJ; changed.push(j); }
       }
       if (changed.length) {
-        if (log) log.push({ pairs: changed, island: i, reason: sumHi === need
-          ? `This ${need} needs every bridge it can still get.`
-          : sumLo === need ? `This ${need} already has all its bridges.`
-            : `This ${need} can only reach its number if these bridges are built.` });
+        if (log) {
+          let reason = `This ${need} can only reach its number if these bridges are built.`;
+          if (sumHi === need) reason = `This ${need} needs every bridge it can still get.`;
+          else if (sumLo === need) reason = `This ${need} already has all its bridges.`;
+          log.push({ pairs: changed, island: i, reason });
+        }
         return changed.length;
       }
     }
@@ -87,7 +89,7 @@
         if (na === nb && na <= 2 && hi[j] >= na) {
           hi[j] = na - 1;
           if (lo[j] > hi[j]) return -1;
-          if (log) log.push({ pairs: [j], reason: `Two ${na}s joined by ${na} bridge${na === 1 ? '' : 's'} would form a closed group. So they can not be joined that way.` });
+          if (log) log.push({ pairs: [j], reason: `Two ${na}s joined by ${PuzzleShell.plural(na, 'bridge')} would form a closed group. So they can not be joined that way.` });
           return 1;
         }
       }

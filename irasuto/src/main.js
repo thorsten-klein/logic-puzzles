@@ -100,7 +100,10 @@
     size: { min: 4, max: 8, def: 6 },
     solvedText: 'The picture is complete — nicely done.',
     generate,
-    encode: (p) => ({ r: p.R, c: p.C, g: Array.from(p.num, (v, k) => (v < 0 ? '.' : (p.col[k] === YES ? 'b' : 'w') + v.toString(36))).join(',') }),
+    encode: (p) => ({ r: p.R, c: p.C, g: Array.from(p.num, (v, k) => {
+      if (v < 0) return '.';
+      return (p.col[k] === YES ? 'b' : 'w') + v.toString(36);
+    }).join(',') }),
     decode(d) {
       const R = d?.r, C = d?.c;
       if (![R, C].every((x) => Number.isInteger(x) && x >= 3 && x <= 20)) throw new Error('Invalid board size');

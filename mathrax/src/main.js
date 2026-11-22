@@ -47,8 +47,11 @@
     const vals = [g[tl], g[tr], g[bl], g[br]];
     const out = [];
     for (const op of ['+', '-', '*', '/']) {
-      const a = op === '+' ? vals[0] + vals[3] : op === '*' ? vals[0] * vals[3]
-        : op === '-' ? Math.abs(vals[0] - vals[3]) : Math.max(vals[0], vals[3]) / Math.min(vals[0], vals[3]);
+      let a;
+      if (op === '+') a = vals[0] + vals[3];
+      else if (op === '*') a = vals[0] * vals[3];
+      else if (op === '-') a = Math.abs(vals[0] - vals[3]);
+      else a = Math.max(vals[0], vals[3]) / Math.min(vals[0], vals[3]);
       if (Number.isInteger(a) && a > 0 && clueOk({ op, v: a }, vals)) out.push({ r, c, op, v: a });
     }
     if (vals.every((x) => x % 2 === 0)) out.push({ r, c, op: 'E' });

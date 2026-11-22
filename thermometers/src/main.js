@@ -8,10 +8,11 @@
   function model(p) {
     const { R, C, rows, cols, thermos } = p;
     const cons = [];
-    const lineWhy = (name, n) => (v) => (v === YES
-      ? `${name} needs ${n} filled cell${n === 1 ? '' : 's'}. The open cells must all be filled.`
-      : n === 0 ? `${name} has no filled cells. All its cells stay empty.`
-        : `${name} already has its ${n} filled cell${n === 1 ? '' : 's'}. The rest stay empty.`);
+    const lineWhy = (name, n) => (v) => {
+      if (v === YES) return `${name} needs ${PuzzleShell.plural(n, 'filled cell')}. The open cells must all be filled.`;
+      if (n === 0) return `${name} has no filled cells. All its cells stay empty.`;
+      return `${name} already has its ${PuzzleShell.plural(n, 'filled cell')}. The rest stay empty.`;
+    };
     for (let r = 0; r < R; r++) {
       const cells = Array.from({ length: C }, (_, c) => r * C + c);
       cons.push({ cells, min: rows[r], max: rows[r], area: cells, why: lineWhy(`Row ${r + 1}`, rows[r]) });
@@ -24,7 +25,10 @@
       for (const t of thermos) {
         // Highest filled cell and lowest empty cell.
         let top = -1, low = t.length;
-        t.forEach((k, i) => { if (s[k] === YES) { top = i; } if (s[k] === NO && low === t.length) { low = i; } });
+        t.forEach((k, i) => {
+          if (s[k] === YES) { top = i; }
+          if (s[k] === NO && low === t.length) { low = i; }
+        });
         if (top >= low) return false;
         const fill = t.slice(0, Math.max(0, top)).filter((k) => s[k] === UNKNOWN);
         if (fill.length) {

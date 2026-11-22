@@ -101,7 +101,11 @@
       const e = entries[k];
       if (e && p.room[k] >= 0 && e !== p.solution[k]) return [{ cells: [k], v: 0, reason: e === 1 ? 'This cell is not empty.' : 'This is wrong here.' }];
     }
-    const cand = Int32Array.from(entries, (e, k) => (p.room[k] < 0 ? 0 : e ? 1 << e : ALL));
+    const cand = Int32Array.from(entries, (e, k) => {
+      if (p.room[k] < 0) return 0;
+      if (e) return 1 << e;
+      return ALL;
+    });
     propagate(p, cand);
     for (let k = 0; k < cand.length; k++) {
       if (entries[k] || p.room[k] < 0 || !one(cand[k])) continue;

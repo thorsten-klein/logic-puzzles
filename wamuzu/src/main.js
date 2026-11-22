@@ -18,7 +18,10 @@
         for (const [a, b] of [[up, down], [left, right]]) {
           if (a < 0 || b < 0) continue;
           if (s[a] === LINE && s[b] === LINE) return -1;
-          const other = s[a] === LINE ? b : s[b] === LINE ? a : -1;
+          let other;
+          if (s[a] === LINE) other = b;
+          else if (s[b] === LINE) other = a;
+          else other = -1;
           if (other < 0 || s[other] !== UNKNOWN) continue;
           s[other] = CROSS;
           if (log) { log.push({ edges: [other], v: CROSS, reason: 'A line turns in every cell, so it can not go straight on here.' }); return 1; }
@@ -45,7 +48,7 @@
       }
       if (path.length >= maxLen) return false;
       const x = path.at(-1), r = Math.floor(x / n), c = x % n;
-      const opts = (axis === 0 ? [[0, 1], [0, -1]] : axis === 1 ? [[1, 0], [-1, 0]] : [[0, 1], [1, 0]])
+      const opts = [[[0, 1], [0, -1]], [[1, 0], [-1, 0]], [[0, 1], [1, 0]]][Math.min(axis, 2)]
         .filter(([a, b]) => free(r + a, c + b));
       for (const [a, b] of PuzzleShell.shuffle(opts)) {
         const k = (r + a) * n + c + b;

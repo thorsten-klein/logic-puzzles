@@ -172,9 +172,15 @@ const Latin = (() => {
           const open = cells.filter((k) => !entries[k] && cand[k] & (1 << v));
           // Name cells like "D1" when columns have letters, else by row or column.
           const lettered = typeof colName(0) === 'string';
-          const spot = (k) => lettered ? `${colName(k % n)}${Math.floor(k / n) + 1}`
-            : line < n ? colName(k % n) : Math.floor(k / n) + 1;
-          const kind = lettered ? 'cells' : line < n ? 'columns' : 'rows';
+          const spot = (k) => {
+            if (lettered) return `${colName(k % n)}${Math.floor(k / n) + 1}`;
+            if (line < n) return colName(k % n);
+            return Math.floor(k / n) + 1;
+          };
+          let kind;
+          if (lettered) kind = 'cells';
+          else if (line < n) kind = 'columns';
+          else kind = 'rows';
           const reason = !rule || open.length === 1
             ? `${head}, and this is the only cell where it can go.`
             : `${head}. By row and column alone it could go in ${kind} ${join(open.map(spot), 'or')}. ` +

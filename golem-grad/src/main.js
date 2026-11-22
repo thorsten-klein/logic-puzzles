@@ -175,7 +175,11 @@
       return { R, C, clues: Int8Array.from(d.g, (ch) => (ch === '.' ? 0 : Number.parseInt(ch, 36))), ring: Uint8Array.from(d.o, Number) };
     },
     model,
-    fixed: (p, k) => (p.clues[k] > 0 ? NO : p.ring[k] ? YES : 0),
+    fixed: (p, k) => {
+      if (p.clues[k] > 0) return NO;
+      if (p.ring[k]) return YES;
+      return 0;
+    },
     draw(p, k, el) {
       if (p.clues[k] > 0) el.textContent = p.clues[k];
       if (p.ring[k]) { const o = document.createElement('span'); o.className = 'gg-ring'; el.append(o); }

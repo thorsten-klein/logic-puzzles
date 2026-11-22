@@ -89,7 +89,8 @@
         else if (Math.random() < 0.5) {
           // Shaded cell with a false clue.
           p.dir[k] = d;
-          p.num[k] = truth === 0 ? 1 + Math.floor(Math.random() * 2) : Math.random() < 0.5 ? truth - 1 : truth + 1;
+          if (truth === 0) p.num[k] = 1 + Math.floor(Math.random() * 2);
+          else p.num[k] = Math.random() < 0.5 ? truth - 1 : truth + 1;
         }
       }
       const s = Binary.logicSolve(model(p));

@@ -75,9 +75,10 @@ const Generator = (() => {
     // search space, so we aim for thinner snakes there. Without the
     // no-touch rule the snake can fold tightly, so we cap density lower
     // to keep the solver's search space tractable.
-    const density = noTouch
-      ? (size <= 6 ? 0.55 : size <= 8 ? 0.5 : size <= 10 ? 0.42 : size <= 12 ? 0.34 : 0.26)
-      : (size <= 6 ? 0.45 : size <= 8 ? 0.36 : size <= 10 ? 0.3 : size <= 12 ? 0.24 : 0.2);
+    // Sizes up to 6, 8, 10, 12, and bigger.
+    const steps = noTouch ? [0.55, 0.5, 0.42, 0.34, 0.26] : [0.45, 0.36, 0.3, 0.24, 0.2];
+    const step = [6, 8, 10, 12].findIndex((max) => size <= max);
+    const density = steps[step < 0 ? 4 : step];
     const targetLen = Math.floor(size * size * density);
     const minLen = Math.max(Math.floor(targetLen * 0.7), size + 2);
     const deadline = Date.now() + deadlineMs;

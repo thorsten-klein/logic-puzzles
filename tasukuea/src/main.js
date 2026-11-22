@@ -92,7 +92,10 @@
       return [[r - 1, c], [r + 1, c], [r, c - 1], [r, c + 1]].some(([a, b]) => a >= 0 && b >= 0 && a < n && b < n && shade[a * n + b]);
     };
     for (let t = 0; t < n * 4; t++) {
-      const size = Math.random() < 0.6 ? 1 : Math.random() < 0.7 ? 2 : 3;
+      let size;
+      if (Math.random() < 0.6) size = 1;
+      else if (Math.random() < 0.7) size = 2;
+      else size = 3;
       const r = Math.floor(Math.random() * (n - size + 1)), c = Math.floor(Math.random() * (n - size + 1));
       const cells = [];
       for (let i = 0; i < size; i++) for (let j = 0; j < size; j++) cells.push((r + i) * n + c + j);
@@ -154,14 +157,20 @@
     size: { min: 5, max: 8, def: 7 },
     solvedText: 'All squares found — nicely done.',
     generate,
-    encode: (p) => ({ r: p.R, c: p.C, g: Array.from(p.clues, (v) => (v === -1 ? '..' : v === Q ? '??' : v.toString(36).padStart(2, '0'))).join('') }),
+    encode: (p) => ({ r: p.R, c: p.C, g: Array.from(p.clues, (v) => {
+      if (v === -1) return '..';
+      if (v === Q) return '??';
+      return v.toString(36).padStart(2, '0');
+    }).join('') }),
     decode(d) {
       const R = d?.r, C = d?.c;
       if (![R, C].every((x) => Number.isInteger(x) && x >= 3 && x <= 20)) throw new Error('Invalid board size');
       if (typeof d.g !== 'string' || d.g.length !== 2 * R * C) throw new Error('Invalid clues');
       const clues = Int8Array.from({ length: R * C }, (_, k) => {
         const t = d.g.slice(2 * k, 2 * k + 2);
-        return t === '..' ? -1 : t === '??' ? Q : Number.parseInt(t, 36);
+        if (t === '..') return -1;
+        if (t === '??') return Q;
+        return Number.parseInt(t, 36);
       });
       return { R, C, clues };
     },

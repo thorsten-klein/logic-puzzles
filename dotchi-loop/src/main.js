@@ -57,7 +57,9 @@
       const room = PuzzleShell.growRegions(n, n, seeds.map((k) => [k]));
       const shapeOf = (k) => {
         const dirs = [0, 1, 2, 3].filter((d) => g.cellEdges[k][d] >= 0 && loop[g.cellEdges[k][d]] === LINE);
-        return dirs.length !== 2 ? '' : (dirs[0] >> 1) === (dirs[1] >> 1) ? 'S' : 'T';
+        if (dirs.length !== 2) return '';
+        if ((dirs[0] >> 1) === (dirs[1] >> 1)) return 'S';
+        return 'T';
       };
       // Each room picks straight or turn; circles on its loop cells of that kind.
       const mark = new Uint8Array(N);

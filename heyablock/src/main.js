@@ -39,9 +39,11 @@
       const v = clues[id];
       if (v < 0) continue;
       cons.push({ cells, min: v, max: v, area: cells,
-        why: (x) => (x === YES ? `This room needs ${v} shaded cell${v === 1 ? '' : 's'}, and only these cells are left.`
-          : v === 0 ? 'This room has a 0. All its cells stay white.'
-            : `This room already has its ${v} shaded cell${v === 1 ? '' : 's'}. The rest stay white.`) });
+        why: (x) => {
+          if (x === YES) return `This room needs ${PuzzleShell.plural(v, 'shaded cell')}, and only these cells are left.`;
+          if (v === 0) return 'This room has a 0. All its cells stay white.';
+          return `This room already has its ${PuzzleShell.plural(v, 'shaded cell')}. The rest stay white.`;
+        } });
     }
     for (const [, cells] of rooms) cons.push({ cells, min: 1, max: cells.length, why: () => 'Every room has at least one shaded cell.' });
     for (let k = 0; k < R * C; k++) {

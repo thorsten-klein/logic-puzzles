@@ -48,7 +48,11 @@
       for (let r = 0; r < n - 1; r++) sol[r * n + n - 1] = 100 - [...new Array(n - 1).keys()].reduce((a, c) => a + sol[r * n + c], 0);
       for (let c = 0; c < n; c++) sol[(n - 1) * n + c] = 100 - [...new Array(n - 1).keys()].reduce((a, r) => a + sol[r * n + c], 0);
       if (sol.some((x) => x < 0 || x > 99)) continue;
-      const base = Int8Array.from(sol, (x) => (x < 10 ? x : Math.random() < 0.5 ? Math.floor(x / 10) : x % 10));
+      const base = Int8Array.from(sol, (x) => {
+        if (x < 10) return x;
+        if (Math.random() < 0.5) return Math.floor(x / 10);
+        return x % 10;
+      });
       // Show full numbers in some cells until the answer is unique.
       const p = { n, base, full: new Int32Array(N) };
       const unique = () => { const r = solve(p, 2, 200000); return r.solutions.length === 1 && !r.capped; };

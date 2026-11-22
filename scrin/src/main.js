@@ -93,7 +93,11 @@
         if (!inGrid(b)) continue;
         const rel = list.map((a) => relation(a, b));
         const last = list.length - 1;
-        if (rel.some((v, i) => (i === last ? v !== 1 : i === 0 && list.length >= 3 ? v === 2 : v !== 0))) continue;
+        if (rel.some((v, i) => {
+          if (i === last) return v !== 1;
+          if (i === 0 && list.length >= 3) return v === 2;
+          return v !== 0;
+        })) continue;
         list.push(b);
         if (list.length >= 4 && rel[0] === 1) return list;
       }

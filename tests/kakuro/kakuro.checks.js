@@ -27,7 +27,7 @@ module.exports = {
           filled = new Map();
           for (const k of cells) {
             const x = Math.random();
-            if (x < (t % 3 === 0 ? 0.3 : t % 3 === 1 ? 0.6 : 0.15)) filled.set(k, p.solution[k]);
+            if (x < [0.3, 0.6, 0.15][t % 3]) filled.set(k, p.solution[k]);
             else if (x > 0.92) filled.set(k, 1 + Math.floor(Math.random() * 9));
           }
           tryIt(() => Hint.findAll(p, filled));

@@ -115,7 +115,7 @@ const Moves = (() => {
         el('circle', { cx: x0, cy: y0, r: s * 0.12, class: 'mv-start' }, g);
       }
       let cls = cfg.dark ? 'mv-piece dark' : 'mv-piece';
-      if (result) cls += ends[i] === solution[i] ? ' ok' : ends[i] !== q.k ? ' bad' : ' show';
+      if (result) cls += ' ' + PuzzleShell.resultClass(ends[i], solution[i], ends[i] !== q.k);
       if (!result && i === selected && !readonly) cls += ' sel';
       if (hintSet.has(i)) cls += ' hint';
       if (cfg.dark) el('rect', { x: x1 - s * 0.4, y: y1 - s * 0.4, width: s * 0.8, height: s * 0.8, rx: s * 0.08, class: cls }, g);
@@ -137,7 +137,8 @@ const Moves = (() => {
             onChange();
             return;
           }
-          selected = at >= 0 ? at : from >= 0 ? from : -1;
+          if (at >= 0) selected = at;
+          else selected = from >= 0 ? from : -1;
           onChange();
         });
         hit.addEventListener('contextmenu', (ev) => {

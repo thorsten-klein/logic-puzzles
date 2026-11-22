@@ -19,7 +19,11 @@
     allowSearch: true,
     loopFill: 0.7,
     thinLoop: true,
-    kindOf: (turn, a, b) => (turn ? (a >= 2 && b >= 2 ? 'b' : '') : (a === 1 || b === 1 ? 'w' : '')),
+    kindOf: (turn, a, b) => {
+      if (turn) return a >= 2 && b >= 2 ? 'b' : '';
+      if (a === 1 || b === 1) return 'w';
+      return '';
+    },
     // Forced lines at pearls. Sides: 0 up, 1 down, 2 left, 3 right.
     step(p, g, s, log) {
       const { LINE } = LegLoop;

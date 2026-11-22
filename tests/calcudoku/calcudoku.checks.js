@@ -8,11 +8,12 @@ module.exports = {
     for (const { cells, op, target } of p.cages) {
       const v = cells.map((k) => p.solution[k]);
       const hi = Math.max(...v), lo = Math.min(...v);
-      const got = op === '+' ? v.reduce((a, b) => a + b, 0)
-        : op === '*' ? v.reduce((a, b) => a * b, 1)
-          : op === '-' ? hi - lo
-            : op === '/' ? hi / lo
-              : v[0];
+      let got;
+      if (op === '+') got = v.reduce((a, b) => a + b, 0);
+      else if (op === '*') got = v.reduce((a, b) => a * b, 1);
+      else if (op === '-') got = hi - lo;
+      else if (op === '/') got = hi / lo;
+      else got = v[0];
       if ((op === '-' || op === '/') && cells.length !== 2) out.push(`${op} cage at ${cells} has ${cells.length} cells`);
       if (got !== target) out.push(`cage at ${cells} (${op}${target}) gives ${got}`);
     }

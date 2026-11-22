@@ -138,7 +138,7 @@
       const R = d?.r, C = d?.c;
       if (![R, C].every((x) => Number.isInteger(x) && x >= 3 && x <= 20)) throw new Error('Invalid board size');
       if (typeof d.g !== 'string' || d.g.length !== R * C || !/^[.A-Z]+$/.test(d.g)) throw new Error('Invalid letters');
-      return { R, C, letters: Int8Array.from(d.g, (ch) => (ch === '.' ? 0 : ch.charCodeAt(0) - 64)) };
+      return { R, C, letters: Int8Array.from(d.g, (ch) => (ch === '.' ? 0 : ch.codePointAt(0) - 64)) };
     },
     model,
     fixed: (p, k) => (p.letters[k] ? NO : 0),

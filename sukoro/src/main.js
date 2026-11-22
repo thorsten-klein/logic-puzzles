@@ -26,7 +26,7 @@
       if (v < 0) continue;
       cons.push({ cells: [k], min: 1, max: 1, why: () => 'A given number is part of the picture.' }, { cells: nb[k], min: v, max: v, area: [k],
         why: (x) => (x === YES ? `This ${v} needs a number in every open cell next to it.`
-          : `This ${v} already has ${v} numbered neighbour${v === 1 ? '' : 's'}. The other neighbours stay empty.`) });
+          : `This ${v} already has ${PuzzleShell.plural(v, 'numbered neighbour')}. The other neighbours stay empty.`) });
     }
     // A number may not equal a neighbouring number. Once a cell and all
     // its neighbours are known, its value is fixed.

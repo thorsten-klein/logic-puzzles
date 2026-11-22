@@ -143,7 +143,11 @@
       const ok = [0, 1, 2, 3].filter((d) => {
         const t = target(p, p.blocks[i], d);
         if (t < 0) return false;
-        const land = p.blocks.map((b, j) => (j === i ? t : state[j] >= 0 ? target(p, b, state[j]) : -1));
+        const land = p.blocks.map((b, j) => {
+          if (j === i) return t;
+          if (state[j] >= 0) return target(p, b, state[j]);
+          return -1;
+        });
         return fine(p, land, false);
       });
       if (ok.length === 1) return [{ blocks: [i], set: [i, ok[0]], reason: 'This block has only one way to go: the others leave the grid or touch another block.' }];

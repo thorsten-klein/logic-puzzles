@@ -42,7 +42,7 @@ const Loop = (() => {
       const lines = es.filter((e) => s[e] === LINE).length;
       const open = es.filter((e) => s[e] === UNKNOWN);
       if (lines > 2) return -1;
-      if (lines + open.length < (must?.[k] ? 2 : lines ? 2 : 0)) return -1;
+      if (lines + open.length < (must?.[k] || lines ? 2 : 0)) return -1;
       if (!open.length) continue;
       let v = 0, why = '';
       if (lines === 2) { v = CROSS; why = 'This cell already has two lines. No more lines can touch it.'; }

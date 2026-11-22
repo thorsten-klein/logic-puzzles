@@ -68,7 +68,11 @@
     return { solutions: out, capped: nodes > maxNodes };
   }
 
-  const startCand = (p, given) => Int32Array.from({ length: p.n * p.n }, (_, k) => (p.arrow[k] >= 0 ? 0 : given[k] ? 1 << given[k] : ((1 << (p.sizeOf[k] + 1)) - 1) & ~1));
+  const startCand = (p, given) => Int32Array.from({ length: p.n * p.n }, (_, k) => {
+    if (p.arrow[k] >= 0) return 0;
+    if (given[k]) return 1 << given[k];
+    return ((1 << (p.sizeOf[k] + 1)) - 1) & ~1;
+  });
 
   function generate(n) {
     const deadline = Date.now() + 8000;

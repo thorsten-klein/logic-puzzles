@@ -7,6 +7,12 @@
 // Player entries: 0 blank, 1 marked empty, 2 star, 3 cloud.
 
 (() => {
+  // Candidate bit of slot i in a line where a and b are the two marks.
+  const slotBit = (i, a, b) => {
+    if (i === a) return 4;
+    return i === b ? 8 : 2;
+  };
+
   const one = (m) => m && !(m & (m - 1));
   const low = (m) => 31 - Math.clz32(m & -m);
   const ALL = 0b1110;
@@ -51,7 +57,7 @@
         const opts = layouts(p, L, cand);
         if (!opts.length) return false;
         const keep = new Int32Array(L.cells.length);
-        for (const [a, b] of opts) L.cells.forEach((_, i) => { keep[i] |= i === a ? 4 : i === b ? 8 : 2; });
+        for (const [a, b] of opts) L.cells.forEach((_, i) => { keep[i] |= slotBit(i, a, b); });
         L.cells.forEach((k, i) => { if (p.lit[k] < 0) cand[k] &= keep[i]; });
       }
       if (cand.some((m, k) => p.lit[k] < 0 && !m)) return false;
@@ -136,7 +142,11 @@
       const e = entries[k];
       if (e && p.lit[k] < 0 && e !== p.solution[k]) return [{ cells: [k], v: 0, reason: e === 1 ? 'This cell is not empty.' : 'This is wrong here.' }];
     }
-    const cand = Int32Array.from(entries, (e, k) => (p.lit[k] >= 0 ? 0 : e ? 1 << e : ALL));
+    const cand = Int32Array.from(entries, (e, k) => {
+      if (p.lit[k] >= 0) return 0;
+      if (e) return 1 << e;
+      return ALL;
+    });
     propagate(p, cand);
     for (let k = 0; k < cand.length; k++) {
       if (entries[k] || p.lit[k] >= 0 || !one(cand[k])) continue;

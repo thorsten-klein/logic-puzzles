@@ -100,7 +100,11 @@
         p.clues[k] = 10 + cells.length;
       }
     },
-    cellText: (p, k) => (p.clues[k] >= 10 ? String(p.clues[k] - 10) : p.clues[k] === 2 ? '×' : ''),
+    cellText: (p, k) => {
+      if (p.clues[k] >= 10) return String(p.clues[k] - 10);
+      if (p.clues[k] === 2) return '×';
+      return '';
+    },
     decorate(p, k, g, x, y, s) {
       if (p.clues[k] !== 1) return;
       const o = document.createElementNS('http://www.w3.org/2000/svg', 'circle');

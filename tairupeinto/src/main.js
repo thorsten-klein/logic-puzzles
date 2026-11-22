@@ -14,9 +14,11 @@
   function model(p) {
     const { R, C, rows, cols, region } = p;
     const cons = [];
-    const lineWhy = (name, n) => (v) => (v === YES
-      ? `${name} needs ${n} shaded cell${n === 1 ? '' : 's'}. The open cells must all be shaded.`
-      : n === 0 ? `${name} has no shaded cells.` : `${name} already has its ${n} shaded cell${n === 1 ? '' : 's'}. The rest stay empty.`);
+    const lineWhy = (name, n) => (v) => {
+      if (v === YES) return `${name} needs ${PuzzleShell.plural(n, 'shaded cell')}. The open cells must all be shaded.`;
+      if (n === 0) return `${name} has no shaded cells.`;
+      return `${name} already has its ${PuzzleShell.plural(n, 'shaded cell')}. The rest stay empty.`;
+    };
     for (let r = 0; r < R; r++) {
       const cells = Array.from({ length: C }, (_, c) => r * C + c);
       cons.push({ cells, min: rows[r], max: rows[r], area: cells, why: lineWhy(`Row ${r + 1}`, rows[r]) });

@@ -13,7 +13,9 @@ const Generator = (() => {
       g = g.map((_, k) => {
         const b = block(k, R, C);
         const sum = b.reduce((a, j) => a + g[j], 0);
-        return sum * 2 > b.length ? 1 : sum * 2 < b.length ? 0 : g[k];
+        if (sum * 2 > b.length) return 1;
+        if (sum * 2 < b.length) return 0;
+        return g[k];
       });
     }
     return g;

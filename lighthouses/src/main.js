@@ -29,9 +29,11 @@
       line.forEach((j) => { seen[j] = 1; });
       const v = lights[k];
       cons.push({ cells: line, min: v, max: v, area: line, at: k,
-        why: (x) => (x === YES ? `This lighthouse sees ${v} ship${v === 1 ? '' : 's'}, and only these cells are left.`
-          : v === 0 ? 'This lighthouse sees no ships. Its row and column are empty.'
-            : `This lighthouse already sees its ${v} ship${v === 1 ? '' : 's'}. No more ships in its row and column.`) });
+        why: (x) => {
+          if (x === YES) return `This lighthouse sees ${PuzzleShell.plural(v, 'ship')}, and only these cells are left.`;
+          if (v === 0) return 'This lighthouse sees no ships. Its row and column are empty.';
+          return `This lighthouse already sees its ${PuzzleShell.plural(v, 'ship')}. No more ships in its row and column.`;
+        } });
     }
     const dark = [];
     for (let k = 0; k < N; k++) if (!seen[k] && !isLight(k)) dark.push(k);

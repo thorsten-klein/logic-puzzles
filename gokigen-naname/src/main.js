@@ -24,7 +24,7 @@
       };
       add(r - 1, c - 1, 1); add(r, c, 1); add(r - 1, c, -1); add(r, c - 1, -1);
       cons.push({ cells, w, min: v - m, max: v - m, at: r * W + c,
-        why: () => `This ${v} needs exactly ${v} line${v === 1 ? '' : 's'} touching it. That settles these cells.` });
+        why: () => `This ${v} needs exactly ${PuzzleShell.plural(v, 'line')} touching it. That settles these cells.` });
     }
     // Ends of the diagonal in cell k for value v.
     const ends = (k, v) => {

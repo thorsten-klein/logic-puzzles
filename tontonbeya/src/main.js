@@ -64,7 +64,10 @@
       if (out.length >= stopAt || ++nodes > maxNodes) return;
       if (i === N) { out.push(Int8Array.from(v)); return; }
       const k = p.order[i], g = p.room[k];
-      const vals = given[k] ? [given[k]] : random ? PuzzleShell.shuffle([1, 2, 3]) : [1, 2, 3];
+      let vals;
+      if (given[k]) vals = [given[k]];
+      else if (random) vals = PuzzleShell.shuffle([1, 2, 3]);
+      else vals = [1, 2, 3];
       for (const x of vals) {
         v[k] = x;
         let ok = true;

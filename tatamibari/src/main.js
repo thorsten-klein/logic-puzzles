@@ -6,7 +6,9 @@
 (() => {
   const shapeCode = ([r1, c1, r2, c2]) => {
     const h = r2 - r1 + 1, w = c2 - c1 + 1;
-    return h === w ? 1 : w > h ? 2 : 3;
+    if (h === w) return 1;
+    if (w > h) return 2;
+    return 3;
   };
   Rects.startGame({
     id: 'tatamibari',

@@ -33,7 +33,7 @@ const Hint = (() => {
       } else if (st.v === FILLED) {
         reason = `This ${n} needs every open cell around it to be filled.`;
       } else {
-        reason = `This ${n} already has ${n} filled cell${n === 1 ? '' : 's'}. The rest stay empty.`;
+        reason = `This ${n} already has ${PuzzleShell.plural(n, 'filled cell')}. The rest stay empty.`;
       }
       out.push({ cells: st.cells, clue: st.con.k, other: st.other?.k, v: st.v, reason });
     }

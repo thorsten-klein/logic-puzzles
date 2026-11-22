@@ -39,7 +39,7 @@
         }
         for (const d of dirs) {
           const w = walk(s, k, d);
-          const need = w.end >= 0 ? (mark[w.end] === mark[k] ? 0 : 1) : 1;
+          const need = w.end >= 0 && mark[w.end] === mark[k] ? 0 : 1;
           if (w.turns > need) return -1;
           if (w.end >= 0 && w.turns !== need) return -1;
         }

@@ -8,10 +8,11 @@
   function model(p) {
     const { R, C, rows, cols } = p;
     const cons = [];
-    const lineWhy = (name, n) => (v) => (v === YES
-      ? `${name} needs ${n} cloud cell${n === 1 ? '' : 's'}. The open cells must all be cloud.`
-      : n === 0 ? `${name} has no cloud cells. All its cells are sky.`
-        : `${name} already has its ${n} cloud cell${n === 1 ? '' : 's'}. The rest is sky.`);
+    const lineWhy = (name, n) => (v) => {
+      if (v === YES) return `${name} needs ${PuzzleShell.plural(n, 'cloud cell')}. The open cells must all be cloud.`;
+      if (n === 0) return `${name} has no cloud cells. All its cells are sky.`;
+      return `${name} already has its ${PuzzleShell.plural(n, 'cloud cell')}. The rest is sky.`;
+    };
     for (let r = 0; r < R; r++) {
       const cells = Array.from({ length: C }, (_, c) => r * C + c);
       cons.push({ cells, min: rows[r], max: rows[r], area: cells, why: lineWhy(`Row ${r + 1}`, rows[r]) });
