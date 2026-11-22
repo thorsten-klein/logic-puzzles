@@ -39,12 +39,21 @@
     return p;
   }
 
+  function clearAroundDigits(p, cand) {
+    for (let k = 0; k < cand.length; k++) {
+      if (!(cand[k] & 2)) {
+        for (const j of p.around[k]) cand[j] &= 2;
+      }
+    }
+  }
+
   function propagate(p, cand) {
     for (let guard = 0; guard < 100; guard++) {
       const before = cand.join(',');
-      // A digit makes all cells around it empty.
-      for (let k = 0; k < cand.length; k++) if (!(cand[k] & 2)) for (const j of p.around[k]) cand[j] &= 2;
-      for (const L of p.lines) if (!Latin.filterGroup(L.cells, cand, L.ok, false)) return false;
+      clearAroundDigits(p, cand);
+      for (const L of p.lines) {
+        if (!Latin.filterGroup(L.cells, cand, L.ok, false)) return false;
+      }
       if (cand.some((m) => !m)) return false;
       if (cand.join(',') === before) return true;
     }
@@ -69,45 +78,68 @@
   // Solutions hold 0 = empty, 1..9 digits.
   const startCand = (p) => Int32Array.from({ length: p.n * p.n }, (_, k) => (p.given[k] ? 1 << (p.given[k] + 1) : ALL));
 
+  function cellFree(sol, r, c, n) {
+    for (let dr = -1; dr <= 1; dr++) for (let dc = -1; dc <= 1; dc++) {
+      const a = r + dr, b = c + dc;
+      if (a >= 0 && b >= 0 && a < n && b < n && sol[a * n + b]) return false;
+    }
+    return true;
+  }
+
+  function randomSol(n) {
+    const N = n * n;
+    const sol = new Int8Array(N);
+    for (const k of PuzzleShell.shuffle([...new Array(N).keys()])) {
+      const r = Math.floor(k / n), c = k % n;
+      if (cellFree(sol, r, c, n) && Math.random() < 0.6) {
+        sol[k] = 1 + Math.floor(Math.random() * 9);
+      }
+    }
+    return sol;
+  }
+
+  function countLines(sol, n) {
+    const N = n * n;
+    const cnt = new Int8Array(2 * n), sum = new Int16Array(2 * n);
+    for (let k = 0; k < N; k++) {
+      if (!sol[k]) continue;
+      const r = Math.floor(k / n), c = k % n;
+      cnt[r]++; sum[r] += sol[k]; cnt[n + c]++; sum[n + c] += sol[k];
+    }
+    return { cnt, sum };
+  }
+
+  function thinGivens(p, solved, N) {
+    for (const k of PuzzleShell.shuffle([...new Array(N).keys()])) {
+      if (!p.given[k]) continue;
+      const keep = p.given[k];
+      p.given[k] = 0;
+      if (!solved()) p.given[k] = keep;
+    }
+  }
+
+  function giveUntilSolved(p, sol, deadline, N, solved) {
+    for (let guard = 0; guard < N && !solved() && Date.now() < deadline; guard++) {
+      const c = startCand(p);
+      propagate(p, c);
+      const open = [...new Array(N).keys()].filter((k) => !one(c[k]) && sol[k]);
+      if (!open.length) break;
+      const k = open[Math.floor(Math.random() * open.length)];
+      p.given[k] = sol[k];
+    }
+  }
+
   function generate(n) {
     const deadline = Date.now() + 8000;
     while (Date.now() < deadline) {
       const N = n * n;
-      // Random digits that never touch.
-      const sol = new Int8Array(N);
-      for (const k of PuzzleShell.shuffle([...new Array(N).keys()])) {
-        const r = Math.floor(k / n), c = k % n;
-        let free = true;
-        for (let dr = -1; dr <= 1; dr++) for (let dc = -1; dc <= 1; dc++) {
-          const a = r + dr, b = c + dc;
-          if (a >= 0 && b >= 0 && a < n && b < n && sol[a * n + b]) free = false;
-        }
-        if (free && Math.random() < 0.6) sol[k] = 1 + Math.floor(Math.random() * 9);
-      }
-      const cnt = new Int8Array(2 * n), sum = new Int16Array(2 * n);
-      for (let k = 0; k < N; k++) {
-        if (!sol[k]) continue;
-        const r = Math.floor(k / n), c = k % n;
-        cnt[r]++; sum[r] += sol[k]; cnt[n + c]++; sum[n + c] += sol[k];
-      }
+      const sol = randomSol(n);
+      const { cnt, sum } = countLines(sol, n);
       const p = prepare({ n, cnt, sum, given: new Int8Array(N) });
       const solved = () => { const c = startCand(p); return propagate(p, c) && c.every(one); };
-      // Give digits where logic gets stuck, then drop the extras.
-      for (let guard = 0; guard < N && !solved() && Date.now() < deadline; guard++) {
-        const c = startCand(p);
-        propagate(p, c);
-        const open = [...new Array(N).keys()].filter((k) => !one(c[k]) && sol[k]);
-        if (!open.length) break;
-        const k = open[Math.floor(Math.random() * open.length)];
-        p.given[k] = sol[k];
-      }
+      giveUntilSolved(p, sol, deadline, N, solved);
       if (!solved()) continue;
-      for (const k of PuzzleShell.shuffle([...new Array(N).keys()])) {
-        if (!p.given[k]) continue;
-        const keep = p.given[k];
-        p.given[k] = 0;
-        if (!solved()) p.given[k] = keep;
-      }
+      thinGivens(p, solved, N);
       p.solution = sol;
       return p;
     }
@@ -135,6 +167,21 @@
     return k === undefined ? [] : [{ cells: [k], v: p.solution[k] || 10, reason: p.solution[k] ? `No simple step is left. This cell holds ${p.solution[k]}.` : 'No simple step is left. This cell stays empty.' }];
   }
 
+  function renderClueCell(el, r, c, n, cnt, sum) {
+    el.className = 'clue';
+    if (r < 0 && c >= 0 && c < n) { el.textContent = cnt[n + c]; el.classList.add('gr-cnt'); }
+    else if (r >= n && c >= 0 && c < n) { el.textContent = sum[n + c]; el.classList.add('gr-sum'); }
+    else if (c < 0 && r >= 0 && r < n) { el.textContent = cnt[r]; el.classList.add('gr-cnt'); }
+    else if (c >= n && r >= 0 && r < n) { el.textContent = sum[r]; el.classList.add('gr-sum'); }
+  }
+
+  function renderResultCell(el, entries, solution, k) {
+    if (solution[k]) el.textContent = solution[k];
+    const mine = entries[k] === 10 ? 0 : entries[k];
+    if (entries[k]) el.classList.add(mine === solution[k] ? 'ok' : 'bad');
+    else if (solution[k]) el.classList.add('show');
+  }
+
   function render(p, entries, opts = {}) {
     const { n, cnt, sum, given, solution } = p;
     const { readonly, result, hint, onChange } = opts;
@@ -145,21 +192,14 @@
       renderCell(K, el) {
         const r = Math.floor(K / W) - 1, c = (K % W) - 1;
         if (r < 0 || c < 0 || r >= n || c >= n) {
-          el.className = 'clue';
-          if (r < 0 && c >= 0 && c < n) { el.textContent = cnt[n + c]; el.classList.add('gr-cnt'); }
-          else if (r >= n && c >= 0 && c < n) { el.textContent = sum[n + c]; el.classList.add('gr-sum'); }
-          else if (c < 0 && r >= 0 && r < n) { el.textContent = cnt[r]; el.classList.add('gr-cnt'); }
-          else if (c >= n && r >= 0 && r < n) { el.textContent = sum[r]; el.classList.add('gr-sum'); }
+          renderClueCell(el, r, c, n, cnt, sum);
           return;
         }
         const k = r * n + c;
         if (hintCells.has(k)) el.classList.add('hint');
         if (given[k]) { el.classList.add('given'); el.textContent = given[k]; return; }
         if (result) {
-          if (solution[k]) el.textContent = solution[k];
-          const mine = entries[k] === 10 ? 0 : entries[k];
-          if (entries[k]) el.classList.add(mine === solution[k] ? 'ok' : 'bad');
-          else if (solution[k]) el.classList.add('show');
+          renderResultCell(el, entries, solution, k);
           return;
         }
         if (readonly) { el.textContent = entries[k] && entries[k] < 10 ? entries[k] : ''; if (entries[k] === 10) { el.classList.add('gr-empty'); } return; }

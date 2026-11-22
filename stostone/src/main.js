@@ -156,7 +156,7 @@
     size: { min: 2, max: 3, def: 3, text: (h) => `${2 * h}×${2 * h}` },
     solvedText: 'All stones landed — nicely done.',
     generate,
-    encode: (p) => ({ r: p.R, c: p.C, g: Array.from(p.room, (v) => v.toString(36).padStart(2, '0')).join(''), n: Array.from(p.clues).join(',') }),
+    encode: Binary.encodeRoomClues,
     decode(d) {
       const R = d?.r, C = d?.c;
       if (![R, C].every((x) => Number.isInteger(x) && x >= 2 && x <= 20) || R % 2) throw new Error('Invalid board size');
@@ -167,15 +167,7 @@
       return { R, C, room, clues };
     },
     model,
-    draw(p, k, el) {
-      PuzzleShell.regionBorders(el, k, p.room, p.R, p.C);
-      if (p.room.indexOf(p.room[k]) === k && p.clues[p.room[k]] >= 0) {
-        const lab = document.createElement('span');
-        lab.className = 'room-clue';
-        lab.textContent = p.clues[p.room[k]];
-        el.appendChild(lab);
-      }
-    },
+    draw: Binary.drawRoomClues,
     noun: 'shaded cell', noNoun: 'white cell',
     className: 'pz-regions ck-board',
   });
