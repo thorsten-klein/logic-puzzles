@@ -23,8 +23,8 @@ const Rules = (() => {
     for (let i = 0; i < n; i++) {
       let row = '', col = '';
       for (let j = 0; j < n; j++) { row += s[i * n + j]; col += s[j * n + i]; }
-      if (row.indexOf(UNKNOWN) === -1) { if (seenR.has(row)) { return false; } seenR.add(row); }
-      if (col.indexOf(UNKNOWN) === -1) { if (seenC.has(col)) { return false; } seenC.add(col); }
+      if (!row.includes(String(UNKNOWN))) { if (seenR.has(row)) { return false; } seenR.add(row); }
+      if (!col.includes(String(UNKNOWN))) { if (seenC.has(col)) { return false; } seenC.add(col); }
     }
     return true;
   }

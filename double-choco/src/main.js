@@ -31,7 +31,7 @@
       const r0 = Math.min(...q.map((x) => x[0])), c0 = Math.min(...q.map((x) => x[1]));
       keys.push(q.map(([a, b]) => `${a - r0},${b - c0}`).sort().join(' '));
     }
-    return keys.reduce((min, k) => (k < min ? k : min));  // smallest key
+    return keys.sort()[0];  // smallest key
   }
   const connected = (n, cells) => {
     if (!cells.length) return false;
