@@ -10,20 +10,7 @@
   // Tetromino type: 'L', 'I', 'T', 'S' (O and others: null).
   function kind(C, cells) {
     if (cells.length !== 4) return null;
-    const pts = cells.map((k) => [Math.floor(k / C), k % C]);
-    const keys = [];
-    for (let t = 0; t < 8; t++) {
-      const q = pts.map(([r, c]) => {
-        let a = r, b = c;
-        if (t & 1) [a, b] = [b, -a];
-        if (t & 2) [a, b] = [-a, -b];
-        if (t & 4) b = -b;
-        return [a, b];
-      });
-      const r0 = Math.min(...q.map((x) => x[0])), c0 = Math.min(...q.map((x) => x[1]));
-      keys.push(q.map(([a, b]) => `${a - r0},${b - c0}`).sort().join(' '));
-    }
-    const key = keys.reduce((min, k) => (k.localeCompare(min) < 0 ? k : min), keys[0]);
+    const key = PuzzleShell.shapeKey(C, cells);
     return { '0,0 0,1 0,2 0,3': 'I', '0,0 0,1 0,2 1,0': 'L', '0,0 0,1 0,2 1,1': 'T', '0,0 0,1 1,1 1,2': 'S' }[key] || null;
   }
 

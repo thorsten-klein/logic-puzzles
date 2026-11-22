@@ -1221,5 +1221,22 @@ const PuzzleShell = (() => {
     return 0;
   }
 
-  return { start, prepare, plural, resultClass, shuffle, gridBoard, colName, cellName, fitCell, digitInput, regionBorders, growRegions, addGivens, dropGivens, TINTS, arrowIcon, figure, shapeFigures, graphConnected, islandDegreeStep, solveIslandGraph, growIslandNetwork, buildIslandPairs, checkCrossingPairs };
+  function shapeKey(C, cells) {
+    const pts = cells.map((k) => [Math.floor(k / C), k % C]);
+    const keys = [];
+    for (let t = 0; t < 8; t++) {
+      const q = pts.map(([r, c]) => {
+        let a = r, b = c;
+        if (t & 1) [a, b] = [b, -a];
+        if (t & 2) [a, b] = [-a, -b];
+        if (t & 4) b = -b;
+        return [a, b];
+      });
+      const r0 = Math.min(...q.map((x) => x[0])), c0 = Math.min(...q.map((x) => x[1]));
+      keys.push(q.map(([a, b]) => `${a - r0},${b - c0}`).sort().join(' '));
+    }
+    return keys.reduce((min, k) => (k < min ? k : min), keys[0]);
+  }
+
+  return { start, prepare, plural, resultClass, shuffle, gridBoard, colName, cellName, fitCell, digitInput, regionBorders, growRegions, addGivens, dropGivens, TINTS, arrowIcon, figure, shapeFigures, graphConnected, islandDegreeStep, solveIslandGraph, growIslandNetwork, buildIslandPairs, checkCrossingPairs, shapeKey };
 })();

@@ -10,23 +10,7 @@
   const { UNKNOWN, YES, NO } = Binary;
   const ARROW = ['↑', '↓', '←', '→'];
 
-  // A shape key that is the same for turned or mirrored copies.
-  function shapeKey(C, cells) {
-    const pts = cells.map((k) => [Math.floor(k / C), k % C]);
-    const keys = [];
-    for (let t = 0; t < 8; t++) {
-      const q = pts.map(([r, c]) => {
-        let a = r, b = c;
-        if (t & 1) [a, b] = [b, -a];
-        if (t & 2) [a, b] = [-a, -b];
-        if (t & 4) b = -b;
-        return [a, b];
-      });
-      const r0 = Math.min(...q.map((x) => x[0])), c0 = Math.min(...q.map((x) => x[1]));
-      keys.push(q.map(([a, b]) => `${a - r0},${b - c0}`).sort().join(' '));
-    }
-    return keys.find((k) => !keys.some((o) => o < k));
-  }
+  const shapeKey = (C, cells) => PuzzleShell.shapeKey(C, cells);
 
   function target(C, k, d) {
     const r = Math.floor(k / C), c = k % C;
@@ -71,17 +55,12 @@
       return out;
     };
     function collectAreas(s, done) {
-      const area = new Int32Array(N).fill(-1);
-      const areas = [];
-      for (let k = 0; k < N; k++) {
-        if (area[k] >= 0 || s[k] !== YES) continue;
-        const cells = [k];
-        area[k] = areas.length;
-        for (const cur of cells) for (const j of nb(cur)) if (area[j] < 0 && s[j] === YES) { area[j] = areas.length; cells.push(j); }
-        const closed = done || cells.every((x) => nb(x).every((j) => s[j] !== UNKNOWN));
-        areas.push({ cells, closed });
-      }
-      return { area, areas };
+      const { id, list } = Binary.areas(R, C, s);
+      const areas = list.map((cells) => ({
+        cells,
+        closed: done || cells.every((x) => nb(x).every((j) => s[j] !== UNKNOWN)),
+      }));
+      return { area: id, areas };
     }
     function checkArrows(area, areas) {
       for (let k = 0; k < N; k++) {

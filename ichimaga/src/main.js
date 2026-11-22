@@ -86,23 +86,27 @@
   const solve = (p, stopAt = 2, maxNodes = 20000) => PuzzleShell.solveIslandGraph(p, settle, 1, stopAt, maxNodes);
 
   // --- generator ---
-  function tryAddCirclePath(R, C, isl, grid, joined, add) {
-    const from = isl[Math.floor(Math.random() * isl.length)];
+  function buildCircleLegs(fromK, R, C) {
     const STEP = [[0, 1], [1, 0], [0, -1], [-1, 0]];
     const d1 = Math.floor(Math.random() * 4), len1 = 1 + Math.floor(Math.random() * 4);
     const turn = Math.random() < 0.5;
     const d2 = (d1 + (Math.random() < 0.5 ? 1 : 3)) % 4, len2 = 1 + Math.floor(Math.random() * 3);
     const cells = [];
-    let r = Math.floor(from.k / C), c = from.k % C, ok = true;
+    let r = Math.floor(fromK / C), c = fromK % C;
     for (const [dir, len] of (turn ? [[d1, len1], [d2, len2]] : [[d1, len1]])) {
       for (let i = 0; i < len; i++) {
         r += STEP[dir][0]; c += STEP[dir][1];
-        if (r < 0 || c < 0 || r >= R || c >= C) { ok = false; break; }
+        if (r < 0 || c < 0 || r >= R || c >= C) return null;
         cells.push(r * C + c);
       }
-      if (!ok) break;
     }
-    if (!ok || cells.length < 2) return;
+    return cells;
+  }
+
+  function tryAddCirclePath(R, C, isl, grid, joined, add) {
+    const from = isl[Math.floor(Math.random() * isl.length)];
+    const cells = buildCircleLegs(from.k, R, C);
+    if (!cells || cells.length < 2) return;
     const end = cells.pop();
     if (grid[end] === -2 || cells.some((k) => grid[k] !== -1)) return;
     const a = grid[from.k];
