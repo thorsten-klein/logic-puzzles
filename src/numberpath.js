@@ -4,18 +4,18 @@
 
 const NumberPath = (() => {
   function neighbours(R, C, diag) {
-    const nb = [];
-    for (let k = 0; k < R * C; k++) {
-      const r = Math.floor(k / C), c = k % C, out = [];
-      for (let dr = -1; dr <= 1; dr++) for (let dc = -1; dc <= 1; dc++) {
-        if (!dr && !dc) continue;
-        if (!diag && dr && dc) continue;
-        const nr = r + dr, nc = c + dc;
-        if (nr >= 0 && nc >= 0 && nr < R && nc < C) out.push(nr * C + nc);
-      }
-      nb.push(out);
+    return Array.from({ length: R * C }, (_, k) => cellNeighbours(R, C, diag, k));
+  }
+
+  // Cells next to k (with `diag` also at a corner).
+  function cellNeighbours(R, C, diag, k) {
+    const r = Math.floor(k / C), c = k % C, out = [];
+    for (let dr = -1; dr <= 1; dr++) for (let dc = -1; dc <= 1; dc++) {
+      const nr = r + dr, nc = c + dc;
+      const step = (dr || dc) && (diag || !dr || !dc);
+      if (step && nr >= 0 && nc >= 0 && nr < R && nc < C) out.push(nr * C + nc);
     }
-    return nb;
+    return out;
   }
 
   function dist(a, b, C, diag) {
@@ -63,6 +63,13 @@ const NumberPath = (() => {
       return !g || dist(cell, posOf[g], C, diag) <= g - v;
     }
 
+    // True if a free cell next to the new head j has no link left.
+    // Possible links: free cells, the new head, later givens.
+    function leavesDeadCell(j, w) {
+      const link = (y) => !val[y] || y === j || (val[y] > w && posOf[val[y]] === y);
+      return nb[j].some((x) => !val[x] && !nb[x].some(link));
+    }
+
     function rec(v, cell) {
       if (solutions.length >= stopAt || ++nodes > maxNodes) return;
       if (v === N) { solutions.push(Int32Array.from(val)); return; }
@@ -75,15 +82,7 @@ const NumberPath = (() => {
         if (val[j] || !ok(j, w)) continue;
         // Do not leave a free neighbour with no way out.
         val[j] = w;
-        let dead = false;
-        for (const x of nb[j]) {
-          if (val[x]) continue;
-          let free = 0;
-          // Possible links: free cells, the new head, later givens.
-          for (const y of nb[x]) if (!val[y] || y === j || (val[y] > w && posOf[val[y]] === y)) free++;
-          if (free === 0) { dead = true; break; }
-        }
-        if (!dead) rec(w, j);
+        if (!leavesDeadCell(j, w)) rec(w, j);
         val[j] = 0;
       }
     }
@@ -120,36 +119,42 @@ const NumberPath = (() => {
   function hints(p, entries) {
     const { R, C, diag, given, solution } = p;
     const N = R * C;
-    const nb = neighbours(R, C, diag);
-    const val = Int32Array.from(entries, (v, k) => given[k] || v);
-    const out = [];
+    const wrong = [];
     for (let k = 0; k < N; k++) {
-      if (entries[k] && !given[k] && entries[k] !== solution[k]) out.push({ cells: [k], v: 0, reason: 'This number is wrong.' });
+      if (entries[k] && !given[k] && entries[k] !== solution[k]) wrong.push({ cells: [k], v: 0, reason: 'This number is wrong.' });
     }
-    if (out.length) return out;
+    if (wrong.length) return wrong;
+    const val = Int32Array.from(entries, (v, k) => given[k] || v);
     const pos = new Int32Array(N + 2).fill(-1);
     for (let k = 0; k < N; k++) if (val[k]) pos[val[k]] = k;
+    const out = onlyCellHints(neighbours(R, C, diag), val, pos, N);
+    if (out.length) return out;
+    // No single step: reveal the next number of a chain.
+    for (let v = 1; v <= N; v++) {
+      if (pos[v] >= 0 || (pos[v - 1] < 0 && pos[v + 1] < 0)) continue;
+      return [{ cells: [solution.indexOf(v)], v, reason: `No single step is left. ${v} goes here.` }];
+    }
+    return [];
+  }
+
+  // Free cells next to every cell in `at`.
+  function freeNear(nb, val, at, N) {
+    return [...new Array(N).keys()].filter((k) => !val[k] && at.every((x) => nb[x].includes(k)));
+  }
+
+  // A number with only one free cell left next to its placed neighbours.
+  function onlyCellHints(nb, val, pos, N) {
+    const out = [];
     for (let v = 1; v <= N; v++) {
       if (pos[v] >= 0) continue;
       const a = pos[v - 1], b = pos[v + 1];
       if (a < 0 && b < 0) continue;
-      let opts = [...new Array(N).keys()].filter((k) => !val[k]);
-      if (a >= 0) opts = opts.filter((k) => nb[a].includes(k));
-      if (b >= 0) opts = opts.filter((k) => nb[b].includes(k));
-      if (opts.length === 1) {
-        const near = a >= 0 ? v - 1 : v + 1;
-        out.push({ cells: opts, v, reason: a >= 0 && b >= 0
-          ? `${v} sits between ${v - 1} and ${v + 1}. Only one free cell touches both.`
-          : `${v} must touch ${near}, and only one free cell does.` });
-      }
-    }
-    if (!out.length) {
-      for (let v = 1; v <= N; v++) {
-        if (pos[v] >= 0 || (pos[v - 1] < 0 && pos[v + 1] < 0)) continue;
-        const k = solution.indexOf(v);
-        out.push({ cells: [k], v, reason: `No single step is left. ${v} goes here.` });
-        break;
-      }
+      const opts = freeNear(nb, val, [a, b].filter((x) => x >= 0), N);
+      if (opts.length !== 1) continue;
+      const near = a >= 0 ? v - 1 : v + 1;
+      out.push({ cells: opts, v, reason: a >= 0 && b >= 0
+        ? `${v} sits between ${v - 1} and ${v + 1}. Only one free cell touches both.`
+        : `${v} must touch ${near}, and only one free cell does.` });
     }
     return out;
   }

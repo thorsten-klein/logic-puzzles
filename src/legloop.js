@@ -19,26 +19,30 @@ const LegLoop = (() => {
     const { R, C, kind, num } = p;
     const g = Loop.grid(R, C);
     const must = Uint8Array.from(kind, (x) => (x ? 1 : 0));
+    // The game's own step, then every clue. Returns -1 when a clue is
+    // broken, else what the game's step set (or 0).
     function rule(s, log) {
       if (cfg.step) {
         const r = cfg.step(p, g, s, log);
         if (r !== 0) return r;
       }
       for (let k = 0; k < R * C; k++) {
-        if (!kind[k]) continue;
-        const info = Loop.legs(g, s, k);
-        const { legs, dirs } = info;
-        if (!cfg.fits(kind[k], info, k, g, s)) return false;
-        const v = num[k];
-        if (v > 0 && legs.length) {
-          const low = legs.reduce((t, l) => t + l.len, 0) + (2 - legs.length);
-          if (low > v) return false;
-          if (dirs.length === 2 && legs.every((l) => l.final) && low !== v) return false;
-        }
+        if (kind[k] && !clueFits(cfg, kind[k], num[k], Loop.legs(g, s, k), k, g, s)) return -1;
       }
       return 0;
     }
     return { g, must, rule };
+  }
+
+  // A clue at cell k still fits: its kind, and its number against the
+  // leg lengths so far (exact once both legs are final).
+  function clueFits(cfg, kind, v, info, k, g, s) {
+    if (!cfg.fits(kind, info, k, g, s)) return false;
+    const { legs, dirs } = info;
+    if (!(v > 0 && legs.length)) return true;
+    const low = legs.reduce((t, l) => t + l.len, 0) + (2 - legs.length);
+    if (low > v) return false;
+    return !(dirs.length === 2 && legs.every((l) => l.final) && low !== v);
   }
 
   // Leg lengths at loop cell k of a full loop.
@@ -52,39 +56,49 @@ const LegLoop = (() => {
     while (Date.now() < deadline) {
       const loop = Loop.randomLoop(n, n, cfg.loopFill || 0.5, !!cfg.thinLoop);
       if (!loop) continue;
-      const g = Loop.grid(n, n);
-      const N = n * n;
-      const kind = new Array(N).fill(''), num = new Int8Array(N);
-      for (let k = 0; k < N; k++) {
-        const L = legsOf(g, loop, k);
-        if (!L) continue;
-        kind[k] = cfg.kindOf(L.turn, L.a, L.b);
-        if (kind[k] && !cfg.noNumbers) num[k] = Math.min(L.a + L.b, 35);
-      }
-      const p = { R: n, C: n, kind, num };
-      // Unique by logic; with cfg.allowSearch also when the full solver
-      // proves it after logic gets stuck.
-      const solved = () => {
-        if (Loop.solvedBy(Loop.logicSolve(model(cfg, p)))) return true;
-        if (!cfg.allowSearch) return false;
-        const r = Loop.solve(model(cfg, p), 2, 3000);
-        return r.solutions.length === 1 && !r.capped;
-      };
-      if (!solved()) continue;
-      // Drop whole circles, then numbers, while logic still solves it.
-      for (const k of PuzzleShell.shuffle([...new Array(N).keys()])) {
-        if (!kind[k]) continue;
-        const keep = [kind[k], num[k]];
-        kind[k] = ''; num[k] = 0;
-        if (solved()) continue;
-        kind[k] = keep[0];
-        if (!solved()) num[k] = keep[1];
-        if (Date.now() > deadline + 4000) break;
-      }
+      const p = { R: n, C: n, ...cluesOf(cfg, n, loop) };
+      if (!solvedOnce(cfg, p)) continue;
+      thinCircles(cfg, p, deadline);
       p.solution = loop;
       return p;
     }
     return null;
+  }
+
+  // Circles (kind) and numbers for every loop cell the game marks.
+  function cluesOf(cfg, n, loop) {
+    const g = Loop.grid(n, n);
+    const kind = new Array(n * n).fill(''), num = new Int8Array(n * n);
+    for (let k = 0; k < n * n; k++) {
+      const L = legsOf(g, loop, k);
+      if (!L) continue;
+      kind[k] = cfg.kindOf(L.turn, L.a, L.b);
+      if (kind[k] && !cfg.noNumbers) num[k] = Math.min(L.a + L.b, 35);
+    }
+    return { kind, num };
+  }
+
+  // Unique by logic; with cfg.allowSearch also when the full solver
+  // proves it after logic gets stuck.
+  function solvedOnce(cfg, p) {
+    if (Loop.solvedBy(Loop.logicSolve(model(cfg, p)))) return true;
+    if (!cfg.allowSearch) return false;
+    const r = Loop.solve(model(cfg, p), 2, 3000);
+    return r.solutions.length === 1 && !r.capped;
+  }
+
+  // Drop whole circles, then numbers, while the puzzle stays unique.
+  function thinCircles(cfg, p, deadline) {
+    const { kind, num } = p;
+    for (const k of PuzzleShell.shuffle([...new Array(p.R * p.C).keys()])) {
+      if (!kind[k]) continue;
+      const keep = [kind[k], num[k]];
+      kind[k] = ''; num[k] = 0;
+      if (solvedOnce(cfg, p)) continue;
+      kind[k] = keep[0];
+      if (!solvedOnce(cfg, p)) num[k] = keep[1];
+      if (Date.now() > deadline + 4000) break;
+    }
   }
 
   function startGame(cfg) {
