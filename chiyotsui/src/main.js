@@ -33,6 +33,13 @@
     return false;
   }
 
+  // True when the shaded area is ok: at most 2 rooms; if closed, mirrors across border.
+  function areaOk(cells, R, C, room, s, done) {
+    if (new Set(cells.map((x) => room[x])).size > 2) return false;
+    const closed = done || cells.every((x) => Binary.sideNeighbours(R, C, x).every((j) => s[j] !== UNKNOWN));
+    return !closed || mirrored(C, room, cells);
+  }
+
   function model(p) {
     const { R, C, room, clues } = p;
     const N = R * C;
@@ -42,28 +49,49 @@
     rooms.forEach((cells, g) => {
       if (clues[g] >= 0) cons.push({ cells, min: clues[g], max: clues[g], at: cells[0], why: (v) => (v === YES ? `This room needs ${clues[g]} shaded cells.` : `This room already has its ${clues[g]} shaded cells.`) });
     });
-    const nb = (k) => {
-      const r = Math.floor(k / C), c = k % C, out = [];
-      if (r > 0) out.push(k - C);
-      if (r < R - 1) out.push(k + C);
-      if (c > 0) out.push(k - 1);
-      if (c < C - 1) out.push(k + 1);
-      return out;
-    };
     function check(s, done) {
-      const seen = new Uint8Array(N);
-      for (let k = 0; k < N; k++) {
-        if (seen[k] || s[k] !== YES) continue;
-        const cells = [k];
-        seen[k] = 1;
-        for (const cur of cells) for (const j of nb(cur)) if (!seen[j] && s[j] === YES) { seen[j] = 1; cells.push(j); }
-        if (new Set(cells.map((x) => room[x])).size > 2) return false;
-        const closed = done || cells.every((x) => nb(x).every((j) => s[j] !== UNKNOWN));
-        if (closed && !mirrored(C, room, cells)) return false;
-      }
-      return true;
+      return Binary.areas(R, C, s).list.every((cells) => areaOk(cells, R, C, room, s, done));
     }
     return { N, cons, check };
+  }
+
+  // Places one mirrored hinge area across room borders if possible.
+  function tryPlaceHinge(R, C, room, sol) {
+    const N = R * C;
+    const a = Math.floor(Math.random() * N), vert = Math.random() < 0.5;
+    const b = vert ? a + 1 : a + C;
+    if (b >= N || (vert && b % C === 0) || room[a] === room[b]) return;
+    const ra = Math.floor(a / C), ca = a % C;
+    const flip = (k) => {
+      const r = Math.floor(k / C), c = k % C;
+      return vert ? r * C + (2 * ca + 1 - c) : (2 * ra + 1 - r) * C + c;
+    };
+    const inside = (k) => {
+      const r = Math.floor(k / C), c = k % C;
+      const m = flip(k), mr = Math.floor(m / C), mc = m % C;
+      return (vert ? c <= ca && mc < C : r <= ra && mr < R) && room[k] === room[a] && room[m] === room[b];
+    };
+    const half = [a];
+    const want = 1 + Math.floor(Math.random() * 3);
+    for (let g = 0; g < 20 && half.length < want; g++) {
+      const x = half[Math.floor(Math.random() * half.length)];
+      const opts = Binary.sideNeighbours(R, C, x).filter((j) => !half.includes(j) && inside(j));
+      if (opts.length) half.push(opts[Math.floor(Math.random() * opts.length)]);
+    }
+    const cells = half.concat(half.map(flip));
+    const own = new Set(cells);
+    const free = (k) => sol[k] !== YES;
+    const nbOk = (k) => Binary.sideNeighbours(R, C, k).every((j) => own.has(j) || sol[j] !== YES);
+    if (cells.every((k) => free(k) && nbOk(k))) {
+      cells.forEach((k) => { sol[k] = YES; });
+    }
+  }
+
+  // Places mirrored areas on an empty board.
+  function placeMirrored(R, C, room) {
+    const sol = new Uint8Array(R * C).fill(2);
+    for (let t = 0; t < 40; t++) tryPlaceHinge(R, C, room, sol);
+    return sol;
   }
 
   function generate(n) {
@@ -72,42 +100,13 @@
       const R = n, C = n, N = R * C;
       const seeds = PuzzleShell.shuffle([...new Array(N).keys()]).slice(0, Math.round(N / 4));
       const room = PuzzleShell.growRegions(R, C, seeds.map((k) => [k]));
-      const sol = new Uint8Array(N).fill(2);
-      const free = (k) => sol[k] !== YES;
-      const nbOk = (k, own) => [k - C, k + C, k % C ? k - 1 : -1, (k + 1) % C ? k + 1 : -1].every((j) => j < 0 || j >= N || own.has(j) || sol[j] !== YES);
-      // Place mirrored areas.
-      for (let t = 0; t < 40; t++) {
-        const a = Math.floor(Math.random() * N), vert = Math.random() < 0.5;
-        const b = vert ? a + 1 : a + C;
-        if (b >= N || (vert && b % C === 0) || room[a] === room[b]) continue;
-        const ra = Math.floor(a / C), ca = a % C;
-        const flip = (k) => { const r = Math.floor(k / C), c = k % C; return vert ? r * C + (2 * ca + 1 - c) : (2 * ra + 1 - r) * C + c; };
-        const inside = (k) => { const r = Math.floor(k / C), c = k % C; const m = flip(k), mr = Math.floor(m / C), mc = m % C;
-          return (vert ? c <= ca && mc < C : r <= ra && mr < R) && room[k] === room[a] && room[m] === room[b]; };
-        const half = [a];
-        const want = 1 + Math.floor(Math.random() * 3);
-        for (let g = 0; g < 20 && half.length < want; g++) {
-          const x = half[Math.floor(Math.random() * half.length)];
-          const opts = [x - C, x + C, x % C ? x - 1 : -1, (x + 1) % C ? x + 1 : -1].filter((j) => j >= 0 && j < N && !half.includes(j) && inside(j));
-          if (opts.length) half.push(opts[Math.floor(Math.random() * opts.length)]);
-        }
-        const cells = half.concat(half.map(flip));
-        const own = new Set(cells);
-        if (!cells.every((k) => free(k) && nbOk(k, own))) continue;
-        cells.forEach((k) => { sol[k] = YES; });
-      }
+      const sol = placeMirrored(R, C, room);
       if (!sol.includes(YES)) continue;
       const count = Math.max(...room) + 1;
       const clues = new Int8Array(count);
       sol.forEach((v, k) => { if (v === YES) clues[room[k]]++; });
       const p = { R, C, room, clues };
-      const unique = () => {
-        const t = Binary.logicSolve(model(p));
-        if (t && !t.includes(UNKNOWN)) return true;
-        if (!t) return false;
-        const r = Binary.solve(model(p), 2, 3000, t);
-        return r.solutions.length === 1 && !r.capped;
-      };
+      const unique = () => Binary.isUnique(model(p));
       if (!unique()) continue;
       for (const g of PuzzleShell.shuffle([...new Array(count).keys()])) {
         const keep = clues[g];

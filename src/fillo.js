@@ -42,35 +42,41 @@ const Fillo = (() => {
     const solutions = [];
     let nodes = 0;
     const sizes = p.sizes;
-    (function rec() {
+    // Regions of size s through cell k over free cells (shuffled if random).
+    const shapesFor = (k, s) => {
+      const list = shapes(R, C, k, s, (j) => !val[j] && (!given[j] || given[j] === s));
+      return random ? PuzzleShell.shuffle(list) : list;
+    };
+    // No same-size neighbour region, and no same-size given touching
+    // from outside (it would form a second touching region).
+    const clear = (cells, s) => {
+      const inside = new Set(cells);
+      return cells.every((x) => nbs(R, C, x).every((j) => inside.has(j) || (val[j] !== s && given[j] !== s)));
+    };
+    // Region sizes to try at cell k.
+    const sizesAt = (k) => {
+      const options = given[k] ? [given[k]] : sizes;
+      return random ? PuzzleShell.shuffle(options.slice()) : options;
+    };
+    const rec = () => {
       if (solutions.length >= stopAt || ++nodes > maxNodes) return;
-      let k = 0;
-      while (k < N && val[k]) k++;
-      if (k === N) { solutions.push(Int8Array.from(val)); return; }
-      let options = given[k] ? [given[k]] : sizes;
-      if (random) options = PuzzleShell.shuffle(options.slice());
-      for (const s of options) {
-        for (const cells of (random ? PuzzleShell.shuffle(shapes(R, C, k, s, (j) => !val[j] && (!given[j] || given[j] === s)))
-          : shapes(R, C, k, s, (j) => !val[j] && (!given[j] || given[j] === s)))) {
-          // No same-size neighbour region, and no same-size given touching
-          // from outside (it would form a second touching region).
-          const inside = new Set(cells);
-          let ok = true;
-          for (const x of cells) {
-            for (const j of nbs(R, C, x)) {
-              if (inside.has(j)) continue;
-              if (val[j] === s || given[j] === s) { ok = false; break; }
-            }
-            if (!ok) break;
-          }
-          if (!ok) continue;
-          for (const x of cells) val[x] = s;
-          rec();
-          for (const x of cells) val[x] = 0;
+      const k = val.indexOf(0);
+      if (k < 0) { solutions.push(Int8Array.from(val)); return; }
+      for (const s of sizesAt(k)) {
+        for (const cells of shapesFor(k, s)) {
+          tryShape(cells, s);
           if (solutions.length >= stopAt) return;
         }
       }
-    })();
+    };
+    // Place a region of size s on `cells`, search on, take it back.
+    const tryShape = (cells, s) => {
+      if (!clear(cells, s)) return;
+      for (const x of cells) val[x] = s;
+      rec();
+      for (const x of cells) val[x] = 0;
+    };
+    rec();
     return { solutions, capped: nodes > maxNodes };
   }
 

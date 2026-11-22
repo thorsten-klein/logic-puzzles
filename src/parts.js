@@ -55,70 +55,84 @@ const Parts = (() => {
 
   // Counts solutions (region number per cell, -2 = outside).
   function solve(cfg, p, stopAt = 2, maxNodes = 30000) {
-    const { R, C } = p;
-    const N = R * C;
-    const id = new Int32Array(N).fill(-1);
-    const max = cfg.maxSize(p);
-    const out = [];
-    let nodes = 0, count = 0;
-    (function rec() {
-      if (out.length >= stopAt || ++nodes > maxNodes) return;
-      let k = 0;
-      while (k < N && id[k] !== -1) k++;
-      if (k === N) {
-        if (!cfg.final || cfg.final(p, id)) out.push(Int32Array.from(id));
-        return;
-      }
-      if (cfg.blocked?.(p, k)) {
-        id[k] = -2;
-        rec();
-        id[k] = -1;
-        return;
-      }
-      if (cfg.skip?.(p, k) && (!cfg.outside || cfg.outside(p, k, id))) {
-        id[k] = -2;
-        rec();
-        id[k] = -1;
-        if (out.length >= stopAt) return;
-      }
-      const me = count++;
-      // A game may list whole regions with k as their first cell.
-      if (cfg.candidates) {
-        for (const cells of cfg.candidates(p, k, id)) {
-          if (cells.some((x) => id[x] !== -1 || (cfg.blocked?.(p, x)))) continue;
-          cells.forEach((x) => { id[x] = me; });
-          if (cfg.region(p, cells, id)) rec();
-          cells.forEach((x) => { id[x] = -1; });
-          if (out.length >= stopAt) break;
-        }
-        count--;
-        return;
-      }
-      // Grow connected regions that contain k (k is their first cell).
-      const cells = [k];
-      id[k] = me;
-      const seen = new Set();
-      (function grow() {
-        if (out.length >= stopAt || nodes > maxNodes) return;
-        const key = cells.slice().sort((a, b) => a - b).join(',');
-        if (seen.has(key)) return;
-        seen.add(key);
-        if (cfg.grow && !cfg.grow(p, cells)) return;
-        if (cfg.region(p, cells, id)) rec();
-        if (cells.length >= max) return;
-        const front = new Set();
-        for (const x of cells) for (const j of nbs(R, C, x)) if (id[j] === -1 && j > k && !(cfg.blocked?.(p, j))) front.add(j);
-        for (const j of front) {
-          cells.push(j); id[j] = me;
-          grow();
-          cells.pop(); id[j] = -1;
-          if (out.length >= stopAt) return;
-        }
-      })();
-      id[k] = -1;
-      count--;
-    })();
-    return { solutions: out, capped: nodes > maxNodes };
+    const N = p.R * p.C;
+    const st = { cfg, p, N, id: new Int32Array(N).fill(-1), max: cfg.maxSize(p), out: [], nodes: 0, count: 0, stopAt, maxNodes };
+    searchNext(st);
+    return { solutions: st.out, capped: st.nodes > maxNodes };
+  }
+
+  const enough = (st) => st.out.length >= st.stopAt;
+
+  // Fills the first free cell in every possible way (depth first).
+  function searchNext(st) {
+    if (enough(st) || ++st.nodes > st.maxNodes) return;
+    const { cfg, p, id } = st;
+    let k = 0;
+    while (k < st.N && id[k] !== -1) k++;
+    if (k === st.N) {
+      if (!cfg.final || cfg.final(p, id)) st.out.push(Int32Array.from(id));
+      return;
+    }
+    if (cfg.blocked?.(p, k)) { leaveOut(st, k); return; }
+    if (cfg.skip?.(p, k) && (!cfg.outside || cfg.outside(p, k, id))) {
+      leaveOut(st, k);
+      if (enough(st)) return;
+    }
+    const me = st.count++;
+    // A game may list whole regions with k as their first cell.
+    if (cfg.candidates) tryCandidates(st, k, me);
+    else growFrom(st, k, me);
+    st.count--;
+  }
+
+  // Cell k belongs to no region (-2); search on.
+  function leaveOut(st, k) {
+    st.id[k] = -2;
+    searchNext(st);
+    st.id[k] = -1;
+  }
+
+  function tryCandidates(st, k, me) {
+    const { cfg, p, id } = st;
+    for (const cells of cfg.candidates(p, k, id)) {
+      if (cells.some((x) => id[x] !== -1 || (cfg.blocked?.(p, x)))) continue;
+      cells.forEach((x) => { id[x] = me; });
+      if (cfg.region(p, cells, id)) searchNext(st);
+      cells.forEach((x) => { id[x] = -1; });
+      if (enough(st)) break;
+    }
+  }
+
+  // Grow connected regions that contain k (k is their first cell).
+  function growFrom(st, k, me) {
+    st.id[k] = me;
+    grow(st, k, me, [k], new Set());
+    st.id[k] = -1;
+  }
+
+  function grow(st, k, me, cells, seen) {
+    if (enough(st) || st.nodes > st.maxNodes) return;
+    const { cfg, p, id } = st;
+    const key = cells.slice().sort((a, b) => a - b).join(',');
+    if (seen.has(key)) return;
+    seen.add(key);
+    if (cfg.grow && !cfg.grow(p, cells)) return;
+    if (cfg.region(p, cells, id)) searchNext(st);
+    if (cells.length >= st.max) return;
+    for (const j of frontier(st, cells, k)) {
+      cells.push(j); id[j] = me;
+      grow(st, k, me, cells, seen);
+      cells.pop(); id[j] = -1;
+      if (enough(st)) return;
+    }
+  }
+
+  // Free cells next to the region (after k, not blocked).
+  function frontier(st, cells, k) {
+    const { cfg, p, id } = st;
+    const front = new Set();
+    for (const x of cells) for (const j of nbs(p.R, p.C, x)) if (id[j] === -1 && j > k && !(cfg.blocked?.(p, j))) front.add(j);
+    return front;
   }
 
   // Edges next to a blocked cell are walls from the start.
@@ -126,8 +140,9 @@ const Parts = (() => {
     if (!cfg.blocked) return [];
     const { R, C } = p;
     const out = [];
-    for (let r = 0; r < R; r++) for (let c = 0; c < C - 1; c++) if (cfg.blocked(p, r * C + c) || cfg.blocked(p, r * C + c + 1)) out.push(r * (C - 1) + c);
-    for (let r = 0; r < R - 1; r++) for (let c = 0; c < C; c++) if (cfg.blocked(p, r * C + c) || cfg.blocked(p, (r + 1) * C + c)) out.push(R * (C - 1) + r * C + c);
+    const either = (a, b) => cfg.blocked(p, a) || cfg.blocked(p, b);
+    for (let r = 0; r < R; r++) for (let c = 0; c < C - 1; c++) if (either(r * C + c, r * C + c + 1)) out.push(r * (C - 1) + c);
+    for (let r = 0; r < R - 1; r++) for (let c = 0; c < C; c++) if (either(r * C + c, (r + 1) * C + c)) out.push(R * (C - 1) + r * C + c);
     return out;
   }
 
@@ -139,67 +154,91 @@ const Parts = (() => {
   function generate(cfg, n) {
     const deadline = Date.now() + 8000;
     while (Date.now() < deadline) {
-      const R = n, C = n;
-      const regions = cfg.split(R, C);
-      if (!regions) continue;
-      const p = { R, C, clues: new Int16Array(R * C) };
-      if (cfg.clues(p, regions) === false) continue;
-      let r = solve(cfg, p, 2, 30000);
-      // A second answer: move a clue inside its region to a cell where the
-      // other answer differs (only for games whose clue value does not
-      // depend on its cell). Repeat while that helps.
-      if (cfg.moveClues && !r.capped && r.solutions.length === 2) {
-        const ans = new Int32Array(R * C).fill(-2);
-        regions.forEach((cells, i) => cells.forEach((x) => { ans[x] = i; }));
-        for (let fix = 0; fix < 40 && !r.capped && r.solutions.length === 2 && Date.now() < deadline; fix++) {
-          const other = r.solutions.find((x) => x.some((v, k) => (v === -2) !== (ans[k] === -2) || (v >= 0 && ans[k] >= 0 && x[k] !== x[regions[ans[k]][0]])));
-          if (!other) break;
-          let moved = false;
-          for (const cells of PuzzleShell.shuffle(regions.slice())) {
-            const at = cells.find((x) => p.clues[x]);
-            const to = cells.filter((x) => x !== at && other[x] !== other[at]);
-            if (!to.length) continue;
-            const x = to[Math.floor(Math.random() * to.length)];
-            p.clues[x] = p.clues[at];
-            p.clues[at] = 0;
-            moved = true;
-            break;
-          }
-          if (!moved) break;
-          r = solve(cfg, p, 2, 30000);
-        }
-      }
-      // Or re-roll the clues of one region that the other answer splits.
-      if (cfg.reroll && !r.capped && r.solutions.length === 2) {
-        const ans = new Int32Array(R * C).fill(-2);
-        regions.forEach((cells, i) => cells.forEach((x) => { ans[x] = i; }));
-        for (let fix = 0; fix < 40 && !r.capped && r.solutions.length === 2 && Date.now() < deadline; fix++) {
-          const other = r.solutions.find((x) => x.some((v, k) => ans[k] >= 0 && x[k] !== x[regions[ans[k]][0]]));
-          if (!other) break;
-          const bad = regions.filter((cells) => cells.some((x) => other[x] !== other[cells[0]]));
-          cfg.reroll(p, bad[Math.floor(Math.random() * bad.length)]);
-          r = solve(cfg, p, 2, 30000);
-        }
-      }
-      let sol = r.solutions.length === 1 && !r.capped ? r.solutions[0] : null;
-      if (!sol) continue;
-      if (cfg.thin !== false) {
-        // Thin clues within a time budget; extra clues are fine.
-        const stop = Date.now() + 1500;
-        for (const k of PuzzleShell.shuffle([...new Array(R * C).keys()])) {
-          if (!p.clues[k]) continue;
-          const keep = p.clues[k];
-          p.clues[k] = 0;
-          const s2 = unique(cfg, p);
-          if (s2) sol = s2; else p.clues[k] = keep;
-          if (Date.now() > stop) break;
-        }
-      }
-      p.solution = sol;
-      p.walls = wallsOf(R, C, sol);
-      return p;
+      const p = generateOnce(cfg, n, deadline);
+      if (p) return p;
     }
     return null;
+  }
+
+  // One try: regions, clues, a unique answer. Returns the puzzle or null.
+  function generateOnce(cfg, n, deadline) {
+    const R = n, C = n;
+    const regions = cfg.split(R, C);
+    if (!regions) return null;
+    const p = { R, C, clues: new Int16Array(R * C) };
+    if (cfg.clues(p, regions) === false) return null;
+    let r = solve(cfg, p, 2, 30000);
+    if (cfg.moveClues) r = fixByMovingClues(cfg, p, regions, r, deadline);
+    if (cfg.reroll) r = fixByReroll(cfg, p, regions, r, deadline);
+    let sol = r.solutions.length === 1 && !r.capped ? r.solutions[0] : null;
+    if (!sol) return null;
+    if (cfg.thin !== false) sol = thinClues(cfg, p, sol);
+    p.solution = sol;
+    p.walls = wallsOf(R, C, sol);
+    return p;
+  }
+
+  // Region number of each cell in the generated answer (-2: none).
+  function answerIds(p, regions) {
+    const ans = new Int32Array(p.R * p.C).fill(-2);
+    regions.forEach((cells, i) => cells.forEach((x) => { ans[x] = i; }));
+    return ans;
+  }
+
+  const twoAnswers = (r) => !r.capped && r.solutions.length === 2;
+
+  // A second answer: move a clue inside its region to a cell where the
+  // other answer differs (only for games whose clue value does not
+  // depend on its cell). Repeat while that helps.
+  function fixByMovingClues(cfg, p, regions, r, deadline) {
+    const ans = answerIds(p, regions);
+    for (let fix = 0; fix < 40 && twoAnswers(r) && Date.now() < deadline; fix++) {
+      const other = r.solutions.find((x) => x.some((v, k) => (v === -2) !== (ans[k] === -2) || (v >= 0 && ans[k] >= 0 && x[k] !== x[regions[ans[k]][0]])));
+      if (!other || !moveOneClue(p, regions, other)) break;
+      r = solve(cfg, p, 2, 30000);
+    }
+    return r;
+  }
+
+  // Moves one clue to a cell of its region where `other` differs.
+  function moveOneClue(p, regions, other) {
+    for (const cells of PuzzleShell.shuffle(regions.slice())) {
+      const at = cells.find((x) => p.clues[x]);
+      const to = cells.filter((x) => x !== at && other[x] !== other[at]);
+      if (!to.length) continue;
+      const x = to[Math.floor(Math.random() * to.length)];
+      p.clues[x] = p.clues[at];
+      p.clues[at] = 0;
+      return true;
+    }
+    return false;
+  }
+
+  // Or re-roll the clues of one region that the other answer splits.
+  function fixByReroll(cfg, p, regions, r, deadline) {
+    const ans = answerIds(p, regions);
+    for (let fix = 0; fix < 40 && twoAnswers(r) && Date.now() < deadline; fix++) {
+      const other = r.solutions.find((x) => x.some((v, k) => ans[k] >= 0 && x[k] !== x[regions[ans[k]][0]]));
+      if (!other) break;
+      const bad = regions.filter((cells) => cells.some((x) => other[x] !== other[cells[0]]));
+      cfg.reroll(p, bad[Math.floor(Math.random() * bad.length)]);
+      r = solve(cfg, p, 2, 30000);
+    }
+    return r;
+  }
+
+  // Thin clues within a time budget; extra clues are fine. Returns the answer.
+  function thinClues(cfg, p, sol) {
+    const stop = Date.now() + 1500;
+    for (const k of PuzzleShell.shuffle([...new Array(p.R * p.C).keys()])) {
+      if (!p.clues[k]) continue;
+      const keep = p.clues[k];
+      p.clues[k] = 0;
+      const s2 = unique(cfg, p);
+      if (s2) sol = s2; else p.clues[k] = keep;
+      if (Date.now() > stop) break;
+    }
+    return sol;
   }
 
   const NS = 'http://www.w3.org/2000/svg';
@@ -210,6 +249,14 @@ const Parts = (() => {
     return e;
   }
 
+  // Result marks of a wall edge: right, wrong, or not drawn yet.
+  function resultEdgeClass(cls, wall, mine, isFixed) {
+    if (!wall && mine) return 'gx-wall bad';
+    if (isFixed) return cls;
+    if (mine) return cls + ' ok';
+    return wall ? cls + ' miss' : cls;
+  }
+
   function render(cfg, p, state, opts = {}) {
     const { R, C, walls } = p;
     const { readonly, result, hint, onChange } = opts;
@@ -218,35 +265,51 @@ const Parts = (() => {
     const g = el('g', { transform: 'translate(2 2)' }, svg);
     el('rect', { x: 0, y: 0, width: C * s, height: R * s, class: 'gx-bg' }, g);
     // Cells outside all regions (in the solution view) are shaded.
-    if (result) for (let k = 0; k < R * C; k++) if (p.solution[k] === -2) el('rect', { x: (k % C) * s, y: Math.floor(k / C) * s, width: s, height: s, class: 'pt-out' }, g);
+    if (result) drawOutside(p, g, s);
     const hintSet = new Set(hint ? hint.edges : []);
     const fixed = new Set(fixedEdges(cfg, p));
-    const edges = [];
-    for (let r = 0; r < R; r++) for (let c = 0; c < C - 1; c++) edges.push([r * (C - 1) + c, (c + 1) * s, r * s, (c + 1) * s, (r + 1) * s]);
-    for (let r = 0; r < R - 1; r++) for (let c = 0; c < C; c++) edges.push([R * (C - 1) + r * C + c, c * s, (r + 1) * s, (c + 1) * s, (r + 1) * s]);
-    for (const [e, x1, y1, x2, y2] of edges) {
-      const v = result ? walls[e] : state[e];
-      let cls = v ? 'gx-wall' : 'gx-grid';
-      if (result && state[e] && !fixed.has(e)) cls += walls[e] ? ' ok' : ' bad';
-      if (result && !walls[e] && state[e]) cls = 'gx-wall bad';
-      if (result && walls[e] && !state[e] && !fixed.has(e)) cls += ' miss'; // not drawn yet
-      if (hintSet.has(e)) cls += ' hint';
-      el('line', { x1, y1, x2, y2, class: cls }, g);
+    // Class of edge e: wall or grid, with the result marks.
+    const edgeClass = (e) => {
+      const wall = result ? walls[e] : state[e];
+      let cls = wall ? 'gx-wall' : 'gx-grid';
+      if (result) cls = resultEdgeClass(cls, walls[e], state[e], fixed.has(e));
+      return hintSet.has(e) ? cls + ' hint' : cls;
+    };
+    for (const [e, x1, y1, x2, y2] of edgeLines(R, C, s)) {
+      el('line', { x1, y1, x2, y2, class: edgeClass(e) }, g);
       if (!readonly && !fixed.has(e)) {
         const hit = el('line', { x1, y1, x2, y2, class: 'gx-hit', 'stroke-width': s * 0.35 }, g);
         hit.addEventListener('click', () => { state[e] = state[e] ? 0 : 1; onChange(); });
       }
     }
     el('rect', { x: 0, y: 0, width: C * s, height: R * s, class: 'gx-frame' }, g);
-    for (let k = 0; k < R * C; k++) {
-      const x = (k % C) * s + s / 2, y = Math.floor(k / C) * s + s / 2;
+    drawClues(cfg, p, g, s);
+    return svg;
+  }
+
+  // Every edge with its line: [e, x1, y1, x2, y2] for cell size s.
+  function edgeLines(R, C, s) {
+    const edges = [];
+    for (let r = 0; r < R; r++) for (let c = 0; c < C - 1; c++) edges.push([r * (C - 1) + c, (c + 1) * s, r * s, (c + 1) * s, (r + 1) * s]);
+    for (let r = 0; r < R - 1; r++) for (let c = 0; c < C; c++) edges.push([R * (C - 1) + r * C + c, c * s, (r + 1) * s, (c + 1) * s, (r + 1) * s]);
+    return edges;
+  }
+
+  // Shaded cells: outside all regions in the answer.
+  function drawOutside(p, g, s) {
+    for (let k = 0; k < p.R * p.C; k++) {
+      if (p.solution[k] === -2) el('rect', { x: (k % p.C) * s, y: Math.floor(k / p.C) * s, width: s, height: s, class: 'pt-out' }, g);
+    }
+  }
+
+  // Clue texts and the game's own marks in the cells.
+  function drawClues(cfg, p, g, s) {
+    for (let k = 0; k < p.R * p.C; k++) {
+      const x = (k % p.C) * s + s / 2, y = Math.floor(k / p.C) * s + s / 2;
       if (cfg.decorate) cfg.decorate(p, k, g, x, y, s);
       const text = p.clues[k] ? cfg.cellText(p, k) : '';
-      if (text === '') continue;
-      const t = el('text', { x, y, 'font-size': s * 0.42, class: 'pt-clue' }, g);
-      t.textContent = text;
+      if (text !== '') el('text', { x, y, 'font-size': s * 0.42, class: 'pt-clue' }, g).textContent = text;
     }
-    return svg;
   }
 
   function hints(p, state) {

@@ -29,34 +29,12 @@
   function model(p) {
     const { R, C, clues } = p;
     const N = R * C;
-    const nb = (k) => {
-      const r = Math.floor(k / C), c = k % C, out = [];
-      if (r > 0) out.push(k - C);
-      if (r < R - 1) out.push(k + C);
-      if (c > 0) out.push(k - 1);
-      if (c < C - 1) out.push(k + 1);
-      return out;
-    };
+    const nb = (k) => Binary.sideNeighbours(R, C, k);
     // True when no cell next to k is still open.
     const settled = (k, s) => nb(k).every((j) => s[j] !== UNKNOWN);
-    const diag = (k) => {
-      const r = Math.floor(k / C), c = k % C, out = [];
-      for (const [a, b] of [[r - 1, c - 1], [r - 1, c + 1], [r + 1, c - 1], [r + 1, c + 1]]) if (a >= 0 && b >= 0 && a < R && b < C) out.push(a * C + b);
-      return out;
-    };
     const cons = [];
     for (let k = 0; k < N; k++) if (clues[k] >= 0) cons.push({ cells: [k], min: 1, max: 1, why: () => 'Clue cells are shaded.' });
-    const blocks = (s) => {
-      const id = new Int32Array(N).fill(-1), list = [];
-      for (let k = 0; k < N; k++) {
-        if (id[k] >= 0 || s[k] !== YES) continue;
-        const cells = [k];
-        id[k] = list.length;
-        for (const cur of cells) for (const j of nb(cur)) if (id[j] < 0 && s[j] === YES) { id[j] = list.length; cells.push(j); }
-        list.push(cells);
-      }
-      return { id, list };
-    };
+    const blocks = (s) => Binary.areas(R, C, s);
     function propagate(s, log) {
       const { id, list } = blocks(s);
       for (let k = 0; k < N; k++) {
@@ -78,38 +56,23 @@
       }
       return 0;
     }
+    // A block has one clue (exactly one once closed), and fits its number.
+    function blockOk(s, cells, done) {
+      const cl = cells.filter((x) => clues[x] >= 0);
+      const closed = done || cells.every((k) => settled(k, s));
+      if (cl.length > 1 || (closed && cl.length !== 1)) return false;
+      const v = cl.length ? clues[cl[0]] : 0;
+      return !(v > 0 && (cells.length > v || (closed && cells.length !== v)));
+    }
     function check(s, done) {
-      const { id, list } = blocks(s);
-      const info = list.map((cells) => {
-        const cl = cells.filter((x) => clues[x] >= 0);
-        const closed = done || cells.every((k) => settled(k, s));
-        return { cells, cl, closed };
-      });
-      for (const b of info) {
-        if (b.cl.length > 1) return false;
-        if (b.closed && b.cl.length !== 1) return false;
-        if (b.cl.length === 1) {
-          const v = clues[b.cl[0]];
-          if (v > 0 && (b.cells.length > v || (b.closed && b.cells.length !== v))) return false;
-        }
-      }
+      const all = blocks(s);
+      if (!all.list.every((cells) => blockOk(s, cells, done))) return false;
       if (!done) return true;
       // Chains: blocks joined at corners; two or more, all shapes different.
-      const seen = new Uint8Array(list.length);
-      for (let a = 0; a < list.length; a++) {
-        if (seen[a]) continue;
-        const chain = [a];
-        seen[a] = 1;
-        for (const cur of chain) {
-          for (const k of list[cur]) for (const j of diag(k)) {
-            if (s[j] === YES && !seen[id[j]]) { seen[id[j]] = 1; chain.push(id[j]); }
-          }
-        }
-        if (chain.length < 2) return false;
-        const keys = chain.map((b) => shapeKey(list[b], C));
-        if (new Set(keys).size !== keys.length) return false;
-      }
-      return true;
+      return Binary.cornerGroups(R, C, s, all).every((chain) => {
+        const keys = chain.map((b) => shapeKey(all.list[b], C));
+        return chain.length >= 2 && new Set(keys).size === keys.length;
+      });
     }
     return { N, cons, propagate, check };
   }
@@ -118,61 +81,50 @@
   // 1–5 cells with different shapes, joined at corners. Blocks never touch
   // by a side, and different chains do not touch at all.
   function makeAnswer(n) {
-    const N = n * n;
-    const id = new Int32Array(N).fill(-1), chainOf = new Int32Array(N).fill(-1);
-    const blocks = [];
-    const around = (k, diagToo) => {
-      const r = Math.floor(k / n), c = k % n, out = [];
-      for (let dr = -1; dr <= 1; dr++) for (let dc = -1; dc <= 1; dc++) {
-        if ((!dr && !dc) || (!diagToo && dr && dc)) continue;
-        const a = r + dr, b = c + dc;
-        if (a >= 0 && b >= 0 && a < n && b < n) out.push(a * n + b);
-      }
-      return out;
-    };
-    const canUse = (k, b, ch) => id[k] < 0 &&
-      around(k, false).every((j) => id[j] < 0 || id[j] === b) &&
-      around(k, true).every((j) => chainOf[j] < 0 || chainOf[j] === ch);
+    const b = Binary.cornerBuilder(n);
+    // A block of 1-5 cells from seed with a shape new in its chain.
     const tryBlock = (seed, ch, used) => {
-      const b = blocks.length, cells = [seed];
-      id[seed] = b; chainOf[seed] = ch;
-      const want = 1 + Math.floor(Math.random() * 5);
-      for (let g = 0; g < 30 && cells.length < want; g++) {
-        const x = cells[Math.floor(Math.random() * cells.length)];
-        const opts = around(x, false).filter((j) => canUse(j, b, ch));
-        if (!opts.length) continue;
-        const j = opts[Math.floor(Math.random() * opts.length)];
-        id[j] = b; chainOf[j] = ch;
-        cells.push(j);
-      }
+      const cells = b.grow(seed, ch, 1 + Math.floor(Math.random() * 5));
       const key = shapeKey(cells, n);
-      if (used.has(key)) { cells.forEach((k) => { id[k] = -1; chainOf[k] = -1; }); return false; }
+      if (used.has(key)) { b.remove(cells); return false; }
       used.add(key);
-      blocks.push(cells);
+      b.keep(cells);
       return true;
     };
-    let fails = 0;
-    for (let ch = 0; ; ch++) {
-      if (fails >= 30) break;
-      const starts = [...new Array(N).keys()].filter((k) => id[k] < 0 && around(k, true).every((j) => id[j] < 0));
-      if (!starts.length) break;
+    // Chain ch of 2-4 blocks from a start cell; undone if too short.
+    const addChain = (ch, start) => {
       const used = new Set();
-      const first = blocks.length;
-      if (!tryBlock(starts[Math.floor(Math.random() * starts.length)], ch, used)) { fails++; ch--; continue; }
+      const first = b.blocks.length;
+      if (!tryBlock(start, ch, used)) return false;
       const goal = 2 + Math.floor(Math.random() * 3);
-      for (let t = 0; t < 40 && blocks.length - first < goal; t++) {
-        const mine = [];
-        for (let i = first; i < blocks.length; i++) mine.push(...blocks[i]);
-        const seeds = [...new Set(mine.flatMap((k) => around(k, true)))].filter((k) => canUse(k, blocks.length, ch));
+      for (let t = 0; t < 40 && b.blocks.length - first < goal; t++) {
+        const seeds = b.seeds(first, ch);
         if (!seeds.length) break;
-        tryBlock(seeds[Math.floor(Math.random() * seeds.length)], ch, used);
+        tryBlock(b.pick(seeds), ch, used);
       }
-      if (blocks.length - first < 2) {
-        for (const cells of blocks.splice(first)) cells.forEach((k) => { id[k] = -1; chainOf[k] = -1; });
-        fails++; ch--;
-      }
+      if (b.blocks.length - first >= 2) return true;
+      b.undo(first);
+      return false;
+    };
+    let fails = 0;
+    for (let ch = 0; fails < 30;) {
+      const starts = b.starts();
+      if (!starts.length) break;
+      if (addChain(ch, b.pick(starts))) ch++;
+      else fails++;
     }
-    return { id, blocks };
+    return { id: b.id, blocks: b.blocks };
+  }
+
+  // Turns numbers into "?" while it stays unique.
+  function hideNumbers(clues, unique, until) {
+    for (const k of PuzzleShell.shuffle([...clues.keys()])) {
+      if (clues[k] <= 0) continue;
+      const keep = clues[k];
+      clues[k] = 0;
+      if (!unique()) clues[k] = keep;
+      if (Date.now() > until) return;
+    }
   }
 
   function generate(n) {
@@ -186,22 +138,9 @@
       const p = { R: n, C: n, clues };
       if (!model(p).check(sol, true)) continue;
       // Unique: by logic alone, else proven by the full solver.
-      const unique = () => {
-        const t = Binary.logicSolve(model(p));
-        if (t && !t.includes(UNKNOWN)) return true;
-        if (!t) return false;
-        const r = Binary.solve(model(p), 2, 4000, t);
-        return r.solutions.length === 1 && !r.capped;
-      };
+      const unique = () => Binary.isUnique(model(p), 4000);
       if (!unique()) continue;
-      // Turn numbers into "?" while it stays unique.
-      for (const k of PuzzleShell.shuffle([...new Array(N).keys()])) {
-        if (clues[k] <= 0) continue;
-        const keep = clues[k];
-        clues[k] = 0;
-        if (!unique()) clues[k] = keep;
-        if (Date.now() > deadline + 3000) break;
-      }
+      hideNumbers(clues, unique, deadline + 3000);
       p.solution = sol;
       return p;
     }

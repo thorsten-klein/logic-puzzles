@@ -15,26 +15,34 @@ module.exports = {
         if (Date.now() >= stop) break;
         const p = tryIt(() => Generator.generate(5 + (b % 5), b % 3 !== 0));
         if (!p) continue;
-        const N = p.size * p.size;
         const sol = new Set(p.solution.map(([r, c]) => r * p.size + c));
         for (let t = 0; t < 30; t++) {
-          const filled = new Set(), marked = new Set();
-          for (let k = 0; k < N; k++) {
-            const x = Math.random();
-            if (x < 0.25) (sol.has(k) ? filled : marked).add(k);
-            else if (x > 0.97) (sol.has(k) ? marked : filled).add(k);
-          }
-          for (let i = 0; i < 60; i++) {
-            const h = tryIt(() => Hint.find(p, filled, marked));
-            if (!h) break;
-            const k = h.r * p.size + h.c;
-            if (h.action === 'fill') filled.add(k);
-            else if (h.action === 'mark') marked.add(k);
-            else { filled.delete(k); marked.delete(k); }
-          }
+          const { filled, marked } = randomMarks(p.size * p.size, sol);
+          hintWalk(p, filled, marked);
           tryIt(() => Hint.findAll(p, filled, marked));
         }
         if (b % 20 === 0) { tryIt(() => Solver.solve(p, 2)); tryIt(() => Solver.solve(p, 1, { maxNodes: 5 })); }
+      }
+      // Random marks: mostly right, a few wrong.
+      function randomMarks(N, sol) { // NOSONAR: evaluated in browser context
+        const filled = new Set(), marked = new Set();
+        for (let k = 0; k < N; k++) {
+          const x = Math.random();
+          if (x < 0.25) (sol.has(k) ? filled : marked).add(k);
+          else if (x > 0.97) (sol.has(k) ? marked : filled).add(k);
+        }
+        return { filled, marked };
+      }
+      // A short hint walk from the marks.
+      function hintWalk(p, filled, marked) {
+        for (let i = 0; i < 60; i++) {
+          const h = tryIt(() => Hint.find(p, filled, marked));
+          if (!h) break;
+          const k = h.r * p.size + h.c;
+          if (h.action === 'fill') filled.add(k);
+          else if (h.action === 'mark') marked.add(k);
+          else { filled.delete(k); marked.delete(k); }
+        }
       }
       // Broken game data.
       const { cfg } = window.__puzzleTest;

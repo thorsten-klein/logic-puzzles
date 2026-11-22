@@ -179,30 +179,39 @@ function uiTests(slug) {
           return Array.from(x);
         };
         const empty = cfg.newState(p);
-        let half;
-        if (typeof s[0] === 'object') half = s.filter((_, j) => j % 2);
-        else { half = copy(s); half.forEach((v, i) => { if (i % 2) half[i] = empty[i]; }); }
+        const pieces = typeof s[0] === 'object';
+        const half = halfOf(s, empty);
         const out = { solvedState: bad(s) ? JSON.stringify(Array.from(s)) + ' answer ' + JSON.stringify(p.solution) : '', solved: bad(s), half: bad(half), missing: miss(half), halfDone: !!cfg.check(p, half), wrongAt: -1, wrong: 0 };
-        if (typeof s[0] === 'object') { // a list of pieces: shrink one
-          const w = copy(s);
+        Object.assign(out, pieces ? shrinkOne(copy(s)) : firstWrong());
+
+        // Every second cell (or piece) of the answer.
+        function halfOf(full, none) {
+          if (typeof full[0] === 'object') return full.filter((_, j) => j % 2);
+          const h = copy(full);
+          h.forEach((v, i) => { if (i % 2) h[i] = none[i]; });
+          return h;
+        }
+        // A list of pieces: shrink one.
+        function shrinkOne(w) {
           const i = w.findIndex((x) => x.length > 1 && (x.length !== 4 || x[0] !== x[2] || x[1] !== x[3]));
-          if (i >= 0) {
-            if (w[i].length === 4 && p.R && w[i].every((v) => typeof v === 'number' && v < Math.max(p.R, p.C))) {
-              w[i] = w[i][0] < w[i][2] ? [w[i][0], w[i][1], w[i][2] - 1, w[i][3]] : [w[i][0], w[i][1], w[i][2], w[i][3] - 1];
-            } else w[i] = w[i].slice(0, -1);
-            Object.assign(out, { wrongAt: i, wrong: bad(w) });
-          }
-          return out;
+          if (i < 0) return {};
+          if (w[i].length === 4 && p.R && w[i].every((v) => typeof v === 'number' && v < Math.max(p.R, p.C))) {
+            w[i] = w[i][0] < w[i][2] ? [w[i][0], w[i][1], w[i][2] - 1, w[i][3]] : [w[i][0], w[i][1], w[i][2], w[i][3] - 1];
+          } else w[i] = w[i].slice(0, -1);
+          return { wrongAt: i, wrong: bad(w) };
         }
         // Wrong: a cell gets a non-empty value the answer does not have there.
-        const vals = [...new Set([...Array.from(s), ...Array.from(empty)])];
-        for (let i = 0; i < s.length && out.wrongAt < 0; i++) {
-          for (const v of vals) {
-            if (v === s[i] || v === empty[i]) continue; // a change, not an emptied cell
-            const w = copy(s);
-            w[i] = v;
-            if (!cfg.check(p, w)) { out.wrongAt = i; out.wrong = bad(w); out.change = `${s[i]} -> ${v}`; break; }
+        function firstWrong() {
+          const vals = [...new Set([...Array.from(s), ...Array.from(empty)])];
+          for (let i = 0; i < s.length; i++) {
+            for (const v of vals) {
+              if (v === s[i] || v === empty[i]) continue; // a change, not an emptied cell
+              const w = copy(s);
+              w[i] = v;
+              if (!cfg.check(p, w)) return { wrongAt: i, wrong: bad(w), change: `${s[i]} -> ${v}` };
+            }
           }
+          return {};
         }
         return out;
       });

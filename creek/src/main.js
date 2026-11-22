@@ -55,33 +55,32 @@
     return e;
   }
 
-  function render(p, state, opts = {}) {
-    const { R, C, clues, solution } = p;
-    const { readonly, result, hint, onChange } = opts;
-    const s = Math.max(28, Math.min(46, Math.floor((Math.min(window.innerWidth, 900) - 60) / C)));
-    const m = 14;
-    const svg = el('svg', { width: C * s + 2 * m, height: R * s + 2 * m, class: 'ck-board' + (readonly ? ' readonly' : '') });
-    const g = el('g', { transform: `translate(${m} ${m})` }, svg);
-    const hintCells = new Set(hint ? hint.cells : []);
-    for (let k = 0; k < R * C; k++) {
-      const x = (k % C) * s, y = Math.floor(k / C) * s;
-      const v = result ? solution[k] : state[k];
-      let cls = 'ck-cell' + (v === YES ? ' shaded' : '');
-      if (hintCells.has(k)) cls += ' hint';
-      if (result && state[k]) cls += state[k] === solution[k] ? ' ok' : ' bad';
-      else if (result && solution[k] === YES) cls += ' miss'; // not entered yet
-      const cell = el('rect', { x, y, width: s, height: s, class: cls }, g);
-      if (v === NO && !result) el('circle', { cx: x + s / 2, cy: y + s / 2, r: s * 0.08, class: 'ck-dot' }, g);
-      if (!readonly) {
-        const cycle = (back) => {
-          const order = back ? [UNKNOWN, NO, YES] : [UNKNOWN, YES, NO];
-          state[k] = order[(order.indexOf(state[k]) + 1) % 3];
-          onChange();
-        };
-        cell.addEventListener('click', () => cycle(false));
-        cell.addEventListener('contextmenu', (ev) => { ev.preventDefault(); cycle(true); });
-      }
-    }
+  function attachCell(cell, state, k, onChange) {
+    const cycle = (back) => {
+      const order = back ? [UNKNOWN, NO, YES] : [UNKNOWN, YES, NO];
+      state[k] = order[(order.indexOf(state[k]) + 1) % 3];
+      onChange();
+    };
+    cell.addEventListener('click', () => cycle(false));
+    cell.addEventListener('contextmenu', (ev) => { ev.preventDefault(); cycle(true); });
+  }
+
+  function renderCell(g, k, p, state, opts, s, hintCells) {
+    const { C, solution } = p;
+    const { readonly, result, onChange } = opts;
+    const x = (k % C) * s, y = Math.floor(k / C) * s;
+    const v = result ? solution[k] : state[k];
+    let cls = 'ck-cell' + (v === YES ? ' shaded' : '');
+    if (hintCells.has(k)) cls += ' hint';
+    if (result && state[k]) cls += state[k] === solution[k] ? ' ok' : ' bad';
+    else if (result && solution[k] === YES) cls += ' miss';
+    const cell = el('rect', { x, y, width: s, height: s, class: cls }, g);
+    if (v === NO && !result) el('circle', { cx: x + s / 2, cy: y + s / 2, r: s * 0.08, class: 'ck-dot' }, g);
+    if (!readonly) attachCell(cell, state, k, onChange);
+  }
+
+  function renderClues(g, p, s, hint) {
+    const { R, C, clues } = p;
     for (let r = 0; r <= R; r++) for (let c = 0; c <= C; c++) {
       const v = clues[r * (C + 1) + c];
       if (v < 0) continue;
@@ -89,6 +88,17 @@
       const t = el('text', { x: c * s, y: r * s, 'font-size': s * 0.3, class: 'ck-num' }, g);
       t.textContent = v;
     }
+  }
+
+  function render(p, state, opts = {}) {
+    const { R, C } = p;
+    const s = Math.max(28, Math.min(46, Math.floor((Math.min(window.innerWidth, 900) - 60) / C)));
+    const m = 14;
+    const svg = el('svg', { width: C * s + 2 * m, height: R * s + 2 * m, class: 'ck-board' + (opts.readonly ? ' readonly' : '') });
+    const g = el('g', { transform: `translate(${m} ${m})` }, svg);
+    const hintCells = new Set(opts.hint ? opts.hint.cells : []);
+    for (let k = 0; k < R * C; k++) renderCell(g, k, p, state, opts, s, hintCells);
+    renderClues(g, p, s, opts.hint);
     return svg;
   }
 

@@ -101,13 +101,7 @@
         for (const k of cells) if (!clues[k] && white(k) && Math.random() < 0.6) clues[k] = white(k);
       }
       const p = { R, C, clues };
-      const unique = () => {
-        const t = Binary.logicSolve(model(p));
-        if (t && !t.includes(UNKNOWN)) return true;
-        if (!t) return false;
-        const r = Binary.solve(model(p), 2, 3000, t);
-        return r.solutions.length === 1 && !r.capped;
-      };
+      const unique = () => Binary.isUnique(model(p));
       if (!unique()) continue;
       const sizeClue = new Set(regions.map((cells) => cells.find((k) => clues[k] === cells.length)));
       for (const k of PuzzleShell.shuffle([...new Array(N).keys()])) {

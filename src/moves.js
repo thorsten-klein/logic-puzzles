@@ -83,23 +83,31 @@ const Moves = (() => {
   };
 
   let selected = -1;
+
+  // Cell colours (cfg.cellClass), room walls and grid lines, the frame.
+  function drawGrid(cfg, p, g, s) {
+    const { R, C, room } = p;
+    for (let k = 0; k < R * C; k++) {
+      const cls = cfg.cellClass ? cfg.cellClass(p, k) : '';
+      if (cls) el('rect', { x: (k % C) * s, y: Math.floor(k / C) * s, width: s, height: s, class: cls }, g);
+    }
+    const line = (a, b) => (room && room[a] !== room[b] ? 'gx-wall' : 'gx-grid');
+    for (let r = 0; r < R; r++) for (let c = 0; c < C; c++) {
+      const k = r * C + c;
+      if (c < C - 1) el('line', { x1: (c + 1) * s, y1: r * s, x2: (c + 1) * s, y2: (r + 1) * s, class: line(k, k + 1) }, g);
+      if (r < R - 1) el('line', { x1: c * s, y1: (r + 1) * s, x2: (c + 1) * s, y2: (r + 1) * s, class: line(k, k + C) }, g);
+    }
+    el('rect', { x: 0, y: 0, width: C * s, height: R * s, class: 'gx-frame', fill: 'none' }, g);
+  }
+
   function render(cfg, p, ends, opts = {}) {
-    const { R, C, pieces, room, solution } = p;
+    const { R, C, pieces, solution } = p;
     const { readonly, result, hint, onChange } = opts;
     const s = Math.max(28, Math.min(48, Math.floor((Math.min(window.innerWidth, 900) - 40) / C)));
     const svg = el('svg', { width: C * s + 4, height: R * s + 4, class: 'gx-board pt-board mv-board' + (readonly ? ' readonly' : '') });
     const g = el('g', { transform: 'translate(2 2)' }, svg);
     el('rect', { x: 0, y: 0, width: C * s, height: R * s, class: 'gx-bg' }, g);
-    for (let k = 0; k < R * C; k++) {
-      const cls = cfg.cellClass ? cfg.cellClass(p, k) : '';
-      if (cls) el('rect', { x: (k % C) * s, y: Math.floor(k / C) * s, width: s, height: s, class: cls }, g);
-    }
-    for (let r = 0; r < R; r++) for (let c = 0; c < C; c++) {
-      const k = r * C + c;
-      if (c < C - 1) el('line', { x1: (c + 1) * s, y1: r * s, x2: (c + 1) * s, y2: (r + 1) * s, class: room && room[k] !== room[k + 1] ? 'gx-wall' : 'gx-grid' }, g);
-      if (r < R - 1) el('line', { x1: c * s, y1: (r + 1) * s, x2: (c + 1) * s, y2: (r + 1) * s, class: room && room[k] !== room[k + C] ? 'gx-wall' : 'gx-grid' }, g);
-    }
-    el('rect', { x: 0, y: 0, width: C * s, height: R * s, class: 'gx-frame', fill: 'none' }, g);
+    drawGrid(cfg, p, g, s);
     const xy = (k) => [(k % C) * s + s / 2, Math.floor(k / C) * s + s / 2];
     if (cfg.cellText) for (let k = 0; k < R * C; k++) {
       const t = cfg.cellText(p, k);
@@ -107,6 +115,13 @@ const Moves = (() => {
     }
     const shown = result ? solution : ends;
     const hintSet = new Set(hint ? hint.cells : []);
+    // Class of piece i: dark or light, result mark, selected, hint.
+    const pieceClass = (i, q) => {
+      let cls = cfg.dark ? 'mv-piece dark' : 'mv-piece';
+      if (result) cls += ' ' + PuzzleShell.resultClass(ends[i], solution[i], ends[i] !== q.k);
+      if (!result && i === selected && !readonly) cls += ' sel';
+      return hintSet.has(i) ? cls + ' hint' : cls;
+    };
     pieces.forEach((q, i) => {
       const end = shown[i];
       const [x0, y0] = xy(q.k), [x1, y1] = xy(end);
@@ -114,38 +129,35 @@ const Moves = (() => {
         el('line', { x1: x0, y1: y0, x2: x1, y2: y1, class: 'mv-track' }, g);
         el('circle', { cx: x0, cy: y0, r: s * 0.12, class: 'mv-start' }, g);
       }
-      let cls = cfg.dark ? 'mv-piece dark' : 'mv-piece';
-      if (result) cls += ' ' + PuzzleShell.resultClass(ends[i], solution[i], ends[i] !== q.k);
-      if (!result && i === selected && !readonly) cls += ' sel';
-      if (hintSet.has(i)) cls += ' hint';
+      const cls = pieceClass(i, q);
       if (cfg.dark) el('rect', { x: x1 - s * 0.4, y: y1 - s * 0.4, width: s * 0.8, height: s * 0.8, rx: s * 0.08, class: cls }, g);
       else el('circle', { cx: x1, cy: y1, r: s * 0.34, class: cls }, g);
       const t = cfg.pieceText(p, i);
       if (t) el('text', { x: x1, y: y1, 'font-size': s * 0.4, class: cfg.dark ? 'pt-clue mv-text light' : 'pt-clue mv-text' }, g).textContent = t;
     });
+    // Click a piece (at its start or its end) to pick it; then click a
+    // cell in line to move it there.
+    const clickCell = (k) => {
+      const at = pieces.findIndex((q, i) => ends[i] === k);
+      const from = pieces.findIndex((q) => q.k === k);
+      if (selected >= 0 && track(p, selected, k) && (at < 0 || at === selected)) {
+        ends[selected] = k;
+        selected = -1;
+      } else if (at >= 0) selected = at;
+      else selected = from >= 0 ? from : -1;
+      onChange();
+    };
+    // Right click: the piece at k goes back to its start.
+    const backCell = (k) => {
+      const at = pieces.findIndex((q, i) => ends[i] === k);
+      if (at >= 0) { ends[at] = pieces[at].k; selected = -1; onChange(); }
+    };
     if (!readonly && !result) {
       for (let k = 0; k < R * C; k++) {
         const hit = el('rect', { x: (k % C) * s, y: Math.floor(k / C) * s, width: s, height: s, fill: 'transparent' }, g);
         hit.style.cursor = 'pointer';
-        hit.addEventListener('click', () => {
-          // Click a piece (at its start or its end) to pick it; then click a cell in line to move it there.
-          const at = pieces.findIndex((q, i) => ends[i] === k);
-          const from = pieces.findIndex((q) => q.k === k);
-          if (selected >= 0 && track(p, selected, k) && (at < 0 || at === selected)) {
-            ends[selected] = k;
-            selected = -1;
-            onChange();
-            return;
-          }
-          if (at >= 0) selected = at;
-          else selected = from >= 0 ? from : -1;
-          onChange();
-        });
-        hit.addEventListener('contextmenu', (ev) => {
-          ev.preventDefault();
-          const at = pieces.findIndex((q, i) => ends[i] === k);
-          if (at >= 0) { ends[at] = pieces[at].k; selected = -1; onChange(); }
-        });
+        hit.addEventListener('click', () => clickCell(k));
+        hit.addEventListener('contextmenu', (ev) => { ev.preventDefault(); backCell(k); });
       }
     }
     return svg;

@@ -29,6 +29,7 @@
     });
     // True if all cells marked `want` can join, moving through cells
     // that pass `ok`, with the given neighbour steps.
+    const neighbours = (k, diag) => diag ? Binary.sideNeighbours(R, C, k).concat(Binary.cornerNeighbours(R, C, k)) : Binary.sideNeighbours(R, C, k);
     const joins = (want, ok, diag) => {
       const start = want.findIndex(Boolean);
       if (start < 0) return true;
@@ -36,13 +37,9 @@
       const stack = [start];
       seen[start] = 1;
       while (stack.length) {
-        const k = stack.pop(), r = Math.floor(k / C), c = k % C;
-        for (let dr = -1; dr <= 1; dr++) for (let dc = -1; dc <= 1; dc++) {
-          if ((!dr && !dc) || (!diag && dr && dc)) continue;
-          const a = r + dr, b = c + dc, j = a * C + b;
-          if (a < 0 || b < 0 || a >= R || b >= C || seen[j] || !ok(k, j)) continue;
-          seen[j] = 1;
-          stack.push(j);
+        const k = stack.pop();
+        for (const j of neighbours(k, diag)) {
+          if (!seen[j] && ok(k, j)) { seen[j] = 1; stack.push(j); }
         }
       }
       return want.every((w, k) => !w || seen[k]);

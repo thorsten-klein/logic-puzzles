@@ -8,6 +8,18 @@
 (() => {
   const { UNKNOWN, YES, NO } = Binary;
 
+  // Inner borders that meet at point (i, j): up, down, left, right.
+  function pointEdges(n, i, j, idx) {
+    const edge = (a, b) => idx.get(`${a},${b}`);
+    const inCol = j > 0 && j < n, inRow = i > 0 && i < n;
+    const es = [];
+    if (i > 0 && inCol) es.push(edge((i - 1) * n + j - 1, (i - 1) * n + j));
+    if (i < n && inCol) es.push(edge(i * n + j - 1, i * n + j));
+    if (j > 0 && inRow) es.push(edge((i - 1) * n + j - 1, i * n + j - 1));
+    if (j < n && inRow) es.push(edge((i - 1) * n + j, i * n + j));
+    return es;
+  }
+
   function prepare(p) {
     const { n } = p;
     p.edges = []; // [cellA, cellB, across?]
@@ -21,11 +33,7 @@
     for (let i = 0; i <= n; i++) for (let j = 0; j <= n; j++) {
       const fi = i === 0 || i === n, fj = j === 0 || j === n;
       if (fi && fj) continue;
-      const es = [];
-      if (i > 0 && j > 0 && j < n) es.push(idx.get(`${(i - 1) * n + j - 1},${(i - 1) * n + j}`));
-      if (i < n && j > 0 && j < n) es.push(idx.get(`${i * n + j - 1},${i * n + j}`));
-      if (j > 0 && i > 0 && i < n) es.push(idx.get(`${(i - 1) * n + j - 1},${i * n + j - 1}`));
-      if (j < n && i > 0 && i < n) es.push(idx.get(`${(i - 1) * n + j},${i * n + j}`));
+      const es = pointEdges(n, i, j, idx);
       p.points.push({ k: i * (n + 1) + j, es, frame: fi || fj ? 2 : 0 });
     }
     return p;
@@ -44,40 +52,45 @@
     });
     const at = Array.from({ length: n * n }, () => []);
     edges.forEach(([a, b], i) => { at[a].push([i, b]); at[b].push([i, a]); });
+    // Regions by sure open borders (NO). Each with its set of numbers.
+    function regions(s) {
+      const id = new Int32Array(n * n).fill(-1);
+      const seen = [];
+      for (let k = 0; k < n * n; k++) {
+        if (id[k] >= 0) continue;
+        const cells = [k];
+        id[k] = seen.length;
+        for (const cur of cells) for (const [e, o] of at[cur]) if (id[o] < 0 && s[e] === NO) { id[o] = seen.length; cells.push(o); }
+        seen.push({ cells, nums: new Set(cells.map((x) => num[x]).filter(Boolean)) });
+      }
+      return { id, seen };
+    }
+
     function check(s, done) {
       // A wall end inside the grid without a dot is a loose end.
       for (const { k, es, frame } of points) {
         if (frame || dot[k]) continue;
         if (es.every((e) => s[e] !== UNKNOWN) && es.filter((e) => s[e] === YES).length === 1) return false;
       }
-      // Regions by open borders (NO, or UNKNOWN when not done).
-      const id = new Int32Array(n * n).fill(-1);
-      const seen = [];
-      let g = 0;
-      for (let k = 0; k < n * n; k++) {
-        if (id[k] >= 0) continue;
-        const cells = [k];
-        id[k] = g;
-        for (const cur of cells) for (const [e, o] of at[cur]) if (id[o] < 0 && s[e] === NO) { id[o] = g; cells.push(o); }
-        const nums = new Set(cells.map((x) => num[x]).filter(Boolean));
-        if (nums.size > 1) return false;
-        seen.push({ cells, nums });
-        g++;
-      }
+      const { id, seen } = regions(s);
+      if (seen.some((r) => r.nums.size > 1)) return false;
       // A wall between two cells of one sure region is not allowed.
       for (let i = 0; i < edges.length; i++) if (s[i] === YES && id[edges[i][0]] === id[edges[i][1]]) return false;
-      if (done) {
-        const where = new Map();
-        for (let r = 0; r < seen.length; r++) {
-          if (!seen[r].nums.size) return false;
-          const v = [...seen[r].nums][0];
-          if (where.has(v)) return false;
-          where.set(v, r);
-        }
-      }
-      return true;
+      if (!done) return true;
+      // Every region has one number, each number one region.
+      const nums = seen.map((r) => [...r.nums][0]);
+      return nums.every(Boolean) && new Set(nums).size === nums.length;
     }
     return { N: edges.length, cons, check };
+  }
+
+  // Two numbers per region to start. Returns the cells of each region.
+  function twoNumbers(p, room) {
+    const rooms = [];
+    room.forEach((g, k) => { rooms[g] ??= []; rooms[g].push(k); });
+    const labels = PuzzleShell.shuffle(rooms.map((_, i) => i + 1));
+    rooms.forEach((cells, g) => { for (const k of PuzzleShell.shuffle(cells.slice()).slice(0, 2)) p.num[k] = labels[g]; });
+    return rooms;
   }
 
   function generate(n) {
@@ -89,27 +102,11 @@
       const p = prepare({ n, num: new Uint8Array(N), dot: new Uint8Array((n + 1) * (n + 1)) });
       const sol = Uint8Array.from(p.edges, ([a, b]) => (room[a] !== room[b] ? YES : NO));
       for (const { k, es, frame } of p.points) if (frame + es.filter((e) => sol[e] === YES).length >= 3) p.dot[k] = 1;
-      // Two numbers per region to start.
-      const rooms = [];
-      room.forEach((g, k) => { rooms[g] ??= []; rooms[g].push(k); });
-      const labels = PuzzleShell.shuffle(rooms.map((_, i) => i + 1));
-      rooms.forEach((cells, g) => { for (const k of PuzzleShell.shuffle(cells.slice()).slice(0, 2)) p.num[k] = labels[g]; });
-      const unique = () => {
-        const m = model(p);
-        const t = Binary.logicSolve(m);
-        if (t && !t.includes(UNKNOWN)) return m.check(t, true) !== false;
-        if (!t) return false;
-        const r = Binary.solve(m, 2, 3000, t);
-        return r.solutions.length === 1 && !r.capped;
-      };
+      const rooms = twoNumbers(p, room);
+      const unique = () => Binary.isUnique(model(p));
       if (!unique()) continue;
-      for (const k of PuzzleShell.shuffle([...new Array(N).keys()])) {
-        if (!p.num[k]) continue;
-        if (rooms[room[k]].filter((x) => p.num[x]).length < 2) continue;
-        const keep = p.num[k];
-        p.num[k] = 0;
-        if (!unique()) p.num[k] = keep;
-      }
+      // Each region keeps at least one number.
+      PuzzleShell.dropGivens(p.num, unique, { keep: (k) => rooms[room[k]].filter((x) => p.num[x]).length < 2 });
       p.solution = sol;
       return p;
     }

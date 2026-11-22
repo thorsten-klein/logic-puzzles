@@ -12,29 +12,32 @@ module.exports = {
         if (Date.now() > stop) break;
         const p = tryIt(() => Generator.generate(size));
         if (!p) continue;
-        const cells = [...new Array(p.rows * p.cols).keys()].filter((k) => !p.layout[k]);
-        // Hint walk: fill the first forced cell until none is left.
-        let filled = new Map(Object.entries(p.given).map(([k, v]) => [Number(k), v]));
-        for (let i = 0; i < 300; i++) {
-          const hs = Hint.findAll(p, filled);
-          if (!hs?.length) break;
-          const h = hs[0];
-          if (h.idx === undefined || !h.digit) break;
-          filled.set(h.idx, h.digit);
-        }
+        hintWalk(p);
         // Random boards: right, half right, and with mistakes.
-        for (let t = 0; t < 60 && Date.now() < stop; t++) {
-          filled = new Map();
-          for (const k of cells) {
-            const x = Math.random();
-            if (x < [0.3, 0.6, 0.15][t % 3]) filled.set(k, p.solution[k]);
-            else if (x > 0.92) filled.set(k, 1 + Math.floor(Math.random() * 9));
-          }
-          tryIt(() => Hint.findAll(p, filled));
-        }
+        for (let t = 0; t < 60 && Date.now() < stop; t++) tryIt(() => Hint.findAll(p, randomFill(p, [0.3, 0.6, 0.15][t % 3])));
         tryIt(() => Solver.solve(p, 2));
         tryIt(() => Solver.solve(p, 2, { maxNodes: 3 }));
         tryIt(() => cfg.decode(cfg.encode(p)));
+      }
+      // Hint walk: fill the first forced cell until none is left.
+      function hintWalk(p) { // NOSONAR: evaluated in browser context
+        const filled = new Map(Object.entries(p.given).map(([k, v]) => [Number(k), v]));
+        for (let i = 0; i < 300; i++) {
+          const h = Hint.findAll(p, filled)?.[0];
+          if (h?.idx === undefined || !h.digit) break;
+          filled.set(h.idx, h.digit);
+        }
+      }
+      // White cells: right with chance `right`, a few random digits.
+      function randomFill(p, right) { // NOSONAR: evaluated in browser context
+        const filled = new Map();
+        for (let k = 0; k < p.rows * p.cols; k++) {
+          if (p.layout[k]) continue;
+          const x = Math.random();
+          if (x < right) filled.set(k, p.solution[k]);
+          else if (x > 0.92) filled.set(k, 1 + Math.floor(Math.random() * 9));
+        }
+        return filled;
       }
       // Broken game data.
       for (const d of [null, {}, { r: 2, c: 2 }, { r: 4, c: 4, g: 'x' }, { r: 3, c: 3, g: '#########', gv: 'x' },

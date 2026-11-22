@@ -32,6 +32,18 @@
     const g = Loop.grid(R, C);
     const lines = wall.map((w, k) => (w && num[k] >= 0 ? lineEdges(R, C, k, dir[k]) : null));
     const rays = wall.map((w, k) => (w === 'b' || w === 'w' ? rayEdges(R, C, k) : null));
+    // The number of wall k counts the loop segments in its arrow's direction.
+    function countRule(s, k, push) {
+      const v = num[k];
+      const yes = lines[k].filter((e) => s[e] === LINE).length;
+      const open = lines[k].filter((e) => s[e] === UNKNOWN);
+      if (yes > v || yes + open.length < v) return false;
+      if (!open.length) return 0;
+      if (yes === v) return push(open, CROSS, `This ${v} already has all its loop segments in the arrow's direction.`, k);
+      if (yes + open.length === v) return push(open, LINE, `This ${v} needs every open segment in the arrow's direction.`, k);
+      return 0;
+    }
+
     function rule(s, log) {
       const push = (edges, v, reason, at) => {
         for (const e of edges) s[e] = v;
@@ -39,26 +51,52 @@
         return edges.length;
       };
       for (let k = 0; k < R * C; k++) {
-        if (!wall[k]) continue;
-        const own = g.cellEdges[k].filter((e) => e >= 0 && s[e] !== CROSS);
-        if (own.some((e) => s[e] === LINE)) return false;
-        if (own.length) return push(own, CROSS, 'The loop never enters a wall cell.', k);
-        if (lines[k]) {
-          const v = num[k];
-          const yes = lines[k].filter((e) => s[e] === LINE).length;
-          const open = lines[k].filter((e) => s[e] === UNKNOWN);
-          if (yes > v || yes + open.length < v) return false;
-          if (open.length && yes === v) return push(open, CROSS, `This ${v} already has all its loop segments in the arrow's direction.`, k);
-          if (open.length && yes + open.length === v) return push(open, LINE, `This ${v} needs every open segment in the arrow's direction.`, k);
-        }
-        if (rays[k]?.every((e) => s[e] !== UNKNOWN)) {
-          const inside = rays[k].filter((e) => s[e] === LINE).length % 2 === 1;
-          if (inside !== (wall[k] === 'w')) return false;
-        }
+        const r = wall[k] ? wallRule(s, k, push) : 0;
+        if (r !== 0) return r;
       }
       return 0;
     }
+
+    // Wall k: the loop stays out, its number fits, and its colour tells
+    // if it is inside (white) or outside (black) the loop.
+    function wallRule(s, k, push) {
+      const own = g.cellEdges[k].filter((e) => e >= 0 && s[e] !== CROSS);
+      if (own.some((e) => s[e] === LINE)) return false;
+      if (own.length) return push(own, CROSS, 'The loop never enters a wall cell.', k);
+      const r = lines[k] ? countRule(s, k, push) : 0;
+      if (r !== 0) return r;
+      if (!rays[k]?.every((e) => s[e] !== UNKNOWN)) return 0;
+      const inside = rays[k].filter((e) => s[e] === LINE).length % 2 === 1;
+      return inside === (wall[k] === 'w') ? 0 : false;
+    }
     return { g, must: null, rule };
+  }
+
+  // Drops numbers, then the colour of walls (grey), while logic still
+  // solves it. Grey walls without a number tell nothing more: dropped too.
+  function thin(p, solved, until) {
+    const { wall, num } = p;
+    // Drops the number of wall k (if any). False if it must stay.
+    const dropNumber = (k) => {
+      if (num[k] < 0) return true;
+      const keep = num[k];
+      num[k] = -1;
+      if (solved()) return true;
+      num[k] = keep;
+      return false;
+    };
+    for (const k of PuzzleShell.shuffle([...wall.keys()])) {
+      if (!wall[k] || !dropNumber(k)) continue;
+      const keepW = wall[k];
+      wall[k] = 'g';
+      if (!solved()) wall[k] = keepW;
+      if (Date.now() > until) break;
+    }
+    for (let k = 0; k < wall.length; k++) {
+      if (wall[k] !== 'g' || num[k] >= 0) continue;
+      wall[k] = '';
+      if (!solved()) wall[k] = 'g';
+    }
   }
 
   function generate(n) {
@@ -80,24 +118,7 @@
       const p = { R: n, C: n, wall, num, dir };
       const solved = () => Loop.solvedBy(Loop.logicSolve(model(p)));
       if (!solved()) continue;
-      for (const k of PuzzleShell.shuffle([...new Array(N).keys()])) {
-        if (!wall[k]) continue;
-        if (num[k] >= 0) {
-          const keep = num[k];
-          num[k] = -1;
-          if (!solved()) { num[k] = keep; continue; }
-        }
-        const keepW = wall[k];
-        wall[k] = 'g';
-        if (!solved()) wall[k] = keepW;
-        if (Date.now() > deadline + 4000) break;
-      }
-      // Grey walls without a number tell nothing more: drop them.
-      for (let k = 0; k < N; k++) {
-        if (wall[k] !== 'g' || num[k] >= 0) continue;
-        wall[k] = '';
-        if (!solved()) wall[k] = 'g';
-      }
+      thin(p, solved, deadline + 4000);
       p.solution = loop;
       return p;
     }

@@ -119,13 +119,7 @@
       if (room.some((v) => v < 0)) continue;
       const sol = Uint8Array.from(on, (v) => (v ? YES : NO));
       const p = { R: n, C: n, room, clues: Int8Array.from(pieces, (cells) => cells.length) };
-      const unique = () => {
-        const t = Binary.logicSolve(model(p));
-        if (t && !t.includes(UNKNOWN)) return true;
-        if (!t) return false;
-        const r = Binary.solve(model(p), 2, 3000, t);
-        return r.solutions.length === 1 && !r.capped;
-      };
+      const unique = () => Binary.isUnique(model(p));
       if (!unique()) continue;
       for (const r of PuzzleShell.shuffle([...p.clues.keys()])) {
         const keep = p.clues[r];

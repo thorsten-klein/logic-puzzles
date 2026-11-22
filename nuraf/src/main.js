@@ -76,10 +76,7 @@
       }
       if (!ok) continue;
       const p = { R, C, clues };
-      const t = Binary.logicSolve(model(p));
-      let unique = t && !t.includes(UNKNOWN);
-      if (!unique && t) { const r = Binary.solve(model(p), 2, 3000, t); unique = r.solutions.length === 1 && !r.capped; }
-      if (!unique) continue;
+      if (!Binary.isUnique(model(p))) continue;
       p.solution = fill;
       return p;
     }

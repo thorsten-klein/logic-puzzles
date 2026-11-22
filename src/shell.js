@@ -673,22 +673,44 @@ const PuzzleShell = (() => {
     }
 
     // --- init: settings, then URL game, then saved game ---
-    const settings = store.get(SETTINGS_KEY);
-    if (settings && Number.isInteger(settings.size) &&
-        settings.size >= cfg.size.min && settings.size <= cfg.size.max) st.size = settings.size;
-    if (settings?.opts) {
-      for (const o of cfg.options || []) if (typeof settings.opts[o.id] === 'boolean') st.opts[o.id] = settings.opts[o.id];
-    }
-    for (const o of cfg.options || []) $(`opt-${o.id}`).checked = st.opts[o.id];
-    refreshStepper();
-
+    loadSettings();
     window.__puzzleTest = { st, cfg, encodeId, decodeId };
+    boot();
+
+    // Board size and options from the last visit.
+    function loadSettings() {
+      const settings = store.get(SETTINGS_KEY);
+      const size = settings?.size;
+      if (Number.isInteger(size) && size >= cfg.size.min && size <= cfg.size.max) st.size = size;
+      for (const o of cfg.options || []) {
+        if (typeof settings?.opts?.[o.id] === 'boolean') st.opts[o.id] = settings.opts[o.id];
+        $(`opt-${o.id}`).checked = st.opts[o.id];
+      }
+      refreshStepper();
+    }
+
+    // First screen: a random board (?start=new), a shared link, the
+    // saved game, or the setup screen.
+    function boot() {
+      const here = new URL(location.href);
+      if (here.searchParams.get('start') === 'new') {
+        here.searchParams.delete('start');
+        window.history.replaceState({}, '', here.pathname + here.search);
+        startRandom();
+        return;
+      }
+      const urlId = new URLSearchParams(location.search).get('game-id');
+      if (urlId && openLink(urlId)) return;
+      const saved = store.get(GAME_KEY);
+      if (saved?.id) {
+        try { startGame(decodeId(saved.id), saved.s); } catch { store.del(GAME_KEY); }
+      }
+      if (!st.puzzle) showExample('menu-example');
+    }
+
     // "Play random puzzle" on the main page (?start=new): a new board at
     // the default size, without the setup screen.
-    const here = new URL(location.href);
-    if (here.searchParams.get('start') === 'new') {
-      here.searchParams.delete('start');
-      window.history.replaceState({}, '', here.pathname + here.search);
+    function startRandom() {
       $('menu-screen').hidden = true;
       setTimeout(() => {
         let puzzle = null;
@@ -700,23 +722,23 @@ const PuzzleShell = (() => {
         $('menu-status').textContent = 'Could not generate a puzzle. Try again.';
         showExample('menu-example');
       }, 30);
-      return;
     }
-    const urlId = new URLSearchParams(location.search).get('game-id');
-    if (urlId) {
-      // Open the shared board once. Then drop the ID from the address,
-      // so a refresh loads the saved progress, not the link again.
-      try { const { puzzle, s } = readId(urlId); startGame(puzzle, s); clearUrl(); return; } catch (e) {
+
+    // Open the shared board once. Then drop the ID from the address,
+    // so a refresh loads the saved progress, not the link again.
+    // Returns false if the link is broken.
+    function openLink(urlId) {
+      try {
+        const { puzzle, s } = readId(urlId);
+        startGame(puzzle, s);
+        clearUrl();
+        return true;
+      } catch (e) {
         $('menu-status').textContent = 'Shared link is invalid: ' + e.message;
         clearUrl();
+        return false;
       }
     }
-    const saved = store.get(GAME_KEY);
-    if (saved?.id) {
-      try { startGame(decodeId(saved.id), saved.s); } catch { store.del(GAME_KEY); }
-    }
-    if (!st.puzzle) showExample('menu-example');
-
   }
 
   // --- small helpers shared by games ---
@@ -891,40 +913,89 @@ const PuzzleShell = (() => {
   // Returns region ids, or null if two groups' paths cross.
   // `avoid(k)` marks cells a path may not cross (except its own ends).
   function growRegions(R, C, groups, avoid = () => false) {
-    const N = R * C;
-    const region = new Int32Array(N).fill(-1);
+    const region = new Int32Array(R * C).fill(-1);
     for (let id = 0; id < groups.length; id++) {
-      const group = groups[id];
-      region[group[0]] = id;
-      for (const j of group.slice(1)) {
-        let r = Math.floor(group[0] / C), c = group[0] % C;
-        const tr = Math.floor(j / C), tc = j % C;
-        while (r !== tr || c !== tc) {
-          if (c !== tc && (r === tr || Math.random() < 0.5)) c += Math.sign(tc - c);
-          else r += Math.sign(tr - r);
-          const cell = r * C + c;
-          if (region[cell] >= 0 && region[cell] !== id) return null;
-          if (avoid(cell) && !group.includes(cell)) return null;
-          region[cell] = id;
-        }
+      if (!joinGroup(region, C, groups[id], id, avoid)) return null;
+    }
+    fillRest(R, C, region);
+    return region;
+  }
+
+  // Joins the cells of a group to its first cell by random L-shaped
+  // paths. Returns false if a path crosses another region or an avoided cell.
+  function joinGroup(region, C, group, id, avoid) {
+    region[group[0]] = id;
+    for (const j of group.slice(1)) {
+      for (const cell of pathCells(C, group[0], j)) {
+        if (region[cell] >= 0 && region[cell] !== id) return false;
+        if (avoid(cell) && !group.includes(cell)) return false;
+        region[cell] = id;
       }
     }
+    return true;
+  }
+
+  // Cells of a random L-shaped path from cell a to cell b (without a).
+  // Yields one cell at a time, so the random steps stay in order.
+  function* pathCells(C, a, b) {
+    let r = Math.floor(a / C), c = a % C;
+    const tr = Math.floor(b / C), tc = b % C;
+    while (r !== tr || c !== tc) {
+      if (c !== tc && (r === tr || Math.random() < 0.5)) c += Math.sign(tc - c);
+      else r += Math.sign(tr - r);
+      yield r * C + c;
+    }
+  }
+
+  // Grows the regions at random until every cell has one.
+  function fillRest(R, C, region) {
     let open = region.filter((x) => x < 0).length;
     while (open > 0) {
       const front = [];
-      for (let k = 0; k < N; k++) {
-        if (region[k] < 0) continue;
-        const r = Math.floor(k / C), c = k % C;
-        for (const [dr, dc] of [[-1, 0], [1, 0], [0, -1], [0, 1]]) {
-          const nr = r + dr, nc = c + dc;
-          if (nr >= 0 && nc >= 0 && nr < R && nc < C && region[nr * C + nc] < 0) front.push([nr * C + nc, region[k]]);
-        }
+      for (let k = 0; k < R * C; k++) {
+        if (region[k] >= 0) front.push(...openSides(R, C, region, k).map((j) => [j, region[k]]));
       }
       const [cell, g] = front[Math.floor(Math.random() * front.length)];
       region[cell] = g;
       open--;
     }
-    return region;
+  }
+
+  // Free cells next to k (up, down, left, right).
+  function openSides(R, C, region, k) {
+    const r = Math.floor(k / C), c = k % C, out = [];
+    for (const [dr, dc] of [[-1, 0], [1, 0], [0, -1], [0, 1]]) {
+      const nr = r + dr, nc = c + dc;
+      if (nr >= 0 && nc >= 0 && nr < R && nc < C && region[nr * C + nc] < 0) out.push(nr * C + nc);
+    }
+    return out;
+  }
+
+  // Generator helper: while `solveAll()` finds a second answer, give the
+  // answer at one random cell where that answer differs. `skip(k)` marks
+  // cells that never get a given. Stops after `limit` tries or at `until`.
+  function addGivens(given, sol, solveAll, { skip = () => false, limit = sol.length, until = Infinity } = {}) {
+    for (let t = 0; t < limit && Date.now() < until; t++) {
+      const res = solveAll();
+      if (res.solutions.length === 1 && !res.capped) return;
+      const other = res.solutions.find((x) => x.some((v, k) => !skip(k) && v !== sol[k]));
+      const diff = [...sol.keys()].filter((k) => !skip(k) && !given[k] && other?.[k] !== sol[k]);
+      if (!diff.length) return;
+      const k = diff[Math.floor(Math.random() * diff.length)];
+      given[k] = sol[k];
+    }
+  }
+
+  // Generator helper: drops givens in random order while `unique()`
+  // holds. `keep(k)` marks givens that stay. Stops at the time `until`.
+  function dropGivens(given, unique, { keep = () => false, until = Infinity } = {}) {
+    for (const k of shuffle([...given.keys()])) {
+      if (!given[k] || keep(k)) continue;
+      const v = given[k];
+      given[k] = 0;
+      if (!unique()) given[k] = v;
+      if (Date.now() > until) return;
+    }
   }
 
   // Region tints for coloured region boards.
@@ -997,5 +1068,5 @@ const PuzzleShell = (() => {
     return Math.max(min, Math.min(max, Math.floor(avail / cols) - 2));
   }
 
-  return { start, prepare, plural, resultClass, shuffle, gridBoard, colName, cellName, fitCell, digitInput, regionBorders, growRegions, TINTS, arrowIcon, figure, shapeFigures };
+  return { start, prepare, plural, resultClass, shuffle, gridBoard, colName, cellName, fitCell, digitInput, regionBorders, growRegions, addGivens, dropGivens, TINTS, arrowIcon, figure, shapeFigures };
 })();
