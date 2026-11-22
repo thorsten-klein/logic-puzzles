@@ -25,7 +25,7 @@
       const r0 = Math.min(...q.map((x) => x[0])), c0 = Math.min(...q.map((x) => x[1]));
       keys.push(q.map(([a, b]) => `${a - r0},${b - c0}`).sort().join(' '));
     }
-    return keys.find((k) => keys.every((o) => k <= o));
+    return keys.find((k) => !keys.some((o) => o < k));
   }
 
   function target(C, k, d) {
