@@ -501,5 +501,5 @@ const Loop = (() => {
     return { dirs, legs: out, turn };
   }
 
-  return { UNKNOWN, LINE, CROSS, grid, randomTour, legs, settle, lookahead, solve, logicSolve, solvedBy, randomLoop, paths, complete, hints, render, startGame };
+  return { UNKNOWN, LINE, CROSS, grid, randomTour, legs, settle, firstChange, lookahead, solve, logicSolve, solvedBy, randomLoop, paths, complete, hints, render, startGame };
 })();

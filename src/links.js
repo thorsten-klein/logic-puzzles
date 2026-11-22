@@ -16,61 +16,85 @@ const Links = (() => {
   const failed = (r) => r === false || r < 0;
 
   // Degree rules per cell: end cells have one line, others 0 or 2.
+  // With a log it stops after the first change.
   function cellStep(m, s, log) {
-    const { g, label, fill } = m;
     let set = 0;
-    for (let k = 0; k < g.R * g.C; k++) {
-      const es = g.cellEdges[k].filter((e) => e >= 0);
-      const lines = es.filter((e) => s[e] === LINE).length;
-      const open = es.filter((e) => s[e] === UNKNOWN);
-      const isEnd = label[k] >= 0;
-      let v = 0, why = '';
-      if (isEnd) {
-        if (lines > 1 || (!lines && !open.length)) return -1;
-        if (!open.length) continue;
-        if (lines === 1) { v = CROSS; why = 'An end cell has exactly one line, and it has it.'; }
-        else if (open.length === 1) { v = LINE; why = 'An end cell needs one line, and only this side is open.'; }
-      } else {
-        if (lines > 2 || (lines === 1 && !open.length)) return -1;
-        if (fill && lines + open.length < 2) return -1;
-        if (!open.length) continue;
-        if (lines === 2) { v = CROSS; why = 'This cell already has two lines.'; }
-        else if (lines === 1 && open.length === 1) { v = LINE; why = 'The line must go on, and this is its only way out.'; }
-        else if (lines === 0 && open.length === 1) { v = CROSS; why = 'A line can not end here, and this cell has only one open side.'; }
-        else if (fill && lines + open.length === 2) { v = LINE; why = 'Every cell is used, and this cell has only these two sides open.'; }
-      }
-      if (!v) continue;
-      for (const e of open) s[e] = v;
-      set += open.length;
-      if (log) { log.push({ edges: open, v, reason: why, at: k }); return set; }
+    for (let k = 0; k < m.g.R * m.g.C; k++) {
+      const r = cellStepAt(m, s, k, log);
+      if (r < 0) return -1;
+      set += r;
+      if (log && r) return set;
     }
     return set;
   }
 
+  // cellStep for cell k. Returns -1, or the number of edges set.
+  function cellStepAt(m, s, k, log) {
+    const es = m.g.cellEdges[k].filter((e) => e >= 0);
+    const lines = es.filter((e) => s[e] === LINE).length;
+    const open = es.filter((e) => s[e] === UNKNOWN);
+    const f = m.label[k] >= 0 ? endCellRule(lines, open.length) : pathCellRule(lines, open.length, m.fill);
+    if (f === FAIL) return -1;
+    if (!f || !open.length) return 0;
+    for (const e of open) s[e] = f.v;
+    if (log) log.push({ edges: open, v: f.v, reason: f.why, at: k });
+    return open.length;
+  }
+
+  // Rule results: FAIL (broken), null (nothing forced), or { v, why }.
+  const FAIL = { fail: true };
+
+  // An end cell has exactly one line.
+  function endCellRule(lines, nOpen) {
+    if (lines > 1 || (!lines && !nOpen)) return FAIL;
+    if (!nOpen) return null;
+    if (lines === 1) return { v: CROSS, why: 'An end cell has exactly one line, and it has it.' };
+    if (nOpen === 1) return { v: LINE, why: 'An end cell needs one line, and only this side is open.' };
+    return null;
+  }
+
+  // Other cells have 0 or 2 lines (2 when every cell is used: `fill`).
+  function pathCellRule(lines, nOpen, fill) {
+    if (lines > 2 || (lines === 1 && !nOpen)) return FAIL;
+    if (fill && lines + nOpen < 2) return FAIL;
+    if (!nOpen) return null;
+    if (lines === 2) return { v: CROSS, why: 'This cell already has two lines.' };
+    if (lines === 1 && nOpen === 1) return { v: LINE, why: 'The line must go on, and this is its only way out.' };
+    if (lines === 0 && nOpen === 1) return { v: CROSS, why: 'A line can not end here, and this cell has only one open side.' };
+    if (fill && lines + nOpen === 2) return { v: LINE, why: 'Every cell is used, and this cell has only these two sides open.' };
+    return null;
+  }
+
   // Path pieces: cells joined by lines. For each piece its end labels.
   function pieces(m, s) {
-    const { g, label } = m;
-    const N = g.R * g.C;
+    const N = m.g.R * m.g.C;
     const id = new Int32Array(N).fill(-1);
     const list = [];
     for (let k = 0; k < N; k++) {
       if (id[k] >= 0) continue;
-      const cells = [k];
-      id[k] = list.length;
-      let edges = 0;
-      for (const cur of cells) {
-        for (const e of g.cellEdges[cur]) {
-          if (e < 0 || s[e] !== LINE) continue;
-          edges++;
-          const [a, b] = g.ends[e];
-          const j = a === cur ? b : a;
-          if (id[j] < 0) { id[j] = list.length; cells.push(j); }
-        }
-      }
-      const ends = cells.filter((x) => label[x] >= 0);
+      const { cells, edges } = growPiece(m.g, s, id, k, list.length);
+      const ends = cells.filter((x) => m.label[x] >= 0);
       list.push({ cells, ends, loop: edges / 2 >= cells.length });
     }
     return { id, list };
+  }
+
+  // Cells joined to k by lines get piece number `n`. Returns the cells
+  // and the line ends counted (each line twice).
+  function growPiece(g, s, id, k, n) {
+    const cells = [k];
+    id[k] = n;
+    let edges = 0;
+    for (const cur of cells) {
+      for (const e of g.cellEdges[cur]) {
+        if (e < 0 || s[e] !== LINE) continue;
+        edges++;
+        const [a, b] = g.ends[e];
+        const j = a === cur ? b : a;
+        if (id[j] < 0) { id[j] = n; cells.push(j); }
+      }
+    }
+    return { cells, edges };
   }
 
   // Labels of the ends of a piece must allow one pairing.
@@ -84,44 +108,36 @@ const Links = (() => {
   function pathStep(m, s, log) {
     const { g } = m;
     const { id, list } = pieces(m, s);
-    for (const pc of list) {
-      if (pc.loop) return -1;
-      if (!labelsFit(m, pc.ends)) return -1;
-    }
+    if (list.some((pc) => pc.loop || !labelsFit(m, pc.ends))) return -1;
     for (let e = 0; e < g.E; e++) {
       if (s[e] !== UNKNOWN) continue;
-      const [a, b] = g.ends[e];
-      let why = '';
-      if (id[a] === id[b]) why = 'A line here would close a loop. Lines run from end to end.';
-      else {
-        const ends = [...list[id[a]].ends, ...list[id[b]].ends];
-        if (!labelsFit(m, ends)) why = ends.length > 2 ? 'A line here would join more than two ends.' : 'A line here would join two different numbers.';
-        // A finished path (two ends) can not grow.
-        else if (list[id[a]].ends.length === 2 && list[id[a]].cells.length > 1) why = 'That path is already finished.';
-        else if (list[id[b]].ends.length === 2 && list[id[b]].cells.length > 1) why = 'That path is already finished.';
-      }
+      const why = blockReason(m, list, id, g.ends[e]);
       if (!why) continue;
       s[e] = CROSS;
-      if (log) { log.push({ edges: [e], v: CROSS, reason: why }); return 1; }
+      if (log) log.push({ edges: [e], v: CROSS, reason: why });
       return 1;
     }
     return 0;
   }
 
+  // Why a line between cells a and b is not possible, or ''.
+  function blockReason(m, list, id, [a, b]) {
+    if (id[a] === id[b]) return 'A line here would close a loop. Lines run from end to end.';
+    const ends = [...list[id[a]].ends, ...list[id[b]].ends];
+    if (!labelsFit(m, ends)) return ends.length > 2 ? 'A line here would join more than two ends.' : 'A line here would join two different numbers.';
+    // A finished path (two ends) can not grow.
+    const finished = (pc) => pc.ends.length === 2 && pc.cells.length > 1;
+    if (finished(list[id[a]]) || finished(list[id[b]])) return 'That path is already finished.';
+    return '';
+  }
+
+  // Steps in order: cells, the game's own rule, paths (see Loop.settle).
   function settle(m, s, log) {
+    const steps = [(t, l) => cellStep(m, t, l), m.rule && ((t, l) => m.rule(t, l)), (t, l) => pathStep(m, t, l)].filter(Boolean);
     for (let guard = 0; guard < 10000; guard++) {
-      let r = cellStep(m, s, log);
-      if (failed(r)) return false;
-      if (r) { if (log) { return true; } continue; }
-      if (m.rule) {
-        r = m.rule(s, log);
-        if (failed(r)) return false;
-        if (r) { if (log) { return true; } continue; }
-      }
-      r = pathStep(m, s, log);
-      if (failed(r)) return false;
-      if (r) { if (log) { return true; } continue; }
-      return true;
+      const r = Loop.firstChange(steps, s, log);
+      if (r < 0) return false;
+      if (!r || log) return true;
     }
     return true; // safety limit reached
   }
