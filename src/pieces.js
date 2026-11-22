@@ -79,6 +79,11 @@ const Pieces = (() => {
       if (!st.opts[i].length) return FAIL;
       if (!st.chosen[i] && st.opts[i].length === 1) return { i, cells: st.opts[i][0], why: 'one' };
     }
+    return onlyCover(p, st);
+  }
+
+  // A cell that only one clue can cover: that clue's piece covers it.
+  function onlyCover(p, st) {
     const N = p.R * p.C;
     const who = Array.from({ length: N }, () => new Set());
     st.opts.forEach((list, i) => list.forEach((cells) => { for (const j of cells) who[j].add(i); }));
@@ -159,14 +164,18 @@ const Pieces = (() => {
     const cnt = new Int32Array(p.R * p.C);
     for (const cells of pieces) for (const k of cells) cnt[k]++;
     if (cnt.some((x) => x > 1 || (x === 0 && !cfg.partial))) return false;
-    for (const cells of pieces) {
-      const cl = cells.filter((k) => p.clues[k]);
-      if (cl.length !== 1) return false;
-      if (cfg.shapes ? !cfg.shapes(p, cl[0]).some((sh) => key(sh) === key(cells)) : cells.length !== cfg.sizeOf(p, cl[0])) return false;
-      if (cfg.fits && !cfg.fits(p, cl[0], cells)) return false;
-      if (!connected(p, cells)) return false;
-    }
+    if (!pieces.every((cells) => pieceOk(cfg, p, cells))) return false;
     return !cfg.final || cfg.final(p, pieces);
+  }
+
+  // One clue per piece, the right shape or size, connected.
+  function pieceOk(cfg, p, cells) {
+    const cl = cells.filter((k) => p.clues[k]);
+    if (cl.length !== 1) return false;
+    const shapeOk = cfg.shapes ? cfg.shapes(p, cl[0]).some((sh) => key(sh) === key(cells)) : cells.length === cfg.sizeOf(p, cl[0]);
+    if (!shapeOk) return false;
+    if (cfg.fits && !cfg.fits(p, cl[0], cells)) return false;
+    return connected(p, cells);
   }
 
   function connected(p, cells) {
@@ -273,40 +282,52 @@ const Pieces = (() => {
   function generate(cfg, n) {
     const deadline = Date.now() + 8000;
     while (Date.now() < deadline) {
-      const R = n, C = n;
-      const pieces = cfg.split(R, C);
-      if (!pieces) continue;
-      const p = { R, C, clues: new Int8Array(R * C), partial: !!cfg.partial };
-      for (const cells of pieces) {
-        const [k, code] = cfg.clueFor(p, cells, pieces);
-        p.clues[k] = code;
-      }
-      if (cfg.prepare) cfg.prepare(p, pieces);
-      if (cfg.final && !cfg.final(p, pieces)) continue;
-      let res = count(cfg, p, 2, 20000);
-      // Another answer: move a clue inside its true piece to a cell the
-      // wrong piece does not cover. The wrong piece then loses its clue.
-      const truth = new Set(pieces.map(key));
-      for (let tries = 0; res.count > 1 && !res.capped && tries < 300 && Date.now() < deadline; tries++) {
-        const other = res.all.find((sol) => sol.some((c) => !truth.has(key(c))));
-        const moves = [];
-        for (const wrong of other.filter((c) => !truth.has(key(c)))) {
-          for (const k of wrong.filter((j) => p.clues[j])) {
-            const mine = pieces.find((c) => c.includes(k));
-            for (const j of mine) if (!wrong.includes(j) && !p.clues[j]) moves.push([k, j]);
-          }
-        }
-        if (!moves.length) break;
-        const [from, to] = moves[Math.floor(Math.random() * moves.length)];
-        if (cfg.moveClue) cfg.moveClue(p, from, to);
-        else { p.clues[to] = p.clues[from]; p.clues[from] = 0; }
-        res = count(cfg, p, 2, 20000);
-      }
-      if (res.count !== 1 || res.capped) continue;
-      p.solution = res.first;
-      return p;
+      const p = generateOnce(cfg, n, deadline);
+      if (p) return p;
     }
     return null;
+  }
+
+  // One try: pieces, clues, then clue moves until the answer is unique.
+  function generateOnce(cfg, n, deadline) {
+    const R = n, C = n;
+    const pieces = cfg.split(R, C);
+    if (!pieces) return null;
+    const p = { R, C, clues: new Int8Array(R * C), partial: !!cfg.partial };
+    for (const cells of pieces) {
+      const [k, code] = cfg.clueFor(p, cells, pieces);
+      p.clues[k] = code;
+    }
+    if (cfg.prepare) cfg.prepare(p, pieces);
+    if (cfg.final && !cfg.final(p, pieces)) return null;
+    let res = count(cfg, p, 2, 20000);
+    // Another answer: move a clue inside its true piece to a cell the
+    // wrong piece does not cover. The wrong piece then loses its clue.
+    for (let tries = 0; res.count > 1 && !res.capped && tries < 300 && Date.now() < deadline; tries++) {
+      const moves = clueMoves(p, pieces, res.all);
+      if (!moves.length) break;
+      const [from, to] = moves[Math.floor(Math.random() * moves.length)];
+      if (cfg.moveClue) cfg.moveClue(p, from, to);
+      else { p.clues[to] = p.clues[from]; p.clues[from] = 0; }
+      res = count(cfg, p, 2, 20000);
+    }
+    if (res.count !== 1 || res.capped) return null;
+    p.solution = res.first;
+    return p;
+  }
+
+  // Clue moves [from, to] that rule out a wrong piece of another answer.
+  function clueMoves(p, pieces, answers) {
+    const truth = new Set(pieces.map(key));
+    const other = answers.find((sol) => sol.some((c) => !truth.has(key(c))));
+    const moves = [];
+    for (const wrong of other.filter((c) => !truth.has(key(c)))) {
+      for (const k of wrong.filter((j) => p.clues[j])) {
+        const mine = pieces.find((c) => c.includes(k));
+        for (const j of mine) if (!wrong.includes(j) && !p.clues[j]) moves.push([k, j]);
+      }
+    }
+    return moves;
   }
 
   function startGame(cfg) {

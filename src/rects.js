@@ -27,15 +27,19 @@ const Rects = (() => {
 
   // Every rectangle the clue at k may own (no other clue inside).
   function options(cfg, p, k) {
-    const { R, C, clues } = p;
-    const r0 = Math.floor(k / C), c0 = k % C, out = [];
+    const { C, clues } = p;
+    return rectsAround(p.R, C, Math.floor(k / C), k % C).filter(([r1, c1, r2, c2]) => {
+      if (p.maxArea && (r2 - r1 + 1) * (c2 - c1 + 1) > p.maxArea) return false;
+      const rect = [r1, c1, r2, c2];
+      return cfg.fits(p, k, rect) && cellsOf(rect, C).every((j) => j === k || !clues[j]);
+    });
+  }
+
+  // Every rectangle [r1, c1, r2, c2] that covers cell (r0, c0).
+  function rectsAround(R, C, r0, c0) {
+    const out = [];
     for (let r1 = 0; r1 <= r0; r1++) for (let r2 = r0; r2 < R; r2++) {
-      for (let c1 = 0; c1 <= c0; c1++) for (let c2 = c0; c2 < C; c2++) {
-        const rect = [r1, c1, r2, c2];
-        if (p.maxArea && (r2 - r1 + 1) * (c2 - c1 + 1) > p.maxArea) continue;
-        if (!cfg.fits(p, k, rect)) continue;
-        if (cellsOf(rect, C).every((j) => j === k || !clues[j])) out.push(rect);
-      }
+      for (let c1 = 0; c1 <= c0; c1++) for (let c2 = c0; c2 < C; c2++) out.push([r1, c1, r2, c2]);
     }
     return out;
   }
@@ -62,6 +66,11 @@ const Rects = (() => {
       if (!st.opts[i].length) return FAIL;
       if (!st.chosen[i] && st.opts[i].length === 1) return { i, rect: st.opts[i][0], why: 'one' };
     }
+    return onlyCover(p, st);
+  }
+
+  // A cell that only one clue can cover: that clue's rectangle covers it.
+  function onlyCover(p, st) {
     const N = p.R * p.C;
     const who = Array.from({ length: N }, () => new Set());
     st.opts.forEach((list, i) => list.forEach((rect) => { for (const j of cellsOf(rect, p.C)) who[j].add(i); }));
@@ -256,50 +265,67 @@ const Rects = (() => {
   function generate(cfg, n) {
     const deadline = Date.now() + 8000;
     while (Date.now() < deadline) {
-      const R = n, C = n;
-      const rects = cfg.split(R, C);
-      if (!rects) continue;
-      const p = { R, C, clues: new Int8Array(R * C), maxArea: cfg.maxArea };
-      if (cfg.prepare?.(p, rects) === false) continue;
-      if (cfg.final && !cfg.final(p, rects)) continue;
-      let ok = true;
-      for (const rect of rects) {
-        const res = cfg.clueFor(p, rect, cellsOf(rect, C));
-        if (!res) { ok = false; break; }
-        p.clues[res[0]] = res[1];
-      }
-      if (!ok) continue;
-      let res = count(cfg, p, 2, 20000);
-      // Optional: let the game change clues to rule out other answers.
-      for (let tries = 0; cfg.improve && res.count > 1 && !res.capped && tries < 40; tries++) {
-        if (!cfg.improve(p, rects, res.all)) break;
-        res = count(cfg, p, 2, 20000);
-      }
-      // Optional: move a clue inside its true rectangle to a cell the
-      // wrong rectangle does not cover (clue codes that do not depend
-      // on the position).
-      for (let tries = 0; cfg.movable && res.count > 1 && !res.capped && tries < 200 && Date.now() < deadline; tries++) {
-        const truth = new Set(rects.map(key));
-        const other = res.all.find((sol) => sol.some((r) => !truth.has(key(r))));
-        const moves = [];
-        for (const wrong of other.filter((r) => !truth.has(key(r)))) {
-          const wc = cellsOf(wrong, C);
-          for (const k of wc.filter((j) => p.clues[j])) {
-            const mine = rects.find((r) => cellsOf(r, C).includes(k));
-            for (const j of cellsOf(mine, C)) if (!wc.includes(j) && !p.clues[j]) moves.push([k, j]);
-          }
-        }
-        if (!moves.length) break;
-        const [from, to] = moves[Math.floor(Math.random() * moves.length)];
-        p.clues[to] = p.clues[from];
-        p.clues[from] = 0;
-        res = count(cfg, p, 2, 20000);
-      }
-      if (res.count !== 1 || res.capped) continue;
-      p.solution = res.first;
-      return p;
+      const p = generateOnce(cfg, n, deadline);
+      if (p) return p;
     }
     return null;
+  }
+
+  // One try: rectangles, clues, then fixes until the answer is unique.
+  function generateOnce(cfg, n, deadline) {
+    const R = n, C = n;
+    const rects = cfg.split(R, C);
+    if (!rects) return null;
+    const p = { R, C, clues: new Int8Array(R * C), maxArea: cfg.maxArea };
+    if (cfg.prepare?.(p, rects) === false) return null;
+    if (cfg.final && !cfg.final(p, rects)) return null;
+    for (const rect of rects) {
+      const res = cfg.clueFor(p, rect, cellsOf(rect, C));
+      if (!res) return null;
+      p.clues[res[0]] = res[1];
+    }
+    let res = count(cfg, p, 2, 20000);
+    const more = () => res.count > 1 && !res.capped;
+    if (cfg.improve) res = improveClues(cfg, p, rects, res);
+    // Optional: move a clue inside its true rectangle to a cell the
+    // wrong rectangle does not cover (clue codes that do not depend
+    // on the position).
+    for (let tries = 0; cfg.movable && more() && tries < 200 && Date.now() < deadline; tries++) {
+      const moves = clueMoves(p, rects, res.all);
+      if (!moves.length) break;
+      const [from, to] = moves[Math.floor(Math.random() * moves.length)];
+      p.clues[to] = p.clues[from];
+      p.clues[from] = 0;
+      res = count(cfg, p, 2, 20000);
+    }
+    if (res.count !== 1 || res.capped) return null;
+    p.solution = res.first;
+    return p;
+  }
+
+  // Optional: let the game change clues to rule out other answers.
+  function improveClues(cfg, p, rects, res) {
+    for (let tries = 0; res.count > 1 && !res.capped && tries < 40; tries++) {
+      if (!cfg.improve(p, rects, res.all)) break;
+      res = count(cfg, p, 2, 20000);
+    }
+    return res;
+  }
+
+  // Clue moves [from, to] that rule out a wrong rectangle of another answer.
+  function clueMoves(p, rects, answers) {
+    const { C } = p;
+    const truth = new Set(rects.map(key));
+    const other = answers.find((sol) => sol.some((r) => !truth.has(key(r))));
+    const moves = [];
+    for (const wrong of other.filter((r) => !truth.has(key(r)))) {
+      const wc = cellsOf(wrong, C);
+      for (const k of wc.filter((j) => p.clues[j])) {
+        const mine = rects.find((r) => cellsOf(r, C).includes(k));
+        for (const j of cellsOf(mine, C)) if (!wc.includes(j) && !p.clues[j]) moves.push([k, j]);
+      }
+    }
+    return moves;
   }
 
   // Full game page. cfg also has id, name, rules, size, solvedText.
