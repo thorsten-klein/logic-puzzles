@@ -124,13 +124,7 @@
       const clues = new Int16Array(N);
       for (const b of blocks) for (const k of b) clues[k] = b.length + 1;
       const p = { R, C, clues };
-      const unique = () => {
-        const t = Binary.logicSolve(model(p));
-        if (t && !t.includes(UNKNOWN)) return true;
-        if (!t) return false;
-        const r = Binary.solve(model(p), 2, 3000, t);
-        return r.solutions.length === 1 && !r.capped;
-      };
+      const unique = () => Binary.isUnique(model(p));
       if (!unique()) continue;
       const blockOf = new Int32Array(N).fill(-1);
       blocks.forEach((b, i) => b.forEach((k) => { blockOf[k] = i; }));

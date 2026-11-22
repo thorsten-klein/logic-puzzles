@@ -101,13 +101,7 @@
       const clues = new Int8Array(count);
       sol.forEach((v, k) => { if (v === YES) clues[room[k]]++; });
       const p = { R, C, room, clues };
-      const unique = () => {
-        const t = Binary.logicSolve(model(p));
-        if (t && !t.includes(UNKNOWN)) return true;
-        if (!t) return false;
-        const r = Binary.solve(model(p), 2, 3000, t);
-        return r.solutions.length === 1 && !r.capped;
-      };
+      const unique = () => Binary.isUnique(model(p));
       if (!unique()) continue;
       for (const g of PuzzleShell.shuffle([...new Array(count).keys()])) {
         const keep = clues[g];

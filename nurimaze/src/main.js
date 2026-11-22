@@ -101,13 +101,7 @@
       for (const k of way) if (!mark[k]) mark[k] = 3;
       for (const k of whites) if (!mark[k]) mark[k] = 4;
       const p = { R, C, room, mark };
-      const unique = () => {
-        const t = Binary.logicSolve(model(p));
-        if (t && !t.includes(UNKNOWN)) return true;
-        if (!t) return false;
-        const r = Binary.solve(model(p), 2, 3000, t);
-        return r.solutions.length === 1 && !r.capped;
-      };
+      const unique = () => Binary.isUnique(model(p));
       if (!unique()) continue;
       for (const k of PuzzleShell.shuffle([...new Array(N).keys()])) {
         if (mark[k] !== 3 && mark[k] !== 4) continue;

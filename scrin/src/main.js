@@ -119,13 +119,7 @@
         ring[cells[Math.floor(Math.random() * cells.length)]] = cells.length + 1;
       }
       const p = { R: n, C: n, ring };
-      const unique = () => {
-        const t = Binary.logicSolve(model(p));
-        if (t && !t.includes(UNKNOWN)) return true;
-        if (!t) return false;
-        const r = Binary.solve(model(p), 2, 3000, t);
-        return r.solutions.length === 1 && !r.capped;
-      };
+      const unique = () => Binary.isUnique(model(p));
       if (!unique()) continue;
       // Drop numbers (keep circles), then whole circles where possible.
       for (const k of PuzzleShell.shuffle([...new Array(N).keys()])) {

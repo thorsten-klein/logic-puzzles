@@ -122,10 +122,7 @@
       }
       if (clues[0] < 0) continue;
       const p = { R: n, C: n, clues };
-      const t = Binary.logicSolve(model(p));
-      let ok = t && !t.includes(UNKNOWN);
-      if (!ok && t) { const r = Binary.solve(model(p), 2, 3000, t); ok = r.solutions.length === 1 && !r.capped; }
-      if (!ok) continue;
+      if (!Binary.isUnique(model(p))) continue;
       p.solution = sol;
       return p;
     }

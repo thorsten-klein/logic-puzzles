@@ -119,10 +119,7 @@
       if (!ok) continue;
       const m = model(p);
       if (m.check(sol, true) === false) continue;
-      const t = Binary.logicSolve(m);
-      let unique = t && !t.includes(UNKNOWN);
-      if (!unique && t) { const r = Binary.solve(m, 2, 4000, t); unique = r.solutions.length === 1 && !r.capped; }
-      if (!unique) continue;
+      if (!Binary.isUnique(m, 4000)) continue;
       p.solution = sol;
       return p;
     }

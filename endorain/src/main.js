@@ -110,13 +110,7 @@
         p.clues[room[cells.at(-1)]]++;
         for (let i = 0; i + 1 < cells.length; i++) sol[key.get(cells[i] + ',' + cells[i + 1])] = YES;
       }
-      const unique = () => {
-        const t = Binary.logicSolve(model(p));
-        if (t && !t.includes(UNKNOWN)) return true;
-        if (!t) return false;
-        const r = Binary.solve(model(p), 2, 3000, t);
-        return r.solutions.length === 1 && !r.capped;
-      };
+      const unique = () => Binary.isUnique(model(p));
       if (!unique()) continue;
       for (const g of PuzzleShell.shuffle([...new Array(count).keys()])) {
         const keep = p.clues[g];

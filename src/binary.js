@@ -531,6 +531,16 @@ const Binary = (() => {
     }
   }
 
+  // Generator helper: true if the model has exactly one answer. Logic
+  // first, then a short search (at most maxNodes) from where it stops.
+  function isUnique(model, maxNodes = 3000) {
+    const t = logicSolve(model);
+    if (!t) return false;
+    if (!t.includes(UNKNOWN)) return true;
+    const r = solve(model, 2, maxNodes, t);
+    return r.solutions.length === 1 && !r.capped;
+  }
+
   // For share links: logic first (generated boards need no more), then a
   // search from where logic stops. Same result shape as solve().
   function solveFull(model, maxNodes = 200000) {
@@ -539,5 +549,5 @@ const Binary = (() => {
     return solve(model, 2, maxNodes, t || undefined);
   }
 
-  return { UNKNOWN, YES, NO, step, settle, lookahead, solve, solveFull, logicSolve, hints, startGame, thinClues, randomFill, openConnected, canConnect };
+  return { UNKNOWN, YES, NO, step, settle, lookahead, solve, solveFull, logicSolve, isUnique, hints, startGame, thinClues, randomFill, openConnected, canConnect };
 })();

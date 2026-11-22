@@ -63,13 +63,7 @@
         if (v !== YES) return;
         for (const k of p.cands[i]) { p.rowCnt[Math.floor(k / n)]++; p.colCnt[k % n]++; }
       });
-      const unique = () => {
-        const t = Binary.logicSolve(model(p));
-        if (t && !t.includes(UNKNOWN)) return true;
-        if (!t) return false;
-        const r = Binary.solve(model(p), 2, 3000, t);
-        return r.solutions.length === 1 && !r.capped;
-      };
+      const unique = () => Binary.isUnique(model(p));
       if (!unique()) continue;
       for (const [arr, i] of PuzzleShell.shuffle([...new Array(n).keys()].flatMap((i) => [[p.rowCnt, i], [p.colCnt, i]]))) {
         const keep = arr[i];

@@ -186,13 +186,7 @@
       const p = { R: n, C: n, clues };
       if (!model(p).check(sol, true)) continue;
       // Unique: by logic alone, else proven by the full solver.
-      const unique = () => {
-        const t = Binary.logicSolve(model(p));
-        if (t && !t.includes(UNKNOWN)) return true;
-        if (!t) return false;
-        const r = Binary.solve(model(p), 2, 4000, t);
-        return r.solutions.length === 1 && !r.capped;
-      };
+      const unique = () => Binary.isUnique(model(p), 4000);
       if (!unique()) continue;
       // Turn numbers into "?" while it stays unique.
       for (const k of PuzzleShell.shuffle([...new Array(N).keys()])) {

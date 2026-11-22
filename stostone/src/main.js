@@ -5,7 +5,7 @@
 // the bottom half of the grid. Built on the shared Binary game page.
 
 (() => {
-  const { UNKNOWN, YES, NO } = Binary;
+  const { YES, NO } = Binary;
 
   // Let stones fall; returns the shaded cells afterwards.
   function fall(R, C, shaded) {
@@ -132,13 +132,7 @@
       }
       const sol = Uint8Array.from(shaded, (v) => (v ? YES : NO));
       const p = { R, C, room, clues: Int8Array.from(placed, (cells) => cells.length) };
-      const unique = () => {
-        const t = Binary.logicSolve(model(p));
-        if (t && !t.includes(UNKNOWN)) return true;
-        if (!t) return false;
-        const r = Binary.solve(model(p), 2, 3000, t);
-        return r.solutions.length === 1 && !r.capped;
-      };
+      const unique = () => Binary.isUnique(model(p));
       if (!unique()) continue;
       for (const g of PuzzleShell.shuffle([...p.clues.keys()])) {
         const keep = p.clues[g];
