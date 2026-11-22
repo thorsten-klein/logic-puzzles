@@ -13,6 +13,24 @@
     return r >= 0 && c >= 0 && r < p.R && c < p.C ? r * p.C + c : -1;
   };
 
+  // White cells connect.
+  function whiteConnected(R, C, taken) {
+    const N = R * C;
+    const start = [...new Array(N).keys()].find((k) => !taken.has(k));
+    const seen = new Uint8Array(N);
+    seen[start] = 1;
+    const stack = [start];
+    let count = 1;
+    while (stack.length) {
+      const k = stack.pop(), r = Math.floor(k / C), c = k % C;
+      for (const [a, b] of [[r - 1, c], [r + 1, c], [r, c - 1], [r, c + 1]]) {
+        const j = a * C + b;
+        if (a >= 0 && b >= 0 && a < R && b < C && !seen[j] && !taken.has(j)) { seen[j] = 1; count++; stack.push(j); }
+      }
+    }
+    return count === N - taken.size;
+  }
+
   // Do the landing cells (one per block, -1 = not set) break a rule?
   function fine(p, land, done) {
     const { R, C } = p;
@@ -28,21 +46,7 @@
       for (const [a, b] of [[r - 1, c], [r + 1, c], [r, c - 1], [r, c + 1]]) if (a >= 0 && b >= 0 && a < R && b < C && taken.has(a * C + b)) return false;
     }
     if (!done) return true;
-    // White cells connect.
-    const N = R * C;
-    const start = [...new Array(N).keys()].find((k) => !taken.has(k));
-    const seen = new Uint8Array(N);
-    seen[start] = 1;
-    const stack = [start];
-    let count = 1;
-    while (stack.length) {
-      const k = stack.pop(), r = Math.floor(k / C), c = k % C;
-      for (const [a, b] of [[r - 1, c], [r + 1, c], [r, c - 1], [r, c + 1]]) {
-        const j = a * C + b;
-        if (a >= 0 && b >= 0 && a < R && b < C && !seen[j] && !taken.has(j)) { seen[j] = 1; count++; stack.push(j); }
-      }
-    }
-    return count === N - taken.size;
+    return whiteConnected(R, C, taken);
   }
 
   function solve(p, stopAt = 2, maxNodes = 200000) {

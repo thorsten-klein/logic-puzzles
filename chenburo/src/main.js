@@ -23,7 +23,7 @@
       const ma = Math.min(...q.map((x) => x[0])), mb = Math.min(...q.map((x) => x[1]));
       keys.push(q.map(([a, b]) => `${a - ma},${b - mb}`).sort().join(' '));
     }
-    return keys.reduce((min, k) => (k < min ? k : min), keys[0]);  // smallest key
+    return keys.reduce((a, b) => (a.localeCompare(b) <= 0 ? a : b), keys[0]);
   }
 
   function model(p) {

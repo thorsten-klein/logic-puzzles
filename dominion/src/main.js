@@ -15,6 +15,67 @@
     return out;
   });
 
+  function stepDomino(s, nbK, log) {
+    const shaded = nbK.filter((j) => s[j] === YES);
+    const open = nbK.filter((j) => s[j] === UNKNOWN);
+    if (shaded.length > 1) return -1;
+    if (shaded.length === 1 && open.length) {
+      for (const j of open) s[j] = NO;
+      if (log) log.push({ cells: open, v: NO, reason: 'This domino is complete. Cells next to it stay white.' });
+      return open.length;
+    }
+    if (!shaded.length) {
+      if (!open.length) return -1;
+      if (open.length === 1) {
+        s[open[0]] = YES;
+        if (log) log.push({ cells: open, v: YES, reason: 'This shaded cell needs a partner, and only one neighbour is left.' });
+        return 1;
+      }
+    }
+    return 0;
+  }
+
+  function findComponents(N, nb, ok) {
+    const comp = new Int32Array(N).fill(-1);
+    let id = 0;
+    for (let k = 0; k < N; k++) {
+      if (comp[k] >= 0 || !ok(k)) continue;
+      const stack = [k];
+      comp[k] = id;
+      while (stack.length) {
+        const cur = stack.pop();
+        for (const j of nb[cur]) {
+          if (comp[j] < 0 && ok(j)) { comp[j] = id; stack.push(j); }
+        }
+      }
+      id++;
+    }
+    return { comp, count: id };
+  }
+
+  function checkJoinable(N, letters, comp) {
+    const seen = new Map();
+    for (let k = 0; k < N; k++) {
+      if (!letters[k]) continue;
+      if (seen.has(letters[k]) && seen.get(letters[k]) !== comp[k]) return false;
+      seen.set(letters[k], comp[k]);
+    }
+    return true;
+  }
+
+  function checkWhite(N, letters, comp, id, done) {
+    const kind = new Map();
+    for (let k = 0; k < N; k++) {
+      if (!letters[k] || comp[k] < 0) continue;
+      if (kind.has(comp[k]) && kind.get(comp[k]) !== letters[k]) return false;
+      kind.set(comp[k], letters[k]);
+    }
+    if (done) {
+      for (let c = 0; c < id; c++) if (!kind.has(c)) return false;
+    }
+    return true;
+  }
+
   function model(p) {
     const { R, C, letters } = p;
     const nb = nbsOf(R, C);
@@ -24,89 +85,61 @@
       // Dominoes: a shaded cell has exactly one shaded side neighbour.
       for (let k = 0; k < R * C; k++) {
         if (s[k] !== YES) continue;
-        const shaded = nb[k].filter((j) => s[j] === YES), open = nb[k].filter((j) => s[j] === UNKNOWN);
-        if (shaded.length > 1) return -1;
-        if (shaded.length === 1 && open.length) {
-          for (const j of open) s[j] = NO;
-          if (log) log.push({ cells: open, v: NO, reason: 'This domino is complete. Cells next to it stay white.' });
-          return open.length;
-        }
-        if (!shaded.length) {
-          if (!open.length) return -1;
-          if (open.length === 1) {
-            s[open[0]] = YES;
-            if (log) log.push({ cells: open, v: YES, reason: 'This shaded cell needs a partner, and only one neighbour is left.' });
-            return 1;
-          }
-        }
+        const res = stepDomino(s, nb[k], log);
+        if (res !== 0) return res;
       }
       return 0;
     }
     // Areas through non-shaded cells: same letters must stay joinable,
     // different letters may not be joined by white cells.
     function check(s, done) {
-      const comp = new Int32Array(R * C).fill(-1);
-      let id = 0;
-      const fill = (start, ok) => {
-        const stack = [start];
-        comp[start] = id;
-        while (stack.length) {
-          const k = stack.pop();
-          for (const j of nb[k]) if (comp[j] < 0 && ok(j)) { comp[j] = id; stack.push(j); }
-        }
-        id++;
-      };
-      // Joinable: through white or open cells.
-      for (let k = 0; k < R * C; k++) if (comp[k] < 0 && s[k] !== YES) fill(k, (j) => s[j] !== YES);
-      const seen = new Map();
-      for (let k = 0; k < R * C; k++) {
-        if (!letters[k]) continue;
-        if (seen.has(letters[k]) && seen.get(letters[k]) !== comp[k]) return false;
-        seen.set(letters[k], comp[k]);
-      }
-      // Surely joined: through white cells only.
-      comp.fill(-1); id = 0;
-      for (let k = 0; k < R * C; k++) if (comp[k] < 0 && s[k] === NO) fill(k, (j) => s[j] === NO);
-      const kind = new Map();
-      for (let k = 0; k < R * C; k++) {
-        if (!letters[k] || comp[k] < 0) continue;
-        if (kind.has(comp[k]) && kind.get(comp[k]) !== letters[k]) return false;
-        kind.set(comp[k], letters[k]);
-      }
-      if (done) for (let c = 0; c < id; c++) if (!kind.has(c)) return false;
-      return true;
+      const N = R * C;
+      const { comp: openComp } = findComponents(N, nb, (j) => s[j] !== YES);
+      if (!checkJoinable(N, letters, openComp)) return false;
+      const { comp: whiteComp, count } = findComponents(N, nb, (j) => s[j] === NO);
+      return checkWhite(N, letters, whiteComp, count, done);
     }
     return { N: R * C, cons, propagate, check };
   }
 
-  function tryOnce(n) {
-    const R = n, C = n, N = R * C;
-    const nb = nbsOf(R, C);
+  function placeDominoes(N, nb) {
     const shade = new Uint8Array(N);
     for (const k of PuzzleShell.shuffle([...new Array(N).keys()])) {
       const j = nb[k][Math.floor(Math.random() * nb[k].length)];
       if ([k, j].some((x) => shade[x] || nb[x].some((y) => shade[y]))) continue;
       if (Math.random() < 0.6) { shade[k] = 1; shade[j] = 1; }
     }
-    // White areas get one letter each, on about half their cells.
+    return shade;
+  }
+
+  function floodWhiteComponent(k, id, nb, shade, comp) {
+    const cells = [k];
+    comp[k] = id;
+    for (const cur of cells) {
+      for (const j of nb[cur]) {
+        if (!shade[j] && comp[j] < 0) { comp[j] = id; cells.push(j); }
+      }
+    }
+    return cells;
+  }
+
+  function placeLetters(N, nb, shade) {
     const letters = new Int8Array(N);
     const comp = new Int32Array(N).fill(-1);
     let id = 0;
     for (let k = 0; k < N; k++) {
       if (shade[k] || comp[k] >= 0) continue;
-      const cells = [k];
-      comp[k] = id;
-      for (const cur of cells) for (const j of nb[cur]) if (!shade[j] && comp[j] < 0) { comp[j] = id; cells.push(j); }
+      const cells = floodWhiteComponent(k, id, nb, shade, comp);
       if (id >= 26) return null;
       for (const x of cells) if (Math.random() < 0.5) letters[x] = id + 1;
       letters[cells[Math.floor(Math.random() * cells.length)]] = id + 1;
       id++;
     }
-    if (id < 2) return null;
-    const p = { R, C, letters };
-    const s = Binary.logicSolve(model(p));
-    if (!s || s.includes(UNKNOWN)) return null;
-    // Thin letters, keeping at least one per area.
+    return id >= 2 ? letters : null;
+  }
+
+  function thinLetters(p, N) {
+    const { letters } = p;
     for (const k of PuzzleShell.shuffle([...new Array(N).keys()])) {
       if (!letters[k]) continue;
       const keep = letters[k];
@@ -115,6 +148,18 @@
       const t = Binary.logicSolve(model(p));
       if (!t || t.includes(UNKNOWN)) letters[k] = keep;
     }
+  }
+
+  function tryOnce(n) {
+    const R = n, C = n, N = R * C;
+    const nb = nbsOf(R, C);
+    const shade = placeDominoes(N, nb);
+    const letters = placeLetters(N, nb, shade);
+    if (!letters) return null;
+    const p = { R, C, letters };
+    const s = Binary.logicSolve(model(p));
+    if (!s || s.includes(UNKNOWN)) return null;
+    thinLetters(p, N);
     p.solution = Uint8Array.from(shade, (x) => (x ? YES : NO));
     return p;
   }

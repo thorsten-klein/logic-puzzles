@@ -212,7 +212,7 @@
       const n = d?.n;
       if (!Number.isInteger(n) || n < 3 || n > 15) throw new Error('Invalid board size');
       if (typeof d.g !== 'string' || d.g.length !== 2 * n * n) throw new Error('Invalid regions');
-      const given = String(d.v || '').split(',').filter(Boolean).map((t) => ({ k: parseInt(t, 10), d: t.slice(-1) }));
+      const given = String(d.v || '').split(',').filter(Boolean).map((t) => ({ k: Number.parseInt(t, 10), d: t.slice(-1) }));
       if (given.some((x) => !(x.k >= 0 && x.k < n * n) || !GLYPH[x.d])) throw new Error('Invalid arrows');
       const p = prepare({ R: n, C: n, region: Int32Array.from({ length: n * n }, (_, k) => Number.parseInt(d.g.slice(2 * k, 2 * k + 2), 36)), given });
       const res = solve(p, 2);

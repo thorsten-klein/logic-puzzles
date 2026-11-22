@@ -589,7 +589,7 @@ const PuzzleShell = (() => {
         ta.style.opacity = '0';
         document.body.appendChild(ta);
         ta.select();
-        try { document.execCommand('copy'); statusEl.textContent = 'Copied to clipboard.'; } catch {
+        try { document.execCommand('copy'); /* NOSONAR */ statusEl.textContent = 'Copied to clipboard.'; } catch {
           statusEl.textContent = 'Copy failed — please select and copy manually.';
         }
         ta.remove();

@@ -7,17 +7,40 @@
 (() => {
   const { UNKNOWN, YES, NO } = Binary;
 
+  function raySeesSameSize(r, c, dr, dc, a, ctx) {
+    const { R, C, s, id, size } = ctx;
+    let x = r + dr, y = c + dc;
+    while (x >= 0 && y >= 0 && x < R && y < C) {
+      const j = x * C + y;
+      if (s[j] === UNKNOWN) break;
+      if (s[j] === YES) return id[j] !== a && size[id[j]] === size[a];
+      x += dr; y += dc;
+    }
+    return false;
+  }
+
+  function squareSeesSameSize(cells, a, ctx) {
+    for (const k of cells) {
+      const r = Math.floor(k / ctx.C), c = k % ctx.C;
+      for (const [dr, dc] of [[-1, 0], [1, 0], [0, -1], [0, 1]]) {
+        if (raySeesSameSize(r, c, dr, dc, a, ctx)) return true;
+      }
+    }
+    return false;
+  }
+
+  function checkSquareSight(list, size, id, s, R, C) {
+    const ctx = { R, C, s, id, size };
+    for (let a = 0; a < list.length; a++) {
+      if (size[a] && squareSeesSameSize(list[a], a, ctx)) return false;
+    }
+    return true;
+  }
+
   function model(p) {
     const { R, C, clues } = p;
     const N = R * C;
-    const nb = (k) => {
-      const r = Math.floor(k / C), c = k % C, out = [];
-      if (r > 0) out.push(k - C);
-      if (r < R - 1) out.push(k + C);
-      if (c > 0) out.push(k - 1);
-      if (c < C - 1) out.push(k + 1);
-      return out;
-    };
+    const nb = (k) => Binary.sideNeighbours(R, C, k);
     // True when no cell next to k is still open.
     const settled = (k, s) => nb(k).every((j) => s[j] !== UNKNOWN);
     const cons = [];
@@ -57,27 +80,7 @@
         return r2 - r1 === c2 - c1 && cells.length === (r2 - r1 + 1) * (c2 - c1 + 1) ? r2 - r1 + 1 : -2;
       });
       if (size.includes(-2)) return false;
-      // Sight: from each closed square, the first shaded cell seen along
-      // a row or column must not belong to a closed square of equal size.
-      for (let a = 0; a < list.length; a++) {
-        if (!size[a]) continue;
-        for (const k of list[a]) {
-          const r = Math.floor(k / C), c = k % C;
-          for (const [dr, dc] of [[-1, 0], [1, 0], [0, -1], [0, 1]]) {
-            let x = r + dr, y = c + dc;
-            while (x >= 0 && y >= 0 && x < R && y < C) {
-              const j = x * C + y;
-              if (s[j] === UNKNOWN) break;
-              if (s[j] === YES) {
-                if (id[j] !== a && size[id[j]] === size[a]) return false;
-                break;
-              }
-              x += dr; y += dc;
-            }
-          }
-        }
-      }
-      return true;
+      return checkSquareSight(list, size, id, s, R, C);
     }
     return { N, cons, propagate, check };
   }

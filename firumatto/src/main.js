@@ -13,6 +13,26 @@
     }
     return false;
   };
+  function straightOptions(R, C, id, r, c) {
+    const opts = [];
+    for (let len = 1; len <= 4; len++) for (const horiz of [true, false]) {
+      const cells = Array.from({ length: len }, (_, i) => (horiz ? [r, c + i] : [r + i, c]));
+      if (cells.some(([a, b]) => a >= R || b >= C || id[a * C + b] >= 0)) continue;
+      opts.push(cells.map(([a, b]) => a * C + b));
+    }
+    return opts;
+  }
+
+  function canPlacePiece(R, C, id, regions, cells) {
+    cells.forEach((x) => { id[x] = regions.length; });
+    const touch = cells.some((x) => Parts.nbs(R, C, x).some((j) => id[j] >= 0 && id[j] !== regions.length && regions[id[j]].length === cells.length));
+    if (touch || fourCorner({ R, C }, id)) {
+      cells.forEach((x) => { id[x] = -1; });
+      return false;
+    }
+    return true;
+  }
+
   Parts.startGame({
     id: 'firumatto',
     name: 'Firumatto',
@@ -39,18 +59,8 @@
         for (let k = 0; k < R * C; k++) {
           if (id[k] >= 0) continue;
           const r = Math.floor(k / C), c = k % C;
-          const opts = [];
-          for (let len = 1; len <= 4; len++) for (const horiz of [true, false]) {
-            const cells = Array.from({ length: len }, (_, i) => (horiz ? [r, c + i] : [r + i, c]));
-            if (cells.some(([a, b]) => a >= R || b >= C || id[a * C + b] >= 0)) continue;
-            opts.push(cells.map(([a, b]) => a * C + b));
-          }
-          const ok = PuzzleShell.shuffle(opts).find((cells) => {
-            cells.forEach((x) => { id[x] = regions.length; });
-            const touch = cells.some((x) => Parts.nbs(R, C, x).some((j) => id[j] >= 0 && id[j] !== regions.length && regions[id[j]].length === cells.length));
-            if (touch || fourCorner({ R, C }, id)) { cells.forEach((x) => { id[x] = -1; }); return false; }
-            return true;
-          });
+          const opts = straightOptions(R, C, id, r, c);
+          const ok = PuzzleShell.shuffle(opts).find((cells) => canPlacePiece(R, C, id, regions, cells));
           if (!ok) break;
           regions.push(ok);
         }

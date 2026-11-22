@@ -4,6 +4,17 @@
 // State: entries for top (0..N-1) then left (N..2N-1); 0 = empty.
 
 (() => {
+  function checkProducts(prod, top, left, n) {
+    for (let r = 0; r < n; r++) {
+      for (let c = 0; c < n; c++) {
+        const x = prod[r * n + c];
+        if (!x || !top[c] || !left[r]) continue;
+        if (top[c] * left[r] !== x) return false;
+      }
+    }
+    return true;
+  }
+
   // Counts (top, left) assignments that fit the products.
   function solve(p, stopAt = 2) {
     const { n, prod } = p;
@@ -20,13 +31,7 @@
       for (let v = 1; v <= n; v++) {
         if (side === 't' ? usedT[v] : usedL[v]) continue;
         if (side === 't') top[j] = v; else left[j] = v;
-        let ok = true;
-        for (let r = 0; r < n && ok; r++) for (let c = 0; c < n && ok; c++) {
-          const x = prod[r * n + c];
-          if (!x || !top[c] || !left[r]) continue;
-          if (top[c] * left[r] !== x) ok = false;
-        }
-        if (ok) {
+        if (checkProducts(prod, top, left, n)) {
           if (side === 't') usedT[v] = 1; else usedL[v] = 1;
           rec(i + 1);
           if (side === 't') usedT[v] = 0; else usedL[v] = 0;

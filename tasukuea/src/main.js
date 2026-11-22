@@ -8,17 +8,25 @@
   const { UNKNOWN, YES, NO } = Binary;
   const Q = -2;
 
+  function checkClueBounds(N, clues, nb, s, black, reach) {
+    for (let k = 0; k < N; k++) {
+      const v = clues[k];
+      if (v < 0) continue;
+      const near = new Set(nb(k).filter((j) => s[j] === YES).map((j) => black.id[j]));
+      let low = 0;
+      for (const a of near) low += black.list[a].length;
+      const nearR = new Set(nb(k).filter((j) => reach.id[j] >= 0).map((j) => reach.id[j]));
+      let high = 0;
+      for (const a of nearR) high += reach.list[a].length;
+      if (low > v || high < v) return false;
+    }
+    return true;
+  }
+
   function model(p) {
     const { R, C, clues } = p;
     const N = R * C;
-    const nb = (k) => {
-      const r = Math.floor(k / C), c = k % C, out = [];
-      if (r > 0) out.push(k - C);
-      if (r < R - 1) out.push(k + C);
-      if (c > 0) out.push(k - 1);
-      if (c < C - 1) out.push(k + 1);
-      return out;
-    };
+    const nb = (k) => Binary.sideNeighbours(R, C, k);
     // True when no cell next to k is still open.
     const settled = (k, s) => nb(k).every((j) => s[j] !== UNKNOWN);
     const cons = [];
@@ -67,18 +75,7 @@
       // Number bounds: shaded squares next to the clue (low) and what
       // could still join (high, through shaded and open cells).
       const reach = areas(s, (k) => s[k] !== NO && clues[k] === -1);
-      for (let k = 0; k < N; k++) {
-        const v = clues[k];
-        if (v < 0) continue;
-        const near = new Set(nb(k).filter((j) => s[j] === YES).map((j) => black.id[j]));
-        let low = 0;
-        for (const a of near) low += black.list[a].length;
-        const nearR = new Set(nb(k).filter((j) => reach.id[j] >= 0).map((j) => reach.id[j]));
-        let high = 0;
-        for (const a of nearR) high += reach.list[a].length;
-        if (low > v || high < v) return false;
-      }
-      return true;
+      return checkClueBounds(N, clues, nb, s, black, reach);
     }
     return { N, cons, propagate, check };
   }

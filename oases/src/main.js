@@ -17,6 +17,31 @@
     return out;
   }
 
+  function reachableCircles(k, nums, s, nb) {
+    const lowSet = new Set(), stack = [k], seen = new Set([k]);
+    while (stack.length) {
+      const x = stack.pop();
+      for (const j of nb(x)) {
+        if (seen.has(j)) continue;
+        seen.add(j);
+        const isCircle = nums[j] >= 0;
+        if (isCircle && (x === k || s[x] === NO)) lowSet.add(j);
+        else if (!isCircle && s[j] === NO) stack.push(j);
+      }
+    }
+    return lowSet.size;
+  }
+
+  function checkCircleSight(N, nums, s, nb, reached) {
+    for (let k = 0; k < N; k++) {
+      const v = nums[k];
+      if (v < 0) continue;
+      if (reachableCircles(k, nums, s, nb) > v) return false;
+      if (reached(k, (j) => s[j] !== YES) < v) return false;
+    }
+    return true;
+  }
+
   function model(p) {
     const { R, C, nums } = p;
     const N = R * C;
@@ -46,24 +71,7 @@
     };
     function check(s) {
       if (!Binary.canConnect(R, C, s, NO)) return false;
-      for (let k = 0; k < N; k++) {
-        const v = nums[k];
-        if (v < 0) continue;
-        // Low: only through white cells; high: through white or open.
-        const lowSet = new Set(), stack = [k], seen = new Set([k]);
-        while (stack.length) {
-          const x = stack.pop();
-          for (const j of nb(x)) {
-            if (seen.has(j)) continue;
-            seen.add(j);
-            if (nums[j] >= 0) { if (x === k || s[x] === NO) { lowSet.add(j); } continue; }
-            if (s[j] === NO) stack.push(j);
-          }
-        }
-        if (lowSet.size > v) return false;
-        if (reached(k, (j) => s[j] !== YES) < v) return false;
-      }
-      return true;
+      return checkCircleSight(N, nums, s, nb, reached);
     }
     return { N, cons, check };
   }

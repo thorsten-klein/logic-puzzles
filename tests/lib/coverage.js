@@ -480,7 +480,7 @@ async function workout(page, slug, more) {
     await page.evaluate(() => { try { Object.defineProperty(navigator, 'clipboard', { value: undefined, configurable: true }); } catch {} });
     await clickIf(page, '#btn-topbar-share');
     await clickAll(page, '.modal:not([hidden]) [data-copy]');
-    await page.evaluate(() => { document.execCommand = () => { throw new Error('no copy'); }; });
+    await page.evaluate(() => { document.execCommand = () => { throw new Error('no copy'); }; }); // NOSONAR
     await clickAll(page, '.modal:not([hidden]) [data-copy]');
     await closeModals(page);
     await clickIf(page, '#btn-topbar-back');

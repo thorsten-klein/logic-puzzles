@@ -25,12 +25,26 @@
       const r0 = Math.min(...q.map((x) => x[0])), c0 = Math.min(...q.map((x) => x[1]));
       keys.push(q.map(([a, b]) => `${a - r0},${b - c0}`).sort().join(' '));
     }
-    return keys.reduce((min, k) => (k < min ? k : min), keys[0]);  // smallest key
+    return keys.find((k) => !keys.some((o) => o < k));
   }
 
   function target(C, k, d) {
     const r = Math.floor(k / C), c = k % C;
     return [[r - 1, c], [r + 1, c], [r, c - 1], [r, c + 1]][d];
+  }
+
+  function checkRooms(rooms, areas, room, s, done, C) {
+    const per = rooms.map(() => []);
+    for (const A of areas) per[room[A.cells[0]]].push(A);
+    for (let g = 0; g < rooms.length; g++) {
+      const list = per[g];
+      const closed = list.filter((A) => A.closed);
+      if (closed.length > 2) return false;
+      if (closed.length === 2 && shapeKey(C, closed[0].cells) !== shapeKey(C, closed[1].cells)) return false;
+      const decided = done || rooms[g].every((k) => s[k] !== UNKNOWN);
+      if (decided && (list.length !== 2 || closed.length !== 2)) return false;
+    }
+    return true;
   }
 
   function model(p) {
@@ -77,17 +91,7 @@
         if (A.cells.length > size || (A.closed && A.cells.length !== size)) return false;
       }
       // Rooms: two areas, same shape.
-      const per = rooms.map(() => []);
-      for (const A of areas) per[room[A.cells[0]]].push(A);
-      for (let g = 0; g < rooms.length; g++) {
-        const list = per[g];
-        const closed = list.filter((A) => A.closed);
-        if (closed.length > 2) return false;
-        if (closed.length === 2 && shapeKey(C, closed[0].cells) !== shapeKey(C, closed[1].cells)) return false;
-        const decided = done || rooms[g].every((k) => s[k] !== UNKNOWN);
-        if (decided && (list.length !== 2 || closed.length !== 2)) return false;
-      }
-      return true;
+      return checkRooms(rooms, areas, room, s, done, C);
     }
     return { N, cons, check };
   }

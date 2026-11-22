@@ -49,6 +49,41 @@
     return seen.every(Boolean);
   }
 
+  function checkCrossingLines(p, lo, hi, log) {
+    for (let j = 0; j < p.pairs.length; j++) {
+      if (!lo[j]) continue;
+      for (const o of p.cross[j]) {
+        if (lo[o]) return -1;
+        if (hi[o]) {
+          hi[o] = 0;
+          if (log) log.push({ pairs: [o], reason: 'Lines may not cross. A line already runs across here.' });
+          return 1;
+        }
+      }
+    }
+    return 0;
+  }
+
+  function checkClosedPairs(p, lo, hi, log) {
+    if (p.isl.length <= 2) return 0;
+    for (let j = 0; j < p.pairs.length; j++) {
+      const { a, b } = p.pairs[j];
+      const na = p.isl[a].n, nb = p.isl[b].n;
+      if (na === 1 && nb === 1 && hi[j] >= 1) {
+        hi[j] = 0;
+        if (lo[j] > hi[j]) return -1;
+        if (log) log.push({ pairs: [j], reason: 'Two 1s joined by a line would form a closed group. So they are not joined.' });
+        return 1;
+      }
+    }
+    return 0;
+  }
+
+  function checkCrossings(p, lo, hi, log) {
+    const res = checkCrossingLines(p, lo, hi, log);
+    return res !== 0 ? res : checkClosedPairs(p, lo, hi, log);
+  }
+
   // One round of forced moves. Returns false on contradiction, else the
   // number of changes. `log` gets { pairs, reason } for hints.
   function step(p, lo, hi, log) {
@@ -77,30 +112,8 @@
         return changed.length;
       }
     }
-    for (let j = 0; j < p.pairs.length; j++) {
-      if (!lo[j]) continue;
-      for (const o of p.cross[j]) {
-        if (lo[o]) return -1;
-        if (hi[o]) {
-          hi[o] = 0;
-          if (log) log.push({ pairs: [o], reason: 'Lines may not cross. A line already runs across here.' });
-          return 1;
-        }
-      }
-    }
-    // Two islands that would close off a group: 1-1, or 2=2.
-    if (N > 2) {
-      for (let j = 0; j < p.pairs.length; j++) {
-        const { a, b } = p.pairs[j];
-        const na = p.isl[a].n, nb = p.isl[b].n;
-        if (na === 1 && nb === 1 && hi[j] >= 1) {
-          hi[j] = 0;
-          if (lo[j] > hi[j]) return -1;
-          if (log) log.push({ pairs: [j], reason: 'Two 1s joined by a line would form a closed group. So they are not joined.' });
-          return 1;
-        }
-      }
-    }
+    const crossRes = checkCrossings(p, lo, hi, log);
+    if (crossRes !== 0) return crossRes;
     if (!connected(p, hi)) return -1;
     return 0;
   }

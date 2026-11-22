@@ -52,6 +52,52 @@
     return { N, cons, propagate, check };
   }
 
+  function fillDominoRooms(room, N, C, R) {
+    for (let open = room.filter((x) => x < 0).length, guard = 0; open > 0 && guard < N * 4; guard++) {
+      for (const k of PuzzleShell.shuffle([...new Array(N).keys()])) {
+        if (room[k] >= 0) continue;
+        const r = Math.floor(k / C), c = k % C;
+        const near = [[r - 1, c], [r + 1, c], [r, c - 1], [r, c + 1]]
+          .filter(([a, b]) => a >= 0 && b >= 0 && a < R && b < C && room[a * C + b] >= 0).map(([a, b]) => room[a * C + b]);
+        if (!near.length) continue;
+        room[k] = near[Math.floor(Math.random() * near.length)];
+        open--;
+      }
+    }
+  }
+
+  function tryMoveDominoCell(cand, p, side, N) {
+    for (const x of cand) {
+      const g = p.room[x];
+      const to = side(x).filter((j) => p.room[j] !== g);
+      if (!to.length) continue;
+      const rest = [...new Array(N).keys()].filter((k) => p.room[k] === g && k !== x);
+      const set = new Set(rest), seen = new Set([rest[0]]), st = [rest[0]];
+      while (st.length) { const k = st.pop(); for (const j of side(k)) if (set.has(j) && !seen.has(j)) { seen.add(j); st.push(j); } }
+      if (seen.size !== rest.length) continue;
+      p.room[x] = p.room[to[Math.floor(Math.random() * to.length)]];
+      return true;
+    }
+    return false;
+  }
+
+  function repairDominoRooms(ctx, deadline) {
+    const { p, N, sol, side } = ctx;
+    let ok = false;
+    for (let fix = 0; fix < 40 && Date.now() < deadline; fix++) {
+      const t = Binary.logicSolve(model(p));
+      if (!t) break;
+      if (!t.includes(UNKNOWN)) { ok = true; break; }
+      const r = Binary.solve(model(p), 2, 5000, t);
+      if (r.capped) break;
+      const other = r.solutions.find((x) => x.some((v, k) => v !== sol[k]));
+      if (!other) { ok = r.solutions.length === 1; break; }
+      const cand = PuzzleShell.shuffle([...new Array(N).keys()].filter((k) => other[k] === YES && sol[k] === NO));
+      if (!tryMoveDominoCell(cand, p, side, N)) break;
+    }
+    return ok;
+  }
+
   function generate(n) {
     const deadline = Date.now() + (n > 6 ? 14000 : 8000);
     while (Date.now() < deadline) {
@@ -76,48 +122,14 @@
       // Rooms: each domino seeds a room; the rest of the cells join rooms.
       const room = new Int32Array(N).fill(-1);
       dominoes.forEach(([a, b], i) => { room[a] = room[b] = i; });
-      for (let open = room.filter((x) => x < 0).length, guard = 0; open > 0 && guard < N * 4; guard++) {
-        for (const k of PuzzleShell.shuffle([...new Array(N).keys()])) {
-          if (room[k] >= 0) continue;
-          const r = Math.floor(k / C), c = k % C;
-          const near = [[r - 1, c], [r + 1, c], [r, c - 1], [r, c + 1]]
-            .filter(([a, b]) => a >= 0 && b >= 0 && a < R && b < C && room[a * C + b] >= 0).map(([a, b]) => room[a * C + b]);
-          if (!near.length) continue;
-          room[k] = near[Math.floor(Math.random() * near.length)];
-          open--;
-        }
-      }
+      fillDominoRooms(room, N, C, R);
       if (room.some((x) => x < 0)) continue;
       const p = { R, C, room };
       const sol = Uint8Array.from(shade, (x) => (x ? YES : NO));
       // Repair: while a second answer exists, move one of its extra shaded
       // cells (white in ours) into a neighbouring room (see LITS).
       const side = (k) => [k - C, k + C, k % C ? k - 1 : -1, (k + 1) % C ? k + 1 : -1].filter((j) => j >= 0 && j < N);
-      let ok = false;
-      for (let fix = 0; fix < 40 && Date.now() < deadline; fix++) {
-        const t = Binary.logicSolve(model(p));
-        if (!t) break;
-        if (!t.includes(UNKNOWN)) { ok = true; break; }
-        const r = Binary.solve(model(p), 2, 5000, t);
-        if (r.capped) break;
-        const other = r.solutions.find((x) => x.some((v, k) => v !== sol[k]));
-        if (!other) { ok = r.solutions.length === 1; break; }
-        let moved = false;
-        for (const x of PuzzleShell.shuffle([...new Array(N).keys()].filter((k) => other[k] === YES && sol[k] === NO))) {
-          const g = room[x];
-          const to = side(x).filter((j) => room[j] !== g);
-          if (!to.length) continue;
-          const rest = [...new Array(N).keys()].filter((k) => room[k] === g && k !== x);
-          const set = new Set(rest), seen = new Set([rest[0]]), st = [rest[0]];
-          while (st.length) { const k = st.pop(); for (const j of side(k)) if (set.has(j) && !seen.has(j)) { seen.add(j); st.push(j); } }
-          if (seen.size !== rest.length) continue;
-          room[x] = room[to[Math.floor(Math.random() * to.length)]];
-          moved = true;
-          break;
-        }
-        if (!moved) break;
-      }
-      if (!ok) continue;
+      if (!repairDominoRooms({ p, N, sol, side }, deadline)) continue;
       p.solution = sol;
       return p;
     }

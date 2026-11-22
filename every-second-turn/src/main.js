@@ -7,6 +7,38 @@
 (() => {
   const { UNKNOWN, LINE, CROSS } = Loop;
 
+  function applyGiven(given, s, log) {
+    for (const e of given) {
+      if (s[e] === CROSS) return -1;
+      if (s[e] === UNKNOWN) {
+        s[e] = LINE;
+        if (log) log.push({ edges: [e], v: LINE, reason: 'This line piece is given.' });
+        return 1;
+      }
+    }
+    return 0;
+  }
+
+  function checkCircleTurns(k, g, s, dirs) {
+    if (dirs.length === 2 && (dirs[0] >> 1) === (dirs[1] >> 1)) return -1;
+    if (dirs.length === 1) {
+      const opp = g.cellEdges[k][dirs[0] ^ 1];
+      if (opp >= 0 && s[opp] === UNKNOWN) {
+        const perp = (dirs[0] >> 1) ? [0, 1] : [2, 3];
+        if (perp.every((d) => g.cellEdges[k][d] < 0 || s[g.cellEdges[k][d]] === CROSS)) return -1;
+      }
+    }
+    return 0;
+  }
+
+  function checkCircleWalk(dirs, walk, s, k) {
+    for (const d of dirs) {
+      const w = walk(s, k, d);
+      if (w.turns > 1 || (w.done && w.turns !== 1)) return -1;
+    }
+    return 0;
+  }
+
   function model(p) {
     const { R, C, circle } = p;
     const g = Loop.grid(R, C);
@@ -30,30 +62,13 @@
       return { turns, done: false };
     };
     function rule(s, log) {
-      for (const e of p.given) {
-        if (s[e] === CROSS) return -1;
-        if (s[e] === UNKNOWN) {
-          s[e] = LINE;
-          if (log) log.push({ edges: [e], v: LINE, reason: 'This line piece is given.' });
-          return 1;
-        }
-      }
+      const givenRes = applyGiven(p.given, s, log);
+      if (givenRes !== 0) return givenRes;
       for (let k = 0; k < R * C; k++) {
         if (!circle[k]) continue;
         const dirs = linesAt(s, k);
-        // A circle turns.
-        if (dirs.length === 2 && (dirs[0] >> 1) === (dirs[1] >> 1)) return -1;
-        if (dirs.length === 1) {
-          const opp = g.cellEdges[k][dirs[0] ^ 1];
-          if (opp >= 0 && s[opp] === UNKNOWN) {
-            const perp = (dirs[0] >> 1) ? [0, 1] : [2, 3];
-            if (perp.every((d) => g.cellEdges[k][d] < 0 || s[g.cellEdges[k][d]] === CROSS)) return -1;
-          }
-        }
-        for (const d of dirs) {
-          const w = walk(s, k, d);
-          if (w.turns > 1 || (w.done && w.turns !== 1)) return -1;
-        }
+        if (checkCircleTurns(k, g, s, dirs) === -1) return -1;
+        if (checkCircleWalk(dirs, walk, s, k) === -1) return -1;
       }
       return 0;
     }

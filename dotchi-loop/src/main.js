@@ -7,6 +7,29 @@
 (() => {
   const { LINE, CROSS } = Loop;
 
+  function checkBlackCircles(g, mark, s, log, N) {
+    for (let k = 0; k < N; k++) {
+      if (mark[k] !== 2) continue;
+      const own = g.cellEdges[k].filter((e) => e >= 0 && s[e] !== CROSS);
+      if (own.some((e) => s[e] === LINE)) return -1;
+      if (own.length) {
+        own.forEach((e) => { s[e] = CROSS; });
+        if (log) log.push({ edges: own, v: CROSS, reason: 'The loop never enters a black circle.', at: k });
+        return own.length;
+      }
+    }
+    return 0;
+  }
+
+  function checkWhiteRooms(whites, shape, s) {
+    for (const cells of whites) {
+      if (!cells) continue;
+      const kinds = new Set(cells.map((k) => shape(s, k)).filter(Boolean));
+      if (kinds.size > 1) return -1;
+    }
+    return 0;
+  }
+
   function model(p) {
     const { R, C, room, mark } = p;
     const g = Loop.grid(R, C);
@@ -26,22 +49,9 @@
       return '';
     };
     function rule(s, log) {
-      for (let k = 0; k < R * C; k++) {
-        if (mark[k] !== 2) continue;
-        const own = g.cellEdges[k].filter((e) => e >= 0 && s[e] !== CROSS);
-        if (own.some((e) => s[e] === LINE)) return -1;
-        if (own.length) {
-          own.forEach((e) => { s[e] = CROSS; });
-          if (log) log.push({ edges: own, v: CROSS, reason: 'The loop never enters a black circle.', at: k });
-          return own.length;
-        }
-      }
-      for (const cells of whites) {
-        if (!cells) continue;
-        const kinds = new Set(cells.map((k) => shape(s, k)).filter(Boolean));
-        if (kinds.size > 1) return -1;
-      }
-      return 0;
+      const blackRes = checkBlackCircles(g, mark, s, log, R * C);
+      if (blackRes !== 0) return blackRes;
+      return checkWhiteRooms(whites, shape, s);
     }
     return { g, must, rule };
   }

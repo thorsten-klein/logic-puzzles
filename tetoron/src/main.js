@@ -18,7 +18,7 @@
       const ma = Math.min(...q.map((x) => x[0])), mb = Math.min(...q.map((x) => x[1]));
       keys.push(q.map(([a, b]) => `${a - ma},${b - mb}`).sort().join(' '));
     }
-    return keys.reduce((min, k) => (k < min ? k : min), keys[0]);  // smallest key
+    return keys.find((k) => keys.every((o) => k <= o));
   }
   const letters = (p, cells) => cells.filter((k) => p.clues[k]).map((k) => p.clues[k]).sort().join('');
 

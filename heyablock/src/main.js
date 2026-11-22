@@ -57,17 +57,9 @@
     const lines = [];
     for (let r = 0; r < R; r++) lines.push(Array.from({ length: C }, (_, c) => r * C + c));
     for (let c = 0; c < C; c++) lines.push(Array.from({ length: R }, (_, r) => r * C + c));
-    for (const line of lines) {
-      const parts = [];
-      for (const k of line) {
-        if (parts.length && room[parts.at(-1)[0]] === room[k]) parts.at(-1).push(k);
-        else parts.push([k]);
-      }
-      for (let i = 1; i + 1 < parts.length; i++) {
-        const cells = [parts[i - 1][parts[i - 1].length - 1], ...parts[i], parts[i + 1][0]];
-        cons.push({ cells, min: 1, max: cells.length,
-          why: () => 'A straight white line may not cross two room borders. This cell must be shaded to break it.' });
-      }
+    for (const cells of Binary.whiteBorders(lines, room)) {
+      cons.push({ cells, min: 1, max: cells.length,
+        why: () => 'A straight white line may not cross two room borders. This cell must be shaded to break it.' });
     }
     // Shaded cells of a room must stay joinable inside the room.
     function roomBlocks(s) {

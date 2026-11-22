@@ -501,5 +501,45 @@ const Loop = (() => {
     return { dirs, legs: out, turn };
   }
 
-  return { UNKNOWN, LINE, CROSS, grid, randomTour, legs, settle, firstChange, lookahead, solve, logicSolve, solvedBy, randomLoop, paths, complete, hints, render, startGame };
+  // Walk the vertices of a tour solution in visit order, randomly shifted.
+  function tourOrder(sol, g, n) {
+    const next = Array.from({ length: n * n }, () => []);
+    for (let e = 0; e < g.E; e++) {
+      if (sol[e] === LINE) {
+        const [a, b] = g.ends[e];
+        next[a].push(b);
+        next[b].push(a);
+      }
+    }
+    const order = [0];
+    for (let prev = -1, cur = 0; order.length < n * n;) {
+      const nx = next[cur].find((x) => x !== prev);
+      prev = cur;
+      cur = nx;
+      order.push(cur);
+    }
+    const shift = Math.floor(Math.random() * order.length);
+    return order.slice(shift).concat(order.slice(0, shift));
+  }
+
+  // For EntryExit and DoubleBack: enforce exact number of region border crossings.
+  function stepBorder(edges, limit, s, log, msgCross, msgLine) {
+    const lines = edges.filter((e) => s[e] === LINE).length;
+    const open = edges.filter((e) => s[e] === UNKNOWN);
+    if (lines > limit || lines + open.length < limit) return -1;
+    if (!open.length) return 0;
+    if (lines === limit) {
+      for (const e of open) s[e] = CROSS;
+      if (log) log.push({ edges: open, v: CROSS, reason: msgCross });
+      return open.length;
+    }
+    if (lines + open.length === limit) {
+      for (const e of open) s[e] = LINE;
+      if (log) log.push({ edges: open, v: LINE, reason: msgLine });
+      return open.length;
+    }
+    return 0;
+  }
+
+  return { UNKNOWN, LINE, CROSS, grid, randomTour, legs, settle, firstChange, lookahead, solve, logicSolve, solvedBy, randomLoop, paths, complete, hints, render, startGame, tourOrder, stepBorder };
 })();

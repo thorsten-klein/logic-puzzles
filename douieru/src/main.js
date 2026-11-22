@@ -7,21 +7,40 @@
 (() => {
   const MAX = 4; // longest leg when building puzzles (the solver allows any)
 
+  function buildEll(ctx, a, b) {
+    const { R, C, k, r, c, v, h } = ctx;
+    if (r + v * a < 0 || r + v * a >= R || c + h * b < 0 || c + h * b >= C) return null;
+    const cells = [k];
+    for (let i = 1; i <= a; i++) cells.push((r + v * i) * C + c);
+    for (let j = 1; j <= b; j++) cells.push(r * C + c + h * j);
+    cells.sort((x, y) => x - y);
+    return { cells, a, b };
+  }
+
   // All L shapes bending at cell k: legs of 1..max cells in two
   // perpendicular directions. Returns { cells, a, b } (leg lengths).
   function ells(R, C, k, max = Math.max(R, C)) {
     const r = Math.floor(k / C), c = k % C, out = [];
     for (const [v, h] of [[-1, -1], [-1, 1], [1, -1], [1, 1]]) {
+      const ctx = { R, C, k, r, c, v, h };
       for (let a = 1; a <= max; a++) for (let b = 1; b <= max; b++) {
-        if (r + v * a < 0 || r + v * a >= R || c + h * b < 0 || c + h * b >= C) continue;
-        const cells = [k];
-        for (let i = 1; i <= a; i++) cells.push((r + v * i) * C + c);
-        for (let j = 1; j <= b; j++) cells.push(r * C + c + h * j);
-        cells.sort((x, y) => x - y);
-        out.push({ cells, a, b });
+        const ell = buildEll(ctx, a, b);
+        if (ell) out.push(ell);
       }
     }
     return out;
+  }
+
+  function findEllOptions(all, N, used, k) {
+    const opts = [];
+    for (let b = 0; b < N; b++) {
+      for (const L of all[b]) {
+        if (L.cells.includes(k) && L.cells.every((x) => !used[x] && x >= k)) {
+          opts.push({ ...L, bend: b });
+        }
+      }
+    }
+    return opts;
   }
 
   // Random tiling by L shapes (backtracking on the first open cell).
@@ -35,8 +54,7 @@
       while (k < N && used[k]) k++;
       if (k === N) return true;
       if (++nodes > 4000) return false;
-      const opts = [];
-      for (let b = 0; b < N; b++) for (const L of all[b]) if (L.cells.includes(k) && L.cells.every((x) => !used[x] && x >= k)) opts.push({ ...L, bend: b });
+      const opts = findEllOptions(all, N, used, k);
       for (const L of PuzzleShell.shuffle(opts).slice(0, 5)) {
         L.cells.forEach((x) => { used[x] = 1; });
         pieces.push(L);

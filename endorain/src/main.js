@@ -61,6 +61,29 @@
     return { N: cands.length, cons, check };
   }
 
+  function buildStraightLine(grid, r, c, [dr, dc], len) {
+    const { n, room, used } = grid;
+    const cells = [];
+    for (let i = 0; i < len; i++) {
+      const a = r + dr * i, b = c + dc * i;
+      if (a >= n || b >= n || used[a * n + b]) return null;
+      cells.push(a * n + b);
+    }
+    return room[cells[0]] !== room[cells[len - 1]] ? cells : null;
+  }
+
+  function findLineOptions(n, room, used, r, c) {
+    const grid = { n, room, used };
+    const opts = [];
+    for (const dir of [[0, 1], [1, 0]]) {
+      for (const len of [2, 3, 4]) {
+        const cells = buildStraightLine(grid, r, c, dir, len);
+        if (cells) opts.push(cells);
+      }
+    }
+    return opts;
+  }
+
   // Random cover with straight lines of 2..4 cells whose ends differ in room.
   function randomCover(n, room, deadline) {
     const N = n * n;
@@ -70,16 +93,7 @@
       while (k < N && used[k]) k++;
       if (k === N) return true;
       const r = Math.floor(k / n), c = k % n;
-      const opts = [];
-      for (const [dr, dc] of [[0, 1], [1, 0]]) for (const len of [2, 3, 4]) {
-        const cells = [];
-        for (let i = 0; i < len; i++) {
-          const a = r + dr * i, b = c + dc * i;
-          if (a >= n || b >= n || used[a * n + b]) break;
-          cells.push(a * n + b);
-        }
-        if (cells.length === len && room[cells[0]] !== room[cells[len - 1]]) opts.push(cells);
-      }
+      const opts = findLineOptions(n, room, used, r, c);
       for (const cells of PuzzleShell.shuffle(opts)) {
         cells.forEach((x) => { used[x] = 1; });
         lines.push(cells);

@@ -37,6 +37,23 @@ const Solver = (() => {
     return set;
   }
 
+  function deducePair(a, b, s, log) {
+    const shared = [...a.open].filter((j) => b.open.has(j));
+    if (!shared.length) return 0;
+    const aOnly = a.open.size - shared.length;
+    const bOnly = [...b.open].filter((j) => !a.open.has(j));
+    if (!bOnly.length) return 0;
+    const xmin = Math.max(0, a.need - aOnly, b.need - bOnly.length);
+    const xmax = Math.min(a.need, b.need, shared.length);
+    let v = 0;
+    if (b.need - xmax === bOnly.length) v = FILLED;
+    else if (b.need - xmin === 0) v = EMPTY;
+    if (!v) return 0;
+    for (const j of bOnly) s[j] = v;
+    if (log) log.push({ con: b.con, other: a.con, cells: bOnly, v });
+    return bOnly.length;
+  }
+
   // Pair rule for two overlapping clues A and B. Bounds the filled count
   // in the shared cells, which can settle the cells only B sees.
   function pairStep(cons, s, log) {
@@ -51,20 +68,8 @@ const Solver = (() => {
     }).filter((x) => x.open.size);
     for (const a of info) for (const b of info) {
       if (a === b) continue;
-      const shared = [...a.open].filter((j) => b.open.has(j));
-      if (!shared.length) continue;
-      const aOnly = a.open.size - shared.length;
-      const bOnly = [...b.open].filter((j) => !a.open.has(j));
-      if (!bOnly.length) continue;
-      const xmin = Math.max(0, a.need - aOnly, b.need - bOnly.length);
-      const xmax = Math.min(a.need, b.need, shared.length);
-      let v = 0;
-      if (b.need - xmax === bOnly.length) v = FILLED;
-      else if (b.need - xmin === 0) v = EMPTY;
-      if (!v) continue;
-      for (const j of bOnly) s[j] = v;
-      if (log) log.push({ con: b.con, other: a.con, cells: bOnly, v });
-      return bOnly.length;
+      const res = deducePair(a, b, s, log);
+      if (res > 0) return res;
     }
     return 0;
   }

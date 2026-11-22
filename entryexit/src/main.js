@@ -3,7 +3,6 @@
 // exactly twice). Built on the shared Loop engine.
 
 (() => {
-  const { UNKNOWN, LINE, CROSS } = Loop;
 
   function model(p) {
     const g = Loop.grid(p.R, p.C);
@@ -19,24 +18,26 @@
     function rule(s, log) {
       for (const edges of border) {
         if (!edges) continue;
-        const lines = edges.filter((e) => s[e] === LINE).length;
-        const open = edges.filter((e) => s[e] === UNKNOWN);
-        if (lines > 2 || lines + open.length < 2) return false;
-        if (!open.length) continue;
-        if (lines === 2) {
-          for (const e of open) s[e] = CROSS;
-          if (log) log.push({ edges: open, v: CROSS, reason: 'This region is already entered and left once. The loop crosses no more of its border.' });
-          return open.length;
-        }
-        if (lines + open.length === 2) {
-          for (const e of open) s[e] = LINE;
-          if (log) log.push({ edges: open, v: LINE, reason: 'The loop must enter and leave this region, and only these border crossings are left.' });
-          return open.length;
-        }
+        const res = Loop.stepBorder(edges, 2, s, log,
+          'This region is already entered and left once. The loop crosses no more of its border.',
+          'The loop must enter and leave this region, and only these border crossings are left.');
+        if (res !== 0) return res;
       }
       return 0;
     }
     return { g, must, rule };
+  }
+
+  function partitionRegions(rot, n) {
+    const region = new Int32Array(n * n);
+    let id = 0;
+    for (let i = 0; i < rot.length;) {
+      const len = Math.min(rot.length - i, 2 + Math.floor(Math.random() * 5));
+      for (let j = 0; j < len; j++) region[rot[i + j]] = id;
+      i += len;
+      id++;
+    }
+    return region;
   }
 
   function generate(half) {
@@ -45,25 +46,8 @@
     while (Date.now() < deadline) {
       const sol = Loop.randomTour(n);
       const g = Loop.grid(n, n);
-      // Walk the tour and cut it into stretches of 2..6 cells.
-      const next = Array.from({ length: n * n }, () => []);
-      for (let e = 0; e < g.E; e++) if (sol[e] === LINE) { const [a, b] = g.ends[e]; next[a].push(b); next[b].push(a); }
-      const order = [0];
-      for (let prev = -1, cur = 0; order.length < n * n;) {
-        const nx = next[cur].find((x) => x !== prev);
-        prev = cur; cur = nx;
-        order.push(cur);
-      }
-      const shift = Math.floor(Math.random() * order.length);
-      const rot = order.slice(shift).concat(order.slice(0, shift));
-      const region = new Int32Array(n * n);
-      let id = 0;
-      for (let i = 0; i < rot.length;) {
-        const len = Math.min(rot.length - i, 2 + Math.floor(Math.random() * 5));
-        for (let j = 0; j < len; j++) region[rot[i + j]] = id;
-        i += len;
-        id++;
-      }
+      const rot = Loop.tourOrder(sol, g, n);
+      const region = partitionRegions(rot, n);
       const p = { R: n, C: n, region };
       const res = Loop.solve(model(p), 2, 20000);
       if (res.solutions.length !== 1 || res.capped) continue;

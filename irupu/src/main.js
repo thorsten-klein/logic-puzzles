@@ -27,6 +27,26 @@
   }
 
   // Split the loop into blocks that follow all rules; null if none works.
+  function blockNeighborIds(cells, pos, idOf, i, C) {
+    const near = new Set();
+    for (const k of cells) {
+      for (const j of [k - C, k + C, k % C ? k - 1 : -1, (k + 1) % C ? k + 1 : -1]) {
+        if (pos.has(j) && idOf(j) !== i) near.add(idOf(j));
+      }
+    }
+    return near;
+  }
+
+  function checkBlockNeighbors(list, pos, off, ring, C) {
+    const idOf = (k) => Math.floor(((pos.get(k) - off + ring.length) % ring.length) / 3);
+    const B = list.length;
+    for (let i = 0; i < B; i++) {
+      const near = blockNeighborIds(list[i], pos, idOf, i, C);
+      if (near.size !== 2 || !near.has((i + 1) % B) || !near.has((i + B - 1) % B)) return false;
+    }
+    return true;
+  }
+
   function blocks(C, ring, circle) {
     if (ring.length % 3) return null;
     const pos = new Map(ring.map((k, i) => [k, i]));
@@ -42,16 +62,7 @@
       }
       if (!ok) continue;
       // Each block touches only its two loop neighbours.
-      const idOf = (k) => Math.floor(((pos.get(k) - off + ring.length) % ring.length) / 3);
-      const B = list.length;
-      for (let i = 0; i < B && ok; i++) {
-        const near = new Set();
-        for (const k of list[i]) for (const j of [k - C, k + C, k % C ? k - 1 : -1, (k + 1) % C ? k + 1 : -1]) {
-          if (pos.has(j) && idOf(j) !== i) near.add(idOf(j));
-        }
-        if (near.size !== 2 || !near.has((i + 1) % B) || !near.has((i + B - 1) % B)) ok = false;
-      }
-      if (ok) return list;
+      if (checkBlockNeighbors(list, pos, off, ring, C)) return list;
     }
     return null;
   }

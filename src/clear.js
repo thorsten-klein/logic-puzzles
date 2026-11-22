@@ -15,7 +15,7 @@
   ];
 
   const keys = () => { try { return Object.keys(localStorage); } catch { return []; } };
-  const keysOf = (kind) => keys().filter(kind.test);
+  const keysOf = (kind) => keys().filter((k) => kind.test(k));
 
   // One checkbox per kind; empty kinds are shown but can not be chosen.
   function fill() {

@@ -27,26 +27,28 @@
         len++;
       }
     };
+    function checkClueCell(v, k, s) {
+      const dirs = [0, 1, 2, 3].filter((d) => g.cellEdges[k][d] >= 0 && s[g.cellEdges[k][d]] === LINE);
+      const legs = dirs.map((d) => leg(s, k, d));
+      for (const l of legs) {
+        if (l.len > v) return -1;
+      }
+      if (dirs.length === 2) {
+        if (dirs[0] === OPP[dirs[1]]) {
+          const sum = legs[0].len + legs[1].len;
+          if (sum > v || (legs[0].final && legs[1].final && sum !== v)) return -1;
+        } else if (legs.some((l) => l.final && l.len !== v)) return -1;
+      } else if (dirs.length === 1 && legs[0].final && legs[0].len !== v) {
+        const o = g.cellEdges[k][OPP[dirs[0]]];
+        if (o < 0 || s[o] === CROSS) return -1;
+      }
+      return 0;
+    }
+
     function rule(s) {
       for (let k = 0; k < R * C; k++) {
         const v = clues[k];
-        if (v <= 0) continue;
-        const dirs = [0, 1, 2, 3].filter((d) => g.cellEdges[k][d] >= 0 && s[g.cellEdges[k][d]] === LINE);
-        const legs = dirs.map((d) => leg(s, k, d));
-        for (const l of legs) {
-          // Too long in any case (also a straight stretch would be longer).
-          if (l.len > v) return -1;
-        }
-        if (dirs.length === 2) {
-          if (dirs[0] === OPP[dirs[1]]) {
-            const sum = legs[0].len + legs[1].len;
-            if (sum > v || (legs[0].final && legs[1].final && sum !== v)) return -1;
-          } else if (legs.some((l) => l.final && l.len !== v)) return -1;
-        } else if (dirs.length === 1 && legs[0].final && legs[0].len !== v) {
-          // A short leg that ends needs the loop to go straight through.
-          const o = g.cellEdges[k][OPP[dirs[0]]];
-          if (o < 0 || s[o] === CROSS) return -1;
-        }
+        if (v > 0 && checkClueCell(v, k, s) === -1) return -1;
       }
       return 0;
     }

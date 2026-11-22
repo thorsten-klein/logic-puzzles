@@ -41,31 +41,52 @@
     return out;
   }
 
+  function pruneMirrors(p, cand, N) {
+    let changed = false;
+    for (let k = 0; k < N; k++) {
+      for (const d of cand[k]) {
+        const m = mirror(p, k, d);
+        if (m < 0 || !cand[m].has(d)) {
+          cand[k].delete(d);
+          changed = true;
+        }
+      }
+      if (!cand[k].size) return null;
+    }
+    return changed;
+  }
+
+  function pruneDisconnected(p, cand, N, d) {
+    const seen = new Uint8Array(N);
+    const stack = coreCells(p, d).filter((k) => cand[k].has(d));
+    if (stack.length !== coreCells(p, d).length) return null;
+    stack.forEach((k) => { seen[k] = 1; });
+    while (stack.length) {
+      const k = stack.pop();
+      for (const j of neighbours(p, k)) {
+        if (!seen[j] && cand[j].has(d)) { seen[j] = 1; stack.push(j); }
+      }
+    }
+    let changed = false;
+    for (let k = 0; k < N; k++) {
+      if (!seen[k] && cand[k].has(d)) {
+        cand[k].delete(d);
+        changed = true;
+        if (!cand[k].size) return null;
+      }
+    }
+    return changed;
+  }
+
   function propagate(p, cand) {
     const N = p.R * p.C;
     for (let guard = 0; guard < 200; guard++) {
-      let changed = false;
-      for (let k = 0; k < N; k++) {
-        // Deleting the current entry while iterating a Set is safe.
-        for (const d of cand[k]) {
-          const m = mirror(p, k, d);
-          if (m < 0 || !cand[m].has(d)) { cand[k].delete(d); changed = true; }
-        }
-        if (!cand[k].size) return false;
-      }
-      // Each dot's area must connect to its core.
+      let changed = pruneMirrors(p, cand, N);
+      if (changed === null) return false;
       for (let d = 0; d < p.dots.length; d++) {
-        const seen = new Uint8Array(N);
-        const stack = coreCells(p, d).filter((k) => cand[k].has(d));
-        if (stack.length !== coreCells(p, d).length) return false;
-        stack.forEach((k) => { seen[k] = 1; });
-        while (stack.length) {
-          const k = stack.pop();
-          for (const j of neighbours(p, k)) if (!seen[j] && cand[j].has(d)) { seen[j] = 1; stack.push(j); }
-        }
-        for (let k = 0; k < N; k++) {
-          if (!seen[k] && cand[k].has(d)) { cand[k].delete(d); changed = true; if (!cand[k].size) return false; }
-        }
+        const res = pruneDisconnected(p, cand, N, d);
+        if (res === null) return false;
+        if (res) changed = true;
       }
       if (!changed) return true;
     }
@@ -92,6 +113,32 @@
     return { solutions, capped: nodes > maxNodes };
   }
 
+  function findGalaxyFrontier(p, owner, N, d) {
+    const front = [];
+    for (let k = 0; k < N; k++) {
+      if (owner[k] !== d) continue;
+      for (const j of neighbours(p, k)) {
+        const m = mirror(p, j, d);
+        if (owner[j] < 0 && m >= 0 && owner[m] < 0) front.push(j);
+      }
+    }
+    return front;
+  }
+
+  function expandGalaxy(p, owner, N, d, size, initialCells) {
+    let cells = initialCells;
+    for (let t = 0; t < 40 && cells < size; t++) {
+      const front = findGalaxyFrontier(p, owner, N, d);
+      if (!front.length) break;
+      const j = front[Math.floor(Math.random() * front.length)];
+      const m = mirror(p, j, d);
+      owner[j] = d;
+      owner[m] = d;
+      cells += j === m ? 1 : 2;
+    }
+    return cells;
+  }
+
   // --- generator: grow symmetric regions one by one ---
   function tryOnce(n) {
     const R = n, C = n, N = R * C;
@@ -116,23 +163,7 @@
       }
       core.forEach((k) => { owner[k] = d; });
       const size = 2 + Math.floor(Math.random() * Math.max(2, n));
-      let cells = core.length;
-      for (let t = 0; t < 40 && cells < size; t++) {
-        const front = [];
-        for (let k = 0; k < N; k++) {
-          if (owner[k] !== d) continue;
-          for (const j of neighbours(p, k)) {
-            const m = mirror(p, j, d);
-            if (owner[j] < 0 && m >= 0 && owner[m] < 0) front.push(j);
-          }
-        }
-        if (!front.length) break;
-        const j = front[Math.floor(Math.random() * front.length)];
-        const m = mirror(p, j, d);
-        owner[j] = d;
-        owner[m] = d;
-        cells += j === m ? 1 : 2;
-      }
+      expandGalaxy(p, owner, N, d, size, core.length);
     }
     if (owner.some((v) => v < 0)) return null;
     const res = solve(p, 2);
