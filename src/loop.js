@@ -34,31 +34,43 @@ const Loop = (() => {
   }
 
   // Basic rules for one cell: at most 2 lines, never exactly 1 at the end.
-  // `must` marks cells the loop has to visit. Returns false, or cells set.
+  // `must` marks cells the loop has to visit. Returns -1, or cells set.
   function cellStep(g, s, must, log) {
     let set = 0;
     for (let k = 0; k < g.R * g.C; k++) {
-      const es = g.cellEdges[k].filter((e) => e >= 0);
-      const lines = es.filter((e) => s[e] === LINE).length;
-      const open = es.filter((e) => s[e] === UNKNOWN);
-      if (lines > 2) return -1;
-      if (lines + open.length < (must?.[k] || lines ? 2 : 0)) return -1;
-      if (!open.length) continue;
-      let v = 0, why = '';
-      if (lines === 2) { v = CROSS; why = 'This cell already has two lines. No more lines can touch it.'; }
-      else if (lines === 1 && open.length === 1) { v = LINE; why = 'The line must go on, and this is its only way out.'; }
-      else if (lines === 0 && open.length === 1) { v = CROSS; why = 'The loop can not pass through this cell: it has only one open side.'; }
-      else if (must?.[k] && lines + open.length === 2) { v = LINE; why = 'The loop must pass through this cell, and only these sides are open.'; }
-      if (!v) continue;
-      for (const e of open) s[e] = v;
-      set += open.length;
-      if (log) log.push({ edges: open, v, reason: why, at: k });
+      const r = cellStepAt(g, s, Boolean(must?.[k]), k, log);
+      if (r < 0) return -1;
+      set += r;
     }
     return set;
   }
 
-  // Follows line edges into paths. Returns { closed, paths } where a path
-  // is { a, b } (its two end cells) or a closed loop.
+  // cellStep for cell k. Returns -1, or the number of edges set.
+  function cellStepAt(g, s, mustK, k, log) {
+    const es = g.cellEdges[k].filter((e) => e >= 0);
+    const lines = es.filter((e) => s[e] === LINE).length;
+    const open = es.filter((e) => s[e] === UNKNOWN);
+    if (lines > 2) return -1;
+    if (lines + open.length < (mustK || lines ? 2 : 0)) return -1;
+    if (!open.length) return 0;
+    const f = forcedSides(lines, open.length, mustK);
+    if (!f) return 0;
+    for (const e of open) s[e] = f.v;
+    if (log) log.push({ edges: open, v: f.v, reason: f.why, at: k });
+    return open.length;
+  }
+
+  // What the open sides of a cell must be, or null if not forced yet.
+  function forcedSides(lines, nOpen, mustK) {
+    if (lines === 2) return { v: CROSS, why: 'This cell already has two lines. No more lines can touch it.' };
+    if (lines === 1 && nOpen === 1) return { v: LINE, why: 'The line must go on, and this is its only way out.' };
+    if (lines === 0 && nOpen === 1) return { v: CROSS, why: 'The loop can not pass through this cell: it has only one open side.' };
+    if (mustK && lines + nOpen === 2) return { v: LINE, why: 'The loop must pass through this cell, and only these sides are open.' };
+    return null;
+  }
+
+  // Follows line edges into paths. Returns { loops, loopCells, open,
+  // lineCells }: closed loops, and the two end cells of each open path.
   function paths(g, s) {
     const adj = Array.from({ length: g.R * g.C }, () => []);
     for (let e = 0; e < g.E; e++) {
@@ -71,19 +83,25 @@ const Loop = (() => {
     const out = { loops: 0, loopCells: 0, open: [], lineCells: 0 };
     for (let k = 0; k < g.R * g.C; k++) {
       if (seen[k] || !adj[k].length) continue;
-      const stack = [k];
-      seen[k] = 1;
-      const comp = [];
-      while (stack.length) {
-        const x = stack.pop();
-        comp.push(x);
-        for (const y of adj[x]) if (!seen[y]) { seen[y] = 1; stack.push(y); }
-      }
+      const comp = component(adj, seen, k);
       out.lineCells += comp.length;
       const ends = comp.filter((x) => adj[x].length === 1);
-      if (!ends.length) { out.loops++; out.loopCells += comp.length; } else out.open.push(ends);
+      if (ends.length) out.open.push(ends);
+      else { out.loops++; out.loopCells += comp.length; }
     }
     return out;
+  }
+
+  // Cells joined to k by lines (marks them in `seen`).
+  function component(adj, seen, k) {
+    const stack = [k], comp = [];
+    seen[k] = 1;
+    while (stack.length) {
+      const x = stack.pop();
+      comp.push(x);
+      for (const y of adj[x]) if (!seen[y]) { seen[y] = 1; stack.push(y); }
+    }
+    return comp;
   }
 
   // No early small loop: an open edge that joins the two ends of one
@@ -91,46 +109,54 @@ const Loop = (() => {
   function loopStep(g, s, must, log) {
     const info = paths(g, s);
     if (info.loops > 1) return -1;
-    if (info.loops === 1) {
-      // A closed loop must be everything.
-      if (info.open.length) return -1;
-      if (must) for (let k = 0; k < must.length; k++) {
-        if (must[k] && g.cellEdges[k].every((e) => e < 0 || s[e] !== LINE)) return -1;
-      }
-      return 0;
-    }
+    if (info.loops === 1) return closedLoopOk(g, s, must, info) ? 0 : -1;
     if (info.open.length < 2) return 0;
+    return crossEarlyLoop(g, s, info, log);
+  }
+
+  // A closed loop must be everything: no open paths, every must-cell on it.
+  function closedLoopOk(g, s, must, info) {
+    if (info.open.length) return false;
+    if (!must) return true;
+    return must.every((m, k) => !m || g.cellEdges[k].some((e) => e >= 0 && s[e] === LINE));
+  }
+
+  // Crosses the first open edge that would close one path into a loop.
+  function crossEarlyLoop(g, s, info, log) {
     const endOf = new Map();
     info.open.forEach(([a, b], i) => { endOf.set(a, i); endOf.set(b, i); });
     for (let e = 0; e < g.E; e++) {
       if (s[e] !== UNKNOWN) continue;
       const [a, b] = g.ends[e];
-      if (endOf.has(a) && endOf.get(a) === endOf.get(b)) {
-        s[e] = CROSS;
-        if (log) log.push({ edges: [e], v: CROSS, reason: 'A line here would close a small loop too early. The loop must be one single ring.' });
-        return 1;
-      }
+      if (!endOf.has(a) || endOf.get(a) !== endOf.get(b)) continue;
+      s[e] = CROSS;
+      if (log) log.push({ edges: [e], v: CROSS, reason: 'A line here would close a small loop too early. The loop must be one single ring.' });
+      return 1;
     }
     return 0;
   }
 
   // A model: { g, must, rule(s, log) } — rule is the game's own step.
+  // The steps run in order; after any change it starts again from the
+  // first. With a log it stops after the first change.
   function settle(m, s, log) {
+    const steps = [(t, l) => cellStep(m.g, t, m.must, l), m.rule && ((t, l) => m.rule(t, l)), (t, l) => loopStep(m.g, t, m.must, l)].filter(Boolean);
     for (let guard = 0; guard < 10000; guard++) {
-      let r = cellStep(m.g, s, m.must, log);
-      if (failed(r)) return false;
-      if (r) { if (log) { return true; } continue; }
-      if (m.rule) {
-        r = m.rule(s, log);
-        if (failed(r)) return false;
-        if (r) { if (log) { return true; } continue; }
-      }
-      r = loopStep(m.g, s, m.must, log);
-      if (failed(r)) return false;
-      if (r) { if (log) { return true; } continue; }
-      return true;
+      const r = firstChange(steps, s, log);
+      if (r < 0) return false;
+      if (!r || log) return true;
     }
     return true; // safety limit reached
+  }
+
+  // Runs the steps until one changes something. Returns -1, 0, or 1.
+  function firstChange(steps, s, log) {
+    for (const f of steps) {
+      const r = f(s, log);
+      if (failed(r)) return -1;
+      if (r) return 1;
+    }
+    return 0;
   }
 
   function complete(m, s) {
@@ -200,63 +226,84 @@ const Loop = (() => {
   // Returns an edge state.
   function randomLoop(R, C, fill = 0.5, thin = false) {
     const g = grid(R, C);
-    const H = R - 1, W = C - 1;
     for (let tries = 0; tries < 50; tries++) {
-      const inside = new Uint8Array(H * W);
-      const at = (r, c) => (r < 0 || c < 0 || r >= H || c >= W ? 0 : inside[r * W + c]);
-      const holeFree = () => {
-        const seen = new Uint8Array(H * W);
-        const stack = [];
-        for (let k = 0; k < H * W; k++) {
-          const r = Math.floor(k / W), c = k % W;
-          if (!inside[k] && (r === 0 || c === 0 || r === H - 1 || c === W - 1)) { seen[k] = 1; stack.push(k); }
-        }
-        while (stack.length) {
-          const k = stack.pop(), r = Math.floor(k / W), c = k % W;
-          for (const [dr, dc] of [[-1, 0], [1, 0], [0, -1], [0, 1]]) {
-            const nr = r + dr, nc = c + dc;
-            if (nr < 0 || nc < 0 || nr >= H || nc >= W) continue;
-            const j = nr * W + nc;
-            if (!seen[j] && !inside[j]) { seen[j] = 1; stack.push(j); }
-          }
-        }
-        return inside.every((v, k) => v || seen[k]);
-      };
-      const checker = () => {
-        for (let r = 0; r <= H; r++) for (let c = 0; c <= W; c++) {
-          const tl = at(r - 1, c - 1), tr = at(r - 1, c), bl = at(r, c - 1), br = at(r, c);
-          if (tl === br && tr === bl && tl !== tr) return true;
-        }
-        return false;
-      };
-      inside[Math.floor(Math.random() * H * W)] = 1;
-      let size = 1;
-      const target = Math.round(H * W * fill);
-      for (let fails = 0; size < target && fails < H * W * 10;) {
-        const cand = [];
-        for (let k = 0; k < H * W; k++) {
-          if (inside[k]) continue;
-          const r = Math.floor(k / W), c = k % W;
-          const touch = at(r - 1, c) + at(r + 1, c) + at(r, c - 1) + at(r, c + 1);
-          if (touch && (!thin || touch === 1)) cand.push(k);
-        }
-        if (!cand.length) break;
-        const k = cand[Math.floor(Math.random() * cand.length)];
-        inside[k] = 1;
-        if (!holeFree() || checker()) { inside[k] = 0; fails++; continue; }
-        size++;
-      }
-      // Square (r, c) has corners at cells (r, c), (r, c+1), (r+1, c), (r+1, c+1).
-      const s = new Uint8Array(g.E).fill(CROSS);
-      for (let r = 0; r < R; r++) for (let c = 0; c < C - 1; c++) {
-        if (at(r - 1, c) !== at(r, c)) s[r * (C - 1) + c] = LINE;
-      }
-      for (let r = 0; r < R - 1; r++) for (let c = 0; c < C; c++) {
-        if (at(r, c - 1) !== at(r, c)) s[R * (C - 1) + r * C + c] = LINE;
-      }
+      const at = growBlob(R - 1, C - 1, fill, thin);
+      const s = blobBorder(g, R, C, at);
       if (complete({ g }, s)) return s;
     }
     return null;
+  }
+
+  // A random blob of squares on an H x W grid, without holes and without
+  // two squares that touch only at a corner. Returns at(r, c): 1 inside.
+  function growBlob(H, W, fill, thin) {
+    const inside = new Uint8Array(H * W);
+    const at = (r, c) => (r < 0 || c < 0 || r >= H || c >= W ? 0 : inside[r * W + c]);
+    inside[Math.floor(Math.random() * H * W)] = 1;
+    let size = 1;
+    const target = Math.round(H * W * fill);
+    for (let fails = 0; size < target && fails < H * W * 10;) {
+      const cand = blobCandidates(inside, at, H, W, thin);
+      if (!cand.length) break;
+      const k = cand[Math.floor(Math.random() * cand.length)];
+      inside[k] = 1;
+      if (!holeFree(inside, H, W) || hasChecker(at, H, W)) { inside[k] = 0; fails++; continue; }
+      size++;
+    }
+    return at;
+  }
+
+  // Squares next to the blob (with `thin`: next to exactly one square).
+  function blobCandidates(inside, at, H, W, thin) {
+    const cand = [];
+    for (let k = 0; k < H * W; k++) {
+      if (inside[k]) continue;
+      const r = Math.floor(k / W), c = k % W;
+      const touch = at(r - 1, c) + at(r + 1, c) + at(r, c - 1) + at(r, c + 1);
+      if (touch && (!thin || touch === 1)) cand.push(k);
+    }
+    return cand;
+  }
+
+  // True if every outside square reaches the grid border.
+  function holeFree(inside, H, W) {
+    const seen = new Uint8Array(H * W);
+    const stack = [];
+    for (let k = 0; k < H * W; k++) {
+      const r = Math.floor(k / W), c = k % W;
+      if (!inside[k] && (r === 0 || c === 0 || r === H - 1 || c === W - 1)) { seen[k] = 1; stack.push(k); }
+    }
+    while (stack.length) {
+      const k = stack.pop(), r = Math.floor(k / W), c = k % W;
+      for (const [dr, dc] of [[-1, 0], [1, 0], [0, -1], [0, 1]]) {
+        const nr = r + dr, nc = c + dc;
+        const j = nr * W + nc;
+        if (nr >= 0 && nc >= 0 && nr < H && nc < W && !seen[j] && !inside[j]) { seen[j] = 1; stack.push(j); }
+      }
+    }
+    return inside.every((v, k) => v || seen[k]);
+  }
+
+  // True if two inside squares touch only at a corner somewhere.
+  function hasChecker(at, H, W) {
+    for (let r = 0; r <= H; r++) for (let c = 0; c <= W; c++) {
+      const tl = at(r - 1, c - 1), tr = at(r - 1, c), bl = at(r, c - 1), br = at(r, c);
+      if (tl === br && tr === bl && tl !== tr) return true;
+    }
+    return false;
+  }
+
+  // The blob's outline as an edge state on the R x C point grid.
+  // Square (r, c) has corners at cells (r, c), (r, c+1), (r+1, c), (r+1, c+1).
+  function blobBorder(g, R, C, at) {
+    const s = new Uint8Array(g.E).fill(CROSS);
+    for (let r = 0; r < R; r++) for (let c = 0; c < C - 1; c++) {
+      if (at(r - 1, c) !== at(r, c)) s[r * (C - 1) + c] = LINE;
+    }
+    for (let r = 0; r < R - 1; r++) for (let c = 0; c < C; c++) {
+      if (at(r, c - 1) !== at(r, c)) s[R * (C - 1) + r * C + c] = LINE;
+    }
+    return s;
   }
 
   // A tour through every point: walk around a random spanning tree of
@@ -349,14 +396,16 @@ const Loop = (() => {
     const gMarks = drawOnTop ? gAbove : gBelow;
     if (drawCell) for (let k = 0; k < R * C; k++) { const [x, y] = center(k); drawCell(gMarks, k, x, y, s, shownState); }
     const hintSet = new Set(hint ? hint.edges : []);
-    for (let e = 0; e < E; e++) {
-      const [a, b] = ends[e];
-      const [x1, y1] = center(a), [x2, y2] = center(b);
+    // Result view: right, wrong (also a cross on a line), or not drawn yet.
+    const resultMark = (e) => {
+      if (state[e] === LINE) return solution[e] === LINE ? ' ok' : ' bad';
+      if (solution[e] !== LINE) return '';
+      return state[e] === CROSS ? ' bad' : ' miss';
+    };
+    const drawEdge = (e, [x1, y1], [x2, y2]) => {
       let v = state[e], cls = '';
       if (result) {
-        if (state[e] === LINE) cls = solution[e] === LINE ? ' ok' : ' bad';
-        else if (state[e] === CROSS && solution[e] === LINE) cls = ' bad'; // crossed out, but a line
-        else if (solution[e] === LINE) cls = ' miss'; // not drawn yet
+        cls = resultMark(e);
         v = solution[e] === LINE ? LINE : UNKNOWN;
       }
       if (hintSet.has(e)) cls += ' hint';
@@ -368,16 +417,22 @@ const Loop = (() => {
       } else if (hintSet.has(e) || cls.includes('bad')) {
         el('line', { x1, y1, x2, y2, class: 'lp-ghost' + cls }, gLines);
       }
-      if (!readonly && !fixedSet.has(e)) {
-        const hit = el('line', { x1, y1, x2, y2, class: 'lp-hit', 'stroke-width': s * 0.45 }, gHits);
-        const cycle = (back) => {
-          const order = back ? [UNKNOWN, CROSS, LINE] : [UNKNOWN, LINE, CROSS];
-          state[e] = order[(order.indexOf(state[e]) + 1) % 3];
-          onChange();
-        };
-        hit.addEventListener('click', () => cycle(false));
-        hit.addEventListener('contextmenu', (ev) => { ev.preventDefault(); cycle(true); });
-      }
+    };
+    // Click target: left click cycles open, line, cross; right click back.
+    const addHit = (e, [x1, y1], [x2, y2]) => {
+      const hit = el('line', { x1, y1, x2, y2, class: 'lp-hit', 'stroke-width': s * 0.45 }, gHits);
+      const cycle = (back) => {
+        const order = back ? [UNKNOWN, CROSS, LINE] : [UNKNOWN, LINE, CROSS];
+        state[e] = order[(order.indexOf(state[e]) + 1) % 3];
+        onChange();
+      };
+      hit.addEventListener('click', () => cycle(false));
+      hit.addEventListener('contextmenu', (ev) => { ev.preventDefault(); cycle(true); });
+    };
+    for (let e = 0; e < E; e++) {
+      const p1 = center(ends[e][0]), p2 = center(ends[e][1]);
+      drawEdge(e, p1, p2);
+      if (!readonly && !fixedSet.has(e)) addHit(e, p1, p2);
     }
     return svg;
   }

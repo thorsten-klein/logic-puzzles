@@ -34,42 +34,76 @@ const Latin = (() => {
     return g;
   }
 
+  // Cells of line `line`: rows 0..n-1, then columns.
+  const lineCells = (n, line) => Array.from({ length: n }, (_, i) => (line < n ? line * n + i : i * n + (line - n)));
+
+  // A fixed digit leaves the other cells of its row and column.
+  // Returns -1 on contradiction, else the number of cells changed.
+  function eliminateFixed(n, cand) {
+    let changed = 0;
+    for (let k = 0; k < n * n; k++) {
+      if (!cand[k]) return -1;
+      if (bitCount(cand[k]) !== 1) continue;
+      const r = removeFromLines(n, cand, k);
+      if (r < 0) return -1;
+      changed += r;
+    }
+    return changed;
+  }
+
+  // Removes the digit of fixed cell k from the rest of its row and column.
+  // Returns -1 if a cell has nothing left, else the number of cells changed.
+  function removeFromLines(n, cand, k) {
+    const m = cand[k], r = Math.floor(k / n), c = k % n;
+    let changed = 0;
+    for (let i = 0; i < n; i++) {
+      for (const j of [r * n + i, i * n + c]) {
+        if (j === k || !(cand[j] & m)) continue;
+        cand[j] &= ~m;
+        if (!cand[j]) return -1;
+        changed++;
+      }
+    }
+    return changed;
+  }
+
+  // A digit with only one place left in a line goes there.
+  // Returns -1 on contradiction, else the number of cells changed.
+  function hiddenSingles(n, cand) {
+    let changed = 0;
+    for (let line = 0; line < 2 * n; line++) {
+      const cells = lineCells(n, line);
+      for (let v = 1; v <= n; v++) {
+        const b = 1 << v;
+        const where = cells.filter((j) => cand[j] & b);
+        if (!where.length) return -1;
+        if (where.length === 1 && cand[where[0]] !== b) { cand[where[0]] = b; changed++; }
+      }
+    }
+    return changed;
+  }
+
+  // The game's own rule. Returns -1 on contradiction, 1 if it changed
+  // something, else 0.
+  function applyPrune(cand, prune) {
+    if (!prune) return 0;
+    const before = cand.join(',');
+    if (prune(cand) === false) return -1;
+    return cand.join(',') === before ? 0 : 1;
+  }
+
   // Row and column eliminations plus hidden singles, then the game's
   // own `prune(cand)` (returns false on contradiction). Runs to a fixed
   // point. Returns false on contradiction.
   function propagate(n, cand, prune) {
     for (let guard = 0; guard < 500; guard++) {
-      let changed = false;
-      for (let k = 0; k < n * n; k++) {
-        const m = cand[k];
-        if (!m) return false;
-        if (bitCount(m) !== 1) continue;
-        const r = Math.floor(k / n), c = k % n;
-        for (let i = 0; i < n; i++) {
-          for (const j of [r * n + i, i * n + c]) {
-            if (j === k || !(cand[j] & m)) continue;
-            cand[j] &= ~m;
-            if (!cand[j]) return false;
-            changed = true;
-          }
-        }
-      }
-      for (let line = 0; line < 2 * n; line++) {
-        const cells = [];
-        for (let i = 0; i < n; i++) cells.push(line < n ? line * n + i : i * n + (line - n));
-        for (let v = 1; v <= n; v++) {
-          const b = 1 << v;
-          const where = cells.filter((j) => cand[j] & b);
-          if (!where.length) return false;
-          if (where.length === 1 && cand[where[0]] !== b) { cand[where[0]] = b; changed = true; }
-        }
-      }
-      if (prune) {
-        const before = cand.join(',');
-        if (prune(cand) === false) return false;
-        if (cand.join(',') !== before) changed = true;
-      }
-      if (!changed) return true;
+      const fixed = eliminateFixed(n, cand);
+      if (fixed < 0) return false;
+      const single = hiddenSingles(n, cand);
+      if (single < 0) return false;
+      const pruned = applyPrune(cand, prune);
+      if (pruned < 0) return false;
+      if (!fixed && !single && !pruned) return true;
     }
     return true;
   }
@@ -135,12 +169,37 @@ const Latin = (() => {
   // game rule (`prune`, e.g. one look at each cage), then a reveal.
   // `colName(c)` names a column like the board labels: A, B, C, ...
   function hints(n, entries, solution, prune, what, colName = (c) => PuzzleShell.colName(c)) {
+    const wrong = wrongEntries(n, entries, solution);
+    if (wrong.length) return wrong;
+    const ctx = { n, entries, colName, cand: seenCandidates(n, entries) };
+    const out = singleHints(ctx, ctx.cand, (k, v) => lineInfo(ctx, k, v));
+    if (out.length) return out;
+    if (prune) {
+      const t = Int32Array.from(ctx.cand);
+      // `what` may name the rule per cell (e.g. its cage).
+      const whatOf = typeof what === 'function' ? what : () => what;
+      const ruleReason = (k, v) => `Only ${v} fits here. Look at ${whatOf(k)}: with the numbers its row and column already hold, no other number works.`;
+      if (prune(t) !== false) {
+        const viaRule = singleHints(ctx, t, ruleReason, whatOf);
+        if (viaRule.length) return viaRule;
+      }
+    }
+    const k = entries.findIndex((v, i) => !v && solution[i]);
+    if (k < 0) return [];
+    return [{ cells: [k], v: solution[k], reason: `No one-step deduction is left from what is on the board; this needs a longer chain of steps. This cell is ${solution[k]}.` }];
+  }
+
+  // Entries that differ from the answer.
+  function wrongEntries(n, entries, solution) {
     const out = [];
     for (let k = 0; k < n * n; k++) {
       if (entries[k] && entries[k] !== solution[k]) out.push({ cells: [k], v: 0, reason: 'This number is wrong.' });
     }
-    if (out.length) return out;
-    // Candidates seen directly: drop the numbers already in the row and column.
+    return out;
+  }
+
+  // Candidates seen directly: drop the numbers already in the row and column.
+  function seenCandidates(n, entries) {
     const cand = startCand(n, entries);
     for (let k = 0; k < n * n; k++) {
       if (entries[k]) continue;
@@ -150,66 +209,75 @@ const Latin = (() => {
         if (entries[i * n + c]) cand[k] &= ~(1 << entries[i * n + c]);
       }
     }
-    // Joins names: "1, 3 and 5".
-    const join = (a, word = 'and') => a.length > 1 ? `${a.slice(0, -1).join(', ')} ${word} ${a.at(-1)}` : String(a[0]);
-    // `rule` names what removed the other spots (for the game-rule pass).
-    const singles = (cnd, reason, rule) => {
-      for (let k = 0; k < n * n; k++) {
-        if (entries[k] || bitCount(cnd[k]) !== 1) continue;
-        out.push({ cells: [k], v: lowBit(cnd[k]), reason: reason(k, lowBit(cnd[k])) });
-      }
-      // Hidden singles: a number that fits only one cell of a row or column.
-      for (let line = 0; line < 2 * n && !out.length; line++) {
-        const cells = [];
-        for (let i = 0; i < n; i++) cells.push(line < n ? line * n + i : i * n + (line - n));
-        const name = line < n ? `row ${line + 1}` : `column ${colName(line - n)}`;
-        for (let v = 1; v <= n; v++) {
-          if (cells.some((k) => entries[k] === v)) continue;
-          const where = cells.filter((k) => !entries[k] && cnd[k] & (1 << v));
-          if (where.length !== 1) continue;
-          const head = `${name[0].toUpperCase() + name.slice(1)} still needs a ${v}`;
-          // Spots left by the row and column alone; the rule removes the rest.
-          const open = cells.filter((k) => !entries[k] && cand[k] & (1 << v));
-          // Name cells like "D1" when columns have letters, else by row or column.
-          const lettered = typeof colName(0) === 'string';
-          const spot = (k) => {
-            if (lettered) return `${colName(k % n)}${Math.floor(k / n) + 1}`;
-            if (line < n) return colName(k % n);
-            return Math.floor(k / n) + 1;
-          };
-          let kind;
-          if (lettered) kind = 'cells';
-          else if (line < n) kind = 'columns';
-          else kind = 'rows';
-          const reason = !rule || open.length === 1
-            ? `${head}, and this is the only cell where it can go.`
-            : `${head}. By row and column alone it could go in ${kind} ${join(open.map(spot), 'or')}. ` +
-              `Using ${rule(where[0])}, ${kind} ` +
-              `${join(open.filter((k) => k !== where[0]).map(spot))} drop out. So it must go here.`;
-          out.push({ cells: where, v, reason });
-        }
-      }
-      return out.length > 0;
-    };
-    const lineInfo = (k, v) => {
-      const r = Math.floor(k / n), c = k % n;
-      const row = [], col = [];
-      for (let i = 0; i < n; i++) { if (entries[r * n + i]) { row.push(entries[r * n + i]); } if (entries[i * n + c]) { col.push(entries[i * n + c]); } }
-      const list = (a) => a.length ? a.sort((x, y) => x - y).join(', ') : 'nothing yet';
-      const used = [...new Set([...row, ...col])].sort((x, y) => x - y).join(', ');
-      return `Row ${r + 1} has ${list(row)}. Column ${colName(c)} has ${list(col)}. ` +
-        `Together that is ${used}, so only ${v} is left.`;
-    };
-    if (singles(cand, lineInfo)) return out;
-    if (prune) {
-      const t = Int32Array.from(cand);
-      // `what` may name the rule per cell (e.g. its cage).
-      const whatOf = typeof what === 'function' ? what : () => what;
-      if (prune(t) !== false && singles(t, (k, v) => `Only ${v} fits here. Look at ${whatOf(k)}: with the numbers its row and column already hold, no other number works.`, whatOf)) return out;
+    return cand;
+  }
+
+  // Joins names: "1, 3 and 5".
+  const joinNames = (a, word = 'and') => (a.length > 1 ? `${a.slice(0, -1).join(', ')} ${word} ${a.at(-1)}` : String(a[0]));
+
+  // Naked singles, else hidden singles, from the candidates `cnd`.
+  // `rule` names what removed the other spots (for the game-rule pass).
+  function singleHints(ctx, cnd, reason, rule) {
+    const { n, entries } = ctx;
+    const out = [];
+    for (let k = 0; k < n * n; k++) {
+      if (entries[k] || bitCount(cnd[k]) !== 1) continue;
+      out.push({ cells: [k], v: lowBit(cnd[k]), reason: reason(k, lowBit(cnd[k])) });
     }
-    const k = entries.findIndex((v, i) => !v && solution[i]);
-    if (k >= 0) out.push({ cells: [k], v: solution[k], reason: `No one-step deduction is left from what is on the board; this needs a longer chain of steps. This cell is ${solution[k]}.` });
+    // Hidden singles: a number that fits only one cell of a row or column.
+    for (let line = 0; line < 2 * n && !out.length; line++) out.push(...hiddenSingleHints(ctx, cnd, line, rule));
     return out;
+  }
+
+  // Hidden singles of one line.
+  function hiddenSingleHints(ctx, cnd, line, rule) {
+    const { n, entries } = ctx;
+    const cells = lineCells(n, line);
+    const out = [];
+    for (let v = 1; v <= n; v++) {
+      if (cells.some((k) => entries[k] === v)) continue;
+      const where = cells.filter((k) => !entries[k] && cnd[k] & (1 << v));
+      if (where.length === 1) out.push({ cells: where, v, reason: hiddenReason(ctx, line, v, where[0], rule) });
+    }
+    return out;
+  }
+
+  // Why number v must go in cell `at` of a line.
+  function hiddenReason(ctx, line, v, at, rule) {
+    const { n, entries, colName, cand } = ctx;
+    const name = line < n ? `row ${line + 1}` : `column ${colName(line - n)}`;
+    const head = `${name[0].toUpperCase() + name.slice(1)} still needs a ${v}`;
+    // Spots left by the row and column alone; the rule removes the rest.
+    const open = lineCells(n, line).filter((k) => !entries[k] && cand[k] & (1 << v));
+    if (!rule || open.length === 1) return `${head}, and this is the only cell where it can go.`;
+    // Name cells like "D1" when columns have letters, else by row or column.
+    const lettered = typeof colName(0) === 'string';
+    const spot = (k) => {
+      if (lettered) return `${colName(k % n)}${Math.floor(k / n) + 1}`;
+      if (line < n) return colName(k % n);
+      return Math.floor(k / n) + 1;
+    };
+    let kind = 'rows';
+    if (lettered) kind = 'cells';
+    else if (line < n) kind = 'columns';
+    return `${head}. By row and column alone it could go in ${kind} ${joinNames(open.map(spot), 'or')}. ` +
+      `Using ${rule(at)}, ${kind} ` +
+      `${joinNames(open.filter((k) => k !== at).map(spot))} drop out. So it must go here.`;
+  }
+
+  // "Row 2 has 1, 4. Column C has 3. Together …": why only v is left.
+  function lineInfo(ctx, k, v) {
+    const { n, entries, colName } = ctx;
+    const r = Math.floor(k / n), c = k % n;
+    const row = [], col = [];
+    for (let i = 0; i < n; i++) {
+      if (entries[r * n + i]) row.push(entries[r * n + i]);
+      if (entries[i * n + c]) col.push(entries[i * n + c]);
+    }
+    const list = (a) => (a.length ? a.sort((x, y) => x - y).join(', ') : 'nothing yet');
+    const used = [...new Set([...row, ...col])].sort((x, y) => x - y).join(', ');
+    return `Row ${r + 1} has ${list(row)}. Column ${colName(c)} has ${list(col)}. ` +
+      `Together that is ${used}, so only ${v} is left.`;
   }
 
   // Givens for a solution: add cells where another answer differs until
