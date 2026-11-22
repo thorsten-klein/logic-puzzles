@@ -17,11 +17,7 @@
       const ma = Math.min(...q.map((x) => x[0])), mb = Math.min(...q.map((x) => x[1]));
       keys.push(q.map(([a, b]) => `${a - ma},${b - mb}`).sort().join(' '));
     }
-    let minKey = keys[0];
-    for (const k of keys) {
-      if (k < minKey) minKey = k;
-    }
-    return minKey;
+    return keys.find((k) => keys.every((o) => k <= o));
   }
   const cellsOf = (id, g) => { const out = []; id.forEach((x, k) => { if (x === g) out.push(k); }); return out; };
   // Same-kind neighbours (only regions that are complete: 4 cells).
