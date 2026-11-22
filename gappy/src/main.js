@@ -26,35 +26,43 @@
       const k = r * n + c;
       cons.push({ cells: [k, k + 1, k + n, k + n + 1], min: 0, max: 1, why: () => 'Shaded cells never touch, not even at a corner.' });
     }
+    function findGapFits(cells, gap, n, s) {
+      const fits = [];
+      for (let a = 0; a + gap + 1 < n; a++) {
+        const b = a + gap + 1;
+        if (cells.every((k, j) => (j === a || j === b ? s[k] !== NO : s[k] !== YES))) fits.push([a, b]);
+      }
+      return fits;
+    }
+
+    function stepLine(cells, gap, n, s, name, log) {
+      const fits = findGapFits(cells, gap, n, s);
+      if (!fits.length) return -1;
+      const yes = [], no = [];
+      cells.forEach((k, j) => {
+        if (s[k] !== UNKNOWN) return;
+        const inAll = fits.every(([a, b]) => j === a || j === b);
+        const inAny = fits.some(([a, b]) => j === a || j === b);
+        if (inAll) yes.push(k); else if (!inAny) no.push(k);
+      });
+      if (!yes.length && !no.length) return 0;
+      for (const k of yes) s[k] = YES;
+      for (const k of no) s[k] = NO;
+      if (log) {
+        if (yes.length) log.push({ cells: yes, v: YES, area: cells, reason: `The gap of ${gap} in ${name} only fits with these cells shaded.` });
+        if (no.length) log.push({ cells: no, v: NO, area: cells, reason: `The gap of ${gap} in ${name} can not use these cells.` });
+      }
+      return yes.length + no.length;
+    }
+
     // Gap clue: the shaded pair is (i, i + gap + 1) for some i.
     function propagate(s, log) {
       for (let i = 0; i < lines.length; i++) {
         const gap = clues[i];
         if (gap < 0) continue;
-        const cells = lines[i];
-        const fits = [];
-        for (let a = 0; a + gap + 1 < n; a++) {
-          const b = a + gap + 1;
-          if (cells.every((k, j) => (j === a || j === b ? s[k] !== NO : s[k] !== YES))) fits.push([a, b]);
-        }
-        if (!fits.length) return -1;
-        const yes = [], no = [];
-        cells.forEach((k, j) => {
-          if (s[k] !== UNKNOWN) return;
-          const inAll = fits.every(([a, b]) => j === a || j === b);
-          const inAny = fits.some(([a, b]) => j === a || j === b);
-          if (inAll) yes.push(k); else if (!inAny) no.push(k);
-        });
         const name = i < n ? `column ${i + 1}` : `row ${i - n + 1}`;
-        if (yes.length || no.length) {
-          for (const k of yes) s[k] = YES;
-          for (const k of no) s[k] = NO;
-          if (log) {
-            if (yes.length) log.push({ cells: yes, v: YES, area: cells, reason: `The gap of ${gap} in ${name} only fits with these cells shaded.` });
-            if (no.length) log.push({ cells: no, v: NO, area: cells, reason: `The gap of ${gap} in ${name} can not use these cells.` });
-          }
-          return yes.length + no.length;
-        }
+        const res = stepLine(lines[i], gap, n, s, name, log);
+        if (res !== 0) return res;
       }
       return 0;
     }

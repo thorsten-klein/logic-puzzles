@@ -89,6 +89,46 @@
     return { N, cons, check };
   }
 
+  function buildRandomSnakes(black, nb, N) {
+    const used = new Uint8Array(N);
+    const ring = new Uint8Array(N);
+    for (;;) {
+      const free = [...new Array(N).keys()].filter((k) => black[k] && !used[k]);
+      if (!free.length) break;
+      const deg = (k) => nb[k].filter((j) => black[j] && !used[j]).length;
+      const start = free.reduce((a, b) => (deg(b) < deg(a) || (deg(b) === deg(a) && Math.random() < 0.3) ? b : a), free[0]);
+      const path = [start];
+      used[start] = 1;
+      const want = 2 + Math.floor(Math.random() * 6);
+      while (path.length < want) {
+        const x = path.at(-1);
+        const opts = nb[x].filter((j) => black[j] && !used[j]);
+        if (!opts.length) break;
+        const j = opts.reduce((a, b) => (deg(b) < deg(a) ? b : a), opts[0]);
+        used[j] = 1;
+        path.push(j);
+      }
+      if (path.length < 2) return null;
+      ring[path[0]] = 1;
+      ring[path.at(-1)] = 1;
+    }
+    return ring;
+  }
+
+  function assignIslandSizes(black, nb, N) {
+    const clues = new Int8Array(N);
+    const seen = new Uint8Array(N);
+    for (let k = 0; k < N; k++) {
+      if (black[k] || seen[k]) continue;
+      const cells = [k];
+      seen[k] = 1;
+      for (const cur of cells) for (const j of nb[cur]) if (!seen[j] && !black[j]) { seen[j] = 1; cells.push(j); }
+      if (cells.length > 35) return null;
+      clues[cells[Math.floor(Math.random() * cells.length)]] = cells.length;
+    }
+    return clues;
+  }
+
   function generate(n) {
     const deadline = Date.now() + 8000;
     while (Date.now() < deadline) {
@@ -98,43 +138,10 @@
       const fill = Binary.randomFill({ ...model(base), cons: model(base).cons.filter((c) => c.cells.length === 4), check: (s) => Binary.canConnect(R, C, s, YES) }, 0.55, 10);
       if (!fill) continue;
       const black = Uint8Array.from(fill, (v) => (v === YES ? 1 : 0));
-      // Random snakes: walk from cells with few free neighbours.
-      const used = new Uint8Array(N);
-      const ring = new Uint8Array(N);
-      let ok = true;
-      for (;;) {
-        const free = [...new Array(N).keys()].filter((k) => black[k] && !used[k]);
-        if (!free.length) break;
-        const deg = (k) => nb[k].filter((j) => black[j] && !used[j]).length;
-        const start = free.reduce((a, b) => (deg(b) < deg(a) || (deg(b) === deg(a) && Math.random() < 0.3) ? b : a), free[0]);
-        const path = [start];
-        used[start] = 1;
-        const want = 2 + Math.floor(Math.random() * 6);
-        while (path.length < want) {
-          const x = path.at(-1);
-          const opts = nb[x].filter((j) => black[j] && !used[j]);
-          if (!opts.length) break;
-          const j = opts.reduce((a, b) => (deg(b) < deg(a) ? b : a), opts[0]);
-          used[j] = 1;
-          path.push(j);
-        }
-        if (path.length < 2) { ok = false; break; }
-        ring[path[0]] = 1;
-        ring[path.at(-1)] = 1;
-      }
-      if (!ok) continue;
-      // Every island gets its size; then drop sizes that are not needed.
-      const clues = new Int8Array(N);
-      const seen = new Uint8Array(N);
-      for (let k = 0; k < N; k++) {
-        if (black[k] || seen[k]) continue;
-        const cells = [k];
-        seen[k] = 1;
-        for (const cur of cells) for (const j of nb[cur]) if (!seen[j] && !black[j]) { seen[j] = 1; cells.push(j); }
-        if (cells.length > 35) { ok = false; break; }
-        clues[cells[Math.floor(Math.random() * cells.length)]] = cells.length;
-      }
-      if (!ok) continue;
+      const ring = buildRandomSnakes(black, nb, N);
+      if (!ring) continue;
+      const clues = assignIslandSizes(black, nb, N);
+      if (!clues) continue;
       const p = { R, C, clues, ring };
       const unique = () => {
         const t = Binary.logicSolve(model(p));
