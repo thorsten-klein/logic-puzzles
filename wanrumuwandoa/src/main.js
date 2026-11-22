@@ -8,6 +8,25 @@
 (() => {
   const { UNKNOWN, YES, NO } = Binary;
 
+  function checkRoomConnectivity(rooms, s, R, C) {
+    for (const cells of rooms) {
+      const inRoom = new Set(cells);
+      const start = cells.find((k) => s[k] === NO);
+      if (start === undefined) continue;
+      const seen = new Set([start]);
+      const stack = [start];
+      while (stack.length) {
+        const k = stack.pop(), r = Math.floor(k / C), c = k % C;
+        for (const [a, b] of [[r - 1, c], [r + 1, c], [r, c - 1], [r, c + 1]]) {
+          const j = a * C + b;
+          if (a >= 0 && b >= 0 && a < R && b < C && inRoom.has(j) && !seen.has(j) && s[j] !== YES) { seen.add(j); stack.push(j); }
+        }
+      }
+      if (cells.some((k) => s[k] === NO && !seen.has(k))) return false;
+    }
+    return true;
+  }
+
   function model(p) {
     const { R, C, room, clues } = p;
     const N = R * C;
@@ -52,22 +71,7 @@
     }
     function check(s) {
       for (const pairs of walls.values()) if (pairs.filter(([a, b]) => s[a] === NO && s[b] === NO).length > 1) return false;
-      // White cells of a room connect inside the room.
-      for (const cells of rooms) {
-        const inRoom = new Set(cells);
-        const start = cells.find((k) => s[k] === NO);
-        if (start === undefined) continue;
-        const seen = new Set([start]);
-        const stack = [start];
-        while (stack.length) {
-          const k = stack.pop(), r = Math.floor(k / C), c = k % C;
-          for (const [a, b] of [[r - 1, c], [r + 1, c], [r, c - 1], [r, c + 1]]) {
-            const j = a * C + b;
-            if (a >= 0 && b >= 0 && a < R && b < C && inRoom.has(j) && !seen.has(j) && s[j] !== YES) { seen.add(j); stack.push(j); }
-          }
-        }
-        if (cells.some((k) => s[k] === NO && !seen.has(k))) return false;
-      }
+      if (!checkRoomConnectivity(rooms, s, R, C)) return false;
       return Binary.canConnect(R, C, s, NO);
     }
     return { N, cons, propagate, check };

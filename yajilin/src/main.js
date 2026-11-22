@@ -47,6 +47,21 @@
     };
 
     function rule(s, log) {
+      const checkRayClue = (n, cells) => {
+        const known = cells.filter((j) => black(s, j)).length;
+        const maybe = cells.filter((j) => !black(s, j) && !onLoop(s, j)).length;
+        if (known > n || known + maybe < n) return -1;
+        if (known === n) {
+          for (const j of cells) {
+            if (black(s, j) || onLoop(s, j)) continue;
+            const r = needLoop(s, j, log, `This arrow already sees its ${PuzzleShell.plural(n, 'black cell')}. The other cells that way are on the loop.`);
+            if (r < 0) return -1;
+            if (r) return r;
+          }
+        }
+        return 0;
+      };
+
       for (let k = 0; k < R * C; k++) {
         if (isArrow(k)) {
           const open = edges(k).filter((e) => s[e] !== CROSS);
@@ -69,17 +84,8 @@
         }
       }
       for (const [, n, cells] of rays) {
-        const known = cells.filter((j) => black(s, j)).length;
-        const maybe = cells.filter((j) => !black(s, j) && !onLoop(s, j)).length;
-        if (known > n || known + maybe < n) return -1;
-        if (known === n) {
-          for (const j of cells) {
-            if (black(s, j) || onLoop(s, j)) continue;
-            const r = needLoop(s, j, log, `This arrow already sees its ${PuzzleShell.plural(n, 'black cell')}. The other cells that way are on the loop.`);
-            if (r < 0) return -1;
-            if (r) return r;
-          }
-        }
+        const res = checkRayClue(n, cells, log);
+        if (res !== 0) return res;
       }
       return 0;
     }
