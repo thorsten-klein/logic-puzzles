@@ -13,6 +13,32 @@
     return out;
   }
 
+  function eliminateEqualNeighbours(R, C, cand) {
+    for (let k = 0; k < R * C; k++) {
+      if (RegionNum.bitCount(cand[k]) !== 1) continue;
+      const r = Math.floor(k / C), c = k % C;
+      if (r > 0) cand[k - C] &= ~cand[k];
+      if (r < R - 1) cand[k + C] &= ~cand[k];
+      if (c > 0) cand[k - 1] &= ~cand[k];
+      if (c < C - 1) cand[k + 1] &= ~cand[k];
+    }
+  }
+
+  function filterLineSums(p, cand) {
+    for (const [want, cells] of lines(p)) {
+      if (cells.some((k) => !cand[k])) return false;
+      const sMin = cells.reduce((a, k) => a + lo(cand[k]), 0);
+      const sMax = cells.reduce((a, k) => a + hi(cand[k]), 0);
+      if (sMin > want || sMax < want) return false;
+      for (const k of cells) {
+        const low = want - (sMax - hi(cand[k])), high = want - (sMin - lo(cand[k]));
+        for (let v = 1; v < 31; v++) if ((cand[k] & (1 << v)) && (v < low || v > high)) cand[k] &= ~(1 << v);
+        if (!cand[k]) return false;
+      }
+    }
+    return true;
+  }
+
   RegionNum.startGame({
     id: 'from-1-to-x',
     name: 'From 1 To X',
@@ -33,26 +59,8 @@
       for (let r = 0; r < p.R; r++) { let t = 0; for (let c = 0; c < p.C; c++) { t += sol[r * p.C + c]; } p.sums.push(t); }
     },
     rule(p, cand) {
-      const { R, C } = p;
-      for (let k = 0; k < R * C; k++) {
-        if (RegionNum.bitCount(cand[k]) !== 1) continue;
-        const r = Math.floor(k / C), c = k % C;
-        if (r > 0) cand[k - C] &= ~cand[k];
-        if (r < R - 1) cand[k + C] &= ~cand[k];
-        if (c > 0) cand[k - 1] &= ~cand[k];
-        if (c < C - 1) cand[k + 1] &= ~cand[k];
-      }
-      for (const [want, cells] of lines(p)) {
-        if (cells.some((k) => !cand[k])) return false;
-        const sMin = cells.reduce((a, k) => a + lo(cand[k]), 0), sMax = cells.reduce((a, k) => a + hi(cand[k]), 0);
-        if (sMin > want || sMax < want) return false;
-        for (const k of cells) {
-          const low = want - (sMax - hi(cand[k])), high = want - (sMin - lo(cand[k]));
-          for (let v = 1; v < 31; v++) if ((cand[k] & (1 << v)) && (v < low || v > high)) cand[k] &= ~(1 << v);
-          if (!cand[k]) return false;
-        }
-      }
-      return true;
+      eliminateEqualNeighbours(p.R, p.C, cand);
+      return filterLineSums(p, cand);
     },
     edge: (p) => ({ top: p.sums.slice(0, p.C), left: p.sums.slice(p.C) }),
     encodeExtra: (p) => p.sums.join(','),
