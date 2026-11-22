@@ -26,7 +26,7 @@
   }
 
   function propagate(p, cand) {
-    const { R, C, black } = p;
+    const { black } = p;
     for (let guard = 0; guard < 200; guard++) {
       const before = cand.join(',');
       // Each stretch is a run of consecutive numbers.
@@ -56,7 +56,11 @@
     return { solutions: out, capped: nodes > maxNodes };
   }
 
-  const startCand = (p, given) => Int32Array.from({ length: p.R * p.C }, (_, k) => (p.black[k] ? 0 : given[k] ? 1 << given[k] : (((1 << (p.R + 1)) - 1) & ~1)));
+  const startCand = (p, given) => Int32Array.from({ length: p.R * p.C }, (_, k) => {
+    if (p.black[k]) return 0;
+    if (given[k]) return 1 << given[k];
+    return ((1 << (p.R + 1)) - 1) & ~1;
+  });
 
   function generate(n) {
     const deadline = Date.now() + 8000;
@@ -69,7 +73,7 @@
       const sol = fill.solutions[0];
       const given = Int8Array.from(sol);
       const solved = () => { const c = startCand(p, given); return propagate(p, c) && c.every((m, k) => black[k] || one(m)); };
-      for (const k of PuzzleShell.shuffle([...Array(N).keys()])) {
+      for (const k of PuzzleShell.shuffle([...new Array(N).keys()])) {
         if (!given[k]) continue;
         const v = given[k];
         given[k] = 0;
@@ -107,7 +111,7 @@
         if (given[k]) { el.classList.add('given'); el.textContent = given[k]; return; }
         if (result) {
           el.textContent = solution[k];
-          el.classList.add(entries[k] === solution[k] ? 'ok' : entries[k] ? 'bad' : 'show');
+          el.classList.add(PuzzleShell.resultClass(entries[k], solution[k]));
         } else if (readonly) el.textContent = entries[k] || '';
         else {
           el.appendChild(PuzzleShell.digitInput({ r: Math.floor(k / C), c: k % C, value: entries[k], max: p.R,
@@ -129,7 +133,7 @@
     generate,
     encode: (p) => ({ n: p.R, b: Array.from(p.black).join(''), v: Array.from(p.given).join('') }),
     decode(d) {
-      const n = d && d.n;
+      const n = d?.n;
       if (!Number.isInteger(n) || n < 3 || n > 15) throw new Error('Invalid size');
       if (typeof d.b !== 'string' || d.b.length !== n * n || typeof d.v !== 'string' || d.v.length !== n * n) throw new Error('Invalid grid');
       const p = prepare({ R: n, C: n, black: Uint8Array.from(d.b, Number) });

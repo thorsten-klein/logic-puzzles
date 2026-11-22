@@ -9,12 +9,11 @@
   const one = (m) => m && !(m & (m - 1));
   const low = (m) => 31 - Math.clz32(m & -m);
   const STEP = [[-1, 0], [1, 0], [0, -1], [0, 1]];
-  const GLYPH = ['↑︎', '↓︎', '←︎', '→︎', ''];
 
   function prepare(p) {
     const { n, room, arrow } = p;
     p.rooms = [];
-    room.forEach((g, k) => { if (g >= 0) (p.rooms[g] = p.rooms[g] || []).push(k); });
+    room.forEach((g, k) => { if (g >= 0) { p.rooms[g] ??= []; p.rooms[g].push(k); } });
     p.rooms = p.rooms.filter(Boolean);
     p.sizeOf = new Int32Array(n * n);
     for (const cells of p.rooms) for (const k of cells) p.sizeOf[k] = cells.length;
@@ -69,18 +68,22 @@
     return { solutions: out, capped: nodes > maxNodes };
   }
 
-  const startCand = (p, given) => Int32Array.from({ length: p.n * p.n }, (_, k) => (p.arrow[k] >= 0 ? 0 : given[k] ? 1 << given[k] : ((1 << (p.sizeOf[k] + 1)) - 1) & ~1));
+  const startCand = (p, given) => Int32Array.from({ length: p.n * p.n }, (_, k) => {
+    if (p.arrow[k] >= 0) return 0;
+    if (given[k]) return 1 << given[k];
+    return ((1 << (p.sizeOf[k] + 1)) - 1) & ~1;
+  });
 
   function generate(n) {
     const deadline = Date.now() + 8000;
     while (Date.now() < deadline) {
       const N = n * n;
       const arrow = new Int8Array(N).fill(-1);
-      for (const k of PuzzleShell.shuffle([...Array(N).keys()]).slice(0, Math.round(N * 0.12))) arrow[k] = 4;
+      for (const k of PuzzleShell.shuffle([...new Array(N).keys()]).slice(0, Math.round(N * 0.12))) arrow[k] = 4;
       // Rooms of 1..5 white cells.
       const room = new Int32Array(N).fill(-1);
       let id = 0;
-      for (const k of PuzzleShell.shuffle([...Array(N).keys()])) {
+      for (const k of PuzzleShell.shuffle([...new Array(N).keys()])) {
         if (arrow[k] >= 0 || room[k] >= 0) continue;
         const want = 1 + Math.floor(Math.random() * 5);
         const cells = [k];
@@ -113,7 +116,7 @@
       const given = Int8Array.from(sol);
       const solved = () => { const c = startCand(p, given); return propagate(p, c) && c.every((m, k) => arrow[k] >= 0 || one(m)); };
       if (!solved()) continue;
-      for (const k of PuzzleShell.shuffle([...Array(N).keys()])) {
+      for (const k of PuzzleShell.shuffle([...new Array(N).keys()])) {
         if (!given[k]) continue;
         const v = given[k];
         given[k] = 0;
@@ -147,12 +150,12 @@
       rows: n, cols: n, cellPx: PuzzleShell.fitCell(n, 44), className: 'pz-board pz-regions mk-board', readonly,
       renderCell(k, el) {
         PuzzleShell.regionBorders(el, k, room, n, n);
-        if (arrow[k] >= 0) { el.classList.add('mk-black'); if (arrow[k] < 4) el.append(PuzzleShell.arrowIcon([0, 4, 6, 2][arrow[k]])); return; }
+        if (arrow[k] >= 0) { el.classList.add('mk-black'); if (arrow[k] < 4) { el.append(PuzzleShell.arrowIcon([0, 4, 6, 2][arrow[k]])); } return; }
         if (hintCells.has(k)) el.classList.add('hint');
         if (given[k]) { el.classList.add('given'); el.textContent = given[k]; return; }
         if (result) {
           el.textContent = solution[k];
-          el.classList.add(entries[k] === solution[k] ? 'ok' : entries[k] ? 'bad' : 'show');
+          el.classList.add(PuzzleShell.resultClass(entries[k], solution[k]));
         } else if (readonly) el.textContent = entries[k] || '';
         else {
           el.appendChild(PuzzleShell.digitInput({ r: Math.floor(k / n), c: k % n, value: entries[k], max: 5,
@@ -175,10 +178,10 @@
     encode: (p) => ({ n: p.n, g: Array.from(p.room, (v) => (v < 0 ? '..' : v.toString(36).padStart(2, '0'))).join(''),
       a: Array.from(p.arrow, (v) => (v < 0 ? '.' : v)).join(''), v: Array.from(p.given).join('') }),
     decode(d) {
-      const n = d && d.n;
+      const n = d?.n;
       if (!Number.isInteger(n) || n < 3 || n > 12) throw new Error('Invalid board size');
       if (typeof d.g !== 'string' || d.g.length !== 2 * n * n || typeof d.a !== 'string' || d.a.length !== n * n) throw new Error('Invalid puzzle');
-      const room = Int32Array.from({ length: n * n }, (_, k) => { const t = d.g.slice(2 * k, 2 * k + 2); return t === '..' ? -1 : parseInt(t, 36); });
+      const room = Int32Array.from({ length: n * n }, (_, k) => { const t = d.g.slice(2 * k, 2 * k + 2); return t === '..' ? -1 : Number.parseInt(t, 36); });
       const p = prepare({ n, room, arrow: Int8Array.from(d.a, (ch) => (ch === '.' ? -1 : Number(ch))) });
       p.given = Int8Array.from(d.v, Number);
       const res = solve(p, startCand(p, p.given), 2, 50000);

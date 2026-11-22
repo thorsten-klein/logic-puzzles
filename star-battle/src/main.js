@@ -10,10 +10,10 @@ PuzzleShell.start({
   generate: (n) => Generator.generate(n),
   encode: (p) => ({ n: p.n, k: p.k, g: Array.from(p.region, (v) => v.toString(36)).join('') }),
   decode(d) {
-    const n = d && d.n, k = d && d.k;
+    const n = d?.n, k = d?.k;
     if (!Number.isInteger(n) || n < 4 || n > 14 || !(k === 1 || k === 2 || k === 3)) throw new Error('Invalid board size');
     if (typeof d.g !== 'string' || d.g.length !== n * n) throw new Error('Invalid regions');
-    const region = Int8Array.from(d.g, (ch) => parseInt(ch, 36));
+    const region = Int8Array.from(d.g, (ch) => Number.parseInt(ch, 36));
     if (region.some((v) => !(v >= 0 && v < n))) throw new Error('Invalid regions');
     const p = { n, k, region };
     const res = Binary.solveFull(Rules.model(p));

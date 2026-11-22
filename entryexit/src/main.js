@@ -13,8 +13,8 @@
     for (let e = 0; e < g.E; e++) {
       const [a, b] = g.ends[e];
       if (p.region[a] === p.region[b]) continue;
-      (border[p.region[a]] = border[p.region[a]] || []).push(e);
-      (border[p.region[b]] = border[p.region[b]] || []).push(e);
+      border[p.region[a]] ??= []; border[p.region[a]].push(e);
+      border[p.region[b]] ??= []; border[p.region[b]].push(e);
     }
     function rule(s, log) {
       for (const edges of border) {
@@ -83,10 +83,10 @@
     generate,
     encode: (p) => ({ n: p.R, g: Array.from(p.region, (v) => v.toString(36).padStart(2, '0')).join('') }),
     decode(d) {
-      const n = d && d.n;
+      const n = d?.n;
       if (!Number.isInteger(n) || n < 2 || n > 16) throw new Error('Invalid board size');
       if (typeof d.g !== 'string' || d.g.length !== 2 * n * n) throw new Error('Invalid regions');
-      return { R: n, C: n, region: Int32Array.from({ length: n * n }, (_, k) => parseInt(d.g.slice(2 * k, 2 * k + 2), 36)) };
+      return { R: n, C: n, region: Int32Array.from({ length: n * n }, (_, k) => Number.parseInt(d.g.slice(2 * k, 2 * k + 2), 36)) };
     },
     model,
     drawCell: (p) => (svg, k, x, y, s) => {

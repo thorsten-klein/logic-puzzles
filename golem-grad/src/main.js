@@ -61,8 +61,7 @@
     for (let k = 0; k < N; k++) {
       if (clues[k]) cons.push({ cells: [k], min: 0, max: 0, why: () => 'Numbered cells stay white.' });
       if (ring[k]) {
-        cons.push({ cells: [k], min: 1, max: 1, why: () => 'Circles are snake ends, so they are shaded.' });
-        cons.push({ cells: nb[k], min: 1, max: nb[k].length, why: () => 'A snake end needs a shaded neighbour.' });
+        cons.push({ cells: [k], min: 1, max: 1, why: () => 'Circles are snake ends, so they are shaded.' }, { cells: nb[k], min: 1, max: nb[k].length, why: () => 'A snake end needs a shaded neighbour.' });
       }
     }
     function check(s, done) {
@@ -72,7 +71,7 @@
         if (seen[k] || s[k] !== NO) continue;
         const cells = [k];
         seen[k] = 1;
-        for (let i = 0; i < cells.length; i++) for (const j of nb[cells[i]]) if (!seen[j] && s[j] === NO) { seen[j] = 1; cells.push(j); }
+        for (const cur of cells) for (const j of nb[cur]) if (!seen[j] && s[j] === NO) { seen[j] = 1; cells.push(j); }
         const nums = cells.filter((x) => clues[x]);
         if (nums.length > 1) return false;
         const closed = done || cells.every((x) => nb[x].every((j) => s[j] !== UNKNOWN));
@@ -104,24 +103,24 @@
       const ring = new Uint8Array(N);
       let ok = true;
       for (;;) {
-        const free = [...Array(N).keys()].filter((k) => black[k] && !used[k]);
+        const free = [...new Array(N).keys()].filter((k) => black[k] && !used[k]);
         if (!free.length) break;
         const deg = (k) => nb[k].filter((j) => black[j] && !used[j]).length;
-        const start = free.reduce((a, b) => (deg(b) < deg(a) || (deg(b) === deg(a) && Math.random() < 0.3) ? b : a));
+        const start = free.reduce((a, b) => (deg(b) < deg(a) || (deg(b) === deg(a) && Math.random() < 0.3) ? b : a), free[0]);
         const path = [start];
         used[start] = 1;
         const want = 2 + Math.floor(Math.random() * 6);
         while (path.length < want) {
-          const x = path[path.length - 1];
+          const x = path.at(-1);
           const opts = nb[x].filter((j) => black[j] && !used[j]);
           if (!opts.length) break;
-          const j = opts.reduce((a, b) => (deg(b) < deg(a) ? b : a));
+          const j = opts.reduce((a, b) => (deg(b) < deg(a) ? b : a), opts[0]);
           used[j] = 1;
           path.push(j);
         }
         if (path.length < 2) { ok = false; break; }
         ring[path[0]] = 1;
-        ring[path[path.length - 1]] = 1;
+        ring[path.at(-1)] = 1;
       }
       if (!ok) continue;
       // Every island gets its size; then drop sizes that are not needed.
@@ -131,7 +130,7 @@
         if (black[k] || seen[k]) continue;
         const cells = [k];
         seen[k] = 1;
-        for (let i = 0; i < cells.length; i++) for (const j of nb[cells[i]]) if (!seen[j] && !black[j]) { seen[j] = 1; cells.push(j); }
+        for (const cur of cells) for (const j of nb[cur]) if (!seen[j] && !black[j]) { seen[j] = 1; cells.push(j); }
         if (cells.length > 35) { ok = false; break; }
         clues[cells[Math.floor(Math.random() * cells.length)]] = cells.length;
       }
@@ -145,7 +144,7 @@
         return r.solutions.length === 1 && !r.capped;
       };
       if (!unique()) continue;
-      for (const k of PuzzleShell.shuffle([...Array(N).keys()])) {
+      for (const k of PuzzleShell.shuffle([...new Array(N).keys()])) {
         if (!clues[k]) continue;
         const keep = clues[k];
         clues[k] = 0;
@@ -170,13 +169,17 @@
     generate,
     encode: (p) => ({ r: p.R, c: p.C, g: Array.from(p.clues, (v) => (v > 0 ? v.toString(36) : '.')).join(''), o: Array.from(p.ring).join('') }),
     decode(d) {
-      const R = d && d.r, C = d && d.c;
+      const R = d?.r, C = d?.c;
       if (![R, C].every((x) => Number.isInteger(x) && x >= 3 && x <= 20)) throw new Error('Invalid board size');
       if (typeof d.g !== 'string' || d.g.length !== R * C || typeof d.o !== 'string' || d.o.length !== R * C) throw new Error('Invalid clues');
-      return { R, C, clues: Int8Array.from(d.g, (ch) => (ch === '.' ? 0 : parseInt(ch, 36))), ring: Uint8Array.from(d.o, Number) };
+      return { R, C, clues: Int8Array.from(d.g, (ch) => (ch === '.' ? 0 : Number.parseInt(ch, 36))), ring: Uint8Array.from(d.o, Number) };
     },
     model,
-    fixed: (p, k) => (p.clues[k] > 0 ? NO : p.ring[k] ? YES : 0),
+    fixed: (p, k) => {
+      if (p.clues[k] > 0) return NO;
+      if (p.ring[k]) return YES;
+      return 0;
+    },
     draw(p, k, el) {
       if (p.clues[k] > 0) el.textContent = p.clues[k];
       if (p.ring[k]) { const o = document.createElement('span'); o.className = 'gg-ring'; el.append(o); }

@@ -14,7 +14,7 @@
     while (Date.now() < deadline) {
       const { paths, state } = Links.randomPaths(n, 3, Math.max(4, n + 1));
       const label = new Int8Array(n * n).fill(-1);
-      paths.forEach((path, i) => { label[path[0]] = i + 1; label[path[path.length - 1]] = i + 1; });
+      paths.forEach((path, i) => { label[path[0]] = i + 1; label[path.at(-1)] = i + 1; });
       const p = { R: n, C: n, label };
       if (!Links.unique(model(p))) continue;
       p.solution = state;
@@ -33,10 +33,10 @@
     generate,
     encode: (p) => ({ n: p.R, g: Array.from(p.label, (v) => (v < 0 ? '.' : v.toString(36))).join('') }),
     decode(d) {
-      const n = d && d.n;
+      const n = d?.n;
       if (!Number.isInteger(n) || n < 3 || n > 16) throw new Error('Invalid board size');
       if (typeof d.g !== 'string' || d.g.length !== n * n) throw new Error('Invalid numbers');
-      return { R: n, C: n, label: Int8Array.from(d.g, (ch) => (ch === '.' ? -1 : parseInt(ch, 36))) };
+      return { R: n, C: n, label: Int8Array.from(d.g, (ch) => (ch === '.' ? -1 : Number.parseInt(ch, 36))) };
     },
     model,
     drawCell: (p) => (svg, k, x, y, s) => {

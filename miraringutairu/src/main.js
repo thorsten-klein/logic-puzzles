@@ -23,7 +23,7 @@
       const r0 = Math.min(...q.map((x) => x[0])), c0 = Math.min(...q.map((x) => x[1]));
       keys.push(q.map(([a, b]) => `${a - r0},${b - c0}`).sort().join(' '));
     }
-    return keys.sort()[0];
+    return keys.reduce((min, k) => (k < min ? k : min), keys[0]);  // smallest key
   }
 
   function model(p) {
@@ -51,7 +51,7 @@
         if (area[k] >= 0 || s[k] !== YES) continue;
         const cells = [k];
         area[k] = areas.length;
-        for (let i = 0; i < cells.length; i++) for (const j of nb(cells[i])) if (area[j] < 0 && s[j] === YES) { area[j] = areas.length; cells.push(j); }
+        for (const cur of cells) for (const j of nb(cur)) if (area[j] < 0 && s[j] === YES) { area[j] = areas.length; cells.push(j); }
         const closed = done || cells.every((x) => nb(x).every((j) => s[j] !== UNKNOWN));
         areas.push({ cells, closed });
       }
@@ -134,7 +134,7 @@
       if (!unique()) continue;
       const blockOf = new Int32Array(N).fill(-1);
       blocks.forEach((b, i) => b.forEach((k) => { blockOf[k] = i; }));
-      for (const k of PuzzleShell.shuffle([...Array(N).keys()])) {
+      for (const k of PuzzleShell.shuffle([...new Array(N).keys()])) {
         if (!clues[k]) continue;
         const keep = clues[k];
         // First try to drop the number, then the cell itself (each block keeps one).
@@ -162,7 +162,7 @@
     generate,
     encode: (p) => ({ r: p.R, c: p.C, g: Array.from(p.clues).join(',') }),
     decode(d) {
-      const R = d && d.r, C = d && d.c;
+      const R = d?.r, C = d?.c;
       if (![R, C].every((x) => Number.isInteger(x) && x >= 3 && x <= 20)) throw new Error('Invalid board size');
       const clues = Int16Array.from(String(d.g).split(','), Number);
       if (clues.length !== R * C) throw new Error('Invalid clues');

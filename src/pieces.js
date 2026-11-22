@@ -30,11 +30,11 @@ const Pieces = (() => {
 
   function options(cfg, p, k) {
     if (cfg.shapes) {
-      const ok = (j) => j === k || (!p.clues[j] && !(cfg.blocked && cfg.blocked(p, j)));
+      const ok = (j) => j === k || (!p.clues[j] && !(cfg.blocked?.(p, j)));
       return cfg.shapes(p, k).filter((cells) => cells.every(ok));
     }
     const size = cfg.sizeOf(p, k);
-    const list = enumerate(p.R, p.C, k, size, (j) => j === k || (!p.clues[j] && !(cfg.blocked && cfg.blocked(p, j))));
+    const list = enumerate(p.R, p.C, k, size, (j) => j === k || (!p.clues[j] && !(cfg.blocked?.(p, j))));
     return cfg.fits ? list.filter((cells) => cfg.fits(p, k, cells)) : list;
   }
 
@@ -71,16 +71,19 @@ const Pieces = (() => {
 
   // One logic step (see Rects): a clue with one piece left, or a cell
   // only one clue can cover. Returns a move, null, or false.
+  // step() result for a contradiction (no option left).
+  const FAIL = { fail: true };
+
   function step(p, st) {
     for (let i = 0; i < st.opts.length; i++) {
-      if (!st.opts[i].length) return false;
+      if (!st.opts[i].length) return FAIL;
       if (!st.chosen[i] && st.opts[i].length === 1) return { i, cells: st.opts[i][0], why: 'one' };
     }
     const N = p.R * p.C;
     const who = Array.from({ length: N }, () => new Set());
     st.opts.forEach((list, i) => list.forEach((cells) => { for (const j of cells) who[j].add(i); }));
     for (let j = 0; j < N; j++) {
-      if (!who[j].size) { if (p.partial) continue; return false; }
+      if (!who[j].size) { if (p.partial) { continue; } return FAIL; }
       // In partial games a cell may stay empty, so no "only cover" step.
       if (who[j].size !== 1 || p.partial) continue;
       const i = [...who[j]][0];
@@ -98,7 +101,7 @@ const Pieces = (() => {
   function settle(p, st) {
     for (;;) {
       const m = step(p, st);
-      if (m === false) return false;
+      if (m === FAIL) return false;
       if (!m) return true;
       if (m.cells) choose(st, m.i, m.cells);
     }
@@ -229,7 +232,7 @@ const Pieces = (() => {
     let path = null;
     const cellAt = (ev) => {
       const el = document.elementFromPoint(ev.clientX, ev.clientY);
-      return el && el.closest('.pc-board') === board && el.dataset.k !== undefined ? Number(el.dataset.k) : null;
+      return el?.closest('.pc-board') === board && el.dataset.k !== undefined ? Number(el.dataset.k) : null;
     };
     board.addEventListener('pointerdown', (ev) => {
       const k = cellAt(ev);
@@ -313,10 +316,10 @@ const Pieces = (() => {
       generate: (n) => generate(cfg, cfg.generateSize ? cfg.generateSize(n) : n),
       encode: (p) => ({ r: p.R, c: p.C, g: Array.from(p.clues, (v) => v.toString(36)).join(''), x: cfg.encodeExtra ? cfg.encodeExtra(p) : undefined }),
       decode(d) {
-        const R = d && d.r, C = d && d.c;
+        const R = d?.r, C = d?.c;
         if (![R, C].every((x) => Number.isInteger(x) && x >= 2 && x <= 20)) throw new Error('Invalid board size');
         if (typeof d.g !== 'string' || d.g.length !== R * C) throw new Error('Invalid clues');
-        const p = { R, C, clues: Int8Array.from(d.g, (ch) => parseInt(ch, 36)), partial: !!cfg.partial };
+        const p = { R, C, clues: Int8Array.from(d.g, (ch) => Number.parseInt(ch, 36)), partial: !!cfg.partial };
         if (cfg.decodeExtra) cfg.decodeExtra(p, d.x);
         if (cfg.prepare) cfg.prepare(p);
         const res = count(cfg, p, 2, 50000);

@@ -38,7 +38,7 @@
         if (seen[k] || s[k] !== YES) continue;
         const cells = [k];
         seen[k] = 1;
-        for (let i = 0; i < cells.length; i++) for (const j of nb(cells[i])) if (!seen[j] && s[j] === YES) { seen[j] = 1; cells.push(j); }
+        for (const cur of cells) for (const j of nb(cur)) if (!seen[j] && s[j] === YES) { seen[j] = 1; cells.push(j); }
         const rs = cells.map((x) => Math.floor(x / C)), cs = cells.map((x) => x % C);
         const box = { r0: Math.min(...rs), r1: Math.max(...rs), c0: Math.min(...cs), c1: Math.max(...cs) };
         const area = (box.r1 - box.r0 + 1) * (box.c1 - box.c0 + 1);
@@ -89,11 +89,15 @@
       const r0 = Math.floor(Math.random() * (n - h + 1)), c0 = Math.floor(Math.random() * (n - w + 1));
       const list = [{ r0, c0, r1: r0 + h - 1, c1: c0 + w - 1 }];
       for (let step = 0; step < 60 && list.length < 16; step++) {
-        const b = grow(list[list.length - 1]);
+        const b = grow(list.at(-1));
         if (!inGrid(b)) continue;
         const rel = list.map((a) => relation(a, b));
         const last = list.length - 1;
-        if (rel.some((v, i) => (i === last ? v !== 1 : i === 0 && list.length >= 3 ? v === 2 : v !== 0))) continue;
+        if (rel.some((v, i) => {
+          if (i === last) return v !== 1;
+          if (i === 0 && list.length >= 3) return v === 2;
+          return v !== 0;
+        })) continue;
         list.push(b);
         if (list.length >= 4 && rel[0] === 1) return list;
       }
@@ -124,7 +128,7 @@
       };
       if (!unique()) continue;
       // Drop numbers (keep circles), then whole circles where possible.
-      for (const k of PuzzleShell.shuffle([...Array(N).keys()])) {
+      for (const k of PuzzleShell.shuffle([...new Array(N).keys()])) {
         if (!ring[k]) continue;
         const keep = ring[k];
         ring[k] = 1;
@@ -151,7 +155,7 @@
     generate,
     encode: (p) => ({ r: p.R, c: p.C, o: Array.from(p.ring).join(',') }),
     decode(d) {
-      const R = d && d.r, C = d && d.c;
+      const R = d?.r, C = d?.c;
       if (![R, C].every((x) => Number.isInteger(x) && x >= 3 && x <= 20)) throw new Error('Invalid board size');
       const ring = Uint8Array.from(String(d.o).split(','), Number);
       if (ring.length !== R * C) throw new Error('Invalid circles');

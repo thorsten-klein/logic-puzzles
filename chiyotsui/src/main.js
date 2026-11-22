@@ -37,7 +37,7 @@
     const { R, C, room, clues } = p;
     const N = R * C;
     const rooms = [];
-    room.forEach((g, k) => { (rooms[g] = rooms[g] || []).push(k); });
+    room.forEach((g, k) => { rooms[g] ??= []; rooms[g].push(k); });
     const cons = [];
     rooms.forEach((cells, g) => {
       if (clues[g] >= 0) cons.push({ cells, min: clues[g], max: clues[g], at: cells[0], why: (v) => (v === YES ? `This room needs ${clues[g]} shaded cells.` : `This room already has its ${clues[g]} shaded cells.`) });
@@ -56,7 +56,7 @@
         if (seen[k] || s[k] !== YES) continue;
         const cells = [k];
         seen[k] = 1;
-        for (let i = 0; i < cells.length; i++) for (const j of nb(cells[i])) if (!seen[j] && s[j] === YES) { seen[j] = 1; cells.push(j); }
+        for (const cur of cells) for (const j of nb(cur)) if (!seen[j] && s[j] === YES) { seen[j] = 1; cells.push(j); }
         if (new Set(cells.map((x) => room[x])).size > 2) return false;
         const closed = done || cells.every((x) => nb(x).every((j) => s[j] !== UNKNOWN));
         if (closed && !mirrored(C, room, cells)) return false;
@@ -70,7 +70,7 @@
     const deadline = Date.now() + 8000;
     while (Date.now() < deadline) {
       const R = n, C = n, N = R * C;
-      const seeds = PuzzleShell.shuffle([...Array(N).keys()]).slice(0, Math.round(N / 4));
+      const seeds = PuzzleShell.shuffle([...new Array(N).keys()]).slice(0, Math.round(N / 4));
       const room = PuzzleShell.growRegions(R, C, seeds.map((k) => [k]));
       const sol = new Uint8Array(N).fill(2);
       const free = (k) => sol[k] !== YES;
@@ -109,7 +109,7 @@
         return r.solutions.length === 1 && !r.capped;
       };
       if (!unique()) continue;
-      for (const g of PuzzleShell.shuffle([...Array(count).keys()])) {
+      for (const g of PuzzleShell.shuffle([...new Array(count).keys()])) {
         const keep = clues[g];
         clues[g] = -1;
         if (!unique()) clues[g] = keep;
@@ -133,10 +133,10 @@
     generate,
     encode: (p) => ({ r: p.R, c: p.C, g: Array.from(p.room, (v) => v.toString(36).padStart(2, '0')).join(''), n: Array.from(p.clues).join(',') }),
     decode(d) {
-      const R = d && d.r, C = d && d.c;
+      const R = d?.r, C = d?.c;
       if (![R, C].every((x) => Number.isInteger(x) && x >= 2 && x <= 20)) throw new Error('Invalid board size');
       if (typeof d.g !== 'string' || d.g.length !== 2 * R * C) throw new Error('Invalid rooms');
-      const room = Int32Array.from({ length: R * C }, (_, k) => parseInt(d.g.slice(2 * k, 2 * k + 2), 36));
+      const room = Int32Array.from({ length: R * C }, (_, k) => Number.parseInt(d.g.slice(2 * k, 2 * k + 2), 36));
       const clues = Int8Array.from(String(d.n).split(','), Number);
       if (room.some((v) => !(v >= 0 && v < clues.length))) throw new Error('Invalid rooms');
       return { R, C, room, clues };

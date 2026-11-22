@@ -31,7 +31,7 @@
       const r0 = Math.min(...q.map((x) => x[0])), c0 = Math.min(...q.map((x) => x[1]));
       keys.push(q.map(([a, b]) => `${a - r0},${b - c0}`).sort().join(' '));
     }
-    return keys.sort()[0];
+    return keys.reduce((min, k) => (k < min ? k : min), keys[0]);  // smallest key
   }
   const connected = (n, cells) => {
     if (!cells.length) return false;
@@ -59,7 +59,7 @@
         if (id[k] >= 0) continue;
         const cells = [k];
         id[k] = g;
-        for (let i = 0; i < cells.length; i++) for (const [e, o] of at[cells[i]]) if (id[o] < 0 && s[e] === NO) { id[o] = g; cells.push(o); }
+        for (const cur of cells) for (const [e, o] of at[cur]) if (id[o] < 0 && s[e] === NO) { id[o] = g; cells.push(o); }
         const white = cells.filter((x) => !grey[x]), dark = cells.filter((x) => grey[x]);
         // A region with number m holds m white and m grey cells.
         for (const x of cells) if (num[x] && (dark.length > num[x] || white.length > num[x])) return false;
@@ -139,7 +139,7 @@
       const sol = Uint8Array.from(p.edges, ([a, b]) => (reg[a] !== reg[b] ? YES : NO));
       // A number in every region to start.
       const rooms = [];
-      reg.forEach((g, k) => { (rooms[g] = rooms[g] || []).push(k); });
+      reg.forEach((g, k) => { rooms[g] ??= []; rooms[g].push(k); });
       for (const cells of rooms) p.num[cells[Math.floor(Math.random() * cells.length)]] = cells.length / 2;
       const unique = () => {
         const m = model(p);
@@ -170,14 +170,14 @@
         const other = r.solutions.find((x) => x.some((v, e) => v !== sol[e]));
         if (!other) break;
         const theirs = sizeIn(other);
-        const spots = [...Array(N).keys()].filter((k) => !p.num[k] && theirs[k] !== mine[k]);
+        const spots = [...new Array(N).keys()].filter((k) => !p.num[k] && theirs[k] !== mine[k]);
         if (!spots.length) break;
         const k = spots[Math.floor(Math.random() * spots.length)];
         p.num[k] = mine[k] / 2;
       }
       if (!ok) continue;
       const stop = Date.now() + 1500;
-      for (const k of PuzzleShell.shuffle([...Array(N).keys()])) {
+      for (const k of PuzzleShell.shuffle([...new Array(N).keys()])) {
         if (!p.num[k]) continue;
         const keep = p.num[k];
         p.num[k] = 0;
@@ -250,7 +250,7 @@
     const log = [];
     Binary.settle(model(p), s, log);
     const step = log.find((x) => x.cells.some((i) => state[i] === UNKNOWN));
-    if (step) return [{ cells: step.cells, v: step.v, reason: step.con && step.con.why ? step.con.why(step.v) : 'This follows from the rules.' }];
+    if (step) return [{ cells: step.cells, v: step.v, reason: step.con?.why ? step.con.why(step.v) : 'This follows from the rules.' }];
     const i = p.solution.findIndex((v, j) => state[j] === UNKNOWN && v === YES);
     return i < 0 ? [] : [{ cells: [i], v: YES, reason: 'No one-step deduction is left; this needs a longer chain. A wall goes here.' }];
   }
@@ -267,7 +267,7 @@
     generate,
     encode: (p) => ({ n: p.n, m: Array.from(p.num).join(','), y: Array.from(p.grey).join('') }),
     decode(d) {
-      const n = d && d.n;
+      const n = d?.n;
       if (!Number.isInteger(n) || n < 3 || n > 12) throw new Error('Invalid board size');
       const num = Uint8Array.from(String(d.m).split(','), Number);
       if (num.length !== n * n || typeof d.y !== 'string' || d.y.length !== n * n) throw new Error('Invalid puzzle');

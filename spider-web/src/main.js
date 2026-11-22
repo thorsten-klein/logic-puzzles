@@ -21,7 +21,7 @@
     const path = [];
     const walk = (x, str) => {
       if (!prefix.has(str)) return;
-      if (str.length === L) { if (words.has(str)) found.set(str, (found.get(str) || 0) + 1); return; }
+      if (str.length === L) { if (words.has(str)) { found.set(str, (found.get(str) || 0) + 1); } return; }
       for (const y of p.adj[x]) {
         if (path.includes(y)) continue;
         path.push(y); walk(y, str + p.letters[y]); path.pop();
@@ -43,7 +43,7 @@
       seen[st[0]] = 1;
       const near = (k) => { const r = Math.floor(k / m), c = k % m; return [[r - 1, c], [r + 1, c], [r, c - 1], [r, c + 1]].filter(([a, b]) => a >= 0 && b >= 0 && a < m && b < m).map(([a, b]) => a * m + b); };
       while (st.length) {
-        const k = st[st.length - 1];
+        const k = st.at(-1);
         const opts = near(k).filter((j) => !seen[j]);
         if (!opts.length) { st.pop(); continue; }
         const j = opts[Math.floor(Math.random() * opts.length)];
@@ -52,8 +52,9 @@
       const has = (a, b) => links.some(([x, y]) => (x === a && y === b) || (x === b && y === a));
       for (let k = 0; k < N; k++) for (const j of near(k)) if (j > k && !has(k, j) && Math.random() < 0.35) links.push([k, j]);
       for (let r = 0; r + 1 < m; r++) for (let c = 0; c + 1 < m; c++) {
-        if (Math.random() < 0.2) links.push([r * m + c, (r + 1) * m + c + 1]);
-        else if (Math.random() < 0.2) links.push([r * m + c + 1, (r + 1) * m + c]);
+        const x = Math.random();
+        if (x < 0.2) links.push([r * m + c, (r + 1) * m + c + 1]);
+        else if (x < 0.36) links.push([r * m + c + 1, (r + 1) * m + c]);
       }
       const adj = edgesOf(m, links);
       // The key word along a random path.
@@ -62,7 +63,7 @@
       for (let t = 0; t < 50 && !path; t++) {
         const pth = [Math.floor(Math.random() * N)];
         while (pth.length < L) {
-          const opts = adj[pth[pth.length - 1]].filter((y) => !pth.includes(y));
+          const opts = adj[pth.at(-1)].filter((y) => !pth.includes(y));
           if (!opts.length) break;
           pth.push(opts[Math.floor(Math.random() * opts.length)]);
         }
@@ -109,14 +110,15 @@
       let cls = 'sw-node';
       // Result: answer circles the player has on the path are ok, the rest
       // are not entered yet.
-      if (path.includes(k)) cls += result ? (Array.from(s).includes(k) ? ' ok' : ' miss') : solved ? ' ok' : ' on';
+      if (path.includes(k) && result) cls += Array.from(s).includes(k) ? ' ok' : ' miss';
+      else if (path.includes(k)) cls += solved ? ' ok' : ' on';
       if (hintSet.has(k)) cls += ' hint';
       const c = el('circle', { cx: x, cy: y, r: gap * 0.3, class: cls }, svg);
       el('text', { x, y, 'font-size': gap * 0.32, class: 'sw-letter' }, svg).textContent = letters[k];
       if (!readonly && !result) {
         c.addEventListener('click', () => {
           const cur = Array.from(s).filter((x) => x >= 0);
-          const last = cur[cur.length - 1];
+          const last = cur.at(-1);
           let next;
           if (k === last) next = cur.slice(0, -1);
           else if (cur.length && adj[last].includes(k) && !cur.includes(k) && cur.length < L) next = cur.concat([k]);
@@ -145,7 +147,7 @@
     generate,
     encode: (p) => ({ m: p.m, l: p.letters, e: p.links.map(([a, b]) => a + '-' + b).join(','), n: p.L }),
     decode(d) {
-      const m = d && d.m, L = d && d.n;
+      const m = d?.m, L = d?.n;
       if (!Number.isInteger(m) || m < 3 || m > 8 || !Number.isInteger(L) || L < 3 || L > 9) throw new Error('Invalid size');
       if (typeof d.l !== 'string' || d.l.length !== m * m || !/^[A-Z]+$/.test(d.l)) throw new Error('Invalid letters');
       const links = String(d.e).split(',').map((t) => t.split('-').map(Number));

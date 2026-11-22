@@ -38,7 +38,7 @@ const UI = (() => {
     let start = null, preview = [];
     const cellAt = (ev) => {
       const el = document.elementFromPoint(ev.clientX, ev.clientY);
-      return el && el.closest('.sh-board') === board && el.dataset.k !== undefined ? Number(el.dataset.k) : null;
+      return el?.closest('.sh-board') === board && el.dataset.k !== undefined ? Number(el.dataset.k) : null;
     };
     const rectOf = (a, b) => [
       Math.min(Math.floor(a / C), Math.floor(b / C)), Math.min(a % C, b % C),

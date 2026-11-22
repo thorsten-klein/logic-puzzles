@@ -5,14 +5,14 @@
 // p.room: room per cell; p.mark: 0 none, 1 white circle, 2 black circle.
 
 (() => {
-  const { UNKNOWN, LINE, CROSS } = Loop;
+  const { LINE, CROSS } = Loop;
 
   function model(p) {
     const { R, C, room, mark } = p;
     const g = Loop.grid(R, C);
     const must = Uint8Array.from(mark, (m) => (m === 1 ? 1 : 0));
     const whites = [];
-    mark.forEach((m, k) => { if (m === 1) (whites[room[k]] = whites[room[k]] || []).push(k); });
+    mark.forEach((m, k) => { if (m === 1) { whites[room[k]] ??= []; whites[room[k]].push(k); } });
     // 'S' straight, 'T' turn, '' not known yet.
     const shape = (s, k) => {
       const dirs = [0, 1, 2, 3].filter((d) => g.cellEdges[k][d] >= 0 && s[g.cellEdges[k][d]] === LINE);
@@ -29,7 +29,7 @@
       for (let k = 0; k < R * C; k++) {
         if (mark[k] !== 2) continue;
         const own = g.cellEdges[k].filter((e) => e >= 0 && s[e] !== CROSS);
-        if (own.some((e) => s[e] === LINE)) return false;
+        if (own.some((e) => s[e] === LINE)) return -1;
         if (own.length) {
           own.forEach((e) => { s[e] = CROSS; });
           if (log) log.push({ edges: own, v: CROSS, reason: 'The loop never enters a black circle.', at: k });
@@ -39,7 +39,7 @@
       for (const cells of whites) {
         if (!cells) continue;
         const kinds = new Set(cells.map((k) => shape(s, k)).filter(Boolean));
-        if (kinds.size > 1) return false;
+        if (kinds.size > 1) return -1;
       }
       return 0;
     }
@@ -53,11 +53,13 @@
       if (!loop) continue;
       const g = Loop.grid(n, n);
       const N = n * n;
-      const seeds = PuzzleShell.shuffle([...Array(N).keys()]).slice(0, Math.round(N / 5));
+      const seeds = PuzzleShell.shuffle([...new Array(N).keys()]).slice(0, Math.round(N / 5));
       const room = PuzzleShell.growRegions(n, n, seeds.map((k) => [k]));
       const shapeOf = (k) => {
         const dirs = [0, 1, 2, 3].filter((d) => g.cellEdges[k][d] >= 0 && loop[g.cellEdges[k][d]] === LINE);
-        return dirs.length !== 2 ? '' : (dirs[0] >> 1) === (dirs[1] >> 1) ? 'S' : 'T';
+        if (dirs.length !== 2) return '';
+        if ((dirs[0] >> 1) === (dirs[1] >> 1)) return 'S';
+        return 'T';
       };
       // Each room picks straight or turn; circles on its loop cells of that kind.
       const mark = new Uint8Array(N);
@@ -71,7 +73,7 @@
       const p = { R: n, C: n, room, mark };
       const solved = () => Loop.solvedBy(Loop.logicSolve(model(p)));
       if (!solved()) continue;
-      for (const k of PuzzleShell.shuffle([...Array(N).keys()])) {
+      for (const k of PuzzleShell.shuffle([...new Array(N).keys()])) {
         if (!mark[k]) continue;
         const keep = mark[k];
         mark[k] = 0;
@@ -94,11 +96,11 @@
     generate,
     encode: (p) => ({ n: p.R, g: Array.from(p.room, (v) => v.toString(36).padStart(2, '0')).join(''), m: Array.from(p.mark).join('') }),
     decode(d) {
-      const n = d && d.n;
+      const n = d?.n;
       if (!Number.isInteger(n) || n < 3 || n > 16) throw new Error('Invalid board size');
       if (typeof d.g !== 'string' || d.g.length !== 2 * n * n) throw new Error('Invalid rooms');
       if (typeof d.m !== 'string' || d.m.length !== n * n || !/^[012]+$/.test(d.m)) throw new Error('Invalid circles');
-      const room = Int32Array.from({ length: n * n }, (_, k) => parseInt(d.g.slice(2 * k, 2 * k + 2), 36));
+      const room = Int32Array.from({ length: n * n }, (_, k) => Number.parseInt(d.g.slice(2 * k, 2 * k + 2), 36));
       return { R: n, C: n, room, mark: Uint8Array.from(d.m, Number) };
     },
     model,

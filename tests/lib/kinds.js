@@ -2,8 +2,8 @@
 // built on (src/<kind>.js). Each check looks at the hidden answer of a new
 // board and returns a list of problems (empty = fine).
 
-const fs = require('fs');
-const path = require('path');
+const fs = require('node:fs');
+const path = require('node:path');
 const { root } = require('./games');
 
 // First match wins: some games load more than one engine.
@@ -59,7 +59,7 @@ function groupsOf(R, C, inside) {
     if (seen[k] || !inside(k)) continue;
     const g = [k];
     seen[k] = 1;
-    for (let i = 0; i < g.length; i++) for (const j of sideNbs(R, C, g[i])) if (!seen[j] && inside(j)) { seen[j] = 1; g.push(j); }
+    for (const cur of g) for (const j of sideNbs(R, C, cur)) if (!seen[j] && inside(j)) { seen[j] = 1; g.push(j); }
     out.push(g);
   }
   return out;
@@ -81,7 +81,7 @@ function lineGraph(p) {
     if (seen[k] || !adj[k].length) continue;
     const comp = [k];
     seen[k] = 1;
-    for (let i = 0; i < comp.length; i++) for (const j of adj[comp[i]]) if (!seen[j]) { seen[j] = 1; comp.push(j); }
+    for (const cur of comp) for (const j of adj[cur]) if (!seen[j]) { seen[j] = 1; comp.push(j); }
     comps.push(comp);
   }
   return { adj, comps };
@@ -117,8 +117,8 @@ const CHECKS = {
     const { R, C } = dims(p);
     const sol = list(p.solution);
     const key = (cells) => cells.map((k) => sol[k]).sort((a, b) => a - b).join(',');
-    const rows = [...Array(R).keys()].map((r) => key([...Array(C).keys()].map((c) => r * C + c)));
-    const cols = [...Array(C).keys()].map((c) => key([...Array(R).keys()].map((r) => r * C + c)));
+    const rows = [...new Array(R).keys()].map((r) => key([...new Array(C).keys()].map((c) => r * C + c)));
+    const cols = [...new Array(C).keys()].map((c) => key([...new Array(R).keys()].map((r) => r * C + c)));
     const out = [];
     rows.forEach((x, r) => { if (x !== rows[0]) out.push(`row ${r} holds ${x}, row 0 holds ${rows[0]}`); });
     if (R === C) cols.forEach((x, c) => { if (x !== rows[0]) out.push(`column ${c} holds ${x}, row 0 holds ${rows[0]}`); });
@@ -239,7 +239,7 @@ const CHECKS = {
       if (seen[k]) continue;
       const group = [k];
       seen[k] = 1;
-      for (let i = 0; i < group.length; i++) for (const j of sideNbs(R, C, group[i])) if (!seen[j] && sol[j] === sol[k]) { seen[j] = 1; group.push(j); }
+      for (const cur of group) for (const j of sideNbs(R, C, cur)) if (!seen[j] && sol[j] === sol[k]) { seen[j] = 1; group.push(j); }
       if (group.length !== sol[k]) out.push(`a group of ${sol[k]}s at cell ${k} has ${group.length} cells`);
     }
     return out;

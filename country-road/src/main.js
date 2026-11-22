@@ -8,7 +8,7 @@
 
   function groups(region) {
     const out = [];
-    region.forEach((g, k) => { (out[g] = out[g] || []).push(k); });
+    region.forEach((g, k) => { out[g] ??= []; out[g].push(k); });
     return out;
   }
 
@@ -32,7 +32,7 @@
       for (let i = 0; i < list.length; i++) {
         const lines = border[i].filter((e) => s[e] === LINE).length;
         const open = border[i].filter((e) => s[e] === UNKNOWN);
-        if (lines > 2 || lines + open.length < 2) return false;
+        if (lines > 2 || lines + open.length < 2) return -1;
         if (open.length && lines === 2) {
           for (const e of open) s[e] = CROSS;
           if (log) log.push({ edges: open, v: CROSS, reason: 'The loop already enters and leaves this region. It crosses no more of its border.' });
@@ -47,15 +47,15 @@
         if (v < 0) continue;
         const yes = list[i].filter((k) => visited(s, k)).length;
         const no = list[i].filter((k) => skipped(s, k)).length;
-        if (yes > v || list[i].length - no < v) return false;
+        if (yes > v || list[i].length - no < v) return -1;
       }
       // Skipped cells may not touch across a border.
       for (const [a, b] of crossPairs) {
-        if (skipped(s, a) && skipped(s, b)) return false;
+        if (skipped(s, a) && skipped(s, b)) return -1;
         for (const [x, y] of [[a, b], [b, a]]) {
           if (!skipped(s, x) || visited(s, y)) continue;
           const es = edges(y), lines = es.filter((e) => s[e] === LINE).length, open = es.filter((e) => s[e] === UNKNOWN);
-          if (lines + open.length < 2) return false;
+          if (lines + open.length < 2) return -1;
           if (lines + open.length === 2) {
             for (const e of open) s[e] = LINE;
             if (log) log.push({ edges: open, v: LINE, reason: 'Skipped cells may not touch across a region border, so the loop visits this cell.' });
@@ -107,7 +107,7 @@
         if (region[k] >= 0) continue;
         const patch = [k];
         const seen = new Set([k]);
-        for (let i = 0; i < patch.length; i++) for (const j of nbs(patch[i])) if (!seen.has(j) && region[j] < 0) { seen.add(j); patch.push(j); }
+        for (const cur of patch) for (const j of nbs(cur)) if (!seen.has(j) && region[j] < 0) { seen.add(j); patch.push(j); }
         const opts = [...new Set(patch.flatMap(nbs).filter((j) => region[j] >= 0).map((j) => region[j]))];
         const to = opts[Math.floor(Math.random() * opts.length)];
         for (const x of patch) region[x] = to;
@@ -139,10 +139,10 @@
     generate,
     encode: (p) => ({ r: p.R, c: p.C, g: Array.from(p.region, (v) => v.toString(36).padStart(2, '0')).join(''), n: p.clues.join(',') }),
     decode(d) {
-      const R = d && d.r, C = d && d.c;
+      const R = d?.r, C = d?.c;
       if (![R, C].every((x) => Number.isInteger(x) && x >= 3 && x <= 20)) throw new Error('Invalid board size');
       if (typeof d.g !== 'string' || d.g.length !== 2 * R * C) throw new Error('Invalid regions');
-      const region = Int32Array.from({ length: R * C }, (_, k) => parseInt(d.g.slice(2 * k, 2 * k + 2), 36));
+      const region = Int32Array.from({ length: R * C }, (_, k) => Number.parseInt(d.g.slice(2 * k, 2 * k + 2), 36));
       const clues = String(d.n).split(',').map(Number);
       if (Math.max(...region) >= clues.length) throw new Error('Invalid clues');
       return { R, C, region, clues };

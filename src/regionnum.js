@@ -7,7 +7,7 @@
 const RegionNum = (() => {
   const bitCount = (m) => { let c = 0; while (m) { m &= m - 1; c++; } return c; };
   const lowBit = (m) => 31 - Math.clz32(m & -m);
-  const values = (m) => { const out = []; for (let v = 1; m >> v; v++) if (m & (1 << v)) out.push(v); return out; };
+  const values = (m) => { const out = []; for (let v = 1; m >> v; v++) { if (m & (1 << v)) { out.push(v); } } return out; };
 
   // Adds region lists and sizes to a puzzle { R, C, region }.
   function prepare(p) {
@@ -19,7 +19,7 @@ const RegionNum = (() => {
 
   function startCand(p, given) {
     return Int32Array.from({ length: p.R * p.C }, (_, k) => {
-      if (given && given[k]) return 1 << given[k];
+      if (given?.[k]) return 1 << given[k];
       return ((1 << (p.groups[p.region[k]].length + 1)) - 1) & ~1;
     });
   }
@@ -146,7 +146,7 @@ const RegionNum = (() => {
         const cand = startCand(p, given);
         return propagate(p, cand, rule) && cand.every((m) => bitCount(m) === 1);
       };
-      for (const k of PuzzleShell.shuffle([...Array(R * C).keys()])) {
+      for (const k of PuzzleShell.shuffle([...new Array(R * C).keys()])) {
         given[k] = 0;
         if (!solved()) given[k] = sol[k];
       }
@@ -201,7 +201,7 @@ const RegionNum = (() => {
         if (given[k]) { el.classList.add('given'); el.textContent = given[k]; return; }
         if (result) {
           el.textContent = solution[k];
-          el.classList.add(entries[k] === solution[k] ? 'ok' : entries[k] ? 'bad' : 'show');
+          el.classList.add(PuzzleShell.resultClass(entries[k], solution[k]));
         } else if (readonly) {
           el.textContent = entries[k] || '';
           el.classList.add('entry');
@@ -231,12 +231,12 @@ const RegionNum = (() => {
         x: cfg.encodeExtra ? cfg.encodeExtra(p) : undefined,
       }),
       decode(d) {
-        const R = d && d.r, C = d && d.c;
+        const R = d?.r, C = d?.c;
         if (![R, C].every((x) => Number.isInteger(x) && x >= 2 && x <= 20)) throw new Error('Invalid board size');
         if (typeof d.g !== 'string' || d.g.length !== 2 * R * C) throw new Error('Invalid regions');
-        if (typeof d.v !== 'string' || d.v.length !== R * C || !/^[0-9]+$/.test(d.v)) throw new Error('Invalid givens');
-        const region = Int32Array.from({ length: R * C }, (_, k) => parseInt(d.g.slice(2 * k, 2 * k + 2), 36));
-        if (region.some((v) => !(v >= 0))) throw new Error('Invalid regions');
+        if (typeof d.v !== 'string' || d.v.length !== R * C || !/^\d+$/.test(d.v)) throw new Error('Invalid givens');
+        const region = Int32Array.from({ length: R * C }, (_, k) => Number.parseInt(d.g.slice(2 * k, 2 * k + 2), 36));
+        if (region.some((v) => !Number.isInteger(v) || v < 0)) throw new Error('Invalid regions');
         const p = prepare({ R, C, region, given: Int8Array.from(d.v, Number) });
         if (cfg.decodeExtra) cfg.decodeExtra(p, d.x);
         const res = solve(p, startCand(p, p.given), cfg.rule, 2, 50000);

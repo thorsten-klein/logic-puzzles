@@ -75,7 +75,7 @@
       const N = n * n;
       // Random digits that never touch.
       const sol = new Int8Array(N);
-      for (const k of PuzzleShell.shuffle([...Array(N).keys()])) {
+      for (const k of PuzzleShell.shuffle([...new Array(N).keys()])) {
         const r = Math.floor(k / n), c = k % n;
         let free = true;
         for (let dr = -1; dr <= 1; dr++) for (let dc = -1; dc <= 1; dc++) {
@@ -96,13 +96,13 @@
       for (let guard = 0; guard < N && !solved() && Date.now() < deadline; guard++) {
         const c = startCand(p);
         propagate(p, c);
-        const open = [...Array(N).keys()].filter((k) => !one(c[k]) && sol[k]);
+        const open = [...new Array(N).keys()].filter((k) => !one(c[k]) && sol[k]);
         if (!open.length) break;
         const k = open[Math.floor(Math.random() * open.length)];
         p.given[k] = sol[k];
       }
       if (!solved()) continue;
-      for (const k of PuzzleShell.shuffle([...Array(N).keys()])) {
+      for (const k of PuzzleShell.shuffle([...new Array(N).keys()])) {
         if (!p.given[k]) continue;
         const keep = p.given[k];
         p.given[k] = 0;
@@ -120,7 +120,11 @@
       const e = entries[k];
       if (e && !p.given[k] && val(e) !== p.solution[k]) return [{ cells: [k], v: 0, reason: e === 10 ? 'This cell is not empty.' : 'This digit is wrong.' }];
     }
-    const cand = Int32Array.from(entries, (e, k) => (p.given[k] ? 1 << (p.given[k] + 1) : e ? 1 << (val(e) + 1) : ALL));
+    const cand = Int32Array.from(entries, (e, k) => {
+      if (p.given[k]) return 1 << (p.given[k] + 1);
+      if (e) return 1 << (val(e) + 1);
+      return ALL;
+    });
     propagate(p, cand);
     for (let k = 0; k < cand.length; k++) {
       if (entries[k] || p.given[k] || !one(cand[k])) continue;
@@ -158,7 +162,7 @@
           else if (solution[k]) el.classList.add('show');
           return;
         }
-        if (readonly) { el.textContent = entries[k] && entries[k] < 10 ? entries[k] : ''; if (entries[k] === 10) el.classList.add('gr-empty'); return; }
+        if (readonly) { el.textContent = entries[k] && entries[k] < 10 ? entries[k] : ''; if (entries[k] === 10) { el.classList.add('gr-empty'); } return; }
         if (entries[k] === 10) el.classList.add('gr-empty');
         el.appendChild(PuzzleShell.digitInput({ r, c, value: entries[k] < 10 ? entries[k] : 0, max: 9,
           onSet: (v) => { entries[k] = v; onChange(false); } }));
@@ -178,11 +182,11 @@
     generate,
     encode: (p) => ({ n: p.n, c: Array.from(p.cnt).join(','), s: Array.from(p.sum).join(','), g: Array.from(p.given).join('') }),
     decode(d) {
-      const n = d && d.n;
+      const n = d?.n;
       if (!Number.isInteger(n) || n < 3 || n > 10) throw new Error('Invalid board size');
       const cnt = Int8Array.from(String(d.c).split(','), Number), sum = Int16Array.from(String(d.s).split(','), Number);
       if (cnt.length !== 2 * n || sum.length !== 2 * n) throw new Error('Invalid clues');
-      if (typeof d.g !== 'string' || d.g.length !== n * n || !/^[0-9]+$/.test(d.g)) throw new Error('Invalid givens');
+      if (typeof d.g !== 'string' || d.g.length !== n * n || !/^\d+$/.test(d.g)) throw new Error('Invalid givens');
       const p = prepare({ n, cnt, sum, given: Int8Array.from(d.g, Number) });
       const res = solve(p, startCand(p), 2, 50000);
       if (res.solutions.length !== 1) throw new Error('Puzzle has no unique solution');

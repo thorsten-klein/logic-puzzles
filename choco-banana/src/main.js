@@ -24,7 +24,7 @@
         if (clues[k] < 0 || s[k] === UNKNOWN) continue;
         for (const j of nb(k)) {
           if (clues[j] < 0 || clues[j] === clues[k]) continue;
-          if (s[j] === s[k]) return false;
+          if (s[j] === s[k]) return -1;
           if (s[j] !== UNKNOWN) continue;
           s[j] = s[k] === YES ? NO : YES;
           if (log) log.push({ cells: [j], v: s[j], reason: `Next-door numbers ${clues[k]} and ${clues[j]} differ, so these cells are in different areas and have different colours.` });
@@ -50,7 +50,7 @@
         if (id[k] >= 0 || !ok(k)) continue;
         const cells = [k];
         id[k] = list.length;
-        for (let i = 0; i < cells.length; i++) for (const j of nb(cells[i])) if (id[j] < 0 && ok(j)) { id[j] = list.length; cells.push(j); }
+        for (const cur of cells) for (const j of nb(cur)) if (id[j] < 0 && ok(j)) { id[j] = list.length; cells.push(j); }
         list.push(cells);
       }
       return { id, list };
@@ -121,8 +121,8 @@
         if (seen[k]) continue;
         const cells = [k];
         seen[k] = 1;
-        for (let i = 0; i < cells.length; i++) {
-          const x = cells[i], r = Math.floor(x / n), c = x % n;
+        for (const cur of cells) {
+          const x = cur, r = Math.floor(x / n), c = x % n;
           for (const [a, b] of [[r - 1, c], [r + 1, c], [r, c - 1], [r, c + 1]]) {
             const j = a * n + b;
             if (a >= 0 && b >= 0 && a < n && b < n && !seen[j] && shade[j] === shade[x]) { seen[j] = 1; cells.push(j); }
@@ -151,10 +151,10 @@
     generate,
     encode: (p) => ({ r: p.R, c: p.C, g: Array.from(p.clues, (v) => (v < 0 ? '.' : v.toString(36))).join('') }),
     decode(d) {
-      const R = d && d.r, C = d && d.c;
+      const R = d?.r, C = d?.c;
       if (![R, C].every((x) => Number.isInteger(x) && x >= 3 && x <= 20)) throw new Error('Invalid board size');
       if (typeof d.g !== 'string' || d.g.length !== R * C) throw new Error('Invalid clues');
-      return { R, C, clues: Int8Array.from(d.g, (ch) => (ch === '.' ? -1 : parseInt(ch, 36))) };
+      return { R, C, clues: Int8Array.from(d.g, (ch) => (ch === '.' ? -1 : Number.parseInt(ch, 36))) };
     },
     model,
     draw(p, k, el) { if (p.clues[k] >= 0) el.append(String(p.clues[k])); },

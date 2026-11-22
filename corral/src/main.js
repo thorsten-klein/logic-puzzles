@@ -43,7 +43,7 @@
           if (a >= 0 && b >= 0 && a < R && b < C && !seen[j] && s[j] !== YES) { seen[j] = 1; stack.push(j); }
         }
       }
-      return [...Array(N).keys()].every((k) => s[k] !== NO || seen[k]);
+      return [...new Array(N).keys()].every((k) => s[k] !== NO || seen[k]);
     };
     function check(s) {
       for (let k = 0; k < N; k++) {
@@ -103,10 +103,10 @@
     generate,
     encode: (p) => ({ r: p.R, c: p.C, g: Array.from(p.clues, (v) => (v ? v.toString(36) : '.')).join('') }),
     decode(d) {
-      const R = d && d.r, C = d && d.c;
+      const R = d?.r, C = d?.c;
       if (![R, C].every((x) => Number.isInteger(x) && x >= 3 && x <= 20)) throw new Error('Invalid board size');
       if (typeof d.g !== 'string' || d.g.length !== R * C) throw new Error('Invalid clues');
-      return { R, C, clues: Int8Array.from(d.g, (ch) => (ch === '.' ? 0 : parseInt(ch, 36))) };
+      return { R, C, clues: Int8Array.from(d.g, (ch) => (ch === '.' ? 0 : Number.parseInt(ch, 36))) };
     },
     model,
     fixed: (p, k) => (p.clues[k] ? YES : 0),

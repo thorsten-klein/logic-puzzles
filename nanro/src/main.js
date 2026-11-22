@@ -12,7 +12,7 @@
     const { R, C, room, given } = p;
     const N = R * C;
     const rooms = [];
-    room.forEach((g, k) => { (rooms[g] = rooms[g] || []).push(k); });
+    room.forEach((g, k) => { rooms[g] ??= []; rooms[g].push(k); });
     const cons = [];
     for (let r = 0; r < R - 1; r++) for (let c = 0; c < C - 1; c++) {
       cons.push({ cells: [r * C + c, r * C + c + 1, (r + 1) * C + c, (r + 1) * C + c + 1], min: 0, max: 3, why: () => 'Numbered cells never fill a 2×2 block.' });
@@ -66,7 +66,7 @@
     const deadline = Date.now() + 8000;
     while (Date.now() < deadline) {
       const R = n, C = n, N = R * C;
-      const seeds = PuzzleShell.shuffle([...Array(N).keys()]).slice(0, Math.round(N / 4.5));
+      const seeds = PuzzleShell.shuffle([...new Array(N).keys()]).slice(0, Math.round(N / 4.5));
       const room = PuzzleShell.growRegions(R, C, seeds.map((k) => [k]));
       const p = { R, C, room, given: new Int8Array(N) };
       const fill = Binary.randomFill(model(p), 0.5, 10);
@@ -75,7 +75,7 @@
       const m0 = model(p);
       const count = Math.max(...room) + 1;
       for (let g = 0; g < count; g++) {
-        const cells = [...Array(N).keys()].filter((k) => room[k] === g && fill[k] === YES);
+        const cells = [...new Array(N).keys()].filter((k) => room[k] === g && fill[k] === YES);
         const k = cells[Math.floor(Math.random() * cells.length)];
         p.given[k] = m0.countOf(fill, g);
       }
@@ -101,12 +101,12 @@
     generate,
     encode: (p) => ({ r: p.R, c: p.C, g: Array.from(p.room, (v) => v.toString(36).padStart(2, '0')).join(''), n: Array.from(p.given, (v) => v.toString(36)).join('') }),
     decode(d) {
-      const R = d && d.r, C = d && d.c;
+      const R = d?.r, C = d?.c;
       if (![R, C].every((x) => Number.isInteger(x) && x >= 2 && x <= 20)) throw new Error('Invalid board size');
       if (typeof d.g !== 'string' || d.g.length !== 2 * R * C) throw new Error('Invalid rooms');
       if (typeof d.n !== 'string' || d.n.length !== R * C) throw new Error('Invalid numbers');
-      const room = Int32Array.from({ length: R * C }, (_, k) => parseInt(d.g.slice(2 * k, 2 * k + 2), 36));
-      return { R, C, room, given: Int8Array.from(d.n, (ch) => parseInt(ch, 36) || 0) };
+      const room = Int32Array.from({ length: R * C }, (_, k) => Number.parseInt(d.g.slice(2 * k, 2 * k + 2), 36));
+      return { R, C, room, given: Int8Array.from(d.n, (ch) => Number.parseInt(ch, 36) || 0) };
     },
     model,
     fixed: (p, k) => (p.given[k] ? YES : 0),

@@ -12,7 +12,7 @@
     const g = Loop.grid(R, C);
     const top = Math.max(...num);
     // Ends: every 1 and every top number; they pair 1 with top.
-    const label = Int8Array.from(num, (v) => (v === 1 ? 0 : v === top ? 0 : -1));
+    const label = Int8Array.from(num, (v) => (v === 1 || v === top ? 0 : -1));
     const step = [-C, C, -1, 1];
     function rule(s) {
       for (let k = 0; k < R * C; k++) {
@@ -25,11 +25,11 @@
           x += step[d];
           from = d ^ 1;
           if (!num[x]) continue;
-          if (num[x] !== want) return false;
+          if (num[x] !== want) return -1;
           want++;
         }
         // A line that reached an end must have met every number.
-        if (x !== k && num[x] === top && want !== top + 1) return false;
+        if (x !== k && num[x] === top && want !== top + 1) return -1;
       }
       return 0;
     }
@@ -49,7 +49,7 @@
         const inner = PuzzleShell.shuffle(Array.from({ length: path.length - 2 }, (_, i) => i + 1)).slice(0, top - 2).sort((a, b) => a - b);
         num[path[0]] = 1;
         inner.forEach((pos, i) => { num[path[pos]] = i + 2; });
-        num[path[path.length - 1]] = top;
+        num[path.at(-1)] = top;
       }
       const p = { R: n, C: n, num };
       if (!Links.unique(model(p))) continue;
@@ -70,10 +70,10 @@
     generate,
     encode: (p) => ({ n: p.R, g: Array.from(p.num, (v) => (v ? v.toString(36) : '.')).join('') }),
     decode(d) {
-      const n = d && d.n;
+      const n = d?.n;
       if (!Number.isInteger(n) || n < 2 || n > 16) throw new Error('Invalid board size');
       if (typeof d.g !== 'string' || d.g.length !== n * n) throw new Error('Invalid numbers');
-      return { R: n, C: n, num: Int8Array.from(d.g, (ch) => (ch === '.' ? 0 : parseInt(ch, 36))) };
+      return { R: n, C: n, num: Int8Array.from(d.g, (ch) => (ch === '.' ? 0 : Number.parseInt(ch, 36))) };
     },
     model,
     drawCell: (p) => (svg, k, x, y, s) => {

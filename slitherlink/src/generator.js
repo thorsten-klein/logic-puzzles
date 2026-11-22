@@ -75,7 +75,7 @@ const Generator = (() => {
       const p = { R, C, clues, solution: lines };
       const first = Solver.solve(p, 2);
       if (first.solutions.length !== 1) continue;
-      for (const k of shuffle([...Array(R * C).keys()])) {
+      for (const k of shuffle([...new Array(R * C).keys()])) {
         const keep = clues[k];
         clues[k] = -1;
         const res = Solver.solve(p, 2, 60000);

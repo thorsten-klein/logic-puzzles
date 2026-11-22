@@ -19,7 +19,7 @@ const Solver = (() => {
     };
     for (let k = 0; k < N; k++) {
       if (walls[k] === WHITE && s[k] === BULB) {
-        if (sight[k].some((j) => s[j] === BULB)) return false;
+        if (sight[k].some((j) => s[j] === BULB)) return -1;
         put(sight[k], NONE, 'seen', k);
       }
     }
@@ -29,7 +29,7 @@ const Solver = (() => {
       const cells = nb[k].filter((j) => walls[j] === WHITE);
       const bulbs = cells.filter((j) => s[j] === BULB).length;
       const open = cells.filter((j) => s[j] === UNKNOWN);
-      if (bulbs > w || bulbs + open.length < w) return false;
+      if (bulbs > w || bulbs + open.length < w) return -1;
       if (!open.length) continue;
       if (bulbs === w) put(open, NONE, 'full', k);
       else if (bulbs + open.length === w) put(open, BULB, 'needs', k);
@@ -38,7 +38,7 @@ const Solver = (() => {
     for (let k = 0; k < N; k++) {
       if (walls[k] !== WHITE || lit[k]) continue;
       const opts = [k, ...sight[k]].filter((j) => s[j] === UNKNOWN);
-      if (!opts.length) return false;
+      if (!opts.length) return -1;
       if (opts.length === 1) { put(opts, BULB, 'only', k); return set; }
     }
     return set;
@@ -52,7 +52,7 @@ const Solver = (() => {
       if (solutions.length >= stopAt || ++nodes > maxNodes) return;
       for (;;) {
         const r = step(p, s);
-        if (r === false) return;
+        if (r < 0) return;
         if (r === 0) break;
       }
       let pick = -1;
@@ -75,7 +75,7 @@ const Solver = (() => {
   function settle(p, s) {
     for (;;) {
       const r = step(p, s);
-      if (r === false) return false;
+      if (r < 0) return false;
       if (r === 0) return true;
     }
   }

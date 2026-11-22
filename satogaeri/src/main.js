@@ -16,16 +16,15 @@
     const deadline = Date.now() + 8000;
     while (Date.now() < deadline) {
       const N = n * n;
-      const seeds = PuzzleShell.shuffle([...Array(N).keys()]).slice(0, Math.round(N / 5));
+      const seeds = PuzzleShell.shuffle([...new Array(N).keys()]).slice(0, Math.round(N / 5));
       const room = PuzzleShell.growRegions(n, n, seeds.map((k) => [k]));
       const rooms = Math.max(...room) + 1;
       const cells = [];
-      room.forEach((g, k) => { (cells[g] = cells[g] || []).push(k); });
+      room.forEach((g, k) => { cells[g] ??= []; cells[g].push(k); });
       const used = new Uint8Array(N);
       const ends = cells.map((list) => list[Math.floor(Math.random() * list.length)]);
       ends.forEach((k) => { used[k] = 1; });
       const pieces = [];
-      const sol = [];
       let ok = true;
       for (const end of ends) {
         let placed = false;
@@ -42,7 +41,6 @@
           if (track.length !== d) continue;
           track.forEach((x) => { used[x] = 1; });
           pieces.push({ k: d ? track[d - 1] : end, num: d });
-          sol.push(end);
           placed = true;
         }
         if (!placed) { ok = false; break; }
@@ -77,7 +75,7 @@
     encodeExtra: (p) => Array.from(p.room, (v) => v.toString(36).padStart(2, '0')).join(''),
     decodeExtra(p, x) {
       if (typeof x !== 'string' || x.length !== 2 * p.R * p.C) throw new Error('Invalid rooms');
-      p.room = Int32Array.from({ length: p.R * p.C }, (_, k) => parseInt(x.slice(2 * k, 2 * k + 2), 36));
+      p.room = Int32Array.from({ length: p.R * p.C }, (_, k) => Number.parseInt(x.slice(2 * k, 2 * k + 2), 36));
       p.rooms = Math.max(...p.room) + 1;
     },
     partial,

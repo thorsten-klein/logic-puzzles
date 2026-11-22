@@ -54,7 +54,7 @@
         let seen = 0;
         for (const [dr, dc] of DIRS) {
           let r = Math.floor(k / C) + dr, c = (k % C) + dc;
-          while (r >= 0 && c >= 0 && r < R && c < C && sol[r * C + c] === sol[k]) { if (num[r * C + c] < 0) seen++; r += dr; c += dc; }
+          while (r >= 0 && c >= 0 && r < R && c < C && sol[r * C + c] === sol[k]) { if (num[r * C + c] < 0) { seen++; } r += dr; c += dc; }
         }
         num[k] = seen;
       }
@@ -63,7 +63,7 @@
       if (!s || s.includes(UNKNOWN)) continue;
       // Drop numbers while logic still solves it. Counts of the others
       // stay right: numbered cells never count.
-      for (const k of PuzzleShell.shuffle([...Array(N).keys()])) {
+      for (const k of PuzzleShell.shuffle([...new Array(N).keys()])) {
         if (num[k] < 0) continue;
         const keep = num[k];
         num[k] = -1;
@@ -74,7 +74,7 @@
             let seen = 0;
             for (const [dr, dc] of DIRS) {
               let r = Math.floor(j / C) + dr, c = (j % C) + dc;
-              while (r >= 0 && c >= 0 && r < R && c < C && sol[r * C + c] === sol[j]) { if (num[r * C + c] < 0) seen++; r += dr; c += dc; }
+              while (r >= 0 && c >= 0 && r < R && c < C && sol[r * C + c] === sol[j]) { if (num[r * C + c] < 0) { seen++; } r += dr; c += dc; }
             }
             num[j] = seen;
           }
@@ -100,14 +100,17 @@
     size: { min: 4, max: 8, def: 6 },
     solvedText: 'The picture is complete — nicely done.',
     generate,
-    encode: (p) => ({ r: p.R, c: p.C, g: Array.from(p.num, (v, k) => (v < 0 ? '.' : (p.col[k] === YES ? 'b' : 'w') + v.toString(36))).join(',') }),
+    encode: (p) => ({ r: p.R, c: p.C, g: Array.from(p.num, (v, k) => {
+      if (v < 0) return '.';
+      return (p.col[k] === YES ? 'b' : 'w') + v.toString(36);
+    }).join(',') }),
     decode(d) {
-      const R = d && d.r, C = d && d.c;
+      const R = d?.r, C = d?.c;
       if (![R, C].every((x) => Number.isInteger(x) && x >= 3 && x <= 20)) throw new Error('Invalid board size');
       const parts = String(d.g).split(',');
       if (parts.length !== R * C || parts.some((t) => t !== '.' && !/^[bw][0-9a-z]+$/.test(t))) throw new Error('Invalid clues');
       const num = new Int8Array(R * C).fill(-1), col = new Uint8Array(R * C);
-      parts.forEach((t, k) => { if (t !== '.') { col[k] = t[0] === 'b' ? YES : NO; num[k] = parseInt(t.slice(1), 36); } });
+      parts.forEach((t, k) => { if (t !== '.') { col[k] = t[0] === 'b' ? YES : NO; num[k] = Number.parseInt(t.slice(1), 36); } });
       return { R, C, num, col };
     },
     model,

@@ -28,8 +28,8 @@ const Rules = (() => {
       if (id[k] >= 0 || !test(k)) continue;
       const cells = [k];
       id[k] = list.length;
-      for (let i = 0; i < cells.length; i++) {
-        for (const j of nb[cells[i]]) if (id[j] < 0 && test(j)) { id[j] = list.length; cells.push(j); }
+      for (const cur of cells) {
+        for (const j of nb[cur]) if (id[j] < 0 && test(j)) { id[j] = list.length; cells.push(j); }
       }
       list.push(cells);
     }
@@ -40,11 +40,9 @@ const Rules = (() => {
     const { n, clues } = p;
     const N = n * n;
     const nb = neighbours(n);
-    const clueCells = [];
     const cons = [];
     for (let k = 0; k < N; k++) {
       if (clues[k]) {
-        clueCells.push(k);
         cons.push({ cells: [k], min: 0, max: 0, why: () => 'Numbered cells are part of an island.' });
       }
     }
@@ -77,8 +75,8 @@ const Rules = (() => {
         const dist = new Int32Array(N).fill(-1);
         const queue = [];
         for (const k of cells) { dist[k] = 0; reach[k] = 1; queue.push(k); }
-        for (let q = 0; q < queue.length; q++) {
-          const k = queue[q];
+        for (const cur of queue) {
+          const k = cur;
           if (dist[k] >= left) continue;
           for (const j of nb[k]) {
             if (dist[j] >= 0 || s[j] === YES) continue;
@@ -98,8 +96,8 @@ const Rules = (() => {
       const isl = islands(s);
       for (let i = 0; i < isl.list.length; i++) {
         const v = isl.num[i], cells = isl.list[i];
-        if (v < 0) return false;
-        if (v > 0 && cells.length > v) return false;
+        if (v < 0) return -1;
+        if (v > 0 && cells.length > v) return -1;
         if (v > 0 && cells.length === v) {
           const around = [...new Set(cells.flatMap((k) => nb[k]))].filter((j) => s[j] === UNKNOWN);
           if (around.length) {
@@ -114,7 +112,7 @@ const Rules = (() => {
         const v = isl.num[i], cells = isl.list[i];
         if (v > 0 && cells.length >= v) continue;
         const exits = [...new Set(cells.flatMap((k) => nb[k]))].filter((j) => s[j] === UNKNOWN);
-        if (exits.length === 0) return false;
+        if (exits.length === 0) return -1;
         if (exits.length === 1) {
           s[exits[0]] = NO;
           if (log) log.push({ cells: exits, v: NO, reason: v
@@ -128,7 +126,7 @@ const Rules = (() => {
       if (sea.list.length > 1) {
         for (const cells of sea.list) {
           const exits = [...new Set(cells.flatMap((k) => nb[k]))].filter((j) => s[j] === UNKNOWN);
-          if (exits.length === 0) return false;
+          if (exits.length === 0) return -1;
           if (exits.length === 1) {
             s[exits[0]] = YES;
             if (log) log.push({ cells: exits, v: YES, reason: 'This part of the sea must connect to the rest, and this is its only way out.' });
@@ -150,7 +148,7 @@ const Rules = (() => {
       const far = [];
       for (let k = 0; k < N; k++) if (s[k] === UNKNOWN && !reach[k]) far.push(k);
       // A white cell no numbered island can reach is broken.
-      for (let k = 0; k < N; k++) if (s[k] === NO && !reach[k]) return false;
+      for (let k = 0; k < N; k++) if (s[k] === NO && !reach[k]) return -1;
       if (far.length) {
         for (const j of far) s[j] = YES;
         if (log) log.push({ cells: far, v: YES, reason: 'No island can reach these cells. They must be sea.' });

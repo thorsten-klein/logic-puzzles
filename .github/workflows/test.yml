@@ -22,11 +22,13 @@ jobs:
         with:
           node-version: lts/*
           cache: npm
-      - run: npm ci
+      # No install scripts: the packages need none (Chrome comes next).
+      - run: npm ci --ignore-scripts
       # Tests use the installed Chrome. Install it only if it is missing.
-      - run: google-chrome --version || npx playwright install --with-deps chrome
+      # Uses the playwright from package-lock.json, never a download by npx.
+      - run: google-chrome --version || ./node_modules/.bin/playwright install --with-deps chrome
       # Two workers: each generator gets more of the slow CI machine.
-      - run: npx playwright test --shard=${{ matrix.shard }}/4
+      - run: npm test -- --shard=${{ matrix.shard }}/4
         env:
           WORKERS: 2
       - uses: actions/upload-artifact@v4

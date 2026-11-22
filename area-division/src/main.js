@@ -3,7 +3,7 @@
 // shared Pieces engine: the "A" cells act as the clue of each piece.
 
 (() => {
-  const L = (v) => String.fromCharCode(64 + v);
+  const L = (v) => String.fromCodePoint(64 + v);
   const sizeFor = (n) => [4, 5, 3, 6].find((s) => (n * n) % s === 0) || 2;
 
   Pieces.startGame({

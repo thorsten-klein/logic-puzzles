@@ -28,7 +28,7 @@
         if (id[k] >= 0 || !ok(k)) continue;
         const cells = [k];
         id[k] = list.length;
-        for (let i = 0; i < cells.length; i++) for (const j of nb(cells[i])) if (id[j] < 0 && ok(j)) { id[j] = list.length; cells.push(j); }
+        for (const cur of cells) for (const j of nb(cur)) if (id[j] < 0 && ok(j)) { id[j] = list.length; cells.push(j); }
         list.push(cells);
       }
       return { id, list };
@@ -42,7 +42,8 @@
         if (nums.length === 2 && cells.length >= Math.max(...nums)) return false;
         if (closed) {
           if (nums.length !== 2) return false;
-          const [a, b] = nums.sort((x, y) => x - y);
+          nums.sort((x, y) => x - y);
+          const [a, b] = nums;
           if (!(cells.length > a && cells.length < b)) return false;
         }
       }
@@ -67,7 +68,7 @@
         if (fill[k] !== NO || seen[k]) continue;
         const cells = [k];
         seen[k] = 1;
-        for (let i = 0; i < cells.length; i++) for (const j of nb(cells[i])) if (fill[j] === NO && !seen[j]) { seen[j] = 1; cells.push(j); }
+        for (const cur of cells) for (const j of nb(cur)) if (fill[j] === NO && !seen[j]) { seen[j] = 1; cells.push(j); }
         if (cells.length < 2 || cells.length > 8) { ok = false; break; }
         const [x, y] = PuzzleShell.shuffle(cells.slice()).slice(0, 2);
         clues[x] = Math.max(1, cells.length - 1 - Math.floor(Math.random() * 2));
@@ -97,10 +98,10 @@
     generate,
     encode: (p) => ({ r: p.R, c: p.C, g: Array.from(p.clues, (v) => (v > 0 ? v.toString(36) : '.')).join('') }),
     decode(d) {
-      const R = d && d.r, C = d && d.c;
+      const R = d?.r, C = d?.c;
       if (![R, C].every((x) => Number.isInteger(x) && x >= 3 && x <= 20)) throw new Error('Invalid board size');
       if (typeof d.g !== 'string' || d.g.length !== R * C) throw new Error('Invalid clues');
-      return { R, C, clues: Int8Array.from(d.g, (ch) => (ch === '.' ? 0 : parseInt(ch, 36))) };
+      return { R, C, clues: Int8Array.from(d.g, (ch) => (ch === '.' ? 0 : Number.parseInt(ch, 36))) };
     },
     model,
     fixed: (p, k) => (p.clues[k] > 0 ? NO : 0),

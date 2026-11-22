@@ -25,11 +25,9 @@ const Solver = (() => {
             if (s[j] === WHITE) return false;
             if (s[j] === UNKNOWN) { s[j] = BLACK; changed = true; }
           }
-        } else {
+        } else if (!pr[k].some((j) => s[j] !== BLACK && nums[j] === nums[k])) {
           // Unknown: white if its number has no open twin in its lines.
-          if (!pr[k].some((j) => s[j] !== BLACK && nums[j] === nums[k])) {
-            s[k] = WHITE; changed = true;
-          }
+          s[k] = WHITE; changed = true;
         }
       }
       if (!openConnected(s, n)) return false;

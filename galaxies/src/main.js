@@ -46,7 +46,8 @@
     for (let guard = 0; guard < 200; guard++) {
       let changed = false;
       for (let k = 0; k < N; k++) {
-        for (const d of [...cand[k]]) {
+        // Deleting the current entry while iterating a Set is safe.
+        for (const d of cand[k]) {
           const m = mirror(p, k, d);
           if (m < 0 || !cand[m].has(d)) { cand[k].delete(d); changed = true; }
         }
@@ -214,7 +215,7 @@
     },
     encode: (p) => ({ r: p.R, c: p.C, d: p.dots.map(({ y, x }) => `${y}.${x}`).join(',') }),
     decode(d) {
-      const R = d && d.r, C = d && d.c;
+      const R = d?.r, C = d?.c;
       if (![R, C].every((x) => Number.isInteger(x) && x >= 2 && x <= 20)) throw new Error('Invalid board size');
       const dots = String(d.d).split(',').map((s) => { const [y, x] = s.split('.').map(Number); return { y, x }; });
       if (dots.some(({ y, x }) => !(y >= 1 && y <= 2 * R - 1 && x >= 1 && x <= 2 * C - 1))) throw new Error('Invalid dots');

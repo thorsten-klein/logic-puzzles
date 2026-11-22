@@ -2,6 +2,5 @@
 .cw-b { fill: #37474f; }
 .cw-w { fill: #fff; stroke: #37474f; stroke-width: 2.5; }
 .cw-g { fill: #b0bec5; }
-.cw-num { text-anchor: middle; dominant-baseline: central; font-weight: 700; fill: #263238; pointer-events: none; }
+.cw-num { text-anchor: middle; dominant-baseline: central; font-weight: 700; fill: #263238; pointer-events: none; font-family: "Noto Sans", Arial, sans-serif; }
 .cw-num.on-black { fill: #fff; }
-.cw-num { font-family: "Noto Sans", Arial, sans-serif; }

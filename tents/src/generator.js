@@ -10,7 +10,7 @@ const Generator = (() => {
     const tent = new Uint8Array(N), trees = new Uint8Array(N);
     const target = Math.round(N * 0.19);
     let placed = 0;
-    for (const k of PuzzleShell.shuffle([...Array(N).keys()])) {
+    for (const k of PuzzleShell.shuffle([...new Array(N).keys()])) {
       if (placed >= target) break;
       if (trees[k] || tent[k]) continue;
       const r = Math.floor(k / n), c = k % n;

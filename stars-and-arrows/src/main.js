@@ -16,7 +16,7 @@
       if (a < 0) continue;
       const [dr, dc] = DIRS[a], cells = [];
       let r = Math.floor(k / C) + dr, c = (k % C) + dc;
-      while (r >= 0 && c >= 0 && r < R && c < C) { if (arrows[r * C + c] < 0) cells.push(r * C + c); r += dr; c += dc; }
+      while (r >= 0 && c >= 0 && r < R && c < C) { if (arrows[r * C + c] < 0) { cells.push(r * C + c); } r += dr; c += dc; }
       out.push([k, cells]);
     }
     return out;
@@ -100,7 +100,7 @@
     generate,
     encode: (p) => ({ n: p.R, a: Array.from(p.arrows, (v) => (v < 0 ? '.' : v)).join(''), r: p.rows.join(','), c: p.cols.join(',') }),
     decode(d) {
-      const n = d && d.n;
+      const n = d?.n;
       if (!Number.isInteger(n) || n < 3 || n > 15) throw new Error('Invalid board size');
       if (typeof d.a !== 'string' || d.a.length !== n * n || !/^[.0-7]+$/.test(d.a)) throw new Error('Invalid arrows');
       const nums = (x) => String(x).split(',').map(Number);

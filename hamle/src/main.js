@@ -30,7 +30,7 @@
     if (!done) return true;
     // White cells connect.
     const N = R * C;
-    const start = [...Array(N).keys()].find((k) => !taken.has(k));
+    const start = [...new Array(N).keys()].find((k) => !taken.has(k));
     const seen = new Uint8Array(N);
     seen[start] = 1;
     const stack = [start];
@@ -51,7 +51,7 @@
     let nodes = 0;
     (function rec(i) {
       if (out.length >= stopAt || ++nodes > maxNodes) return;
-      if (i === p.blocks.length) { if (fine(p, land, true)) out.push(Int8Array.from(dirs)); return; }
+      if (i === p.blocks.length) { if (fine(p, land, true)) { out.push(Int8Array.from(dirs)); } return; }
       for (let d = 0; d < 4; d++) {
         const t = target(p, p.blocks[i], d);
         if (t < 0) continue;
@@ -69,7 +69,7 @@
       const N = n * n;
       // Landing cells first (not touching), then where each block came from.
       const land = [];
-      for (const k of PuzzleShell.shuffle([...Array(N).keys()])) {
+      for (const k of PuzzleShell.shuffle([...new Array(N).keys()])) {
         if (land.length >= Math.round(N / 6)) break;
         const r = Math.floor(k / n), c = k % n;
         if (land.some((j) => Math.abs(Math.floor(j / n) - r) + Math.abs((j % n) - c) <= 1)) continue;
@@ -143,7 +143,11 @@
       const ok = [0, 1, 2, 3].filter((d) => {
         const t = target(p, p.blocks[i], d);
         if (t < 0) return false;
-        const land = p.blocks.map((b, j) => (j === i ? t : state[j] >= 0 ? target(p, b, state[j]) : -1));
+        const land = p.blocks.map((b, j) => {
+          if (j === i) return t;
+          if (state[j] >= 0) return target(p, b, state[j]);
+          return -1;
+        });
         return fine(p, land, false);
       });
       if (ok.length === 1) return [{ blocks: [i], set: [i, ok[0]], reason: 'This block has only one way to go: the others leave the grid or touch another block.' }];
@@ -164,7 +168,7 @@
     generate,
     encode: (p) => ({ n: p.R, b: p.blocks.map((b) => `${b.k}.${b.n}`).join(',') }),
     decode(d) {
-      const n = d && d.n;
+      const n = d?.n;
       if (!Number.isInteger(n) || n < 3 || n > 12) throw new Error('Invalid board size');
       const blocks = String(d.b).split(',').map((t) => { const [k, m] = t.split('.').map(Number); return { k, n: m }; });
       if (blocks.some((b) => !(b.k >= 0 && b.k < n * n && b.n >= 1 && b.n < n))) throw new Error('Invalid blocks');

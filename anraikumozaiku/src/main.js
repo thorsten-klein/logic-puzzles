@@ -4,7 +4,7 @@
 // Built on the Parts engine; regions are listed as rectangles.
 
 (() => {
-  const sizeOf = (id, g) => { let n = 0; for (const v of id) if (v === g) n++; return n; };
+  const sizeOf = (id, g) => { let n = 0; for (const v of id) { if (v === g) { n++; } } return n; };
 
   Parts.startGame({
     id: 'anraikumozaiku',
@@ -21,8 +21,7 @@
       const r0 = Math.floor(k / C), c0 = k % C;
       const out = [];
       for (let h = 1; r0 + h <= R; h++) {
-        let wMax = C - c0;
-        for (let w = 1; w <= wMax; w++) {
+        for (let w = 1; w <= C - c0; w++) {
           const cells = [];
           let circles = 0, bad = false;
           for (let r = r0; r < r0 + h && !bad; r++) for (let c = c0; c < c0 + w && !bad; c++) {
@@ -31,7 +30,7 @@
             circles += p.clues[x] ? 1 : 0;
             cells.push(x);
           }
-          if (bad) { wMax = w - 1; break; }
+          if (bad) break;
           if (circles > 1) break;
           if (circles === 1) out.push(cells);
         }

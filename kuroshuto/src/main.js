@@ -24,8 +24,7 @@
       if (r < R - 1) cons.push({ cells: [k, k + C], min: 0, max: 1, why });
       const v = clues[k];
       if (v <= 0) continue;
-      cons.push({ cells: [k], min: 0, max: 0, why: () => 'Numbered cells stay white.' });
-      cons.push({ cells: atDistance(R, C, k, v), min: 1, max: 1, at: k,
+      cons.push({ cells: [k], min: 0, max: 0, why: () => 'Numbered cells stay white.' }, { cells: atDistance(R, C, k, v), min: 1, max: 1, at: k,
         why: (x) => (x === YES ? `Exactly one cell ${v} steps from this ${v} is shaded, and only this one is left.`
           : `One cell ${v} steps from this ${v} is already shaded. The others stay white.`) });
     }
@@ -64,10 +63,10 @@
     generate,
     encode: (p) => ({ r: p.R, c: p.C, g: Array.from(p.clues, (v) => (v ? v.toString(36) : '.')).join('') }),
     decode(d) {
-      const R = d && d.r, C = d && d.c;
+      const R = d?.r, C = d?.c;
       if (![R, C].every((x) => Number.isInteger(x) && x >= 3 && x <= 20)) throw new Error('Invalid board size');
       if (typeof d.g !== 'string' || d.g.length !== R * C) throw new Error('Invalid clues');
-      return { R, C, clues: Int8Array.from(d.g, (ch) => (ch === '.' ? 0 : parseInt(ch, 36))) };
+      return { R, C, clues: Int8Array.from(d.g, (ch) => (ch === '.' ? 0 : Number.parseInt(ch, 36))) };
     },
     model,
     fixed: (p, k) => (p.clues[k] > 0 ? NO : 0),

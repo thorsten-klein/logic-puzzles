@@ -11,12 +11,11 @@
   function prepare(p) {
     const { n, room } = p;
     p.rooms = [];
-    room.forEach((g, k) => { (p.rooms[g] = p.rooms[g] || []).push(k); });
+    room.forEach((g, k) => { p.rooms[g] ??= []; p.rooms[g].push(k); });
     const each = n / 3;
     p.lines = [];
     for (let i = 0; i < n; i++) {
-      p.lines.push(Array.from({ length: n }, (_, c) => i * n + c));
-      p.lines.push(Array.from({ length: n }, (_, r) => r * n + i));
+      p.lines.push(Array.from({ length: n }, (_, c) => i * n + c), Array.from({ length: n }, (_, r) => r * n + i));
     }
     p.lineOk = (vals) => [1, 2, 3].every((v) => vals.filter((x) => x === v).length === each);
     p.lineOk.partial = (vals, i) => [1, 2, 3].every((v) => vals.slice(0, i + 1).filter((x) => x === v).length <= each);
@@ -88,7 +87,7 @@
       const sol = fill.solutions[0];
       const given = Int8Array.from(sol);
       const solved = () => { const c = startCand(p, given); return propagate(p, c) && c.every(one); };
-      for (const k of PuzzleShell.shuffle([...Array(n * n).keys()])) {
+      for (const k of PuzzleShell.shuffle([...new Array(n * n).keys()])) {
         const v = given[k];
         given[k] = 0;
         if (!solved()) given[k] = v;
@@ -125,7 +124,7 @@
         if (given[k]) { el.classList.add('given'); el.textContent = given[k]; return; }
         if (result) {
           el.textContent = solution[k];
-          el.classList.add(entries[k] === solution[k] ? 'ok' : entries[k] ? 'bad' : 'show');
+          el.classList.add(PuzzleShell.resultClass(entries[k], solution[k]));
         } else if (readonly) el.textContent = entries[k] || '';
         else {
           el.appendChild(PuzzleShell.digitInput({ r: Math.floor(k / n), c: k % n, value: entries[k], max: 3,
@@ -146,11 +145,11 @@
     generate,
     encode: (p) => ({ n: p.n, g: Array.from(p.room, (v) => v.toString(36).padStart(2, '0')).join(''), v: Array.from(p.given).join('') }),
     decode(d) {
-      const n = d && d.n;
+      const n = d?.n;
       if (!Number.isInteger(n) || n % 3 || n < 3 || n > 12) throw new Error('Invalid board size');
       if (typeof d.g !== 'string' || d.g.length !== 2 * n * n) throw new Error('Invalid rooms');
       if (typeof d.v !== 'string' || d.v.length !== n * n || !/^[0-3]+$/.test(d.v)) throw new Error('Invalid givens');
-      const p = prepare({ n, room: Int32Array.from({ length: n * n }, (_, k) => parseInt(d.g.slice(2 * k, 2 * k + 2), 36)) });
+      const p = prepare({ n, room: Int32Array.from({ length: n * n }, (_, k) => Number.parseInt(d.g.slice(2 * k, 2 * k + 2), 36)) });
       p.given = Int8Array.from(d.v, Number);
       const res = solve(p, startCand(p, p.given), 2, 50000);
       if (res.solutions.length !== 1) throw new Error('Puzzle has no unique solution');

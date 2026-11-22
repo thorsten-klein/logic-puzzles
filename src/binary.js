@@ -8,15 +8,17 @@
 //          With `w` (weights per cell) the YES weights are summed instead.
 //   check  optional (state, done) -> false if the state is broken.
 //          `done` is true when no cell is unknown.
-//   propagate  optional (state, log) -> false on contradiction, else the
+//   propagate  optional (state, log) -> -1 on contradiction, else the
 //          number of cells it set. For game rules that are not counts.
 //          Log entries are { cells, v, reason }.
 // Cell states: 0 = unknown, 1 = yes, 2 = no.
 
 const Binary = (() => {
   const UNKNOWN = 0, YES = 1, NO = 2;
+  // A step result that means "contradiction": -1 (or false, the old form).
+  const failed = (r) => r === false || r < 0;
 
-  // One pass over the count rules. Returns false on contradiction,
+  // One pass over the count rules. Returns -1 on contradiction,
   // else the number of cells set. `log` gets { con, cells, v }, and
   // { con, fail: true } for the broken rule.
   function step(model, s, log) {
@@ -24,7 +26,7 @@ const Binary = (() => {
     for (const con of model.cons) {
       if (con.w) {
         const r = weightedStep(con, s, log);
-        if (r === false) { if (log) log.push({ con, fail: true }); return false; }
+        if (failed(r)) { if (log) { log.push({ con, fail: true }); } return -1; }
         set += r;
         continue;
       }
@@ -34,7 +36,7 @@ const Binary = (() => {
         if (s[k] === YES) yes++;
         else if (s[k] === UNKNOWN) open.push(k);
       }
-      if (yes > con.max || yes + open.length < con.min) { if (log) log.push({ con, fail: true }); return false; }
+      if (yes > con.max || yes + open.length < con.min) { if (log) { log.push({ con, fail: true }); } return -1; }
       if (!open.length) continue;
       let v = 0;
       if (yes === con.max) v = NO;
@@ -57,7 +59,7 @@ const Binary = (() => {
       const w = con.w[i];
       if (s[k] === YES) { lo += w; hi += w; } else if (s[k] === UNKNOWN) { if (w > 0) hi += w; else lo += w; }
     });
-    if (lo > con.max || hi < con.min) return false;
+    if (lo > con.max || hi < con.min) return -1;
     const yes = [], no = [];
     con.cells.forEach((k, i) => {
       if (s[k] !== UNKNOWN) return;
@@ -71,7 +73,7 @@ const Binary = (() => {
       else if (!yesOk) no.push(k);
       else if (!noOk) yes.push(k);
     });
-    if (yes.includes(-1)) return false;
+    if (yes.includes(-1)) return -1;
     for (const k of no) s[k] = NO;
     for (const k of yes) s[k] = YES;
     if (log && no.length) log.push({ con, cells: no, v: NO });
@@ -83,14 +85,14 @@ const Binary = (() => {
   function settle(model, s) {
     for (;;) {
       const r = step(model, s);
-      if (r === false) return false;
+      if (failed(r)) return false;
       if (r > 0) continue;
       if (!model.propagate) break;
       const q = model.propagate(s);
-      if (q === false) return false;
+      if (failed(q)) return false;
       if (q === 0) break;
     }
-    return !model.check || model.check(s, !s.includes(UNKNOWN)) !== false;
+    return model.check?.(s, !s.includes(UNKNOWN)) !== false;
   }
 
   // Tries both values of each open cell. If one fails, the other is
@@ -164,7 +166,7 @@ const Binary = (() => {
   // dead-end hint is one short line instead of the step-by-step list.
   function hints(model, state, solution, noun, noNoun = null, name = null) {
     const a = (w) => (/^[aeiou8]/i.test(w) ? `an ${w}` : `a ${w}`);
-    const names = (ks) => ks.length > 1 ? `${ks.slice(0, -1).map(name).join(', ')} and ${name(ks[ks.length - 1])}` : name(ks[0]);
+    const names = (ks) => ks.length > 1 ? `${ks.slice(0, -1).map(name).join(', ')} and ${name(ks.at(-1))}` : name(ks[0]);
     // "F2 is a white cell" / "E1 and G1 are white cells".
     const becomes = (ks, v) => {
       const w = v === YES ? noun : noNoun || 'empty cell';
@@ -191,11 +193,18 @@ const Binary = (() => {
         if (r === 0 && model.propagate) r = model.propagate(t, log);
         for (const st of log) {
           // The clue cell behind this step, if there is one.
-          const at = st.at != null ? st.at : st.con && st.con.at != null ? st.con.at : null;
+          let at;
+          if (st.at != null) at = st.at;
+          else if (st.con?.at != null) at = st.con.at;
+          else at = null;
           const text = why(st);
           if (st.fail) {
-            const where = at != null ? ` at ${name(at)}` : st.con ? ` at ${names(st.con.cells)}` : '';
-            lines.push(`Now a rule is broken${where}${text ? `: ${text}` : '.'}`);
+            let where;
+            if (at != null) where = ` at ${name(at)}`;
+            else if (st.con) where = ` at ${names(st.con.cells)}`;
+            else where = '';
+            const tail = text ? `: ${text}` : '.';
+            lines.push(`Now a rule is broken${where}${tail}`);
           } else if (last && at == null && last.at == null && last.v === st.v && last.text === text) {
             last.cells.push(...st.cells);
             lines[lines.length - 1] = `Then ${becomes(last.cells, st.v)}${since(text, null)}.`;
@@ -203,21 +212,22 @@ const Binary = (() => {
           } else lines.push(`Then ${becomes(st.cells, st.v)}${since(text, at)}.`);
           last = st.fail ? null : { at, v: st.v, text, cells: [...st.cells] };
         }
-        if (r === false) {
+        if (failed(r)) {
           if (!log.some((st) => st.fail)) lines.push('Now a rule is broken.');
           return lines;
         }
         if (r === 0) break;
       }
-      if (model.check && model.check(t, !t.includes(UNKNOWN)) === false) lines.push('Now the rules can no longer all be met (for example, the cells can no longer connect).');
+      if (model.check?.(t, !t.includes(UNKNOWN)) === false) lines.push('Now the rules can no longer all be met (for example, the cells can no longer connect).');
       return lines;
     }
     const out = [];
     for (let k = 0; k < model.N; k++) {
       if (state[k] === UNKNOWN || state[k] === solution[k]) continue;
-      out.push({ cells: [k], v: solution[k],
-        reason: state[k] === YES ? `This ${noun} is wrong.`
-          : noNoun ? `This ${noNoun} is wrong.` : `This cell is marked empty, but it needs ${a(noun)}.` });
+      let reason = `This cell is marked empty, but it needs ${a(noun)}.`;
+      if (state[k] === YES) reason = `This ${noun} is wrong.`;
+      else if (noNoun) reason = `This ${noNoun} is wrong.`;
+      out.push({ cells: [k], v: solution[k], reason });
     }
     if (out.length) return out;
     const s = Uint8Array.from(state);
@@ -226,7 +236,10 @@ const Binary = (() => {
     if (!log.length && model.propagate) model.propagate(s, log);
     for (const st of log) {
       if (st.reason) { out.push(st); continue; }
-      const why = st.con.why ? st.con.why(st.v) : (st.v === YES ? `These cells need ${a(noun)}.` : `No ${noun} can go here.`);
+      let why;
+      if (st.con.why) why = st.con.why(st.v);
+      else if (st.v === YES) why = `These cells need ${a(noun)}.`;
+      else why = `No ${noun} can go here.`;
       out.push({ cells: st.cells, v: st.v, area: st.con.area, at: st.con.at, reason: why });
     }
     if (!out.length) {
@@ -234,13 +247,15 @@ const Binary = (() => {
       if (la) {
         if (!name) {
           const ifNo = noNoun ? `${a(noNoun)} here` : 'Leaving this cell empty';
+          const stays = noNoun ? `is ${a(noNoun)}` : 'stays empty';
           out.push({ cells: [la.k], v: la.v, area: la.area, reason: la.tried === YES
-            ? `${a(noun)} here leads to a dead end, so this cell ${noNoun ? `is ${a(noNoun)}` : 'stays empty'}.`.replace(/^a/, 'A')
+            ? `${a(noun)} here leads to a dead end, so this cell ${stays}.`.replace(/^a/, 'A')
             : `${ifNo} leads to a dead end, so it needs ${a(noun)}.`.replace(/^a/, 'A') });
           return out;
         }
+        const beNo = noNoun ? `be ${a(noNoun)}` : 'stay empty';
         const end = la.tried === YES
-          ? `That is not possible, so ${name(la.k)} must ${noNoun ? `be ${a(noNoun)}` : 'stay empty'}.`
+          ? `That is not possible, so ${name(la.k)} must ${beNo}.`
           : `That is not possible, so ${name(la.k)} must be ${a(noun)}.`;
         out.push({ cells: [la.k], v: la.v, area: la.area, reason: [...chain(la.k, la.tried), end].join('\n') });
       }
@@ -279,7 +294,7 @@ const Binary = (() => {
       const top = cfg.top ? cfg.top(p, withFixed) : null, left = cfg.left ? cfg.left(p, withFixed) : null;
       const offR = top ? 1 : 0, offC = left ? 1 : 0;
       const hintCells = new Set(hint ? hint.cells : []);
-      const area = new Set(hint && hint.area ? hint.area : []);
+      const area = new Set(hint?.area ? hint.area : []);
       const shown = result ? solution : full(p, state);
       const board = PuzzleShell.gridBoard({
         rows: R + offR, cols: C + offC, cellPx: PuzzleShell.fitCell(C + offC, cfg.cellMax || 42),
@@ -288,7 +303,10 @@ const Binary = (() => {
           const r = Math.floor(K / (C + offC)) - offR, c = (K % (C + offC)) - offC;
           if (r < 0 || c < 0) {
             el.className = 'clue' + (r < 0 ? ' clue-top' : ' clue-left');
-            const item = r < 0 && c >= 0 ? top[c] : c < 0 && r >= 0 ? left[r] : null;
+            let item;
+            if (r < 0 && c >= 0) item = top[c];
+            else if (c < 0 && r >= 0) item = left[r];
+            else item = null;
             if (item != null) {
               const [text, done] = Array.isArray(item) ? item : [item, false];
               el.textContent = text;
@@ -333,11 +351,12 @@ const Binary = (() => {
       const s = Uint8Array.from(full(p, state), (v) => (v === YES ? YES : NO));
       const m = cfg.model(p);
       for (const con of m.cons) {
-        const y = con.cells.reduce((a, k, i) => a + (s[k] === YES ? (con.w ? con.w[i] : 1) : 0), 0);
+        const weight = (i) => (con.w ? con.w[i] : 1);
+        const y = con.cells.reduce((a, k, i) => a + (s[k] === YES ? weight(i) : 0), 0);
         if (y < con.min || y > con.max) return false;
       }
-      if (m.propagate && m.propagate(Uint8Array.from(s)) === false) return false;
-      return !m.check || m.check(s, true) !== false;
+      if (failed(m.propagate?.(Uint8Array.from(s)))) return false;
+      return m.check?.(s, true) !== false;
     }
 
     PuzzleShell.start({
@@ -351,7 +370,7 @@ const Binary = (() => {
         const m = cfg.model(p);
         const byLogic = logicSolve(m);
         if (!byLogic) throw new Error('Puzzle has no solution');
-        if (!byLogic.includes(UNKNOWN) && (!m.check || m.check(byLogic, true) !== false)) { p.solution = byLogic; return p; }
+        if (!byLogic.includes(UNKNOWN) && (m.check?.(byLogic, true) !== false)) { p.solution = byLogic; return p; }
         const res = solve(m, 2, 50000, byLogic);
         if (res.solutions.length !== 1) throw new Error('Puzzle has no unique solution');
         p.solution = res.solutions[0];
@@ -426,7 +445,7 @@ const Binary = (() => {
         s[k] = v === YES ? NO : YES;
         ok = settle(model, s);
       }
-      if (ok && (!model.check || model.check(s, true) !== false)) return s;
+      if (ok && (model.check?.(s, true) !== false)) return s;
     }
     return null;
   }

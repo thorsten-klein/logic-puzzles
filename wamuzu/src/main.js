@@ -17,8 +17,11 @@
         const [up, down, left, right] = g.cellEdges[k];
         for (const [a, b] of [[up, down], [left, right]]) {
           if (a < 0 || b < 0) continue;
-          if (s[a] === LINE && s[b] === LINE) return false;
-          const other = s[a] === LINE ? b : s[b] === LINE ? a : -1;
+          if (s[a] === LINE && s[b] === LINE) return -1;
+          let other;
+          if (s[a] === LINE) other = b;
+          else if (s[b] === LINE) other = a;
+          else other = -1;
           if (other < 0 || s[other] !== UNKNOWN) continue;
           s[other] = CROSS;
           if (log) { log.push({ edges: [other], v: CROSS, reason: 'A line turns in every cell, so it can not go straight on here.' }); return 1; }
@@ -44,8 +47,8 @@
         paths.pop();
       }
       if (path.length >= maxLen) return false;
-      const x = path[path.length - 1], r = Math.floor(x / n), c = x % n;
-      const opts = (axis === 0 ? [[0, 1], [0, -1]] : axis === 1 ? [[1, 0], [-1, 0]] : [[0, 1], [1, 0]])
+      const x = path.at(-1), r = Math.floor(x / n), c = x % n;
+      const opts = [[[0, 1], [0, -1]], [[1, 0], [-1, 0]], [[0, 1], [1, 0]]][Math.min(axis, 2)]
         .filter(([a, b]) => free(r + a, c + b));
       for (const [a, b] of PuzzleShell.shuffle(opts)) {
         const k = (r + a) * n + c + b;
@@ -79,7 +82,7 @@
       const paths = randomCover(n, Math.min(deadline, Date.now() + 500));
       if (!paths) continue;
       const end = new Uint8Array(n * n);
-      for (const path of paths) { end[path[0]] = 1; end[path[path.length - 1]] = 1; }
+      for (const path of paths) { end[path[0]] = 1; end[path.at(-1)] = 1; }
       const p = { R: n, C: n, end };
       if (!Links.unique(model(p))) continue;
       const g = Loop.grid(n, n);
@@ -104,7 +107,7 @@
     generate,
     encode: (p) => ({ n: p.R, e: Array.from(p.end).join('') }),
     decode(d) {
-      const n = d && d.n;
+      const n = d?.n;
       if (!Number.isInteger(n) || n < 3 || n > 14) throw new Error('Invalid board size');
       if (typeof d.e !== 'string' || d.e.length !== n * n || !/^[01]+$/.test(d.e)) throw new Error('Invalid circles');
       return { R: n, C: n, end: Uint8Array.from(d.e, Number) };

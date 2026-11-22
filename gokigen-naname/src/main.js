@@ -24,7 +24,7 @@
       };
       add(r - 1, c - 1, 1); add(r, c, 1); add(r - 1, c, -1); add(r, c - 1, -1);
       cons.push({ cells, w, min: v - m, max: v - m, at: r * W + c,
-        why: () => `This ${v} needs exactly ${v} line${v === 1 ? '' : 's'} touching it. That settles these cells.` });
+        why: () => `This ${v} needs exactly ${PuzzleShell.plural(v, 'line')} touching it. That settles these cells.` });
     }
     // Ends of the diagonal in cell k for value v.
     const ends = (k, v) => {
@@ -45,12 +45,12 @@
     }
     function propagate(s, log) {
       const find = roots(s);
-      if (!find) return false;
+      if (!find) return -1;
       for (let k = 0; k < R * C; k++) {
         if (s[k] !== UNKNOWN) continue;
         const loopYes = (() => { const [a, b] = ends(k, YES); return find(a) === find(b); })();
         const loopNo = (() => { const [a, b] = ends(k, NO); return find(a) === find(b); })();
-        if (loopYes && loopNo) return false;
+        if (loopYes && loopNo) return -1;
         if (loopYes || loopNo) {
           s[k] = loopYes ? NO : YES;
           if (log) log.push({ cells: [k], v: s[k], reason: 'The other diagonal would close a loop, so this one goes here.' });
@@ -127,7 +127,7 @@
       const v = clues[r * (C + 1) + c];
       if (v < 0) continue;
       const cx = c * s, cy = r * s;
-      el('circle', { cx, cy, r: s * 0.22, class: 'gn-clue' + (hint && hint.at === r * (C + 1) + c ? ' hint' : '') }, g);
+      el('circle', { cx, cy, r: s * 0.22, class: 'gn-clue' + (hint?.at === r * (C + 1) + c ? ' hint' : '') }, g);
       const t = el('text', { x: cx, y: cy, 'font-size': s * 0.3, class: 'gn-num' }, g);
       t.textContent = v;
     }
@@ -147,7 +147,7 @@
     generate,
     encode: (p) => ({ r: p.R, c: p.C, g: Array.from(p.clues, (v) => (v < 0 ? '.' : v)).join('') }),
     decode(d) {
-      const R = d && d.r, C = d && d.c;
+      const R = d?.r, C = d?.c;
       if (![R, C].every((x) => Number.isInteger(x) && x >= 2 && x <= 20)) throw new Error('Invalid board size');
       if (typeof d.g !== 'string' || d.g.length !== (R + 1) * (C + 1) || !/^[.0-4]+$/.test(d.g)) throw new Error('Invalid clues');
       const p = { R, C, clues: Int8Array.from(d.g, (ch) => (ch === '.' ? -1 : Number(ch))) };

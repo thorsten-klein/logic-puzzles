@@ -3,7 +3,7 @@
 
 const Game = (() => {
   function decode(d, diag) {
-    const R = d && d.r, C = d && d.c;
+    const R = d?.r, C = d?.c;
     if (![R, C].every((x) => Number.isInteger(x) && x >= 2 && x <= 15)) throw new Error('Invalid board size');
     const given = Int32Array.from(String(d.g).split(','), Number);
     if (given.length !== R * C || given.some((v) => !(v >= 0 && v <= R * C))) throw new Error('Invalid givens');

@@ -120,7 +120,7 @@ html, body {
   display: flex;
   align-items: center;
   justify-content: center;
-  transition: all 0.15s ease;
+  transition: color 0.15s ease, border-color 0.15s ease, background-color 0.15s ease;
   padding: 0;
   text-decoration: none;
 }
@@ -328,7 +328,7 @@ a.btn:hover {
   justify-content: center;
   font-weight: 700;
   font-size: 14px;
-  color: #fff;
+  color: var(--fg);
   transition: background 60ms linear;
 }
 
@@ -520,10 +520,13 @@ a.btn:hover {
   }
 }
 
-/* Active shaking and rotating motion (triggered intermittently or on hover) */
-.hero-logo.is-shaking,
-.hero-logo:hover {
-  animation: hero-logo-shake-rotate 0.5s ease-in-out infinite;
+/* Active shaking and rotating motion (triggered intermittently or on hover),
+   only when the system does not ask for less motion. */
+@media (prefers-reduced-motion: no-preference) {
+  .hero-logo.is-shaking,
+  .hero-logo:hover {
+    animation: hero-logo-shake-rotate 0.5s ease-in-out infinite;
+  }
 }
 
 @keyframes hero-logo-shake-rotate {
@@ -594,14 +597,19 @@ a.btn:hover {
   display: flex;
   flex-direction: column;
   gap: 6px;
-  transition: border-color 0.15s ease, box-shadow 0.15s ease, transform 0.1s ease;
+  transition: border-color 0.15s ease, box-shadow 0.15s ease;
   min-height: 118px;
+  position: relative;
 }
 
 .game-card:hover {
   border-color: var(--accent);
   box-shadow: 0 2px 10px rgba(0, 0, 0, 0.08);
-  transform: translateY(-1px);
+}
+/* The card lifts a little, unless the system asks for less motion. */
+@media (prefers-reduced-motion: no-preference) {
+  .game-card { transition: border-color 0.15s ease, box-shadow 0.15s ease, transform 0.1s ease; }
+  .game-card:hover { transform: translateY(-1px); }
 }
 
 .game-card h3 {
@@ -635,7 +643,7 @@ a.btn:hover {
 
 .badge.available {
   background: rgba(76, 175, 80, 0.15);
-  color: #2e7d32;
+  color: #1b5e20;
 }
 
 .badge.placeholder {
@@ -650,7 +658,7 @@ a.btn:hover {
 
 /* --- Hub: view switch, sort, list view --- */
 .hub-tools { display: flex; flex-wrap: wrap; gap: 10px 16px; align-items: center; justify-content: center; }
-.view-switch { display: inline-flex; border: 1px solid var(--line); border-radius: 8px; overflow: hidden; background: #fff; }
+.view-switch { display: inline-flex; border: 1px solid var(--line); border-radius: 8px; overflow: hidden; background: #fff; margin: 0; padding: 0; min-width: 0; }
 .view-switch button {
   display: inline-flex; align-items: center; gap: 6px; border: 0; border-radius: 0; background: transparent;
   padding: 7px 12px; font-size: 14px; color: var(--muted); cursor: pointer;
@@ -687,7 +695,7 @@ a.btn:hover {
 .card-pic.none::after { content: 'No example yet'; font-size: 13px; color: var(--muted); }
 
 /* --- Hub: tag filter and card tags --- */
-.tag-filter { display: flex; flex-wrap: wrap; gap: 6px; justify-content: center; max-width: 760px; }
+.tag-filter { display: flex; flex-wrap: wrap; gap: 6px; justify-content: center; max-width: 760px; margin: 0; padding: 0; border: 0; min-width: 0; }
 .tag-filter .chip {
   border: 1px solid var(--line); background: #fff; color: var(--fg); border-radius: 999px;
   padding: 5px 12px; font-size: 13px; cursor: pointer;
@@ -894,8 +902,11 @@ a.btn:hover {
 .hub-intro p.random-pick { display: flex; flex-wrap: wrap; align-items: center; justify-content: center; gap: 12px; color: var(--fg); margin: 14px 0; }
 .hub-intro p.coffee { display: flex; flex-wrap: wrap; align-items: center; justify-content: center; gap: 12px; color: var(--fg); margin: 14px 0; }
 .coffee-badge { display: inline-flex; line-height: 0; }
-.coffee-badge img { height: 40px; width: auto; transition: transform 0.1s ease; }
-.coffee-badge:hover img { transform: translateY(-1px); }
+.coffee-badge img { height: 40px; width: auto; }
+@media (prefers-reduced-motion: no-preference) {
+  .coffee-badge img { transition: transform 0.1s ease; }
+  .coffee-badge:hover img { transform: translateY(-1px); }
+}
 
 /* Footer on every page (added by src/site.js) */
 #site-footer {
@@ -906,10 +917,9 @@ a.btn:hover {
   background: linear-gradient(to top, var(--bg) 60%, transparent);
   pointer-events: none;
 }
-#site-footer a { pointer-events: auto; }
+#site-footer a { pointer-events: auto; color: inherit; }
 #site-footer .gh { display: inline-flex; }
 #site-footer .gh svg { width: 18px; height: 18px; fill: currentColor; }
-#site-footer a { color: inherit; }
 #site-footer a:hover { color: var(--accent); }
 
 /* Close button (X) in the corner of a popup */
@@ -1086,8 +1096,8 @@ button.icon-btn { display: inline-flex; align-items: center; justify-content: ce
 .icon-btn .icon { width: 18px; height: 18px; fill: none; stroke: currentColor; stroke-width: 2.5; stroke-linecap: round; stroke-linejoin: round; }
 
 /* "Regenerate similar puzzle": teal, same size as the other buttons. */
-button.regen-btn { border: 0; padding: 10px 22px; border-radius: 6px; font-size: 16px; color: #fff; background: #00897b; cursor: pointer; }
-button.regen-btn:hover:not(:disabled) { background: #00695c; }
+button.regen-btn { border: 0; padding: 10px 22px; border-radius: 6px; font-size: 16px; color: #fff; background: #00695c; cursor: pointer; }
+button.regen-btn:hover:not(:disabled) { background: #004d40; }
 button.regen-btn:disabled { opacity: 0.6; cursor: wait; }
 
 /* Favourite star (Favs in src/site.js): grey outline, gold when on. */
@@ -1104,7 +1114,6 @@ button.regen-btn:disabled { opacity: 0.6; cursor: wait; }
 #menu-screen h1 .fav-star { width: 38px; height: 38px; }
 #menu-screen h1 .fav-star svg { width: 28px; height: 28px; }
 /* Main page: star in the bottom right corner of each card. */
-.game-card { position: relative; }
 /* Bottom right corner of a card: the "New" badge, then the star. */
 .game-card .card-corner { position: absolute; right: 8px; bottom: 8px; display: flex; align-items: center; gap: 6px; }
 .game-card .card-foot { padding-right: 80px; }

@@ -12,7 +12,7 @@
     const { R, C, room, clues } = p;
     const N = R * C;
     const rooms = [];
-    room.forEach((g, k) => { (rooms[g] = rooms[g] || []).push(k); });
+    room.forEach((g, k) => { rooms[g] ??= []; rooms[g].push(k); });
     const cons = [];
     // Border pairs, grouped by the pair of rooms.
     const walls = new Map();
@@ -34,11 +34,14 @@
       // Once two rooms have a door, no second door may open between them.
       for (const pairs of walls.values()) {
         const doors = pairs.filter(([a, b]) => s[a] === NO && s[b] === NO);
-        if (doors.length > 1) return false;
+        if (doors.length > 1) return -1;
         if (doors.length !== 1) continue;
         for (const [a, b] of pairs) {
           if (pairs === doors || (s[a] === NO && s[b] === NO)) continue;
-          const open = s[a] === NO && s[b] === UNKNOWN ? b : s[b] === NO && s[a] === UNKNOWN ? a : -1;
+          let open;
+          if (s[a] === NO && s[b] === UNKNOWN) open = b;
+          else if (s[b] === NO && s[a] === UNKNOWN) open = a;
+          else open = -1;
           if (open < 0) continue;
           s[open] = YES;
           if (log) log.push({ cells: [open], v: YES, reason: 'These two rooms already share a door. A second door between them is not allowed.' });
@@ -74,7 +77,7 @@
     const deadline = Date.now() + 8000;
     while (Date.now() < deadline) {
       const R = n, C = n, N = R * C;
-      const seeds = PuzzleShell.shuffle([...Array(N).keys()]).slice(0, Math.round(N / 4));
+      const seeds = PuzzleShell.shuffle([...new Array(N).keys()]).slice(0, Math.round(N / 4));
       const room = PuzzleShell.growRegions(R, C, seeds.map((k) => [k]));
       const count = Math.max(...room) + 1;
       const p = { R, C, room, clues: new Int8Array(count).fill(-1) };
@@ -104,10 +107,10 @@
     generate,
     encode: (p) => ({ r: p.R, c: p.C, g: Array.from(p.room, (v) => v.toString(36).padStart(2, '0')).join(''), n: Array.from(p.clues).join(',') }),
     decode(d) {
-      const R = d && d.r, C = d && d.c;
+      const R = d?.r, C = d?.c;
       if (![R, C].every((x) => Number.isInteger(x) && x >= 2 && x <= 20)) throw new Error('Invalid board size');
       if (typeof d.g !== 'string' || d.g.length !== 2 * R * C) throw new Error('Invalid rooms');
-      const room = Int32Array.from({ length: R * C }, (_, k) => parseInt(d.g.slice(2 * k, 2 * k + 2), 36));
+      const room = Int32Array.from({ length: R * C }, (_, k) => Number.parseInt(d.g.slice(2 * k, 2 * k + 2), 36));
       const clues = Int8Array.from(String(d.n).split(','), Number);
       if (room.some((v) => !(v >= 0 && v < clues.length))) throw new Error('Invalid rooms');
       return { R, C, room, clues };

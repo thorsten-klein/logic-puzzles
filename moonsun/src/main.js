@@ -33,10 +33,10 @@
         c = mark[k];
       }
       // A circle that is shut off can not be part of the room's colour.
-      const can = [1, 2].filter((m) => !cellsOf[r].some((k) => mark[k] === m && closed(s, k)));
-      if (c) return can.includes(c) ? c : -1;
+      const can = new Set([1, 2].filter((m) => !cellsOf[r].some((k) => mark[k] === m && closed(s, k))));
+      if (c) return can.has(c) ? c : -1;
       const has = [1, 2].filter((m) => cellsOf[r].some((k) => mark[k] === m));
-      const left = has.length ? has.filter((m) => can.includes(m)) : [1, 2];
+      const left = has.length ? has.filter((m) => can.has(m)) : [1, 2];
       if (!left.length) return -1;
       return left.length === 1 && has.length ? left[0] : 0;
     };
@@ -44,14 +44,14 @@
       const col = [];
       for (let r = 0; r < count; r++) {
         const cross = border[r].filter((e) => s[e] === LINE).length;
-        if (cross > 2) return false;
-        if (border[r].every((e) => s[e] !== UNKNOWN) && cross !== 2) return false;
+        if (cross > 2) return -1;
+        if (border[r].every((e) => s[e] !== UNKNOWN) && cross !== 2) return -1;
         col[r] = colour(s, r);
-        if (col[r] < 0) return false;
+        if (col[r] < 0) return -1;
         // Circles of the other colour stay off the loop.
-        if (col[r]) for (const k of cellsOf[r]) if (mark[k] && mark[k] !== col[r] && lines(s, k)) return false;
+        if (col[r]) for (const k of cellsOf[r]) if (mark[k] && mark[k] !== col[r] && lines(s, k)) return -1;
       }
-      for (const [e, a, b] of between) if (s[e] === LINE && col[a] && col[a] === col[b]) return false;
+      for (const [e, a, b] of between) if (s[e] === LINE && col[a] && col[a] === col[b]) return -1;
       return 0;
     }
     return { g, must: null, rule };
@@ -81,7 +81,7 @@
     const room = new Int32Array(N).fill(-1);
     groups.forEach((cells, id) => cells.forEach((k) => { room[k] = id; }));
     for (let open = room.filter((x) => x < 0).length; open > 0;) {
-      for (const k of PuzzleShell.shuffle([...Array(N).keys()])) {
+      for (const k of PuzzleShell.shuffle([...new Array(N).keys()])) {
         if (room[k] >= 0) continue;
         const r = Math.floor(k / n), c = k % n;
         const near = [[r - 1, c], [r + 1, c], [r, c - 1], [r, c + 1]]
@@ -104,7 +104,7 @@
       const cuts = [];
       for (let i = 0; i < path.length;) { const len = 2 + Math.floor(Math.random() * 5); cuts.push(path.slice(i, i + len)); i += len; }
       if (cuts.length < 4) continue;
-      if (cuts[cuts.length - 1].length < 2 || cuts.length % 2) { const last = cuts.pop(); cuts[cuts.length - 1].push(...last); }
+      if (cuts.at(-1).length < 2 || cuts.length % 2) { const last = cuts.pop(); cuts.at(-1).push(...last); }
       if (cuts.length % 2) continue;
       const room = grow(n, cuts);
       const N = n * n;
@@ -121,13 +121,13 @@
       const p = { R: n, C: n, room, mark };
       const solved = () => Loop.solvedBy(Loop.logicSolve(model(p)));
       if (!solved()) continue;
-      for (const k of PuzzleShell.shuffle([...Array(N).keys()])) {
+      for (const k of PuzzleShell.shuffle([...new Array(N).keys()])) {
         if (!mark[k]) continue;
         const keep = mark[k];
         mark[k] = 0;
         // Every room keeps at least one circle of its colour.
         const r = room[k];
-        const left = [...Array(N).keys()].some((j) => room[j] === r && mark[j] === (r % 2) + 1);
+        const left = [...new Array(N).keys()].some((j) => room[j] === r && mark[j] === (r % 2) + 1);
         if (!left || !solved()) mark[k] = keep;
         if (Date.now() > deadline + 4000) break;
       }
@@ -148,11 +148,11 @@
     generate,
     encode: (p) => ({ n: p.R, g: Array.from(p.room, (v) => v.toString(36).padStart(2, '0')).join(''), m: Array.from(p.mark).join('') }),
     decode(d) {
-      const n = d && d.n;
+      const n = d?.n;
       if (!Number.isInteger(n) || n < 3 || n > 16) throw new Error('Invalid board size');
       if (typeof d.g !== 'string' || d.g.length !== 2 * n * n) throw new Error('Invalid rooms');
       if (typeof d.m !== 'string' || d.m.length !== n * n || !/^[012]+$/.test(d.m)) throw new Error('Invalid circles');
-      const room = Int32Array.from({ length: n * n }, (_, k) => parseInt(d.g.slice(2 * k, 2 * k + 2), 36));
+      const room = Int32Array.from({ length: n * n }, (_, k) => Number.parseInt(d.g.slice(2 * k, 2 * k + 2), 36));
       return { R: n, C: n, room, mark: Uint8Array.from(d.m, Number) };
     },
     model,

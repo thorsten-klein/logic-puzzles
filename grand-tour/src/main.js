@@ -10,7 +10,7 @@
     const must = new Uint8Array(p.R * p.C).fill(1);
     function rule(s, log) {
       for (const e of p.given) {
-        if (s[e] === CROSS) return false;
+        if (s[e] === CROSS) return -1;
         if (s[e] === UNKNOWN) {
           s[e] = LINE;
           if (log) log.push({ edges: [e], v: LINE, reason: 'This connection is given.' });
@@ -28,11 +28,13 @@
     const p = { R: n, C: n, given: [] };
     const lines = [...sol.keys()].filter((e) => sol[e] === LINE);
     // Give connections where another tour differs, until unique.
-    for (let guard = 0; guard < lines.length; guard++) {
+    // At most one round per entry.
+    const rounds = lines.length;
+    for (let guard = 0; guard < rounds; guard++) {
       const res = Loop.solve(model(p), 2, 20000);
       if (res.solutions.length === 1 && !res.capped) break;
       const other = res.solutions.find((x) => x.some((v, e) => v !== sol[e]));
-      const opts = lines.filter((e) => !p.given.includes(e) && (!other || other[e] !== LINE));
+      const opts = lines.filter((e) => !p.given.includes(e) && (other?.[e] !== LINE));
       p.given.push(opts[Math.floor(Math.random() * opts.length)]);
     }
     // Drop givens that are not needed.
@@ -56,7 +58,7 @@
     generate,
     encode: (p) => ({ n: p.R, e: p.given.join(',') }),
     decode(d) {
-      const n = d && d.n;
+      const n = d?.n;
       if (!Number.isInteger(n) || n < 2 || n > 16) throw new Error('Invalid board size');
       const E = Loop.grid(n, n).E;
       const given = String(d.e || '').split(',').filter(Boolean).map(Number);

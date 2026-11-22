@@ -35,17 +35,17 @@
         const legs = dirs.map((d) => leg(s, k, d));
         for (const l of legs) {
           // Too long in any case (also a straight stretch would be longer).
-          if (l.len > v) return false;
+          if (l.len > v) return -1;
         }
         if (dirs.length === 2) {
           if (dirs[0] === OPP[dirs[1]]) {
             const sum = legs[0].len + legs[1].len;
-            if (sum > v || (legs[0].final && legs[1].final && sum !== v)) return false;
-          } else if (legs.some((l) => l.final && l.len !== v)) return false;
+            if (sum > v || (legs[0].final && legs[1].final && sum !== v)) return -1;
+          } else if (legs.some((l) => l.final && l.len !== v)) return -1;
         } else if (dirs.length === 1 && legs[0].final && legs[0].len !== v) {
           // A short leg that ends needs the loop to go straight through.
           const o = g.cellEdges[k][OPP[dirs[0]]];
-          if (o < 0 || s[o] === CROSS) return false;
+          if (o < 0 || s[o] === CROSS) return -1;
         }
       }
       return 0;
@@ -76,7 +76,7 @@
       const p = { R: n, C: n, clues };
       const solved = () => Loop.solvedBy(Loop.logicSolve(model(p)));
       if (!solved()) continue;
-      for (const k of PuzzleShell.shuffle([...Array(n * n).keys()])) {
+      for (const k of PuzzleShell.shuffle([...new Array(n * n).keys()])) {
         if (clues[k] < 0) continue;
         const keep = clues[k];
         clues[k] = -1;
@@ -100,10 +100,10 @@
     generate,
     encode: (p) => ({ r: p.R, c: p.C, g: Array.from(p.clues, (v) => (v < 0 ? '.' : v.toString(36))).join('') }),
     decode(d) {
-      const R = d && d.r, C = d && d.c;
+      const R = d?.r, C = d?.c;
       if (![R, C].every((x) => Number.isInteger(x) && x >= 3 && x <= 20)) throw new Error('Invalid board size');
       if (typeof d.g !== 'string' || d.g.length !== R * C) throw new Error('Invalid clues');
-      return { R, C, clues: Int8Array.from(d.g, (ch) => (ch === '.' ? -1 : parseInt(ch, 36))) };
+      return { R, C, clues: Int8Array.from(d.g, (ch) => (ch === '.' ? -1 : Number.parseInt(ch, 36))) };
     },
     model,
     drawOnTop: true,

@@ -6,6 +6,12 @@
 // Player entries: 0 blank, 1 marked empty, 2 rabbit, 3 tree.
 
 (() => {
+  // Candidate bit of slot i in a line where a and b are the two marks.
+  const slotBit = (i, a, b) => {
+    if (i === a) return 4;
+    return i === b ? 8 : 2;
+  };
+
   const one = (m) => m && !(m & (m - 1));
   const low = (m) => 31 - Math.clz32(m & -m);
   const ALL = 0b1110;
@@ -63,7 +69,7 @@
       }
       p.lines.forEach((cells, li) => {
         const keep = new Int32Array(cells.length);
-        for (const [a, b] of opts[li]) cells.forEach((_, i) => { keep[i] |= i === a ? 4 : i === b ? 8 : 2; });
+        for (const [a, b] of opts[li]) cells.forEach((_, i) => { keep[i] |= slotBit(i, a, b); });
         cells.forEach((k, i) => { cand[k] &= keep[i]; });
       });
       if (cand.some((m) => !m)) return false;
@@ -105,7 +111,7 @@
       for (let k = 0; k < N; k++) if (sol[k] === 1) p.num[k] = count(k);
       const solved = () => { const c = startCand(p); return propagate(p, c) && c.every(one); };
       if (!solved()) continue;
-      for (const k of PuzzleShell.shuffle([...Array(N).keys()])) {
+      for (const k of PuzzleShell.shuffle([...new Array(N).keys()])) {
         if (p.num[k] < 0) continue;
         const keep = p.num[k];
         p.num[k] = -1;
@@ -124,7 +130,11 @@
       const e = entries[k];
       if (e && p.num[k] < 0 && e !== p.solution[k]) return [{ cells: [k], v: 0, reason: e === 1 ? 'This cell is not empty.' : 'This is wrong here.' }];
     }
-    const cand = Int32Array.from(entries, (e, k) => (p.num[k] >= 0 ? 2 : e ? 1 << e : ALL));
+    const cand = Int32Array.from(entries, (e, k) => {
+      if (p.num[k] >= 0) return 2;
+      if (e) return 1 << e;
+      return ALL;
+    });
     propagate(p, cand);
     for (let k = 0; k < cand.length; k++) {
       if (entries[k] || p.num[k] >= 0 || !one(cand[k])) continue;
@@ -173,7 +183,7 @@
     generate,
     encode: (p) => ({ n: p.n, g: Array.from(p.num, (v) => (v < 0 ? '.' : v)).join('') }),
     decode(d) {
-      const n = d && d.n;
+      const n = d?.n;
       if (!Number.isInteger(n) || n < 3 || n > 12) throw new Error('Invalid board size');
       if (typeof d.g !== 'string' || d.g.length !== n * n || !/^[.0-2]+$/.test(d.g)) throw new Error('Invalid numbers');
       const p = prepare({ n, num: Int8Array.from(d.g, (ch) => (ch === '.' ? -1 : Number(ch))) });

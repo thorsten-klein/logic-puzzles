@@ -19,6 +19,8 @@
       if (c < C - 1) out.push(k + 1);
       return out;
     };
+    // True when no cell next to k is still open.
+    const settled = (k, s) => nb(k).every((j) => s[j] !== UNKNOWN);
     const cons = [];
     for (let k = 0; k < N; k++) {
       if (clues[k] === -1) continue;
@@ -31,10 +33,10 @@
         const cells = [r * C + c, r * C + c + 1, (r + 1) * C + c, (r + 1) * C + c + 1];
         const yes = cells.filter((k) => s[k] === YES).length, no = cells.filter((k) => s[k] === NO).length;
         const open = cells.filter((k) => s[k] === UNKNOWN);
-        if (yes === 3 && no === 1) return false;
+        if (yes === 3 && no === 1) return -1;
         if (open.length !== 1) continue;
-        if (yes === 3) { s[open[0]] = YES; if (log) log.push({ cells: open, v: YES, reason: 'Shaded areas are squares. Three shaded cells in a 2×2 block need the fourth.' }); return 1; }
-        if (yes === 2 && no === 1) { s[open[0]] = NO; if (log) log.push({ cells: open, v: NO, reason: 'Shaded areas are squares. This cell would make an L shape.' }); return 1; }
+        if (yes === 3) { s[open[0]] = YES; if (log) { log.push({ cells: open, v: YES, reason: 'Shaded areas are squares. Three shaded cells in a 2×2 block need the fourth.' }); } return 1; }
+        if (yes === 2 && no === 1) { s[open[0]] = NO; if (log) { log.push({ cells: open, v: NO, reason: 'Shaded areas are squares. This cell would make an L shape.' }); } return 1; }
       }
       return 0;
     }
@@ -45,7 +47,7 @@
         if (id[k] >= 0 || !ok(k)) continue;
         const cells = [k];
         id[k] = list.length;
-        for (let i = 0; i < cells.length; i++) for (const j of nb(cells[i])) if (id[j] < 0 && ok(j)) { id[j] = list.length; cells.push(j); }
+        for (const cur of cells) for (const j of nb(cur)) if (id[j] < 0 && ok(j)) { id[j] = list.length; cells.push(j); }
         list.push(cells);
       }
       return { id, list };
@@ -57,7 +59,7 @@
       const sizeOf = black.list.map((cells) => {
         const rows = cells.map((k) => Math.floor(k / C)), cols = cells.map((k) => k % C);
         const h = Math.max(...rows) - Math.min(...rows) + 1, w = Math.max(...cols) - Math.min(...cols) + 1;
-        const closed = cells.every((k) => nb(k).every((j) => s[j] !== UNKNOWN));
+        const closed = cells.every((k) => settled(k, s));
         if ((closed || done) && h !== w) return -1;
         return cells.length;
       });
@@ -90,7 +92,10 @@
       return [[r - 1, c], [r + 1, c], [r, c - 1], [r, c + 1]].some(([a, b]) => a >= 0 && b >= 0 && a < n && b < n && shade[a * n + b]);
     };
     for (let t = 0; t < n * 4; t++) {
-      const size = Math.random() < 0.6 ? 1 : Math.random() < 0.7 ? 2 : 3;
+      let size;
+      if (Math.random() < 0.6) size = 1;
+      else if (Math.random() < 0.7) size = 2;
+      else size = 3;
       const r = Math.floor(Math.random() * (n - size + 1)), c = Math.floor(Math.random() * (n - size + 1));
       const cells = [];
       for (let i = 0; i < size; i++) for (let j = 0; j < size; j++) cells.push((r + i) * n + c + j);
@@ -116,8 +121,8 @@
         if (!shade[k] || seen[k]) continue;
         const cells = [k];
         seen[k] = 1;
-        for (let i = 0; i < cells.length; i++) {
-          const x = cells[i], r = Math.floor(x / n), c = x % n;
+        for (const cur of cells) {
+          const x = cur, r = Math.floor(x / n), c = x % n;
           for (const j of [r > 0 ? x - n : -1, r < n - 1 ? x + n : -1, c > 0 ? x - 1 : -1, c < n - 1 ? x + 1 : -1]) {
             if (j >= 0 && shade[j] && !seen[j]) { seen[j] = 1; cells.push(j); }
           }
@@ -152,14 +157,20 @@
     size: { min: 5, max: 8, def: 7 },
     solvedText: 'All squares found — nicely done.',
     generate,
-    encode: (p) => ({ r: p.R, c: p.C, g: Array.from(p.clues, (v) => (v === -1 ? '..' : v === Q ? '??' : v.toString(36).padStart(2, '0'))).join('') }),
+    encode: (p) => ({ r: p.R, c: p.C, g: Array.from(p.clues, (v) => {
+      if (v === -1) return '..';
+      if (v === Q) return '??';
+      return v.toString(36).padStart(2, '0');
+    }).join('') }),
     decode(d) {
-      const R = d && d.r, C = d && d.c;
+      const R = d?.r, C = d?.c;
       if (![R, C].every((x) => Number.isInteger(x) && x >= 3 && x <= 20)) throw new Error('Invalid board size');
       if (typeof d.g !== 'string' || d.g.length !== 2 * R * C) throw new Error('Invalid clues');
       const clues = Int8Array.from({ length: R * C }, (_, k) => {
         const t = d.g.slice(2 * k, 2 * k + 2);
-        return t === '..' ? -1 : t === '??' ? Q : parseInt(t, 36);
+        if (t === '..') return -1;
+        if (t === '??') return Q;
+        return Number.parseInt(t, 36);
       });
       return { R, C, clues };
     },

@@ -15,7 +15,9 @@
   const relation = (vals) => {
     const s = vals.indexOf(2), m = vals.indexOf(3), t = vals.indexOf(4);
     const a = Math.abs(s - t), b = Math.abs(m - t);
-    return a < b ? 1 : a > b ? 2 : 3;
+    if (a < b) return 1;
+    if (a > b) return 2;
+    return 3;
   };
 
   function prepare(p) {
@@ -60,7 +62,7 @@
     return { solutions: out, capped: nodes > maxNodes };
   }
 
-  const startCand = (p, given) => Int32Array.from({ length: p.n * p.n }, (_, k) => (given && given[k] ? 1 << given[k] : ALL));
+  const startCand = (p, given) => Int32Array.from({ length: p.n * p.n }, (_, k) => (given?.[k] ? 1 << given[k] : ALL));
 
   function generate(n) {
     const deadline = Date.now() + 8000;
@@ -81,19 +83,19 @@
       for (let guard = 0; guard < N && !solved(); guard++) {
         const c = startCand(p, p.given);
         propagate(p, c);
-        const open = [...Array(N).keys()].filter((k) => !one(c[k]) && sol[k] > 1);
+        const open = [...new Array(N).keys()].filter((k) => !one(c[k]) && sol[k] > 1);
         if (!open.length) break;
         const k = open[Math.floor(Math.random() * open.length)];
         p.given[k] = sol[k];
       }
       if (!solved()) continue;
-      for (const [arr, i] of PuzzleShell.shuffle([...Array(n).keys()].flatMap((i) => [[p.rowClue, i], [p.colClue, i]]))) {
+      for (const [arr, i] of PuzzleShell.shuffle([...new Array(n).keys()].flatMap((i) => [[p.rowClue, i], [p.colClue, i]]))) {
         const keep = arr[i];
         arr[i] = 0;
         prepare(p);
         if (!solved()) { arr[i] = keep; prepare(p); }
       }
-      for (const k of PuzzleShell.shuffle([...Array(N).keys()])) {
+      for (const k of PuzzleShell.shuffle([...new Array(N).keys()])) {
         if (!p.given[k]) continue;
         const keep = p.given[k];
         p.given[k] = 0;
@@ -140,8 +142,11 @@
         const r = Math.floor(K / W) - 1, c = (K % W) - 1;
         if (r < 0 || c < 0) {
           el.className = 'clue';
-          const v = r < 0 && c >= 0 ? p.colClue[c] : c < 0 && r >= 0 ? p.rowClue[r] : 0;
-          if (v) el.append(figureEl(v === 1 ? 2 : v === 2 ? 3 : 4));
+          let v;
+          if (r < 0 && c >= 0) v = p.colClue[c];
+          else if (c < 0 && r >= 0) v = p.rowClue[r];
+          else v = 0;
+          if (v) el.append(figureEl(Math.min(v + 1, 4))); // 1 → 2, 2 → 3, else 4
           return;
         }
         const k = r * n + c;
@@ -185,7 +190,7 @@
     generate,
     encode: (p) => ({ n: p.n, r: enc(p.rowClue), c: enc(p.colClue), g: enc(p.given) }),
     decode(d) {
-      const n = d && d.n;
+      const n = d?.n;
       if (!Number.isInteger(n) || n < 3 || n > 12) throw new Error('Invalid board size');
       const p = prepare({ n, rowClue: dec(d.r, n), colClue: dec(d.c, n) });
       p.given = dec(d.g, n * n);

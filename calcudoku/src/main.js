@@ -15,10 +15,10 @@ PuzzleShell.start({
     o: p.ops.map(([op, t]) => `${op || '='}${t}`).join(','),
   }),
   decode(d) {
-    const n = d && d.n;
+    const n = d?.n;
     if (!Number.isInteger(n) || n < 3 || n > 9) throw new Error('Invalid board size');
     if (typeof d.c !== 'string' || d.c.length !== 2 * n * n || typeof d.o !== 'string') throw new Error('Invalid cages');
-    const cage = Int32Array.from({ length: n * n }, (_, k) => parseInt(d.c.slice(2 * k, 2 * k + 2), 36));
+    const cage = Int32Array.from({ length: n * n }, (_, k) => Number.parseInt(d.c.slice(2 * k, 2 * k + 2), 36));
     const ops = d.o.split(',').map((s) => {
       const m = s.match(/^([+\-*/=])(\d+)$/);
       if (!m) throw new Error('Invalid cage rule');

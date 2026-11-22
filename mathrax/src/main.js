@@ -47,8 +47,11 @@
     const vals = [g[tl], g[tr], g[bl], g[br]];
     const out = [];
     for (const op of ['+', '-', '*', '/']) {
-      const a = op === '+' ? vals[0] + vals[3] : op === '*' ? vals[0] * vals[3]
-        : op === '-' ? Math.abs(vals[0] - vals[3]) : Math.max(vals[0], vals[3]) / Math.min(vals[0], vals[3]);
+      let a;
+      if (op === '+') a = vals[0] + vals[3];
+      else if (op === '*') a = vals[0] * vals[3];
+      else if (op === '-') a = Math.abs(vals[0] - vals[3]);
+      else a = Math.max(vals[0], vals[3]) / Math.min(vals[0], vals[3]);
       if (Number.isInteger(a) && a > 0 && clueOk({ op, v: a }, vals)) out.push({ r, c, op, v: a });
     }
     if (vals.every((x) => x % 2 === 0)) out.push({ r, c, op: 'E' });
@@ -73,7 +76,7 @@
         const res = solveP(p, 5000);
         if (res.solutions.length === 1 && !res.capped) break;
         const other = res.solutions.find((x) => x.some((v, k) => v !== sol[k]));
-        const diff = [...sol.keys()].filter((k) => !p.given[k] && (!other || other[k] !== sol[k]));
+        const diff = [...sol.keys()].filter((k) => !p.given[k] && (other?.[k] !== sol[k]));
         const k = diff[Math.floor(Math.random() * diff.length)];
         p.given[k] = sol[k];
       }
@@ -107,7 +110,7 @@
         if (given[k]) { el.classList.add('given'); el.textContent = given[k]; return; }
         if (result) {
           el.textContent = solution[k];
-          el.classList.add(entries[k] === solution[k] ? 'ok' : entries[k] ? 'bad' : 'show');
+          el.classList.add(PuzzleShell.resultClass(entries[k], solution[k]));
         } else if (readonly) {
           el.textContent = entries[k] || '';
           el.classList.add('entry');
@@ -144,11 +147,11 @@
     generate,
     encode: (p) => ({ n: p.n, g: Array.from(p.given).join(''), k: p.clues.map((x) => `${x.r}.${x.c}.${x.op}${x.v || ''}`).join(',') }),
     decode(d) {
-      const n = d && d.n;
+      const n = d?.n;
       if (!Number.isInteger(n) || n < 3 || n > 9) throw new Error('Invalid board size');
-      if (typeof d.g !== 'string' || d.g.length !== n * n || !/^[0-9]+$/.test(d.g)) throw new Error('Invalid givens');
+      if (typeof d.g !== 'string' || d.g.length !== n * n || !/^\d+$/.test(d.g)) throw new Error('Invalid givens');
       const clues = String(d.k || '').split(',').filter(Boolean).map((s) => {
-        const m = s.match(/^(\d+)\.(\d+)\.([-+*/EO])(\d*)$/);
+        const m = /^(\d+)\.(\d+)\.([-+*/EO])(\d*)$/.exec(s);
         if (!m) throw new Error('Invalid clue');
         return { r: Number(m[1]), c: Number(m[2]), op: m[3], v: m[4] ? Number(m[4]) : undefined };
       });

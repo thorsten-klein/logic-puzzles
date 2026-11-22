@@ -27,8 +27,8 @@
     function propagate(s, log) {
       for (const [k, dirs] of arms) {
         const v = black[k];
-        const got = dirs.map(([cells, want]) => { let i = 0; while (i < cells.length && s[cells[i]] === want) i++; return i; });
-        const can = dirs.map(([cells, want]) => { let i = 0; while (i < cells.length && s[cells[i]] !== (want === YES ? NO : YES)) i++; return i; });
+        const got = dirs.map(([cells, want]) => { let i = 0; while (i < cells.length && s[cells[i]] === want) { i++; } return i; });
+        const can = dirs.map(([cells, want]) => { let i = 0; while (i < cells.length && s[cells[i]] !== (want === YES ? NO : YES)) { i++; } return i; });
         const min = got.reduce((a, b) => a + b, 0), max = can.reduce((a, b) => a + b, 0);
         if (min > v || max < v) return false;
         for (let d = 0; d < 4; d++) {
@@ -80,7 +80,11 @@
       const R = n, C = n, N = R * C;
       const black = new Int8Array(N).fill(-1);
       for (let k = 0; k < N; k++) if (Math.random() < 0.18) black[k] = 0;
-      const s = Uint8Array.from({ length: N }, (_, k) => (black[k] >= 0 ? NO : Math.random() < 0.5 ? YES : NO));
+      const s = Uint8Array.from({ length: N }, (_, k) => {
+        if (black[k] >= 0) return NO;
+        if (Math.random() < 0.5) return YES;
+        return NO;
+      });
       const p = { R, C, black };
       // Flip unattached lines until all reach a black cell (or give up).
       const m = model(p);
@@ -137,10 +141,10 @@
     generate,
     encode: (p) => ({ r: p.R, c: p.C, g: Array.from(p.black, (v) => (v < 0 ? '..' : v.toString(36).padStart(2, '0'))).join('') }),
     decode(d) {
-      const R = d && d.r, C = d && d.c;
+      const R = d?.r, C = d?.c;
       if (![R, C].every((x) => Number.isInteger(x) && x >= 3 && x <= 20)) throw new Error('Invalid board size');
       if (typeof d.g !== 'string' || d.g.length !== 2 * R * C) throw new Error('Invalid grid');
-      return { R, C, black: Int16Array.from({ length: R * C }, (_, k) => (d.g[2 * k] === '.' ? -1 : parseInt(d.g.slice(2 * k, 2 * k + 2), 36))) };
+      return { R, C, black: Int16Array.from({ length: R * C }, (_, k) => (d.g[2 * k] === '.' ? -1 : Number.parseInt(d.g.slice(2 * k, 2 * k + 2), 36))) };
     },
     model,
     fixed: (p, k) => (p.black[k] >= 0 ? NO : 0),

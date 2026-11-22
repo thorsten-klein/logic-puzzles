@@ -46,7 +46,7 @@
         if (id[k] >= 0 || s[k] !== NO) continue;
         const cells = [k];
         id[k] = k;
-        for (let i = 0; i < cells.length; i++) for (const j of nb(cells[i])) if (id[j] < 0 && s[j] === NO) { id[j] = k; cells.push(j); }
+        for (const cur of cells) for (const j of nb(cur)) if (id[j] < 0 && s[j] === NO) { id[j] = k; cells.push(j); }
         const rows = cells.map((x) => Math.floor(x / C)), cols = cells.map((x) => x % C);
         const r1 = Math.min(...rows), r2 = Math.max(...rows), c1 = Math.min(...cols), c2 = Math.max(...cols);
         for (let r = r1; r <= r2; r++) for (let c = c1; c <= c2; c++) if (s[r * C + c] === YES) return false;
@@ -67,7 +67,10 @@
       return [[r - 1, c], [r + 1, c], [r, c - 1], [r, c + 1]].some(([a, b]) => a >= 0 && b >= 0 && a < n && b < n && white[a * n + b]);
     };
     for (let t = 0; t < n * 8; t++) {
-      const size = Math.random() < 0.45 ? 1 : Math.random() < 0.7 ? 2 : 3;
+      let size;
+      if (Math.random() < 0.45) size = 1;
+      else if (Math.random() < 0.7) size = 2;
+      else size = 3;
       const r = Math.floor(Math.random() * (n - size + 1)), c = Math.floor(Math.random() * (n - size + 1));
       const cells = [];
       for (let i = 0; i < size; i++) for (let j = 0; j < size; j++) cells.push((r + i) * n + c + j);
@@ -93,7 +96,6 @@
   function generate(n) {
     const deadline = Date.now() + 8000;
     while (Date.now() < deadline) {
-      const N = n * n;
       const sol = makeAnswer(n);
       const p = { R: n, C: n, clues: Uint8Array.from(sol, (v) => (v === YES ? 1 : 2)) };
       const m = model(p);
@@ -116,13 +118,17 @@
     generate,
     encode: (p) => ({ r: p.R, c: p.C, g: Array.from(p.clues).join('') }),
     decode(d) {
-      const R = d && d.r, C = d && d.c;
+      const R = d?.r, C = d?.c;
       if (![R, C].every((x) => Number.isInteger(x) && x >= 3 && x <= 20)) throw new Error('Invalid board size');
       if (typeof d.g !== 'string' || d.g.length !== R * C || !/^[012]+$/.test(d.g)) throw new Error('Invalid clues');
       return { R, C, clues: Uint8Array.from(d.g, Number) };
     },
     model,
-    fixed: (p, k) => (p.clues[k] === 1 ? YES : p.clues[k] === 2 ? NO : 0),
+    fixed: (p, k) => {
+      if (p.clues[k] === 1) return YES;
+      if (p.clues[k] === 2) return NO;
+      return 0;
+    },
     draw(p, k, el) {
       if (!p.clues[k]) return;
       const o = document.createElement('span');

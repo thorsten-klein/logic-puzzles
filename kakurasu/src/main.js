@@ -57,7 +57,7 @@
     },
     encode: (p) => ({ n: p.n, r: p.rows.join(','), c: p.cols.join(',') }),
     decode(d) {
-      const n = d && d.n;
+      const n = d?.n;
       if (!Number.isInteger(n) || n < 3 || n > 12) throw new Error('Invalid board size');
       const nums = (x) => String(x).split(',').map(Number);
       const rows = nums(d.r), cols = nums(d.c);

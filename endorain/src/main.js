@@ -17,7 +17,7 @@
       if (r < n - 1) { p.at[k][1].push(p.cands.length); p.at[k + n][1].push(p.cands.length); p.cands.push([k, k + n]); }
     }
     p.rooms = [];
-    p.room.forEach((g, k) => { (p.rooms[g] = p.rooms[g] || []).push(k); });
+    p.room.forEach((g, k) => { p.rooms[g] ??= []; p.rooms[g].push(k); });
     return p;
   }
 
@@ -35,12 +35,11 @@
     // The other end of the line that ends in cell k (or -1 if not known yet).
     const other = (s, k) => {
       const i = at[k][0].concat(at[k][1]).find((e) => s[e] === YES);
-      let prev = k, x = cands[i][0] === k ? cands[i][1] : cands[i][0];
-      const step = x - prev;
+      let x = cands[i][0] === k ? cands[i][1] : cands[i][0];
+      const step = x - k;
       for (;;) {
         if (!done(s, x)) return -1;
         if (deg(s, x) === 1) return x;
-        prev = x;
         x += step;
       }
     };
@@ -98,7 +97,7 @@
     const deadline = Date.now() + 8000;
     while (Date.now() < deadline) {
       const N = n * n;
-      const seeds = PuzzleShell.shuffle([...Array(N).keys()]).slice(0, Math.round(N / 5));
+      const seeds = PuzzleShell.shuffle([...new Array(N).keys()]).slice(0, Math.round(N / 5));
       const room = PuzzleShell.growRegions(n, n, seeds.map((k) => [k]));
       const lines = randomCover(n, room, Math.min(deadline, Date.now() + 1000));
       if (!lines) continue;
@@ -108,7 +107,7 @@
       const key = new Map(p.cands.map(([a, b], i) => [a + ',' + b, i]));
       for (const cells of lines) {
         p.clues[room[cells[0]]]++;
-        p.clues[room[cells[cells.length - 1]]]++;
+        p.clues[room[cells.at(-1)]]++;
         for (let i = 0; i + 1 < cells.length; i++) sol[key.get(cells[i] + ',' + cells[i + 1])] = YES;
       }
       const unique = () => {
@@ -119,7 +118,7 @@
         return r.solutions.length === 1 && !r.capped;
       };
       if (!unique()) continue;
-      for (const g of PuzzleShell.shuffle([...Array(count).keys()])) {
+      for (const g of PuzzleShell.shuffle([...new Array(count).keys()])) {
         const keep = p.clues[g];
         p.clues[g] = -1;
         if (!unique()) p.clues[g] = keep;
@@ -194,7 +193,7 @@
     const log = [];
     Binary.settle(model(p), s, log);
     const step = log.find((x) => x.cells.some((i) => state[i] === UNKNOWN));
-    if (step) return [{ cells: step.cells, v: step.v, reason: step.con && step.con.why ? step.con.why(step.v) : 'This follows from the rules.' }];
+    if (step) return [{ cells: step.cells, v: step.v, reason: step.con?.why ? step.con.why(step.v) : 'This follows from the rules.' }];
     const i = p.solution.findIndex((v, j) => state[j] === UNKNOWN && v === YES);
     return i < 0 ? [] : [{ cells: [i], v: YES, reason: 'No simple step is left. These two cells are joined.' }];
   }
@@ -211,10 +210,10 @@
     generate,
     encode: (p) => ({ n: p.n, g: Array.from(p.room, (v) => v.toString(36).padStart(2, '0')).join(''), c: Array.from(p.clues).join(',') }),
     decode(d) {
-      const n = d && d.n;
+      const n = d?.n;
       if (!Number.isInteger(n) || n < 3 || n > 12) throw new Error('Invalid board size');
       if (typeof d.g !== 'string' || d.g.length !== 2 * n * n) throw new Error('Invalid rooms');
-      const room = Int32Array.from({ length: n * n }, (_, k) => parseInt(d.g.slice(2 * k, 2 * k + 2), 36));
+      const room = Int32Array.from({ length: n * n }, (_, k) => Number.parseInt(d.g.slice(2 * k, 2 * k + 2), 36));
       const clues = Int8Array.from(String(d.c).split(','), Number);
       if (room.some((v) => !(v >= 0 && v < clues.length))) throw new Error('Invalid rooms');
       const p = prepare({ n, room, clues });

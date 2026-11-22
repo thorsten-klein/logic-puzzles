@@ -25,7 +25,7 @@
       const r0 = Math.min(...q.map((x) => x[0])), c0 = Math.min(...q.map((x) => x[1]));
       keys.push(q.map(([a, b]) => `${a - r0},${b - c0}`).sort().join(' '));
     }
-    return keys.sort()[0];
+    return keys.reduce((min, k) => (k < min ? k : min), keys[0]);  // smallest key
   }
 
   function target(C, k, d) {
@@ -37,7 +37,7 @@
     const { R, C, room, clues } = p;
     const N = R * C;
     const rooms = [];
-    room.forEach((g, k) => { (rooms[g] = rooms[g] || []).push(k); });
+    room.forEach((g, k) => { rooms[g] ??= []; rooms[g].push(k); });
     const cons = [];
     for (let k = 0; k < N; k++) {
       if (k % C < C - 1 && room[k] !== room[k + 1]) cons.push({ cells: [k, k + 1], min: 0, max: 1, why: () => 'Shaded cells in different rooms never touch.' });
@@ -63,7 +63,7 @@
         if (area[k] >= 0 || s[k] !== YES) continue;
         const cells = [k];
         area[k] = areas.length;
-        for (let i = 0; i < cells.length; i++) for (const j of nb(cells[i])) if (area[j] < 0 && s[j] === YES) { area[j] = areas.length; cells.push(j); }
+        for (const cur of cells) for (const j of nb(cur)) if (area[j] < 0 && s[j] === YES) { area[j] = areas.length; cells.push(j); }
         const closed = done || cells.every((x) => nb(x).every((j) => s[j] !== UNKNOWN));
         areas.push({ cells, closed });
       }
@@ -128,10 +128,10 @@
     const deadline = Date.now() + 8000;
     while (Date.now() < deadline) {
       const R = n, C = n, N = R * C;
-      const seeds = PuzzleShell.shuffle([...Array(N).keys()]).slice(0, Math.max(2, Math.round(N / 8)));
+      const seeds = PuzzleShell.shuffle([...new Array(N).keys()]).slice(0, Math.max(2, Math.round(N / 8)));
       const room = PuzzleShell.growRegions(R, C, seeds.map((k) => [k]));
       const rooms = [];
-      room.forEach((g, k) => { (rooms[g] = rooms[g] || []).push(k); });
+      room.forEach((g, k) => { rooms[g] ??= []; rooms[g].push(k); });
       const sol = new Uint8Array(N).fill(NO);
       const pairs = [];
       let ok = true;
@@ -143,7 +143,7 @@
       }
       if (!ok) continue;
       // Areas must not touch across rooms.
-      if ([...Array(N).keys()].some((k) => sol[k] === YES && ((k % C < C - 1 && sol[k + 1] === YES && room[k] !== room[k + 1]) || (k + C < N && sol[k + C] === YES && room[k] !== room[k + C])))) continue;
+      if ([...new Array(N).keys()].some((k) => sol[k] === YES && ((k % C < C - 1 && sol[k + 1] === YES && room[k] !== room[k + 1]) || (k + C < N && sol[k + C] === YES && room[k] !== room[k + C])))) continue;
       // An arrow for each area from a white neighbour.
       const clues = new Int16Array(N);
       for (const area of pairs) {
@@ -165,7 +165,7 @@
         return r.solutions.length === 1 && !r.capped;
       };
       if (!unique()) continue;
-      for (const k of PuzzleShell.shuffle([...Array(N).keys()])) {
+      for (const k of PuzzleShell.shuffle([...new Array(N).keys()])) {
         if (!clues[k]) continue;
         const keep = clues[k];
         clues[k] = 0;
@@ -190,10 +190,10 @@
     generate,
     encode: (p) => ({ r: p.R, c: p.C, g: Array.from(p.room, (v) => v.toString(36).padStart(2, '0')).join(''), n: Array.from(p.clues).join(',') }),
     decode(d) {
-      const R = d && d.r, C = d && d.c;
+      const R = d?.r, C = d?.c;
       if (![R, C].every((x) => Number.isInteger(x) && x >= 2 && x <= 20)) throw new Error('Invalid board size');
       if (typeof d.g !== 'string' || d.g.length !== 2 * R * C) throw new Error('Invalid rooms');
-      const room = Int32Array.from({ length: R * C }, (_, k) => parseInt(d.g.slice(2 * k, 2 * k + 2), 36));
+      const room = Int32Array.from({ length: R * C }, (_, k) => Number.parseInt(d.g.slice(2 * k, 2 * k + 2), 36));
       const clues = Int16Array.from(String(d.n).split(','), Number);
       if (clues.length !== R * C) throw new Error('Invalid clues');
       return { R, C, room, clues };

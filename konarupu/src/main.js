@@ -4,7 +4,7 @@
 // (an (n+1) x (n+1) grid); numbers sit between four dots.
 
 (() => {
-  const { UNKNOWN, LINE, CROSS } = Loop;
+  const { LINE, CROSS } = Loop;
 
   function model(p) {
     const { n, clues } = p;
@@ -29,7 +29,7 @@
         if (v < 0) continue;
         let turns = 0, open = 0;
         for (const d of corners(k)) { const t = turnOf(s, d); if (t === 1) turns++; else if (t < 0) open++; }
-        if (turns > v || turns + open < v) return false;
+        if (turns > v || turns + open < v) return -1;
       }
       return 0;
     }
@@ -68,7 +68,7 @@
     generate,
     encode: (p) => ({ n: p.n, g: Array.from(p.clues, (v) => (v < 0 ? '.' : v)).join('') }),
     decode(d) {
-      const n = d && d.n;
+      const n = d?.n;
       if (!Number.isInteger(n) || n < 2 || n > 15) throw new Error('Invalid board size');
       if (typeof d.g !== 'string' || d.g.length !== n * n || !/^[.0-4]+$/.test(d.g)) throw new Error('Invalid clues');
       return { n, R: n + 1, C: n + 1, clues: Int8Array.from(d.g, (ch) => (ch === '.' ? -1 : Number(ch))) };

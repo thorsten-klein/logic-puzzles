@@ -42,8 +42,10 @@
         }
         // The clue cell is white, so the clue is true.
         if (broken) {
-          if (log) log.push({ fail: true, at: k, reason: `This white clue must be true, but it ${yes > v ? `already sees ${yes}` : `can see at most ${yes + open.length}`} shaded ${(yes > v ? yes : yes + open.length) === 1 ? 'cell' : 'cells'}, not ${v}.` });
-          return false;
+          const seen = yes > v ? yes : yes + open.length;
+          const sees = yes > v ? `already sees ${seen}` : `can see at most ${seen}`;
+          if (log) log.push({ fail: true, at: k, reason: `This white clue must be true, but it ${sees} shaded ${seen === 1 ? 'cell' : 'cells'}, not ${v}.` });
+          return -1;
         }
         if (!open.length) continue;
         if (yes === v) {
@@ -87,7 +89,8 @@
         else if (Math.random() < 0.5) {
           // Shaded cell with a false clue.
           p.dir[k] = d;
-          p.num[k] = truth === 0 ? 1 + Math.floor(Math.random() * 2) : Math.random() < 0.5 ? truth - 1 : truth + 1;
+          if (truth === 0) p.num[k] = 1 + Math.floor(Math.random() * 2);
+          else p.num[k] = Math.random() < 0.5 ? truth - 1 : truth + 1;
         }
       }
       const s = Binary.logicSolve(model(p));
@@ -112,16 +115,16 @@
     generate,
     encode: (p) => ({ r: p.R, c: p.C, n: Array.from(p.num, (v, k) => (v < 0 ? '.' : v.toString(36) + p.dir[k])).join(',') }),
     decode(d) {
-      const R = d && d.r, C = d && d.c;
+      const R = d?.r, C = d?.c;
       if (![R, C].every((x) => Number.isInteger(x) && x >= 3 && x <= 20)) throw new Error('Invalid board size');
       const parts = String(d.n).split(',');
       if (parts.length !== R * C) throw new Error('Invalid clues');
       const num = new Int8Array(R * C).fill(-1), dir = new Int8Array(R * C);
       parts.forEach((t, k) => {
         if (t === '.') return;
-        num[k] = parseInt(t.slice(0, -1), 36);
+        num[k] = Number.parseInt(t.slice(0, -1), 36);
         dir[k] = Number(t.slice(-1)) % 4;
-        if (!(num[k] >= 0)) throw new Error('Invalid clues');
+        if (!Number.isInteger(num[k]) || num[k] < 0) throw new Error('Invalid clues');
       });
       return { R, C, num, dir };
     },

@@ -51,7 +51,7 @@
         if (p.given[k]) { el.classList.add('given'); el.textContent = p.given[k]; return; }
         if (result) {
           el.textContent = p.solution[k];
-          el.classList.add(s[k] === p.solution[k] ? 'ok' : s[k] ? 'bad' : 'show');
+          el.classList.add(PuzzleShell.resultClass(s[k], p.solution[k]));
         } else if (readonly) {
           el.textContent = s[k] || '';
         } else {
@@ -73,7 +73,7 @@
     for (let k = 0; k < N; k++) if (!p.layout[k] && valueAt(p, s, k)) filled.set(k, valueAt(p, s, k));
     for (const h of Hint.findAll(p, filled)) out.push({ cells: [h.idx], v: h.digit, reason: h.reason });
     if (out.length) return out;
-    const k = [...Array(N).keys()].find((j) => !p.layout[j] && !valueAt(p, s, j));
+    const k = [...new Array(N).keys()].find((j) => !p.layout[j] && !valueAt(p, s, j));
     if (k !== undefined) out.push({ cells: [k], v: p.solution[k], reason: `No simple step is left. This cell is ${p.solution[k]}.` });
     return out;
   }
@@ -94,7 +94,7 @@
       return { r: p.rows, c: p.cols, g, gv: Object.keys(p.given || {}).map(Number) };
     },
     decode(d) {
-      const rows = d && d.r, cols = d && d.c;
+      const rows = d?.r, cols = d?.c;
       if (![rows, cols].every((x) => Number.isInteger(x) && x >= 3 && x <= 20)) throw new Error('Invalid board size');
       if (typeof d.g !== 'string' || d.g.length !== rows * cols || !/^[#1-9]+$/.test(d.g)) throw new Error('Invalid puzzle grid');
       if (!Array.isArray(d.gv) || d.gv.some((k) => !Number.isInteger(k) || k < 0 || k >= rows * cols || d.g[k] === '#')) {

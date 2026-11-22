@@ -17,6 +17,8 @@
       if (c < C - 1) out.push(k + 1);
       return out;
     };
+    // True when no cell next to k is still open.
+    const settled = (k, s) => nb(k).every((j) => s[j] !== UNKNOWN);
     const cons = [];
     for (let r = 0; r < R - 1; r++) for (let c = 0; c < C - 1; c++) {
       cons.push({ cells: [r * C + c, r * C + c + 1, (r + 1) * C + c, (r + 1) * C + c + 1], min: 0, max: 2, why: () => 'Stripes are straight and never touch by a side.' });
@@ -28,7 +30,7 @@
         if (id[k] >= 0 || !ok(k)) continue;
         const cells = [k];
         id[k] = list.length;
-        for (let i = 0; i < cells.length; i++) for (const j of nb(cells[i])) if (id[j] < 0 && ok(j)) { id[j] = list.length; cells.push(j); }
+        for (const cur of cells) for (const j of nb(cur)) if (id[j] < 0 && ok(j)) { id[j] = list.length; cells.push(j); }
         list.push(cells);
       }
       return { id, list };
@@ -39,7 +41,7 @@
       const len = black.list.map((cells) => {
         const rows = new Set(cells.map((k) => Math.floor(k / C))), cols = new Set(cells.map((k) => k % C));
         if (rows.size > 1 && cols.size > 1) return -2;
-        const closed = done || cells.every((k) => nb(k).every((j) => s[j] !== UNKNOWN));
+        const closed = done || cells.every((k) => settled(k, s));
         return closed ? cells.length : 0;
       });
       if (len.includes(-2)) return false;
@@ -58,7 +60,7 @@
       for (const cells of white.list) {
         const nums = cells.filter((k) => clues[k] > 0);
         if (nums.length > 1) return false;
-        const closed = done || cells.every((k) => nb(k).every((j) => s[j] !== UNKNOWN));
+        const closed = done || cells.every((k) => settled(k, s));
         if (closed && (nums.length !== 1 || cells.length !== clues[nums[0]])) return false;
         if (nums.length === 1) {
           const v = clues[nums[0]];
@@ -108,8 +110,8 @@
         if (sol[k] !== NO || seen[k]) continue;
         const cells = [k];
         seen[k] = 1;
-        for (let i = 0; i < cells.length; i++) {
-          const x = cells[i], r = Math.floor(x / n), c = x % n;
+        for (const cur of cells) {
+          const x = cur, r = Math.floor(x / n), c = x % n;
           for (const [a, b] of [[r - 1, c], [r + 1, c], [r, c - 1], [r, c + 1]]) {
             const j = a * n + b;
             if (a >= 0 && b >= 0 && a < n && b < n && !seen[j] && sol[j] === NO) { seen[j] = 1; cells.push(j); }
@@ -142,10 +144,10 @@
     generate,
     encode: (p) => ({ r: p.R, c: p.C, g: Array.from(p.clues, (v) => (v > 0 ? v.toString(36) : '.')).join('') }),
     decode(d) {
-      const R = d && d.r, C = d && d.c;
+      const R = d?.r, C = d?.c;
       if (![R, C].every((x) => Number.isInteger(x) && x >= 3 && x <= 20)) throw new Error('Invalid board size');
       if (typeof d.g !== 'string' || d.g.length !== R * C) throw new Error('Invalid clues');
-      return { R, C, clues: Int8Array.from(d.g, (ch) => (ch === '.' ? 0 : parseInt(ch, 36))) };
+      return { R, C, clues: Int8Array.from(d.g, (ch) => (ch === '.' ? 0 : Number.parseInt(ch, 36))) };
     },
     model,
     fixed: (p, k) => (p.clues[k] > 0 ? NO : 0),

@@ -17,7 +17,8 @@
         const cells = [k];
         for (let i = 1; i <= a; i++) cells.push((r + v * i) * C + c);
         for (let j = 1; j <= b; j++) cells.push(r * C + c + h * j);
-        out.push({ cells: cells.sort((x, y) => x - y), a, b });
+        cells.sort((x, y) => x - y);
+        out.push({ cells, a, b });
       }
     }
     return out;
@@ -57,10 +58,17 @@
     size: { min: 4, max: 8, def: 6 },
     solvedText: 'Same and different, all sorted — nicely done.',
     shapes: (p, k) => ells(p.R, p.C, k)
-      .filter((L) => (p.clues[k] === 1 ? L.a === L.b : p.clues[k] === 2 ? L.a !== L.b : true))
+      .filter((L) => {
+        if (p.clues[k] === 1) return L.a === L.b;
+        if (p.clues[k] === 2) return L.a !== L.b;
+        return true;
+      })
       .map((L) => L.cells),
     split,
-    clueFor: (p, cells) => [cells.bend, Math.random() < 0.25 ? 3 : cells.a === cells.b ? 1 : 2],
+    clueFor: (p, cells) => {
+      if (Math.random() < 0.25) return [cells.bend, 3];
+      return [cells.bend, cells.a === cells.b ? 1 : 2];
+    },
     clueText: (v) => ['', '◎', '⬤', '○'][v],
   });
 })();

@@ -29,8 +29,8 @@
     },
     setup(p, sol) {
       p.sums = [];
-      for (let c = 0; c < p.C; c++) { let t = 0; for (let r = 0; r < p.R; r++) t += sol[r * p.C + c]; p.sums.push(t); }
-      for (let r = 0; r < p.R; r++) { let t = 0; for (let c = 0; c < p.C; c++) t += sol[r * p.C + c]; p.sums.push(t); }
+      for (let c = 0; c < p.C; c++) { let t = 0; for (let r = 0; r < p.R; r++) { t += sol[r * p.C + c]; } p.sums.push(t); }
+      for (let r = 0; r < p.R; r++) { let t = 0; for (let c = 0; c < p.C; c++) { t += sol[r * p.C + c]; } p.sums.push(t); }
     },
     rule(p, cand) {
       const { R, C } = p;
@@ -58,7 +58,7 @@
     encodeExtra: (p) => p.sums.join(','),
     decodeExtra(p, x) {
       const sums = String(x).split(',').map(Number);
-      if (sums.length !== p.R + p.C || sums.some((v) => !(v >= 0))) throw new Error('Invalid sums');
+      if (sums.length !== p.R + p.C || sums.some((v) => !Number.isInteger(v) || v < 0)) throw new Error('Invalid sums');
       p.sums = sums;
     },
   });

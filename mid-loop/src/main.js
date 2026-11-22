@@ -30,7 +30,7 @@
     const same = (a, b) => !(a.final && b.final && a.len !== b.len) && !(a.final && b.len > a.len) && !(b.final && a.len > b.len);
     function rule(s, log) {
       for (const e of edot) {
-        if (s[e] === CROSS) return false;
+        if (s[e] === CROSS) return -1;
         if (s[e] === UNKNOWN) {
           s[e] = LINE;
           if (log) log.push({ edges: [e], v: LINE, reason: 'The loop passes every dot.' });
@@ -38,19 +38,19 @@
         }
         const [a, b] = g.ends[e];
         const d = b - a === 1 ? 3 : 1; // direction from a to b
-        if (!same(run(s, a, d ^ 1), run(s, b, d))) return false;
+        if (!same(run(s, a, d ^ 1), run(s, b, d))) return -1;
       }
       for (let k = 0; k < R * C; k++) {
         if (!cdot[k]) continue;
         const dirs = [0, 1, 2, 3].filter((d) => g.cellEdges[k][d] >= 0 && s[g.cellEdges[k][d]] === LINE);
-        if (dirs.length === 2 && (dirs[0] >> 1) !== (dirs[1] >> 1)) return false;
+        if (dirs.length === 2 && (dirs[0] >> 1) !== (dirs[1] >> 1)) return -1;
         if (dirs.length === 1) {
           const o = g.cellEdges[k][dirs[0] ^ 1];
-          if (o < 0 || s[o] === CROSS) return false;
+          if (o < 0 || s[o] === CROSS) return -1;
         }
         if (dirs.length === 2) {
           const walk = (d) => { const r = run(s, k + step[d], d); return { len: r.len + 1, final: r.final }; };
-          if (!same(walk(dirs[0]), walk(dirs[1]))) return false;
+          if (!same(walk(dirs[0]), walk(dirs[1]))) return -1;
         }
       }
       return 0;
@@ -110,7 +110,7 @@
     generate,
     encode: (p) => ({ n: p.R, c: Array.from(p.cdot).join(''), e: p.edot.join(',') }),
     decode(d) {
-      const n = d && d.n;
+      const n = d?.n;
       if (!Number.isInteger(n) || n < 3 || n > 16) throw new Error('Invalid board size');
       if (typeof d.c !== 'string' || d.c.length !== n * n || !/^[01]+$/.test(d.c)) throw new Error('Invalid dots');
       const E = Loop.grid(n, n).E;

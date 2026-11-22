@@ -43,7 +43,7 @@
       } else {
         const d = v - 40;
         // An arrow at a leg end, pointing back toward the bend.
-        const ok = L.legs.some(({ d: ld, leg }) => leg[leg.length - 1] === k && d === (ld ^ 1));
+        const ok = L.legs.some(({ d: ld, leg }) => leg.at(-1) === k && d === (ld ^ 1));
         if (!ok) return false;
       }
     }
@@ -64,7 +64,8 @@
           const cells = [k];
           for (let i = 1; i <= a; i++) cells.push((r + v * i) * C + c);
           for (let j = 1; j <= b; j++) cells.push(r * C + c + h * j);
-          out.push(cells.sort((x, y) => x - y));
+          cells.sort((x, y) => x - y);
+          out.push(cells);
         }
       }
       return out;
@@ -118,11 +119,13 @@
         if (!L) return false;
         // Circle (sometimes with the size) and arrows on both leg ends.
         p.clues[L.bend] = Math.random() < 0.5 ? cells.length + 1 : 1;
-        for (const { d, leg } of L.legs) p.clues[leg[leg.length - 1]] = 40 + (d ^ 1);
+        for (const { d, leg } of L.legs) p.clues[leg.at(-1)] = 40 + (d ^ 1);
       }
       return true;
     },
-    cellText: (p, k) => { const v = p.clues[k]; return v >= 40 ? ARROW[v - 40] : v > 1 ? String(v - 1) : ''; },
+    cellText: (p, k) => { const v = p.clues[k]; if (v >= 40) return ARROW[v - 40];
+    if (v > 1) return String(v - 1);
+    return ''; },
     decorate(p, k, g, x, y, s) {
       const v = p.clues[k];
       if (!v || v >= 40) return;

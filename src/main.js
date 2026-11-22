@@ -25,17 +25,21 @@
 
   function excerpt(text, max = 140) {
     if (text.length <= max) return text;
-    return text.slice(0, max).replace(/\s+\S*$/, '') + '…';
+    // Cut at the last space, so no word is cut in half.
+    const cut = text.slice(0, max);
+    let i = cut.length - 1;
+    while (i >= 0 && !/\s/.test(cut[i])) i--;
+    return (i >= 0 ? cut.slice(0, i).trimEnd() : cut) + '…';
   }
 
   function cardHtml(game) {
     const isAvailable = game.status === 'available';
     const badgeClass = isAvailable ? 'available' : 'placeholder';
     const badgeText = isAvailable ? 'Play' : 'Coming soon';
-    const pic = prefs.view !== 'details' ? ''
-      : isAvailable
-        ? `<div class="card-pic"><img src="thumbs/${game.slug}.webp" alt="Example of ${game.name} and its solution" loading="lazy" onerror="this.parentNode.classList.add('none')"></div>`
-        : '<div class="card-pic none"></div>';
+    let pic;
+    if (prefs.view !== 'details') pic = '';
+    else if (isAvailable) pic = `<div class="card-pic"><img src="thumbs/${game.slug}.webp" alt="Example of ${game.name} and its solution" loading="lazy" onerror="this.parentNode.classList.add('none')"></div>`;
+    else pic = '<div class="card-pic none"></div>';
     return `
       <a class="game-card${isAvailable ? '' : ' is-placeholder'}" href="${game.slug}/index.html">
         ${pic}
@@ -124,12 +128,16 @@
   document.getElementById('btn-paste-start').addEventListener('click', () => {
     const t = pasteInput.value.trim();
     const m = t.match(/[?&]game-id=([A-Za-z0-9_-]+)/);
-    const id = m ? m[1] : /^[A-Za-z0-9_-]+$/.test(t) ? t : null;
+    let id;
+    if (m) id = m[1];
+    else if (/^[A-Za-z0-9_-]+$/.test(t)) id = t;
+    else id = null;
     if (!id) { pasteStatus.textContent = 'No game ID found in that text.'; return; }
     let slug = null;
     try {
-      const b64 = id.replace(/-/g, '+').replace(/_/g, '/');
-      slug = JSON.parse(decodeURIComponent(escape(atob(b64 + '='.repeat((4 - (b64.length % 4)) % 4))))).g;
+      const b64 = id.replaceAll('-', '+').replaceAll('_', '/');
+      const bytes = Uint8Array.from(atob(b64 + '='.repeat((4 - (b64.length % 4)) % 4)), (ch) => ch.codePointAt(0));
+      slug = JSON.parse(new TextDecoder('utf-8', { fatal: true }).decode(bytes)).g;
     } catch { /* not readable */ }
     const game = GAMES.find((g) => g.slug === slug && g.status === 'available');
     if (!game) { pasteStatus.textContent = 'This is not a game ID of a puzzle here.'; return; }

@@ -34,7 +34,7 @@
           let used = 0, blacks = 0;
           for (const v of vals) {
             if (v === B) blacks++;
-            else { if (used & (1 << v)) return false; used |= 1 << v; }
+            else { if (used & (1 << v)) { return false; } used |= 1 << v; }
           }
           return blacks === 2 && (want < 0 || between(vals, B) === want);
         };
@@ -82,7 +82,7 @@
   }
 
   const startCand = (p, entries) => Int32Array.from({ length: p.n * p.n },
-    (_, k) => (entries && entries[k] ? 1 << entries[k] : Latin.full(p.n - 1)));
+    (_, k) => (entries?.[k] ? 1 << entries[k] : Latin.full(p.n - 1)));
 
   function generate(n) {
     const B = n - 1;
@@ -138,7 +138,10 @@
         const R = Math.floor(K / (n + 1)) - 1, C = (K % (n + 1)) - 1;
         if (R < 0 || C < 0) {
           el.className = 'clue';
-          const v = R < 0 && C >= 0 ? clues[C] : C < 0 && R >= 0 ? clues[n + R] : -1;
+          let v;
+          if (R < 0 && C >= 0) v = clues[C];
+          else if (C < 0 && R >= 0) v = clues[n + R];
+          else v = -1;
           el.textContent = v >= 0 ? v : '';
           return;
         }
@@ -146,7 +149,7 @@
         const v = result ? solution[k] : entries[k];
         if (v === B) el.classList.add('shaded');
         else if (v) el.textContent = v;
-        if (result) el.classList.add(entries[k] === solution[k] ? 'ok' : entries[k] ? 'bad' : 'show');
+        if (result) el.classList.add(PuzzleShell.resultClass(entries[k], solution[k]));
         if (hintCells.has(k)) el.classList.add('hint');
         if (!readonly) {
           el.addEventListener('keydown', (ev) => {
@@ -184,7 +187,7 @@
     },
     encode: (p) => ({ n: p.n, c: p.clues.join(',') }),
     decode(d) {
-      const n = d && d.n;
+      const n = d?.n;
       if (!Number.isInteger(n) || n < 4 || n > 9) throw new Error('Invalid board size');
       const clues = String(d.c).split(',').map(Number);
       if (clues.length !== 2 * n || clues.some((x) => !(x >= -1 && x <= 45))) throw new Error('Invalid clues');

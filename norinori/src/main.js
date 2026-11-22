@@ -10,7 +10,7 @@
     const { R, C, room } = p;
     const N = R * C;
     const rooms = [];
-    room.forEach((g, k) => { (rooms[g] = rooms[g] || []).push(k); });
+    room.forEach((g, k) => { rooms[g] ??= []; rooms[g].push(k); });
     const nb = (k) => {
       const r = Math.floor(k / C), c = k % C, out = [];
       if (r > 0) out.push(k - C);
@@ -26,7 +26,7 @@
         if (s[k] !== YES) continue;
         const n = nb(k);
         const yes = n.filter((j) => s[j] === YES), open = n.filter((j) => s[j] === UNKNOWN);
-        if (yes.length > 1 || (!yes.length && !open.length)) return false;
+        if (yes.length > 1 || (!yes.length && !open.length)) return -1;
         if (yes.length === 1 && open.length) {
           open.forEach((j) => { s[j] = NO; });
           if (log) log.push({ cells: open, v: NO, reason: 'This domino is complete. Dominoes never touch by a side.' });
@@ -65,7 +65,10 @@
       const dominoes = [];
       for (let t = 0; t < N * 3; t++) {
         const k = Math.floor(Math.random() * N), r = Math.floor(k / C), c = k % C;
-        const j = Math.random() < 0.5 ? (c < C - 1 ? k + 1 : -1) : (r < R - 1 ? k + C : -1);
+        let j;
+        if (Math.random() < 0.5) j = c < C - 1 ? k + 1 : -1;
+        else if (r < R - 1) j = k + C;
+        else j = -1;
         if (j < 0 || !free(k) || !free(j)) continue;
         shade[k] = shade[j] = 1;
         dominoes.push([k, j]);
@@ -74,7 +77,7 @@
       const room = new Int32Array(N).fill(-1);
       dominoes.forEach(([a, b], i) => { room[a] = room[b] = i; });
       for (let open = room.filter((x) => x < 0).length, guard = 0; open > 0 && guard < N * 4; guard++) {
-        for (const k of PuzzleShell.shuffle([...Array(N).keys()])) {
+        for (const k of PuzzleShell.shuffle([...new Array(N).keys()])) {
           if (room[k] >= 0) continue;
           const r = Math.floor(k / C), c = k % C;
           const near = [[r - 1, c], [r + 1, c], [r, c - 1], [r, c + 1]]
@@ -100,11 +103,11 @@
         const other = r.solutions.find((x) => x.some((v, k) => v !== sol[k]));
         if (!other) { ok = r.solutions.length === 1; break; }
         let moved = false;
-        for (const x of PuzzleShell.shuffle([...Array(N).keys()].filter((k) => other[k] === YES && sol[k] === NO))) {
+        for (const x of PuzzleShell.shuffle([...new Array(N).keys()].filter((k) => other[k] === YES && sol[k] === NO))) {
           const g = room[x];
           const to = side(x).filter((j) => room[j] !== g);
           if (!to.length) continue;
-          const rest = [...Array(N).keys()].filter((k) => room[k] === g && k !== x);
+          const rest = [...new Array(N).keys()].filter((k) => room[k] === g && k !== x);
           const set = new Set(rest), seen = new Set([rest[0]]), st = [rest[0]];
           while (st.length) { const k = st.pop(); for (const j of side(k)) if (set.has(j) && !seen.has(j)) { seen.add(j); st.push(j); } }
           if (seen.size !== rest.length) continue;
@@ -132,10 +135,10 @@
     generate,
     encode: (p) => ({ r: p.R, c: p.C, g: Array.from(p.room, (v) => v.toString(36).padStart(2, '0')).join('') }),
     decode(d) {
-      const R = d && d.r, C = d && d.c;
+      const R = d?.r, C = d?.c;
       if (![R, C].every((x) => Number.isInteger(x) && x >= 2 && x <= 20)) throw new Error('Invalid board size');
       if (typeof d.g !== 'string' || d.g.length !== 2 * R * C) throw new Error('Invalid rooms');
-      return { R, C, room: Int32Array.from({ length: R * C }, (_, k) => parseInt(d.g.slice(2 * k, 2 * k + 2), 36)) };
+      return { R, C, room: Int32Array.from({ length: R * C }, (_, k) => Number.parseInt(d.g.slice(2 * k, 2 * k + 2), 36)) };
     },
     model,
     draw(p, k, el) { PuzzleShell.regionBorders(el, k, p.room, p.R, p.C); },

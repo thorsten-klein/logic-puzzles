@@ -8,7 +8,7 @@
 (() => {
   function info(p, id) {
     const doms = new Map();
-    id.forEach((g, k) => { if (g >= 0) { if (!doms.has(g)) doms.set(g, []); doms.get(g).push(k); } });
+    id.forEach((g, k) => { if (g >= 0) { if (!doms.has(g)) { doms.set(g, []); } doms.get(g).push(k); } });
     const touch = new Map();
     for (const [g, cells] of doms) {
       const set = new Set();
@@ -41,7 +41,7 @@
         }
       }
       const doms = new Map();
-      id.forEach((g, k) => { if (g >= 0) { if (!doms.has(g)) doms.set(g, []); doms.get(g).push(k); } });
+      id.forEach((g, k) => { if (g >= 0) { if (!doms.has(g)) { doms.set(g, []); } doms.get(g).push(k); } });
       for (const [g, dc] of doms) {
         const num = dc.map((x) => p.clues[x]).find(Boolean);
         if (!num) continue;
@@ -83,7 +83,7 @@
         }
         return false;
       };
-      for (const k of PuzzleShell.shuffle([...Array(N).keys()])) {
+      for (const k of PuzzleShell.shuffle([...new Array(N).keys()])) {
         if (id[k] >= 0) continue;
         const opts = PuzzleShell.shuffle(Parts.nbs(R, C, k).filter((j) => id[j] < 0));
         for (const j of opts) {

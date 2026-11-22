@@ -25,14 +25,14 @@
       for (let k = 0; k < R * C; k++) {
         if (s[k] !== YES) continue;
         const shaded = nb[k].filter((j) => s[j] === YES), open = nb[k].filter((j) => s[j] === UNKNOWN);
-        if (shaded.length > 1) return false;
+        if (shaded.length > 1) return -1;
         if (shaded.length === 1 && open.length) {
           for (const j of open) s[j] = NO;
           if (log) log.push({ cells: open, v: NO, reason: 'This domino is complete. Cells next to it stay white.' });
           return open.length;
         }
         if (!shaded.length) {
-          if (!open.length) return false;
+          if (!open.length) return -1;
           if (open.length === 1) {
             s[open[0]] = YES;
             if (log) log.push({ cells: open, v: YES, reason: 'This shaded cell needs a partner, and only one neighbour is left.' });
@@ -83,7 +83,7 @@
     const R = n, C = n, N = R * C;
     const nb = nbsOf(R, C);
     const shade = new Uint8Array(N);
-    for (const k of PuzzleShell.shuffle([...Array(N).keys()])) {
+    for (const k of PuzzleShell.shuffle([...new Array(N).keys()])) {
       const j = nb[k][Math.floor(Math.random() * nb[k].length)];
       if ([k, j].some((x) => shade[x] || nb[x].some((y) => shade[y]))) continue;
       if (Math.random() < 0.6) { shade[k] = 1; shade[j] = 1; }
@@ -96,7 +96,7 @@
       if (shade[k] || comp[k] >= 0) continue;
       const cells = [k];
       comp[k] = id;
-      for (let i = 0; i < cells.length; i++) for (const j of nb[cells[i]]) if (!shade[j] && comp[j] < 0) { comp[j] = id; cells.push(j); }
+      for (const cur of cells) for (const j of nb[cur]) if (!shade[j] && comp[j] < 0) { comp[j] = id; cells.push(j); }
       if (id >= 26) return null;
       for (const x of cells) if (Math.random() < 0.5) letters[x] = id + 1;
       letters[cells[Math.floor(Math.random() * cells.length)]] = id + 1;
@@ -107,7 +107,7 @@
     const s = Binary.logicSolve(model(p));
     if (!s || s.includes(UNKNOWN)) return null;
     // Thin letters, keeping at least one per area.
-    for (const k of PuzzleShell.shuffle([...Array(N).keys()])) {
+    for (const k of PuzzleShell.shuffle([...new Array(N).keys()])) {
       if (!letters[k]) continue;
       const keep = letters[k];
       if (letters.filter((v) => v === keep).length === 1) continue;
@@ -133,16 +133,16 @@
       while (Date.now() < deadline) { const p = tryOnce(n); if (p) return p; }
       return null;
     },
-    encode: (p) => ({ r: p.R, c: p.C, g: Array.from(p.letters, (v) => (v ? String.fromCharCode(64 + v) : '.')).join('') }),
+    encode: (p) => ({ r: p.R, c: p.C, g: Array.from(p.letters, (v) => (v ? String.fromCodePoint(64 + v) : '.')).join('') }),
     decode(d) {
-      const R = d && d.r, C = d && d.c;
+      const R = d?.r, C = d?.c;
       if (![R, C].every((x) => Number.isInteger(x) && x >= 3 && x <= 20)) throw new Error('Invalid board size');
       if (typeof d.g !== 'string' || d.g.length !== R * C || !/^[.A-Z]+$/.test(d.g)) throw new Error('Invalid letters');
-      return { R, C, letters: Int8Array.from(d.g, (ch) => (ch === '.' ? 0 : ch.charCodeAt(0) - 64)) };
+      return { R, C, letters: Int8Array.from(d.g, (ch) => (ch === '.' ? 0 : ch.codePointAt(0) - 64)) };
     },
     model,
     fixed: (p, k) => (p.letters[k] ? NO : 0),
-    draw(p, k, el) { if (p.letters[k]) el.textContent = String.fromCharCode(64 + p.letters[k]); },
+    draw(p, k, el) { if (p.letters[k]) el.textContent = String.fromCodePoint(64 + p.letters[k]); },
     noun: 'shaded cell', noNoun: 'white cell',
     className: 'dm2-board',
   });

@@ -11,9 +11,9 @@
   const low = (m) => 31 - Math.clz32(m & -m);
 
   function prepare(p) {
-    const { R, C, region, circle } = p;
+    const { region, circle } = p;
     p.groups = [];
-    region.forEach((g, k) => { if (!circle[k]) (p.groups[g] = p.groups[g] || []).push(k); });
+    region.forEach((g, k) => { if (!circle[k]) { p.groups[g] ??= []; p.groups[g].push(k); } });
     p.groups = p.groups.filter(Boolean);
     return p;
   }
@@ -100,7 +100,11 @@
     return { solutions: out, capped: nodes > maxNodes };
   }
 
-  const startCand = (p, given) => Int32Array.from({ length: p.R * p.C }, (_, k) => (p.circle[k] ? 0 : given[k] ? 1 << given[k] : ALL));
+  const startCand = (p, given) => Int32Array.from({ length: p.R * p.C }, (_, k) => {
+    if (p.circle[k]) return 0;
+    if (given[k]) return 1 << given[k];
+    return ALL;
+  });
 
   function generate(n) {
     const deadline = Date.now() + 8000;
@@ -108,11 +112,11 @@
       const R = n, C = n, N = R * C;
       const circle = new Uint8Array(N);
       const count = Math.max(2, Math.round(N / 6));
-      for (const k of PuzzleShell.shuffle([...Array(N).keys()]).slice(0, count)) circle[k] = 1;
+      for (const k of PuzzleShell.shuffle([...new Array(N).keys()]).slice(0, count)) circle[k] = 1;
       // Random arrow forest: grow out from the circles.
       const arrow = new Int8Array(N);
       const done = Uint8Array.from(circle);
-      let front = [...Array(N).keys()].filter((k) => circle[k]);
+      let front = [...new Array(N).keys()].filter((k) => circle[k]);
       while (front.length) {
         const k = front[Math.floor(Math.random() * front.length)];
         const r = Math.floor(k / C), c = k % C;
@@ -127,7 +131,7 @@
       // Regions of up to 4 cells with different arrows (circles alone).
       const region = new Int32Array(N).fill(-1);
       let id = 0;
-      for (const k of PuzzleShell.shuffle([...Array(N).keys()])) {
+      for (const k of PuzzleShell.shuffle([...new Array(N).keys()])) {
         if (region[k] >= 0) continue;
         region[k] = id;
         if (!circle[k]) {
@@ -156,14 +160,14 @@
         const res = solve(p, startCand(p, given), 2, 5000);
         if (res.solutions.length === 1 && !res.capped) break;
         const other = res.solutions.find((x) => x.some((v, k) => v !== arrow[k]));
-        const diff = [...Array(N).keys()].filter((k) => !circle[k] && !given[k] && (!other || other[k] !== arrow[k]));
+        const diff = [...new Array(N).keys()].filter((k) => !circle[k] && !given[k] && (other?.[k] !== arrow[k]));
         if (!diff.length) break;
         const k = diff[Math.floor(Math.random() * diff.length)];
         given[k] = arrow[k];
       }
       const unique = () => { const r = solve(p, startCand(p, given), 2, 30000); return r.solutions.length === 1 && !r.capped; };
       if (!unique()) continue;
-      for (const k of PuzzleShell.shuffle([...Array(N).keys()])) {
+      for (const k of PuzzleShell.shuffle([...new Array(N).keys()])) {
         if (!given[k]) continue;
         const keep = given[k];
         given[k] = 0;
@@ -203,7 +207,7 @@
         if (given[k]) { el.classList.add('given'); el.append(PuzzleShell.arrowIcon(TURN[given[k]])); return; }
         const v = result ? solution[k] : entries[k];
         if (v) el.append(PuzzleShell.arrowIcon(TURN[v]));
-        if (result) el.classList.add(entries[k] === solution[k] ? 'ok' : entries[k] ? 'bad' : 'show');
+        if (result) el.classList.add(PuzzleShell.resultClass(entries[k], solution[k]));
       },
       onCell(k, ev) {
         if (circle[k] || given[k]) return;
@@ -224,11 +228,11 @@
     generate,
     encode: (p) => ({ n: p.R, g: Array.from(p.region, (v) => v.toString(36).padStart(2, '0')).join(''), o: Array.from(p.circle).join(''), v: Array.from(p.given).join('') }),
     decode(d) {
-      const n = d && d.n;
+      const n = d?.n;
       if (!Number.isInteger(n) || n < 3 || n > 15) throw new Error('Invalid board size');
       if (typeof d.g !== 'string' || d.g.length !== 2 * n * n) throw new Error('Invalid regions');
       if (typeof d.o !== 'string' || d.o.length !== n * n || typeof d.v !== 'string' || d.v.length !== n * n) throw new Error('Invalid grid');
-      const p = prepare({ R: n, C: n, region: Int32Array.from({ length: n * n }, (_, k) => parseInt(d.g.slice(2 * k, 2 * k + 2), 36)), circle: Uint8Array.from(d.o, Number) });
+      const p = prepare({ R: n, C: n, region: Int32Array.from({ length: n * n }, (_, k) => Number.parseInt(d.g.slice(2 * k, 2 * k + 2), 36)), circle: Uint8Array.from(d.o, Number) });
       p.given = Int8Array.from(d.v, Number);
       const res = solve(p, startCand(p, p.given), 2, 50000);
       if (res.solutions.length !== 1) throw new Error('Puzzle has no unique solution');

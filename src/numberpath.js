@@ -32,7 +32,7 @@ const NumberPath = (() => {
     for (let r = 0; r < R; r++) for (let c = 0; c < C; c++) path.push(r * C + (r % 2 ? C - 1 - c : c));
     for (let it = 0; it < N * 40; it++) {
       if (Math.random() < 0.5) path.reverse();
-      const end = path[path.length - 1];
+      const end = path.at(-1);
       const at = new Map(path.map((k, i) => [k, i]));
       const opts = nb[end].filter((k) => at.get(k) !== path.length - 2);
       const k = opts[Math.floor(Math.random() * opts.length)];
@@ -105,7 +105,7 @@ const NumberPath = (() => {
     const N = R * C;
     const sol = randomPath(R, C, diag);
     const given = Int32Array.from(sol);
-    for (const k of PuzzleShell.shuffle([...Array(N).keys()])) {
+    for (const k of PuzzleShell.shuffle([...new Array(N).keys()])) {
       if (sol[k] === 1 || sol[k] === N) continue;
       if (Math.random() < keepRate) continue;
       given[k] = 0;
@@ -133,13 +133,14 @@ const NumberPath = (() => {
       if (pos[v] >= 0) continue;
       const a = pos[v - 1], b = pos[v + 1];
       if (a < 0 && b < 0) continue;
-      let opts = [...Array(N).keys()].filter((k) => !val[k]);
+      let opts = [...new Array(N).keys()].filter((k) => !val[k]);
       if (a >= 0) opts = opts.filter((k) => nb[a].includes(k));
       if (b >= 0) opts = opts.filter((k) => nb[b].includes(k));
       if (opts.length === 1) {
+        const near = a >= 0 ? v - 1 : v + 1;
         out.push({ cells: opts, v, reason: a >= 0 && b >= 0
           ? `${v} sits between ${v - 1} and ${v + 1}. Only one free cell touches both.`
-          : `${v} must touch ${a >= 0 ? v - 1 : v + 1}, and only one free cell does.` });
+          : `${v} must touch ${near}, and only one free cell does.` });
       }
     }
     if (!out.length) {
@@ -167,7 +168,7 @@ const NumberPath = (() => {
         if (given[k]) { el.classList.add('given'); el.textContent = given[k]; return; }
         if (result) {
           el.textContent = solution[k];
-          el.classList.add(entries[k] === solution[k] ? 'ok' : entries[k] ? 'bad' : 'show');
+          el.classList.add(PuzzleShell.resultClass(entries[k], solution[k]));
         } else if (readonly) {
           el.textContent = entries[k] || '';
           el.classList.add('entry');

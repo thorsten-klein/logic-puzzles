@@ -99,7 +99,7 @@ const Solver = (() => {
       // Prune: not enough remaining moves to visit every required cell.
       if (mustInclude && unvisitedRequired() > total - path.length) return;
 
-      const last = path[path.length - 1];
+      const last = path.at(-1);
 
       if (last[0] === tail[0] && last[1] === tail[1]) {
         if (path.length !== total) return;
@@ -114,12 +114,12 @@ const Solver = (() => {
 
       if (path.length >= total) return;
 
-      const grandprev = path.length >= 2 ? path[path.length - 2] : null;
+      const grandprev = path.length >= 2 ? path.at(-2) : null;
       for (const [dr, dc] of Rules.ORTHO) {
         const nr = last[0] + dr, nc = last[1] + dc;
         if (!Rules.inBounds(nr, nc, size)) continue;
         if (filled[idx(nr, nc)]) continue;
-        if (mustExclude && mustExclude.has(nr * size + nc)) continue;
+        if (mustExclude?.has(nr * size + nc)) continue;
         if (rowCount[nr] >= rowClues[nr]) continue;
         if (colCount[nc] >= colClues[nc]) continue;
         if (nr === tail[0] && nc === tail[1] && path.length + 1 !== total) continue;

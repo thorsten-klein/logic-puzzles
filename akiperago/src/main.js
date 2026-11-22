@@ -32,7 +32,7 @@
         if (id[k] >= 0 || s[k] !== YES) continue;
         const cells = [k];
         id[k] = list.length;
-        for (let i = 0; i < cells.length; i++) for (const j of nb(cells[i])) if (id[j] < 0 && s[j] === YES) { id[j] = list.length; cells.push(j); }
+        for (const cur of cells) for (const j of nb(cur)) if (id[j] < 0 && s[j] === YES) { id[j] = list.length; cells.push(j); }
         list.push(cells);
       }
       return { id, list };
@@ -71,8 +71,8 @@
         if (seen[a]) continue;
         const group = [a];
         seen[a] = 1;
-        for (let i = 0; i < group.length; i++) {
-          for (const k of list[group[i]]) for (const j of diag(k)) {
+        for (const cur of group) {
+          for (const k of list[cur]) for (const j of diag(k)) {
             if (s[j] === YES && !seen[id[j]]) { seen[id[j]] = 1; group.push(id[j]); }
           }
         }
@@ -119,8 +119,10 @@
       islands.push(cells);
       return true;
     };
-    for (let g = 0, fails = 0; fails < 30; g++) {
-      const starts = [...Array(N).keys()].filter((k) => id[k] < 0 && around(k, true).every((j) => id[j] < 0));
+    let fails = 0;
+    for (let g = 0; ; g++) {
+      if (fails >= 30) break;
+      const starts = [...new Array(N).keys()].filter((k) => id[k] < 0 && around(k, true).every((j) => id[j] < 0));
       if (!starts.length) break;
       const size = 2 + Math.floor(Math.random() * 3);
       const order = PuzzleShell.shuffle(Array.from({ length: size }, (_, i) => i + 1));
@@ -165,7 +167,7 @@
         return r.solutions.length === 1 && !r.capped;
       };
       if (!unique()) continue;
-      for (const k of PuzzleShell.shuffle([...Array(N).keys()])) {
+      for (const k of PuzzleShell.shuffle([...new Array(N).keys()])) {
         if (clues[k] < 0) continue;
         const keep = clues[k];
         clues[k] = keep > 0 ? 0 : -1;
@@ -189,12 +191,20 @@
     size: { min: 5, max: 6, def: 6 },
     solvedText: 'Islands all charted — nicely done.',
     generate,
-    encode: (p) => ({ r: p.R, c: p.C, g: Array.from(p.clues, (v) => (v < 0 ? '.' : v === 0 ? '?' : v.toString(36))).join('') }),
+    encode: (p) => ({ r: p.R, c: p.C, g: Array.from(p.clues, (v) => {
+      if (v < 0) return '.';
+      if (v === 0) return '?';
+      return v.toString(36);
+    }).join('') }),
     decode(d) {
-      const R = d && d.r, C = d && d.c;
+      const R = d?.r, C = d?.c;
       if (![R, C].every((x) => Number.isInteger(x) && x >= 3 && x <= 20)) throw new Error('Invalid board size');
       if (typeof d.g !== 'string' || d.g.length !== R * C) throw new Error('Invalid clues');
-      return { R, C, clues: Int8Array.from(d.g, (ch) => (ch === '.' ? -1 : ch === '?' ? 0 : parseInt(ch, 36))) };
+      return { R, C, clues: Int8Array.from(d.g, (ch) => {
+        if (ch === '.') return -1;
+        if (ch === '?') return 0;
+        return Number.parseInt(ch, 36);
+      }) };
     },
     model,
     fixed: (p, k) => (p.clues[k] >= 0 ? YES : 0),

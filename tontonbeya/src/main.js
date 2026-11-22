@@ -10,7 +10,7 @@
   function prepare(p) {
     const { n, room } = p;
     p.rooms = [];
-    room.forEach((g, k) => { (p.rooms[g] = p.rooms[g] || []).push(k); });
+    room.forEach((g, k) => { p.rooms[g] ??= []; p.rooms[g].push(k); });
     p.nb = Array.from({ length: n * n }, (_, k) => {
       const r = Math.floor(k / n), c = k % n;
       return [[r - 1, c], [r + 1, c], [r, c - 1], [r, c + 1]].filter(([a, b]) => a >= 0 && b >= 0 && a < n && b < n).map(([a, b]) => a * n + b);
@@ -64,7 +64,10 @@
       if (out.length >= stopAt || ++nodes > maxNodes) return;
       if (i === N) { out.push(Int8Array.from(v)); return; }
       const k = p.order[i], g = p.room[k];
-      const vals = given[k] ? [given[k]] : random ? PuzzleShell.shuffle([1, 2, 3]) : [1, 2, 3];
+      let vals;
+      if (given[k]) vals = [given[k]];
+      else if (random) vals = PuzzleShell.shuffle([1, 2, 3]);
+      else vals = [1, 2, 3];
       for (const x of vals) {
         v[k] = x;
         let ok = true;
@@ -81,7 +84,7 @@
     const deadline = Date.now() + 8000;
     while (Date.now() < deadline) {
       const N = n * n;
-      const seeds = PuzzleShell.shuffle([...Array(N).keys()]).slice(0, Math.round(N / 4));
+      const seeds = PuzzleShell.shuffle([...new Array(N).keys()]).slice(0, Math.round(N / 4));
       const room = PuzzleShell.growRegions(n, n, seeds.map((k) => [k]));
       const p = prepare({ n, room });
       const fill = solve(p, new Int8Array(N), 1, 20000, true);
@@ -90,7 +93,7 @@
       const given = Int8Array.from(sol);
       const unique = () => { const r = solve(p, given, 2, 20000); return r.solutions.length === 1 && !r.capped; };
       if (!unique()) continue;
-      for (const k of PuzzleShell.shuffle([...Array(N).keys()])) {
+      for (const k of PuzzleShell.shuffle([...new Array(N).keys()])) {
         const keep = given[k];
         given[k] = 0;
         if (!unique()) given[k] = keep;
@@ -119,7 +122,7 @@
         PuzzleShell.regionBorders(el, k, room, n, n);
         if (hintCells.has(k)) el.classList.add('hint');
         if (given[k]) { el.classList.add('given'); el.textContent = FIG[given[k]]; return; }
-        if (result) { el.textContent = FIG[solution[k]]; el.classList.add(s[k] === solution[k] ? 'ok' : s[k] ? 'bad' : 'show'); return; }
+        if (result) { el.textContent = FIG[solution[k]]; el.classList.add(PuzzleShell.resultClass(s[k], solution[k])); return; }
         el.textContent = FIG[s[k]];
       },
       onCell(k, ev) {
@@ -142,10 +145,10 @@
     generate,
     encode: (p) => ({ n: p.n, g: Array.from(p.room, (v) => v.toString(36).padStart(2, '0')).join(''), v: Array.from(p.given).join('') }),
     decode(d) {
-      const n = d && d.n;
+      const n = d?.n;
       if (!Number.isInteger(n) || n < 3 || n > 10) throw new Error('Invalid board size');
       if (typeof d.g !== 'string' || d.g.length !== 2 * n * n || typeof d.v !== 'string' || d.v.length !== n * n) throw new Error('Invalid puzzle');
-      const room = Int32Array.from({ length: n * n }, (_, k) => parseInt(d.g.slice(2 * k, 2 * k + 2), 36));
+      const room = Int32Array.from({ length: n * n }, (_, k) => Number.parseInt(d.g.slice(2 * k, 2 * k + 2), 36));
       const p = prepare({ n, room });
       p.given = Int8Array.from(d.v, Number);
       const res = solve(p, p.given, 2, 200000);

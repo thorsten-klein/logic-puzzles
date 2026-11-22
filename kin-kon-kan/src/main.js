@@ -37,7 +37,7 @@
 
   function prepare(p) {
     p.rooms = [];
-    p.room.forEach((g, k) => { (p.rooms[g] = p.rooms[g] || []).push(k); });
+    p.room.forEach((g, k) => { p.rooms[g] ??= []; p.rooms[g].push(k); });
     p.partner = new Int32Array(4 * p.n).fill(-1);
     p.clues.forEach((x, i) => {
       if (!x) return;
@@ -67,7 +67,7 @@
     };
     (function rec(g) {
       if (out.length >= stopAt || ++nodes > maxNodes) return;
-      if (g === rooms.length) { if (ok(true)) out.push(Uint8Array.from(mir)); return; }
+      if (g === rooms.length) { if (ok(true)) { out.push(Uint8Array.from(mir)); } return; }
       for (const k of rooms[g]) for (const v of [1, 2]) {
         mir[k] = v;
         done[g] = 1;
@@ -83,10 +83,10 @@
     const deadline = Date.now() + 8000;
     while (Date.now() < deadline) {
       const N = n * n;
-      const seeds = PuzzleShell.shuffle([...Array(N).keys()]).slice(0, Math.round(N / 5));
+      const seeds = PuzzleShell.shuffle([...new Array(N).keys()]).slice(0, Math.round(N / 5));
       const room = PuzzleShell.growRegions(n, n, seeds.map((k) => [k]));
       const rooms = [];
-      room.forEach((g, k) => { (rooms[g] = rooms[g] || []).push(k); });
+      room.forEach((g, k) => { rooms[g] ??= []; rooms[g].push(k); });
       const mir = new Uint8Array(N);
       for (const cells of rooms) mir[cells[Math.floor(Math.random() * cells.length)]] = 1 + Math.floor(Math.random() * 2);
       // All beams with at least one bounce, each pair once.
@@ -158,8 +158,13 @@
     clues.forEach((x, i) => {
       if (!x) return;
       const side = Math.floor(i / n), j = i % n;
-      const [cx, cy] = side === 0 ? [o + j * s + s / 2, s / 2] : side === 1 ? [o + j * s + s / 2, o + n * s + s / 2]
-        : side === 2 ? [s / 2, o + j * s + s / 2] : [o + n * s + s / 2, o + j * s + s / 2];
+      // Label spot by side: top, bottom, left, right.
+      const [cx, cy] = [
+        [o + j * s + s / 2, s / 2],
+        [o + j * s + s / 2, o + n * s + s / 2],
+        [s / 2, o + j * s + s / 2],
+        [o + n * s + s / 2, o + j * s + s / 2],
+      ][side];
       el('text', { x: cx, y: cy, 'font-size': s * 0.38, class: 'pt-clue kk-label' }, g).textContent = LET[x[0]] + x[1];
     });
     for (let k = 0; k < n * n; k++) {
@@ -167,7 +172,7 @@
       const v = result ? solution[k] : state[k];
       if (v) {
         let cls = '';
-        if (result) cls = state[k] === solution[k] ? ' ok' : state[k] ? ' bad' : ' show';
+        if (result) cls = ' ' + PuzzleShell.resultClass(state[k], solution[k]);
         const [a, b] = v === 1 ? [[x + d, y + s - d], [x + s - d, y + d]] : [[x + d, y + d], [x + s - d, y + s - d]];
         el('line', { x1: a[0], y1: a[1], x2: b[0], y2: b[1], class: 'kk-mirror' + cls }, g);
       } else if (result && state[k]) {
@@ -205,10 +210,10 @@
     encode: (p) => ({ n: p.n, g: Array.from(p.room, (v) => v.toString(36).padStart(2, '0')).join(''),
       c: p.clues.map((x) => (x ? LET[x[0]] + x[1] : '')).join(',') }),
     decode(d) {
-      const n = d && d.n;
+      const n = d?.n;
       if (!Number.isInteger(n) || n < 3 || n > 12) throw new Error('Invalid board size');
       if (typeof d.g !== 'string' || d.g.length !== 2 * n * n) throw new Error('Invalid rooms');
-      const room = Int32Array.from({ length: n * n }, (_, k) => parseInt(d.g.slice(2 * k, 2 * k + 2), 36));
+      const room = Int32Array.from({ length: n * n }, (_, k) => Number.parseInt(d.g.slice(2 * k, 2 * k + 2), 36));
       const parts = String(d.c).split(',');
       if (parts.length !== 4 * n) throw new Error('Invalid clues');
       const clues = parts.map((t) => (t ? [LET.indexOf(t[0]), Number(t.slice(1))] : null));

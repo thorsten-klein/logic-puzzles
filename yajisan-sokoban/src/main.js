@@ -33,11 +33,11 @@
     while (Date.now() < deadline) {
       const N = n * n;
       const on = new Uint8Array(N);
-      const finals = PuzzleShell.shuffle([...Array(N).keys()]).slice(0, Math.round(N / 6));
+      const finals = PuzzleShell.shuffle([...new Array(N).keys()]).slice(0, Math.round(N / 6));
       finals.forEach((k) => { on[k] = 1; });
       // Clues on free cells.
       const clue = new Int16Array(N);
-      for (const k of [...Array(N).keys()]) {
+      for (const k of new Array(N).keys()) {
         if (on[k]) continue;
         const d = Math.floor(Math.random() * 4);
         clue[k] = d + 1;
@@ -69,7 +69,7 @@
       const p = { R: n, C: n, pieces, clue };
       const unique = () => { const r = Moves.solve(p, partial, 2, 30000); return r.solutions.length === 1 && !r.capped; };
       if (!unique()) continue;
-      for (const k of PuzzleShell.shuffle([...Array(N).keys()])) {
+      for (const k of PuzzleShell.shuffle([...new Array(N).keys()])) {
         if (!clue[k]) continue;
         const keep = clue[k];
         clue[k] = 0;

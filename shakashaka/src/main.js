@@ -25,7 +25,7 @@
   function slices(p, v, i, j) {
     // v: cell values (-1 unknown). Returns 8 slices: 1 white, 0 black, -1 unknown.
     const out = new Array(8);
-    for (const [dr, dc, vc, A, B, cv, ch] of AROUND) {
+    for (const [dr, dc, vc, A, B, cv] of AROUND) {
       const r = i + dr, c = j + dc;
       if (r < 0 || c < 0 || r >= p.n || c >= p.n || p.black[r * p.n + c]) { out[A] = 0; out[B] = 0; continue; }
       const x = v[r * p.n + c];
@@ -38,7 +38,7 @@
   }
   function pointOk(o) {
     if (o.every((x) => x === 1)) return true;
-    const start = o.findIndex((x) => x === 0);
+    const start = o.indexOf(0);
     if (start < 0) return true; // white and unknown only
     // Runs of white between two known blacks.
     for (let s = 0; s < 8; s++) {
@@ -91,7 +91,7 @@
     while (Date.now() < deadline) {
       const N = n * n;
       const black = new Uint8Array(N);
-      for (const k of PuzzleShell.shuffle([...Array(N).keys()]).slice(0, Math.round(N * 0.15))) black[k] = 1;
+      for (const k of PuzzleShell.shuffle([...new Array(N).keys()]).slice(0, Math.round(N * 0.15))) black[k] = 1;
       const p = { n, black };
       const fill = solve(p, 1, 20000, true);
       if (!fill.solutions.length) continue;
@@ -102,7 +102,7 @@
       for (let k = 0; k < N; k++) if (black[k]) black[k] = 2 + nbs(k).filter((j) => !black[j] && sol[j] > 0).length;
       const unique = () => { const r = solve(p, 2, 30000); return r.solutions.length === 1 && !r.capped; };
       if (!unique()) continue;
-      for (const k of PuzzleShell.shuffle([...Array(N).keys()])) {
+      for (const k of PuzzleShell.shuffle([...new Array(N).keys()])) {
         if (black[k] < 2) continue;
         const keep = black[k];
         black[k] = 1;
@@ -152,7 +152,7 @@
         const q = v - 1;
         const pts = [C[q], C[(q + 1) % 4], C[(q + 3) % 4]];
         let cls = '';
-        if (result) cls = state[k] === solution[k] ? ' ok' : state[k] ? ' bad' : ' show';
+        if (result) cls = ' ' + PuzzleShell.resultClass(state[k], solution[k]);
         el('polygon', { points: pts.map((c) => c.join(',')).join(' '), class: 'sk-tri' + cls }, g);
       } else if (result && state[k]) {
         el('circle', { cx: x + s / 2, cy: y + s / 2, r: s * 0.12, class: 'sk-tri bad' }, g);
@@ -164,7 +164,10 @@
         hit.addEventListener('click', (ev) => {
           const b = hit.getBoundingClientRect();
           const fx = (ev.clientX - b.left) / b.width, fy = (ev.clientY - b.top) / b.height;
-          const q = fy < 0.5 ? (fx < 0.5 ? 0 : 1) : (fx < 0.5 ? 3 : 2);
+          let q;
+          if (fy < 0.5) q = fx < 0.5 ? 0 : 1;
+          else if (fx < 0.5) q = 3;
+          else q = 2;
           state[k] = state[k] === q + 1 ? 0 : q + 1;
           onChange();
         });
@@ -192,7 +195,7 @@
     generate,
     encode: (p) => ({ n: p.n, b: Array.from(p.black).join(',') }),
     decode(d) {
-      const n = d && d.n;
+      const n = d?.n;
       if (!Number.isInteger(n) || n < 3 || n > 12) throw new Error('Invalid board size');
       const black = Uint8Array.from(String(d.b).split(','), Number);
       if (black.length !== n * n) throw new Error('Invalid cells');

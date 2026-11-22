@@ -24,12 +24,12 @@
         while (st.length) {
           const x = st.pop();
           used++;
-          if (nums.has(num[x])) return false;
+          if (nums.has(num[x])) return -1;
           nums.add(num[x]);
           g.cellEdges[x].forEach((e, d) => { if (e >= 0 && s[e] === LINE && !seenCell[x + step[d]]) { seenCell[x + step[d]] = 1; st.push(x + step[d]); } });
         }
       }
-      if (used > top) return false;
+      if (used > top) return -1;
       // Walk from the start: numbers met must all differ.
       const seen = new Set([num[0]]);
       let x = 0, from = -1;
@@ -38,11 +38,11 @@
         if (d === undefined) break;
         x += step[d];
         from = d ^ 1;
-        if (seen.has(num[x])) return false;
+        if (seen.has(num[x])) return -1;
         seen.add(num[x]);
       }
-      if (seen.size > top) return false;
-      if (x === R * C - 1 && seen.size !== top) return false;
+      if (seen.size > top) return -1;
+      if (x === R * C - 1 && seen.size !== top) return -1;
       return 0;
     }
     return { g, label, fill: false, rule };
@@ -58,7 +58,7 @@
       let ok = false;
       const dist = (k) => (n - 1 - Math.floor(k / n)) + (n - 1 - (k % n));
       for (let guard = 0; guard < N * 4; guard++) {
-        const k = path[path.length - 1];
+        const k = path.at(-1);
         if (k === goal) { ok = path.length === len; break; }
         const left = len - path.length;
         const r = Math.floor(k / n), c = k % n;
@@ -129,10 +129,10 @@
     generate,
     encode: (p) => ({ n: p.R, t: p.top, g: Array.from(p.num, (v) => v.toString(36)).join('') }),
     decode(d) {
-      const n = d && d.n;
+      const n = d?.n;
       if (!Number.isInteger(n) || n < 2 || n > 12) throw new Error('Invalid board size');
       if (typeof d.g !== 'string' || d.g.length !== n * n || !Number.isInteger(d.t)) throw new Error('Invalid numbers');
-      return { R: n, C: n, top: d.t, num: Int8Array.from(d.g, (ch) => parseInt(ch, 36)) };
+      return { R: n, C: n, top: d.t, num: Int8Array.from(d.g, (ch) => Number.parseInt(ch, 36)) };
     },
     model,
     drawCell: (p) => (svg, k, x, y, s) => {

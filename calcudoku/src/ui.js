@@ -26,7 +26,7 @@ const UI = (() => {
         if (hintCells.has(k)) el.classList.add('hint');
         if (result) {
           el.append(String(solution[k]));
-          el.classList.add(entries[k] === solution[k] ? 'ok' : entries[k] ? 'bad' : 'show');
+          el.classList.add(PuzzleShell.resultClass(entries[k], solution[k]));
         } else if (readonly) {
           el.append(entries[k] ? String(entries[k]) : '');
           el.classList.add('entry');

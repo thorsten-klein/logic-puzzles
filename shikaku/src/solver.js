@@ -23,9 +23,12 @@ const Solver = (() => {
   }
 
   // One logic step. Returns { i, rect, why } or null; false if broken.
+  // step() result for a contradiction (no option left).
+  const FAIL = { fail: true };
+
   function step(p, st) {
     for (let i = 0; i < st.opts.length; i++) {
-      if (!st.opts[i].length) return false;
+      if (!st.opts[i].length) return FAIL;
       if (!st.chosen[i] && st.opts[i].length === 1) return { i, rect: st.opts[i][0], why: 'one' };
     }
     const N = p.R * p.C;
@@ -34,7 +37,7 @@ const Solver = (() => {
       for (const j of Rules.cellsOf(rect, p.C)) who[j].push([i, rect]);
     }));
     for (let j = 0; j < N; j++) {
-      if (!who[j].length) return false;
+      if (!who[j].length) return FAIL;
       const clues = new Set(who[j].map(([i]) => i));
       if (clues.size === 1) {
         const i = who[j][0][0];
@@ -55,7 +58,7 @@ const Solver = (() => {
     const st = init(p);
     for (;;) {
       const m = step(p, st);
-      if (m === false) return null;
+      if (m === FAIL) return null;
       if (!m) break;
       if (m.rect) choose(st, m.i, m.rect);
     }
@@ -69,12 +72,12 @@ const Solver = (() => {
       if (found >= stopAt) return;
       for (;;) {
         const m = step(p, st);
-        if (m === false) return;
+        if (m === FAIL) return;
         if (!m) break;
         if (m.rect) choose(st, m.i, m.rect);
       }
       const i = st.chosen.findIndex((x) => !x);
-      if (i < 0) { if (!found) first = st.chosen.slice(); found++; return; }
+      if (i < 0) { if (!found) { first = st.chosen.slice(); } found++; return; }
       for (const rect of st.opts[i]) {
         const copy = { clueCells: st.clueCells, opts: st.opts.map((o) => o.slice()), chosen: st.chosen.slice() };
         choose(copy, i, rect);
@@ -84,5 +87,5 @@ const Solver = (() => {
     return { count: found, first };
   }
 
-  return { init, choose, step, logicSolve, countSolutions };
+  return { init, choose, step, FAIL, logicSolve, countSolutions };
 })();

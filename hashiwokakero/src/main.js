@@ -52,26 +52,28 @@
     for (let i = 0; i < N; i++) {
       const need = p.isl[i].n, js = p.of[i];
       const sumLo = js.reduce((a, j) => a + lo[j], 0), sumHi = js.reduce((a, j) => a + hi[j], 0);
-      if (sumLo > need || sumHi < need) return false;
+      if (sumLo > need || sumHi < need) return -1;
       const changed = [];
       for (const j of js) {
         const minJ = Math.max(lo[j], need - (sumHi - hi[j]));
         const maxJ = Math.min(hi[j], need - (sumLo - lo[j]));
-        if (minJ > maxJ) return false;
+        if (minJ > maxJ) return -1;
         if (minJ !== lo[j] || maxJ !== hi[j]) { lo[j] = minJ; hi[j] = maxJ; changed.push(j); }
       }
       if (changed.length) {
-        if (log) log.push({ pairs: changed, island: i, reason: sumHi === need
-          ? `This ${need} needs every bridge it can still get.`
-          : sumLo === need ? `This ${need} already has all its bridges.`
-            : `This ${need} can only reach its number if these bridges are built.` });
+        if (log) {
+          let reason = `This ${need} can only reach its number if these bridges are built.`;
+          if (sumHi === need) reason = `This ${need} needs every bridge it can still get.`;
+          else if (sumLo === need) reason = `This ${need} already has all its bridges.`;
+          log.push({ pairs: changed, island: i, reason });
+        }
         return changed.length;
       }
     }
     for (let j = 0; j < p.pairs.length; j++) {
       if (!lo[j]) continue;
       for (const o of p.cross[j]) {
-        if (lo[o]) return false;
+        if (lo[o]) return -1;
         if (hi[o]) {
           hi[o] = 0;
           if (log) log.push({ pairs: [o], reason: 'Bridges may not cross. A bridge already runs across here.' });
@@ -86,20 +88,20 @@
         const na = p.isl[a].n, nb = p.isl[b].n;
         if (na === nb && na <= 2 && hi[j] >= na) {
           hi[j] = na - 1;
-          if (lo[j] > hi[j]) return false;
-          if (log) log.push({ pairs: [j], reason: `Two ${na}s joined by ${na} bridge${na === 1 ? '' : 's'} would form a closed group. So they can not be joined that way.` });
+          if (lo[j] > hi[j]) return -1;
+          if (log) log.push({ pairs: [j], reason: `Two ${na}s joined by ${PuzzleShell.plural(na, 'bridge')} would form a closed group. So they can not be joined that way.` });
           return 1;
         }
       }
     }
-    if (!connected(p, hi)) return false;
+    if (!connected(p, hi)) return -1;
     return 0;
   }
 
   function settle(p, lo, hi) {
     for (;;) {
       const r = step(p, lo, hi);
-      if (r === false) return false;
+      if (r < 0) return false;
       if (r === 0) return true;
     }
   }
@@ -150,7 +152,7 @@
           // New islands may not touch other islands.
           const nr = [[-1, 0], [1, 0], [0, -1], [0, 1]].some(([a, b]) => {
             const x = er + a, y = ec + b;
-            return x >= 0 && y >= 0 && x < R && y < C && grid[x * C + y] >= 0 && x * C + y !== path[path.length - 1];
+            return x >= 0 && y >= 0 && x < R && y < C && grid[x * C + y] >= 0 && x * C + y !== path.at(-1);
           });
           if (nr) continue;
           add(end);
@@ -237,7 +239,7 @@
     const lo = Int8Array.from(state), hi = new Int8Array(state.length).fill(2);
     const log = [];
     for (let i = 0; i < 50 && !log.some((x) => x.pairs.some((j) => lo[j] > state[j])); i++) {
-      if (!step(p, lo, hi, log)) break;
+      if (step(p, lo, hi, log) <= 0) break; // nothing more, or a contradiction
     }
     const firstUseful = log.find((x) => x.pairs.some((j) => lo[j] > state[j]));
     if (firstUseful) {
@@ -261,7 +263,7 @@
     generate,
     encode: (p) => ({ r: p.R, c: p.C, i: p.isl.map((x) => `${x.k}.${x.n}`).join(',') }),
     decode(d) {
-      const R = d && d.r, C = d && d.c;
+      const R = d?.r, C = d?.c;
       if (![R, C].every((x) => Number.isInteger(x) && x >= 3 && x <= 25)) throw new Error('Invalid board size');
       const isl = String(d.i).split(',').map((s) => { const [k, n] = s.split('.').map(Number); return { k, n }; });
       if (isl.some((x) => !(x.k >= 0 && x.k < R * C && x.n >= 1 && x.n <= 8))) throw new Error('Invalid islands');

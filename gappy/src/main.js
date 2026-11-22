@@ -37,7 +37,7 @@
           const b = a + gap + 1;
           if (cells.every((k, j) => (j === a || j === b ? s[k] !== NO : s[k] !== YES))) fits.push([a, b]);
         }
-        if (!fits.length) return false;
+        if (!fits.length) return -1;
         const yes = [], no = [];
         cells.forEach((k, j) => {
           if (s[k] !== UNKNOWN) return;
@@ -111,7 +111,7 @@
     generate,
     encode: (p) => ({ n: p.n, c: p.clues.join(',') }),
     decode(d) {
-      const n = d && d.n;
+      const n = d?.n;
       if (!Number.isInteger(n) || n < 5 || n > 15) throw new Error('Invalid board size');
       const clues = String(d.c).split(',').map(Number);
       if (clues.length !== 2 * n || clues.some((x) => !(x >= -1 && x < n))) throw new Error('Invalid clues');

@@ -17,8 +17,11 @@
       const v = p.clues[k];
       if (v < 0) continue;
       cons.push({ cells: corners(p, k), min: v, max: v, at: k,
-        why: (x) => (x === YES ? `This ${v} needs every open corner dot black.`
-          : v === 0 ? 'A 0 means all four corner dots are white.' : `This ${v} already has ${v} black dot${v === 1 ? '' : 's'}. The other corners are white.`) });
+        why: (x) => {
+          if (x === YES) return `This ${v} needs every open corner dot black.`;
+          if (v === 0) return 'A 0 means all four corner dots are white.';
+          return `This ${v} already has ${PuzzleShell.plural(v, 'black dot')}. The other corners are white.`;
+        } });
     }
     return { N: (p.R + 1) * (p.C + 1), cons };
   }
@@ -59,7 +62,7 @@
     for (let k = 0; k < R * C; k++) {
       if (clues[k] < 0) continue;
       const x = (k % C) * s + s / 2, y = Math.floor(k / C) * s + s / 2;
-      if (hint && hint.at === k) el('rect', { x: x - s / 2 + 2, y: y - s / 2 + 2, width: s - 4, height: s - 4, class: 'sq-hint-cell' }, g);
+      if (hint?.at === k) el('rect', { x: x - s / 2 + 2, y: y - s / 2 + 2, width: s - 4, height: s - 4, class: 'sq-hint-cell' }, g);
       const t = el('text', { x, y, 'font-size': s * 0.42, class: 'sq-num' }, g);
       t.textContent = clues[k];
     }
@@ -67,7 +70,7 @@
     for (let r = 0; r <= R; r++) for (let c = 0; c <= C; c++) {
       const d = r * (C + 1) + c;
       const v = result ? solution[d] : state[d];
-      let cls = 'sq-dot' + (v === YES ? ' black' : v === NO ? ' white' : '');
+      let cls = 'sq-dot' + ({ [YES]: ' black', [NO]: ' white' }[v] ?? '');
       if (hintSet.has(d)) cls += ' hint';
       if (result && state[d]) cls += state[d] === solution[d] ? ' ok' : ' bad';
       else if (result && solution[d] === YES) cls += ' miss'; // not entered yet
@@ -96,7 +99,7 @@
     generate,
     encode: (p) => ({ r: p.R, c: p.C, g: Array.from(p.clues, (v) => (v < 0 ? '.' : v)).join('') }),
     decode(d) {
-      const R = d && d.r, C = d && d.c;
+      const R = d?.r, C = d?.c;
       if (![R, C].every((x) => Number.isInteger(x) && x >= 2 && x <= 20)) throw new Error('Invalid board size');
       if (typeof d.g !== 'string' || d.g.length !== R * C || !/^[.0-4]+$/.test(d.g)) throw new Error('Invalid clues');
       const p = { R, C, clues: Int8Array.from(d.g, (ch) => (ch === '.' ? -1 : Number(ch))) };

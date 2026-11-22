@@ -27,7 +27,7 @@
     const ray = (k, d) => {
       const [dr, dc] = DIRS[d], out = [];
       let r = Math.floor(k / C) + dr, c = (k % C) + dc;
-      while (r >= 0 && c >= 0 && r < R && c < C) { if (!isArrow(r * C + c)) out.push(r * C + c); r += dr; c += dc; }
+      while (r >= 0 && c >= 0 && r < R && c < C) { if (!isArrow(r * C + c)) { out.push(r * C + c); } r += dr; c += dc; }
       return out;
     };
     const rays = [];
@@ -37,7 +37,7 @@
     const needLoop = (s, k, log, why) => {
       const es = edges(k);
       const lines = es.filter((e) => s[e] === LINE).length, open = es.filter((e) => s[e] === UNKNOWN);
-      if (lines + open.length < 2) return false;
+      if (lines + open.length < 2) return -1;
       if (lines < 2 && lines + open.length === 2) {
         for (const e of open) s[e] = LINE;
         if (log) log.push({ edges: open, v: LINE, reason: why, at: k });
@@ -50,7 +50,7 @@
       for (let k = 0; k < R * C; k++) {
         if (isArrow(k)) {
           const open = edges(k).filter((e) => s[e] !== CROSS);
-          if (open.some((e) => s[e] === LINE)) return false;
+          if (open.some((e) => s[e] === LINE)) return -1;
           if (open.length) {
             for (const e of open) s[e] = CROSS;
             if (log) log.push({ edges: open, v: CROSS, reason: 'The loop never passes through an arrow cell.', at: k });
@@ -62,21 +62,21 @@
         // Black: neighbours are not black, so they are on the loop.
         for (const j of nbs(k)) {
           if (isArrow(j)) continue;
-          if (black(s, j)) return false;
+          if (black(s, j)) return -1;
           const r = needLoop(s, j, log, 'Black cells never touch. This cell must be on the loop, and only two sides are open.');
-          if (r === false) return false;
+          if (r < 0) return -1;
           if (r) return r;
         }
       }
-      for (const [k, n, cells] of rays) {
+      for (const [, n, cells] of rays) {
         const known = cells.filter((j) => black(s, j)).length;
         const maybe = cells.filter((j) => !black(s, j) && !onLoop(s, j)).length;
-        if (known > n || known + maybe < n) return false;
+        if (known > n || known + maybe < n) return -1;
         if (known === n) {
           for (const j of cells) {
             if (black(s, j) || onLoop(s, j)) continue;
-            const r = needLoop(s, j, log, `This arrow already sees its ${n} black cell${n === 1 ? '' : 's'}. The other cells that way are on the loop.`);
-            if (r === false) return false;
+            const r = needLoop(s, j, log, `This arrow already sees its ${PuzzleShell.plural(n, 'black cell')}. The other cells that way are on the loop.`);
+            if (r < 0) return -1;
             if (r) return r;
           }
         }
@@ -93,7 +93,7 @@
       if (!loop) continue;
       const g = Loop.grid(n, n);
       const on = (k) => g.cellEdges[k].some((e) => e >= 0 && loop[e] === LINE);
-      const off = [...Array(n * n).keys()].filter((k) => !on(k));
+      const off = [...new Array(n * n).keys()].filter((k) => !on(k));
       // Arrows break up touching off-loop cells; a few extra for clues.
       const arrow = new Uint8Array(n * n);
       for (const k of PuzzleShell.shuffle(off.slice())) {
@@ -111,7 +111,7 @@
         for (const d of PuzzleShell.shuffle(['u', 'd', 'l', 'r'])) {
           const [dr, dc] = DIRS[d];
           let r = Math.floor(k / n) + dr, c = (k % n) + dc, cnt = 0, cells = 0;
-          while (r >= 0 && c >= 0 && r < n && c < n) { if (blackCell(r * n + c)) cnt++; cells++; r += dr; c += dc; }
+          while (r >= 0 && c >= 0 && r < n && c < n) { if (blackCell(r * n + c)) { cnt++; } cells++; r += dr; c += dc; }
           if (cells && (!best || cnt > best.n)) best = { d, n: cnt };
         }
         clues[k] = best || { d: 'u', n: 0 };
@@ -138,14 +138,14 @@
     generate,
     encode: (p) => ({ r: p.R, c: p.C, g: p.clues.map((x) => (x ? x.d + x.n.toString(36) : '..')).join('') }),
     decode(d) {
-      const R = d && d.r, C = d && d.c;
+      const R = d?.r, C = d?.c;
       if (![R, C].every((x) => Number.isInteger(x) && x >= 3 && x <= 20)) throw new Error('Invalid board size');
       if (typeof d.g !== 'string' || d.g.length !== 2 * R * C) throw new Error('Invalid clues');
       const clues = Array.from({ length: R * C }, (_, k) => {
         const t = d.g.slice(2 * k, 2 * k + 2);
         if (t === '..') return null;
         if (!DIRS[t[0]]) throw new Error('Invalid clue');
-        return { d: t[0], n: parseInt(t[1], 36) };
+        return { d: t[0], n: Number.parseInt(t[1], 36) };
       });
       return { R, C, clues };
     },

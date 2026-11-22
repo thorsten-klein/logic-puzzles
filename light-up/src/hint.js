@@ -6,7 +6,7 @@ const Hint = (() => {
 
   const REASONS = {
     seen: () => 'This bulb lights these cells. No other bulb may go where it shines.',
-    full: (n) => `This ${n} already has ${n} bulb${n === 1 ? '' : 's'} next to it. The other sides get no bulb.`,
+    full: (n) => `This ${n} already has ${PuzzleShell.plural(n, 'bulb')} next to it. The other sides get no bulb.`,
     needs: (n) => `This ${n} needs a bulb on every open side.`,
     only: () => 'This dark cell can only be lit from one place. A bulb goes there.',
     trial: () => 'A bulb here would lead to a dead end (a dark cell or a broken number). So no bulb here.',

@@ -20,7 +20,7 @@ const Hint = (() => {
     });
     for (let guard = 0; guard < 500; guard++) {
       const m = Solver.step(p, st);
-      if (!m) break;
+      if (!m || m === Solver.FAIL) break;
       if (!m.rect) continue;
       const v = p.clues[st.clueCells[m.i]];
       out.push({ add: m.rect, cells: Rules.cellsOf(m.rect, p.C), clue: st.clueCells[m.i],

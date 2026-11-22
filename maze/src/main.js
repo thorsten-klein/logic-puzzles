@@ -13,7 +13,7 @@
     const stack = [0];
     seen[0] = 1;
     while (stack.length) {
-      const k = stack[stack.length - 1];
+      const k = stack.at(-1);
       const r = Math.floor(k / n), c = k % n;
       const opts = [[r - 1, c], [r + 1, c], [r, c - 1], [r, c + 1]]
         .filter(([a, b]) => a >= 0 && b >= 0 && a < n && b < n && !seen[a * n + b]);
@@ -39,8 +39,8 @@
     const N = n * n, prev = new Int32Array(N).fill(-1);
     const queue = [0];
     prev[0] = 0;
-    for (let i = 0; i < queue.length; i++) {
-      const k = queue[i];
+    for (const cur of queue) {
+      const k = cur;
       for (const j of [k - n, k + n, k - 1, k + 1]) {
         if (j < 0 || j >= N || prev[j] >= 0 || !open(n, walls, k, j)) continue;
         prev[j] = k;
@@ -74,7 +74,7 @@
       if (marked) cls += ' marked';
       if (result && state[k]) cls += onPath.has(k) ? ' ok' : ' bad';
       else if (result && onPath.has(k) && k !== 0 && k !== n * n - 1) cls += ' miss'; // not entered yet
-      if (hint && hint.k === k) cls += ' hint';
+      if (hint?.k === k) cls += ' hint';
       if (k === 0) cls += ' start';
       if (k === n * n - 1) cls += ' goal';
       const cell = el('rect', { x, y, width: s, height: s, class: cls }, g);
@@ -113,7 +113,7 @@
     },
     encode: (p) => ({ n: p.n, w: Array.from(p.walls).join('') }),
     decode(d) {
-      const n = d && d.n;
+      const n = d?.n;
       if (!Number.isInteger(n) || n < 2 || n > 40) throw new Error('Invalid size');
       if (typeof d.w !== 'string' || d.w.length !== n * n || !/^[0-3]+$/.test(d.w)) throw new Error('Invalid walls');
       const walls = Uint8Array.from(d.w, Number);

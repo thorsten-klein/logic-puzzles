@@ -41,13 +41,13 @@ const Moves = (() => {
     const used = new Int32Array(p.R * p.C).fill(-1);
     p.pieces.forEach((q, i) => { used[q.k] = i; });
     const opts = p.pieces.map((_, i) => options(p, i));
-    const order = [...Array(P).keys()].sort((a, b) => opts[a].length - opts[b].length);
+    const order = [...new Array(P).keys()].sort((a, b) => opts[a].length - opts[b].length);
     const ends = new Int32Array(P).fill(-1);
     const out = [];
     let nodes = 0;
     (function rec(t) {
       if (out.length >= stopAt || ++nodes > maxNodes) return;
-      if (t === P) { if (partial(p, ends, true) !== false) out.push(Int32Array.from(ends)); return; }
+      if (t === P) { if (partial(p, ends, true) !== false) { out.push(Int32Array.from(ends)); } return; }
       const i = order[t];
       for (const o of random ? PuzzleShell.shuffle(opts[i].slice()) : opts[i]) {
         if (o.cells.some((x) => used[x] >= 0 && used[x] !== i)) continue;
@@ -115,7 +115,7 @@ const Moves = (() => {
         el('circle', { cx: x0, cy: y0, r: s * 0.12, class: 'mv-start' }, g);
       }
       let cls = cfg.dark ? 'mv-piece dark' : 'mv-piece';
-      if (result) cls += ends[i] === solution[i] ? ' ok' : ends[i] !== q.k ? ' bad' : ' show';
+      if (result) cls += ' ' + PuzzleShell.resultClass(ends[i], solution[i], ends[i] !== q.k);
       if (!result && i === selected && !readonly) cls += ' sel';
       if (hintSet.has(i)) cls += ' hint';
       if (cfg.dark) el('rect', { x: x1 - s * 0.4, y: y1 - s * 0.4, width: s * 0.8, height: s * 0.8, rx: s * 0.08, class: cls }, g);
@@ -137,7 +137,8 @@ const Moves = (() => {
             onChange();
             return;
           }
-          selected = at >= 0 ? at : from >= 0 ? from : -1;
+          if (at >= 0) selected = at;
+          else selected = from >= 0 ? from : -1;
           onChange();
         });
         hit.addEventListener('contextmenu', (ev) => {
@@ -158,7 +159,7 @@ const Moves = (() => {
       generate: cfg.generate,
       encode: (p) => ({ r: p.R, c: p.C, p: p.pieces.map((q) => [q.k, q.num, q.label || 0]), x: cfg.encodeExtra ? cfg.encodeExtra(p) : undefined }),
       decode(d) {
-        const R = d && d.r, C = d && d.c;
+        const R = d?.r, C = d?.c;
         if (![R, C].every((x) => Number.isInteger(x) && x >= 3 && x <= 16)) throw new Error('Invalid board size');
         if (!Array.isArray(d.p)) throw new Error('Invalid pieces');
         const pieces = d.p.map((q) => {

@@ -16,8 +16,8 @@
       if (!shaded[k] || id[k] >= 0) continue;
       const cells = [k];
       id[k] = blocks.length;
-      for (let i = 0; i < cells.length; i++) {
-        const x = cells[i], r = Math.floor(x / C), c = x % C;
+      for (const cur of cells) {
+        const x = cur, r = Math.floor(x / C), c = x % C;
         for (const [a, b] of [[r - 1, c], [r + 1, c], [r, c - 1], [r, c + 1]]) {
           const j = a * C + b;
           if (a >= 0 && b >= 0 && a < R && b < C && shaded[j] && id[j] < 0) { id[j] = blocks.length; cells.push(j); }
@@ -44,7 +44,7 @@
     const { R, C, room, clues } = p;
     const N = R * C;
     const rooms = [];
-    room.forEach((g, k) => { (rooms[g] = rooms[g] || []).push(k); });
+    room.forEach((g, k) => { rooms[g] ??= []; rooms[g].push(k); });
     const cons = [];
     for (let k = 0; k < N; k++) {
       const r = Math.floor(k / C), c = k % C;
@@ -94,7 +94,8 @@
       let ok = true;
       const placed = [];
       // Lift from the top stones down, keeping stones apart.
-      for (const cells of stones.sort((a, b) => Math.min(...a) - Math.min(...b))) {
+      stones.sort((a, b) => Math.min(...a) - Math.min(...b));
+      for (const cells of stones) {
         const top = Math.min(...cells.map((k) => Math.floor(k / C)));
         const lifts = PuzzleShell.shuffle(Array.from({ length: top + 1 }, (_, i) => i));
         let done = false;
@@ -120,7 +121,7 @@
       // Rooms grow around the stones.
       const room = Int32Array.from(pos);
       for (let open = room.filter((x) => x < 0).length, guard = 0; open > 0 && guard < N * 4; guard++) {
-        for (const k of PuzzleShell.shuffle([...Array(N).keys()])) {
+        for (const k of PuzzleShell.shuffle([...new Array(N).keys()])) {
           if (room[k] >= 0) continue;
           const r = Math.floor(k / C), c = k % C;
           const near = [[r - 1, c], [r + 1, c], [r, c - 1], [r, c + 1]].filter(([a, b]) => a >= 0 && b >= 0 && a < R && b < C && room[a * C + b] >= 0).map(([a, b]) => room[a * C + b]);
@@ -163,10 +164,10 @@
     generate,
     encode: (p) => ({ r: p.R, c: p.C, g: Array.from(p.room, (v) => v.toString(36).padStart(2, '0')).join(''), n: Array.from(p.clues).join(',') }),
     decode(d) {
-      const R = d && d.r, C = d && d.c;
+      const R = d?.r, C = d?.c;
       if (![R, C].every((x) => Number.isInteger(x) && x >= 2 && x <= 20) || R % 2) throw new Error('Invalid board size');
       if (typeof d.g !== 'string' || d.g.length !== 2 * R * C) throw new Error('Invalid rooms');
-      const room = Int32Array.from({ length: R * C }, (_, k) => parseInt(d.g.slice(2 * k, 2 * k + 2), 36));
+      const room = Int32Array.from({ length: R * C }, (_, k) => Number.parseInt(d.g.slice(2 * k, 2 * k + 2), 36));
       const clues = Int8Array.from(String(d.n).split(','), Number);
       if (room.some((v) => !(v >= 0 && v < clues.length))) throw new Error('Invalid rooms');
       return { R, C, room, clues };

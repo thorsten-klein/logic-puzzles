@@ -32,16 +32,16 @@
         if (!mark[k]) continue;
         const dirs = linesAt(s, k);
         // Straight through the circle.
-        if (dirs.length === 2 && (dirs[0] >> 1) !== (dirs[1] >> 1)) return false;
+        if (dirs.length === 2 && (dirs[0] >> 1) !== (dirs[1] >> 1)) return -1;
         if (dirs.length === 1) {
           const o = g.cellEdges[k][dirs[0] ^ 1];
-          if (o < 0 || s[o] === CROSS) return false;
+          if (o < 0 || s[o] === CROSS) return -1;
         }
         for (const d of dirs) {
           const w = walk(s, k, d);
-          const need = w.end >= 0 ? (mark[w.end] === mark[k] ? 0 : 1) : 1;
-          if (w.turns > need) return false;
-          if (w.end >= 0 && w.turns !== need) return false;
+          const need = w.end >= 0 && mark[w.end] === mark[k] ? 0 : 1;
+          if (w.turns > need) return -1;
+          if (w.end >= 0 && w.turns !== need) return -1;
         }
       }
       return 0;
@@ -124,11 +124,11 @@
         let t = 0, max = 0, seen = false;
         for (const o of ring.concat(ring)) {
           if (o.turn) t++;
-          else if (mark[o.k]) { if (seen) max = Math.max(max, t); seen = true; t = 0; }
+          else if (mark[o.k]) { if (seen) { max = Math.max(max, t); } seen = true; t = 0; }
         }
         return max;
       };
-      for (const k of PuzzleShell.shuffle([...Array(n * n).keys()])) {
+      for (const k of PuzzleShell.shuffle([...new Array(n * n).keys()])) {
         if (!mark[k]) continue;
         const keep = mark[k];
         mark[k] = 0;
@@ -152,7 +152,7 @@
     generate,
     encode: (p) => ({ n: p.R, m: Array.from(p.mark).join('') }),
     decode(d) {
-      const n = d && d.n;
+      const n = d?.n;
       if (!Number.isInteger(n) || n < 3 || n > 16) throw new Error('Invalid board size');
       if (typeof d.m !== 'string' || d.m.length !== n * n || !/^[012]+$/.test(d.m)) throw new Error('Invalid circles');
       return { R: n, C: n, mark: Uint8Array.from(d.m, Number) };

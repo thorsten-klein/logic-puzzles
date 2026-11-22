@@ -14,7 +14,7 @@ const Generator = (() => {
       while (c + maxW < C && id[r * C + c + maxW] < 0) maxW++;
       const w = 1 + Math.floor(Math.random() * Math.min(maxW, 4));
       let maxH = 0;
-      while (r + maxH < R && [...Array(w).keys()].every((i) => id[(r + maxH) * C + c + i] < 0)) maxH++;
+      while (r + maxH < R && [...new Array(w).keys()].every((i) => id[(r + maxH) * C + c + i] < 0)) maxH++;
       let h = 1 + Math.floor(Math.random() * Math.min(maxH, 4));
       if (w * h === 1 && Math.random() < 0.8) {
         if (maxH > 1) h = 2;

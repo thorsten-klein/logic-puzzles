@@ -26,12 +26,15 @@
 
   // st: 0 open, 1 chosen, 2 ruled out. Returns false on contradiction,
   // else { e, why } for the first forced choice found, or null.
+  // forced() result for a contradiction.
+  const FAIL = { fail: true };
+
   function forced(p, st) {
     for (let k = 0; k < p.R * p.C; k++) {
       const es = p.cellEdges[k];
       if (es.some((e) => st[e] === 1)) continue;
       const open = es.filter((e) => st[e] === 0);
-      if (!open.length) return false;
+      if (!open.length) return FAIL;
       if (open.length === 1) return { e: open[0], why: 'cell', k };
     }
     const byType = new Map();
@@ -43,8 +46,8 @@
     });
     for (let a = 0; a <= p.n; a++) for (let b = a; b <= p.n; b++) {
       const list = byType.get(typeOf(p.n, a, b)) || [];
-      if (!list.length) return false;
-      if (list.filter((e) => st[e] === 1).length > 1) return false;
+      if (!list.length) return FAIL;
+      if (list.filter((e) => st[e] === 1).length > 1) return FAIL;
       if (list.length === 1 && st[list[0]] === 0) return { e: list[0], why: 'type', a, b };
     }
     return null;
@@ -61,7 +64,7 @@
   function settle(p, st) {
     for (;;) {
       const f = forced(p, st);
-      if (f === false) return false;
+      if (f === FAIL) return false;
       if (!f) return true;
       choose(p, st, f.e);
     }
@@ -189,10 +192,10 @@
     const st = new Uint8Array(p.edges.length);
     state.forEach((v, e) => { if (v === 1) choose(p, st, e); });
     const f = forced(p, st);
-    if (f && f.why === 'cell') {
+    if (f?.why === 'cell') {
       return [{ edges: [f.e], v: 1, reason: `This ${p.g[f.k]} has only one neighbour left to pair with.` }];
     }
-    if (f && f.why === 'type') {
+    if (f?.why === 'type') {
       return [{ edges: [f.e], v: 1, reason: `The ${f.a}-${f.b} domino can only go here.` }];
     }
     const e = p.solution.findIndex((v, i) => v && !state[i]);
@@ -215,9 +218,9 @@
     },
     encode: (p) => ({ n: p.n, g: Array.from(p.g).join('') }),
     decode(d) {
-      const n = d && d.n;
+      const n = d?.n;
       if (!Number.isInteger(n) || n < 1 || n > 9) throw new Error('Invalid size');
-      if (typeof d.g !== 'string' || d.g.length !== (n + 1) * (n + 2) || !/^[0-9]+$/.test(d.g)) throw new Error('Invalid grid');
+      if (typeof d.g !== 'string' || d.g.length !== (n + 1) * (n + 2) || !/^\d+$/.test(d.g)) throw new Error('Invalid grid');
       const p = prepare({ n, g: Int8Array.from(d.g, Number) });
       const res = solve(p, 2, 50000);
       if (res.solutions.length !== 1) throw new Error('Puzzle has no unique solution');

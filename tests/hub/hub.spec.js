@@ -2,9 +2,10 @@
 // random button and the shaking logo.
 
 const { test, expect } = require('@playwright/test');
-const path = require('path');
+const path = require('node:path');
 const { root } = require('../lib/games');
 const { collect } = require('../lib/coverage');
+const { inOrder } = require('../lib/steps');
 
 const url = 'file://' + path.join(root, 'index.html');
 
@@ -16,10 +17,10 @@ async function steps(page) {
 
   // Views: Details is the default, then Icons and List.
   await expect(page.locator('[data-view="details"]')).toHaveAttribute('aria-pressed', 'true');
-  for (const v of ['icons', 'list', 'details']) {
+  await inOrder(['icons', 'list', 'details'], async (v) => {
     await page.click(`[data-view="${v}"]`);
     await expect(page.locator(`[data-view="${v}"]`)).toHaveAttribute('aria-pressed', 'true');
-  }
+  });
 
   // Search narrows the list and says how many match.
   await page.fill('#game-search', 'masyu');
@@ -40,7 +41,7 @@ async function steps(page) {
   expect(await cards.count()).toBe(all);
 
   // Sort orders.
-  for (const v of ['name-desc', 'playable', 'original', 'name']) await page.selectOption('#game-sort', v);
+  await inOrder(['name-desc', 'playable', 'original', 'name'], (v) => page.selectOption('#game-sort', v));
 
   // The logo shakes now and then.
   await page.waitForFunction(() => document.querySelector('.hero-logo').classList.contains('is-shaking'), null, { timeout: 8000 });

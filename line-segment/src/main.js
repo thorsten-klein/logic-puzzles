@@ -78,7 +78,7 @@
       const p = { n, clue };
       const unique = () => { const r = solve(p, 2); return r.solutions.length === 1 && !r.capped; };
       if (!unique()) continue;
-      for (const k of PuzzleShell.shuffle([...Array(N).keys()])) {
+      for (const k of PuzzleShell.shuffle([...new Array(N).keys()])) {
         const keep = clue[k];
         clue[k] = 0;
         if (!unique()) clue[k] = keep;
@@ -132,7 +132,7 @@
     generate,
     encode: (p) => ({ n: p.n, g: Array.from(p.clue).join('') }),
     decode(d) {
-      const n = d && d.n;
+      const n = d?.n;
       if (!Number.isInteger(n) || n < 3 || n > 12) throw new Error('Invalid board size');
       if (typeof d.g !== 'string' || d.g.length !== n * n || !/^[0-3]+$/.test(d.g)) throw new Error('Invalid letters');
       const p = { n, clue: Int8Array.from(d.g, Number) };

@@ -10,7 +10,7 @@
   // p = { R, C, isl: [{ k, n }] }. Pairs are islands that see each
   // other along a row or column: { a, b, cells } (cells between them).
   function prepare(p) {
-    const { R, C, isl } = p;
+    const { C, isl } = p;
     const at = new Map(isl.map((x, i) => [x.k, i]));
     const line = (a, b) => {
       const ra = Math.floor(a / C), ca = a % C, rb = Math.floor(b / C), cb = b % C;
@@ -62,12 +62,12 @@
       const n = p.isl[i].n, js = p.of[i];
       const least = n < 0 ? 1 : n, most = n < 0 ? 99 : n;
       const sumLo = js.reduce((a, j) => a + lo[j], 0), sumHi = js.reduce((a, j) => a + hi[j], 0);
-      if (sumLo > most || sumHi < least) return false;
+      if (sumLo > most || sumHi < least) return -1;
       const changed = [];
       for (const j of js) {
         const minJ = Math.max(lo[j], least - (sumHi - hi[j]));
         const maxJ = Math.min(hi[j], most - (sumLo - lo[j]));
-        if (minJ > maxJ) return false;
+        if (minJ > maxJ) return -1;
         if (minJ !== lo[j] || maxJ !== hi[j]) { lo[j] = minJ; hi[j] = maxJ; changed.push(j); }
       }
       if (changed.length) return changed.length;
@@ -75,7 +75,7 @@
     for (let j = 0; j < p.pairs.length; j++) {
       if (!lo[j]) continue;
       for (const o of p.cross[j]) {
-        if (lo[o]) return false;
+        if (lo[o]) return -1;
         if (hi[o]) {
           hi[o] = 0;
           return 1;
@@ -89,19 +89,19 @@
         const na = p.isl[a].n, nb = p.isl[b].n;
         if (na === 1 && nb === 1 && hi[j] >= 1) {
           hi[j] = 0;
-          if (lo[j] > hi[j]) return false;
+          if (lo[j] > hi[j]) return -1;
           return 1;
         }
       }
     }
-    if (!connected(p, hi)) return false;
+    if (!connected(p, hi)) return -1;
     return 0;
   }
 
   function settle(p, lo, hi) {
     for (;;) {
       const r = step(p, lo, hi);
-      if (r === false) return false;
+      if (r < 0) return false;
       if (r === 0) return true;
     }
   }
@@ -260,7 +260,7 @@
     generate,
     encode: (p) => ({ r: p.R, c: p.C, i: p.isl.map((x) => `${x.k}.${x.n}`).join(',') }),
     decode(d) {
-      const R = d && d.r, C = d && d.c;
+      const R = d?.r, C = d?.c;
       if (![R, C].every((x) => Number.isInteger(x) && x >= 3 && x <= 25)) throw new Error('Invalid board size');
       const isl = String(d.i).split(',').map((s) => { const [k, n] = s.split('.').map(Number); return { k, n }; });
       if (isl.some((x) => !(x.k >= 0 && x.k < R * C && (x.n === -1 || (x.n >= 1 && x.n <= 4))))) throw new Error('Invalid circles');

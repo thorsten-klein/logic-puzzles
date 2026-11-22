@@ -21,7 +21,7 @@
       let x = start, from = -1, prev = -1;
       for (let guard = 0; guard <= R * C; guard++) {
         if (room[x] !== prev) { visits[room[x]]++; prev = room[x]; }
-        if (entry[x] && entry[x] !== visits[room[x]]) return false;
+        if (entry[x] && entry[x] !== visits[room[x]]) return -1;
         const d = [0, 1, 2, 3].find((q) => q !== from && g.cellEdges[x][q] >= 0 && s[g.cellEdges[x][q]] === LINE);
         if (d === undefined) break;
         x += step[d];
@@ -30,8 +30,8 @@
       const finished = x === goal;
       for (let i = 0; i < count.length; i++) {
         if (count[i] < 0) continue;
-        if (visits[i] > count[i]) return false;
-        if (finished && visits[i] !== count[i]) return false;
+        if (visits[i] > count[i]) return -1;
+        if (finished && visits[i] !== count[i]) return -1;
       }
       return 0;
     }
@@ -63,7 +63,7 @@
         order.push(x);
       }
       if (order.length !== N) continue;
-      const seeds = PuzzleShell.shuffle([...Array(N).keys()]).slice(0, Math.round(N / 5));
+      const seeds = PuzzleShell.shuffle([...new Array(N).keys()]).slice(0, Math.round(N / 5));
       const room = PuzzleShell.growRegions(n, n, seeds.map((k) => [k]));
       const rooms = Math.max(...room) + 1;
       const count = new Int8Array(rooms);
@@ -82,7 +82,7 @@
         if (!Links.unique(model(p), 8000)) count[i] = keep;
         if (Date.now() > deadline + 3000) break;
       }
-      for (const k of PuzzleShell.shuffle([...Array(N).keys()])) {
+      for (const k of PuzzleShell.shuffle([...new Array(N).keys()])) {
         if (!entry[k]) continue;
         const keep = entry[k];
         entry[k] = 0;
@@ -107,12 +107,12 @@
     encode: (p) => ({ n: p.R, s: p.start, t: p.goal, g: Array.from(p.room, (v) => v.toString(36).padStart(2, '0')).join(''),
       c: Array.from(p.count).join(','), e: Array.from(p.entry, (v) => v.toString(36)).join('') }),
     decode(d) {
-      const n = d && d.n;
+      const n = d?.n;
       if (!Number.isInteger(n) || n < 2 || n > 12) throw new Error('Invalid board size');
       if (typeof d.g !== 'string' || d.g.length !== 2 * n * n || typeof d.e !== 'string' || d.e.length !== n * n) throw new Error('Invalid puzzle');
-      const room = Int32Array.from({ length: n * n }, (_, k) => parseInt(d.g.slice(2 * k, 2 * k + 2), 36));
+      const room = Int32Array.from({ length: n * n }, (_, k) => Number.parseInt(d.g.slice(2 * k, 2 * k + 2), 36));
       const count = Int8Array.from(String(d.c).split(','), Number);
-      return { R: n, C: n, room, count, entry: Int8Array.from(d.e, (ch) => parseInt(ch, 36)), start: d.s, goal: d.t };
+      return { R: n, C: n, room, count, entry: Int8Array.from(d.e, (ch) => Number.parseInt(ch, 36)), start: d.s, goal: d.t };
     },
     model,
     drawCell: (p) => (svg, k, x, y, s) => {

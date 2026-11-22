@@ -23,7 +23,7 @@
       const ma = Math.min(...q.map((x) => x[0])), mb = Math.min(...q.map((x) => x[1]));
       keys.push(q.map(([a, b]) => `${a - ma},${b - mb}`).sort().join(' '));
     }
-    return keys.sort()[0];
+    return keys.reduce((min, k) => (k < min ? k : min), keys[0]);  // smallest key
   }
 
   function model(p) {
@@ -37,6 +37,8 @@
       if (c < C - 1) out.push(k + 1);
       return out;
     };
+    // True when no cell next to k is still open.
+    const settled = (k, s) => nb(k).every((j) => s[j] !== UNKNOWN);
     const diag = (k) => {
       const r = Math.floor(k / C), c = k % C, out = [];
       for (const [a, b] of [[r - 1, c - 1], [r - 1, c + 1], [r + 1, c - 1], [r + 1, c + 1]]) if (a >= 0 && b >= 0 && a < R && b < C) out.push(a * C + b);
@@ -50,7 +52,7 @@
         if (id[k] >= 0 || s[k] !== YES) continue;
         const cells = [k];
         id[k] = list.length;
-        for (let i = 0; i < cells.length; i++) for (const j of nb(cells[i])) if (id[j] < 0 && s[j] === YES) { id[j] = list.length; cells.push(j); }
+        for (const cur of cells) for (const j of nb(cur)) if (id[j] < 0 && s[j] === YES) { id[j] = list.length; cells.push(j); }
         list.push(cells);
       }
       return { id, list };
@@ -80,7 +82,7 @@
       const { id, list } = blocks(s);
       const info = list.map((cells) => {
         const cl = cells.filter((x) => clues[x] >= 0);
-        const closed = done || cells.every((k) => nb(k).every((j) => s[j] !== UNKNOWN));
+        const closed = done || cells.every((k) => settled(k, s));
         return { cells, cl, closed };
       });
       for (const b of info) {
@@ -98,8 +100,8 @@
         if (seen[a]) continue;
         const chain = [a];
         seen[a] = 1;
-        for (let i = 0; i < chain.length; i++) {
-          for (const k of list[chain[i]]) for (const j of diag(k)) {
+        for (const cur of chain) {
+          for (const k of list[cur]) for (const j of diag(k)) {
             if (s[j] === YES && !seen[id[j]]) { seen[id[j]] = 1; chain.push(id[j]); }
           }
         }
@@ -149,8 +151,10 @@
       blocks.push(cells);
       return true;
     };
-    for (let ch = 0, fails = 0; fails < 30; ch++) {
-      const starts = [...Array(N).keys()].filter((k) => id[k] < 0 && around(k, true).every((j) => id[j] < 0));
+    let fails = 0;
+    for (let ch = 0; ; ch++) {
+      if (fails >= 30) break;
+      const starts = [...new Array(N).keys()].filter((k) => id[k] < 0 && around(k, true).every((j) => id[j] < 0));
       if (!starts.length) break;
       const used = new Set();
       const first = blocks.length;
@@ -191,7 +195,7 @@
       };
       if (!unique()) continue;
       // Turn numbers into "?" while it stays unique.
-      for (const k of PuzzleShell.shuffle([...Array(N).keys()])) {
+      for (const k of PuzzleShell.shuffle([...new Array(N).keys()])) {
         if (clues[k] <= 0) continue;
         const keep = clues[k];
         clues[k] = 0;
@@ -214,12 +218,20 @@
     size: { min: 5, max: 6, def: 6 },
     solvedText: 'Every chain unbroken — nicely done.',
     generate,
-    encode: (p) => ({ r: p.R, c: p.C, g: Array.from(p.clues, (v) => (v < 0 ? '.' : v === 0 ? '?' : v.toString(36))).join('') }),
+    encode: (p) => ({ r: p.R, c: p.C, g: Array.from(p.clues, (v) => {
+      if (v < 0) return '.';
+      if (v === 0) return '?';
+      return v.toString(36);
+    }).join('') }),
     decode(d) {
-      const R = d && d.r, C = d && d.c;
+      const R = d?.r, C = d?.c;
       if (![R, C].every((x) => Number.isInteger(x) && x >= 3 && x <= 20)) throw new Error('Invalid board size');
       if (typeof d.g !== 'string' || d.g.length !== R * C) throw new Error('Invalid clues');
-      return { R, C, clues: Int8Array.from(d.g, (ch) => (ch === '.' ? -1 : ch === '?' ? 0 : parseInt(ch, 36))) };
+      return { R, C, clues: Int8Array.from(d.g, (ch) => {
+        if (ch === '.') return -1;
+        if (ch === '?') return 0;
+        return Number.parseInt(ch, 36);
+      }) };
     },
     model,
     fixed: (p, k) => (p.clues[k] >= 0 ? YES : 0),

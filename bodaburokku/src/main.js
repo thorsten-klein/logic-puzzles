@@ -58,7 +58,7 @@
         if (id[k] >= 0) continue;
         const cells = [k];
         id[k] = g;
-        for (let i = 0; i < cells.length; i++) for (const [e, o] of at[cells[i]]) if (id[o] < 0 && s[e] === NO) { id[o] = g; cells.push(o); }
+        for (const cur of cells) for (const [e, o] of at[cur]) if (id[o] < 0 && s[e] === NO) { id[o] = g; cells.push(o); }
         const nums = new Set(cells.map((x) => num[x]).filter(Boolean));
         if (nums.size > 1) return false;
         seen.push({ cells, nums });
@@ -84,14 +84,14 @@
     const deadline = Date.now() + 8000;
     while (Date.now() < deadline) {
       const N = n * n;
-      const seeds = PuzzleShell.shuffle([...Array(N).keys()]).slice(0, Math.round(N / 5));
+      const seeds = PuzzleShell.shuffle([...new Array(N).keys()]).slice(0, Math.round(N / 5));
       const room = PuzzleShell.growRegions(n, n, seeds.map((k) => [k]));
       const p = prepare({ n, num: new Uint8Array(N), dot: new Uint8Array((n + 1) * (n + 1)) });
       const sol = Uint8Array.from(p.edges, ([a, b]) => (room[a] !== room[b] ? YES : NO));
       for (const { k, es, frame } of p.points) if (frame + es.filter((e) => sol[e] === YES).length >= 3) p.dot[k] = 1;
       // Two numbers per region to start.
       const rooms = [];
-      room.forEach((g, k) => { (rooms[g] = rooms[g] || []).push(k); });
+      room.forEach((g, k) => { rooms[g] ??= []; rooms[g].push(k); });
       const labels = PuzzleShell.shuffle(rooms.map((_, i) => i + 1));
       rooms.forEach((cells, g) => { for (const k of PuzzleShell.shuffle(cells.slice()).slice(0, 2)) p.num[k] = labels[g]; });
       const unique = () => {
@@ -103,7 +103,7 @@
         return r.solutions.length === 1 && !r.capped;
       };
       if (!unique()) continue;
-      for (const k of PuzzleShell.shuffle([...Array(N).keys()])) {
+      for (const k of PuzzleShell.shuffle([...new Array(N).keys()])) {
         if (!p.num[k]) continue;
         if (rooms[room[k]].filter((x) => p.num[x]).length < 2) continue;
         const keep = p.num[k];
@@ -179,7 +179,7 @@
     const log = [];
     Binary.settle(model(p), s, log);
     const step = log.find((x) => x.cells.some((i) => state[i] === UNKNOWN));
-    if (step) return [{ cells: step.cells, v: step.v, reason: step.con && step.con.why ? step.con.why(step.v) : 'This follows from the rules.' }];
+    if (step) return [{ cells: step.cells, v: step.v, reason: step.con?.why ? step.con.why(step.v) : 'This follows from the rules.' }];
     const i = p.solution.findIndex((v, j) => state[j] === UNKNOWN && v === YES);
     return i < 0 ? [] : [{ cells: [i], v: YES, reason: 'No one-step deduction is left; this needs a longer chain. A wall goes here.' }];
   }
@@ -196,7 +196,7 @@
     generate,
     encode: (p) => ({ n: p.n, m: Array.from(p.num).join(','), d: Array.from(p.dot).join('') }),
     decode(d) {
-      const n = d && d.n;
+      const n = d?.n;
       if (!Number.isInteger(n) || n < 3 || n > 12) throw new Error('Invalid board size');
       const num = Uint8Array.from(String(d.m).split(','), Number);
       if (num.length !== n * n || typeof d.d !== 'string' || d.d.length !== (n + 1) * (n + 1)) throw new Error('Invalid puzzle');

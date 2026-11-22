@@ -44,8 +44,7 @@
       const [up, down, left, right] = dirs;
       if (!dot[k]) {
         // Lines go straight here: up = down and left = right.
-        cons.push({ cells: [up, down], w: [1, -1], min: 0, max: 0, why: () => 'Lines turn only at dots, so this line goes straight on.' });
-        cons.push({ cells: [left, right], w: [1, -1], min: 0, max: 0, why: () => 'Lines turn only at dots, so this line goes straight on.' });
+        cons.push({ cells: [up, down], w: [1, -1], min: 0, max: 0, why: () => 'Lines turn only at dots, so this line goes straight on.' }, { cells: [left, right], w: [1, -1], min: 0, max: 0, why: () => 'Lines turn only at dots, so this line goes straight on.' });
       } else cons.push({ cells: es, min: 0, max: 2, why: () => 'Lines never cross at a dot.' });
     }
     const at = Array.from({ length: n * n }, () => []);
@@ -62,7 +61,7 @@
         if (id[k] >= 0) continue;
         const cells = [k];
         id[k] = g;
-        for (let i = 0; i < cells.length; i++) for (const [e, o] of at[cells[i]]) if (id[o] < 0 && s[e] === NO) { id[o] = g; cells.push(o); }
+        for (const cur of cells) for (const [e, o] of at[cur]) if (id[o] < 0 && s[e] === NO) { id[o] = g; cells.push(o); }
         const kinds = new Set(cells.map((x) => num[x]).filter(Boolean));
         if (kinds.size > 1) return false;
         const closed = done || cells.every((x) => at[x].every(([e, o]) => id[o] === g || s[e] === YES));
@@ -107,7 +106,7 @@
           if (p.dot[k]) {
             if (usedDot.has(k) || dotsHere.includes(k)) { ok = false; break; }
             dotsHere.push(k);
-            if (Math.random() < 0.6) d = d < 2 ? (Math.random() < 0.5 ? 2 : 3) : (Math.random() < 0.5 ? 0 : 1);
+            if (Math.random() < 0.6) d = (d < 2 ? 2 : 0) + (Math.random() < 0.5 ? 0 : 1);
           }
         }
         if (!ok || !segs.length) continue;
@@ -124,7 +123,7 @@
         if (reg[k] >= 0) continue;
         const cells = [k];
         reg[k] = regs.length;
-        for (let q = 0; q < cells.length; q++) for (const [e, o] of at[cells[q]]) if (reg[o] < 0 && !wall[e]) { reg[o] = regs.length; cells.push(o); }
+        for (const cur of cells) for (const [e, o] of at[cur]) if (reg[o] < 0 && !wall[e]) { reg[o] = regs.length; cells.push(o); }
         regs.push(cells);
       }
       if (regs.length < 3) continue;
@@ -141,7 +140,7 @@
         const r = Binary.solve(m, 2, 4000, t);
         if (r.capped) break;
         if (r.solutions.length === 1) { unique = true; break; }
-        const free = [...Array(N).keys()].filter((k) => !p.num[k]);
+        const free = [...new Array(N).keys()].filter((k) => !p.num[k]);
         if (!free.length) break;
         const k = free[Math.floor(Math.random() * free.length)];
         p.num[k] = kind[reg[k]];
@@ -218,7 +217,7 @@
     const log = [];
     Binary.settle(model(p), s, log);
     const step = log.find((x) => x.cells.some((i) => state[i] === UNKNOWN));
-    if (step) return [{ cells: step.cells, v: step.v, reason: step.con && step.con.why ? step.con.why(step.v) : 'This follows from the rules.' }];
+    if (step) return [{ cells: step.cells, v: step.v, reason: step.con?.why ? step.con.why(step.v) : 'This follows from the rules.' }];
     const i = p.solution.findIndex((v, j) => state[j] === UNKNOWN && v === YES);
     return i < 0 ? [] : [{ cells: [i], v: YES, reason: 'No one-step deduction is left; this needs a longer chain. A line goes here.' }];
   }
@@ -235,7 +234,7 @@
     generate,
     encode: (p) => ({ n: p.n, m: Array.from(p.num).join(','), d: Array.from(p.dot).join('') }),
     decode(d) {
-      const n = d && d.n;
+      const n = d?.n;
       if (!Number.isInteger(n) || n < 3 || n > 12) throw new Error('Invalid board size');
       const num = Uint8Array.from(String(d.m).split(','), Number);
       if (num.length !== n * n || typeof d.d !== 'string' || d.d.length !== (n + 1) * (n + 1)) throw new Error('Invalid puzzle');

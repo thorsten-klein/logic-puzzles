@@ -45,14 +45,18 @@
       const sol = new Int32Array(N);
       const hi = Math.floor(200 / n);
       for (let r = 0; r < n - 1; r++) for (let c = 0; c < n - 1; c++) sol[r * n + c] = 1 + Math.floor(Math.random() * hi);
-      for (let r = 0; r < n - 1; r++) sol[r * n + n - 1] = 100 - [...Array(n - 1).keys()].reduce((a, c) => a + sol[r * n + c], 0);
-      for (let c = 0; c < n; c++) sol[(n - 1) * n + c] = 100 - [...Array(n - 1).keys()].reduce((a, r) => a + sol[r * n + c], 0);
+      for (let r = 0; r < n - 1; r++) sol[r * n + n - 1] = 100 - [...new Array(n - 1).keys()].reduce((a, c) => a + sol[r * n + c], 0);
+      for (let c = 0; c < n; c++) sol[(n - 1) * n + c] = 100 - [...new Array(n - 1).keys()].reduce((a, r) => a + sol[r * n + c], 0);
       if (sol.some((x) => x < 0 || x > 99)) continue;
-      const base = Int8Array.from(sol, (x) => (x < 10 ? x : Math.random() < 0.5 ? Math.floor(x / 10) : x % 10));
+      const base = Int8Array.from(sol, (x) => {
+        if (x < 10) return x;
+        if (Math.random() < 0.5) return Math.floor(x / 10);
+        return x % 10;
+      });
       // Show full numbers in some cells until the answer is unique.
       const p = { n, base, full: new Int32Array(N) };
       const unique = () => { const r = solve(p, 2, 200000); return r.solutions.length === 1 && !r.capped; };
-      for (const k of PuzzleShell.shuffle([...Array(N).keys()])) {
+      for (const k of PuzzleShell.shuffle([...new Array(N).keys()])) {
         if (unique()) break;
         if (sol[k] >= 10) p.full[k] = sol[k];
       }
@@ -98,7 +102,8 @@
         el.append(b);
         if (result) {
           el.append(String(solution[k]));
-          el.classList.add(s[k] === solution[k] || (!s[k] && solution[k] === base[k]) ? 'ok' : s[k] ? 'bad' : 'show');
+          // Left empty is right when the answer is the printed digit.
+          el.classList.add(PuzzleShell.resultClass(s[k] || base[k], solution[k], Boolean(s[k])));
         } else {
           const input = PuzzleShell.digitInput({ r: Math.floor(k / n), c: k % n, value: s[k], max: 99,
             onSet: (v) => { s[k] = v; onChange(false); } });
@@ -112,8 +117,8 @@
       const sums = document.createElement('div');
       sums.className = 'hd-sum';
       const val = (k) => p.full[k] || s[k] || base[k];
-      const rows = [...Array(n).keys()].map((r) => [...Array(n).keys()].reduce((a, c) => a + val(r * n + c), 0));
-      const cols = [...Array(n).keys()].map((c) => [...Array(n).keys()].reduce((a, r) => a + val(r * n + c), 0));
+      const rows = [...new Array(n).keys()].map((r) => [...new Array(n).keys()].reduce((a, c) => a + val(r * n + c), 0));
+      const cols = [...new Array(n).keys()].map((c) => [...new Array(n).keys()].reduce((a, r) => a + val(r * n + c), 0));
       sums.textContent = `Rows: ${rows.join(', ')} · Columns: ${cols.join(', ')}`;
       wrap.append(sums);
     }
@@ -131,9 +136,9 @@
     generate,
     encode: (p) => ({ n: p.n, b: Array.from(p.base).join(''), f: Array.from(p.full).join(',') }),
     decode(d) {
-      const n = d && d.n;
+      const n = d?.n;
       if (!Number.isInteger(n) || n < 2 || n > 6) throw new Error('Invalid board size');
-      if (typeof d.b !== 'string' || d.b.length !== n * n || !/^[0-9]+$/.test(d.b)) throw new Error('Invalid digits');
+      if (typeof d.b !== 'string' || d.b.length !== n * n || !/^\d+$/.test(d.b)) throw new Error('Invalid digits');
       const full = d.f ? Int32Array.from(String(d.f).split(','), Number) : new Int32Array(n * n);
       if (full.length !== n * n) throw new Error('Invalid numbers');
       const p = { n, base: Int8Array.from(d.b, Number), full };

@@ -15,7 +15,7 @@ const Generator = (() => {
     (function build(start, pick) {
       if (pick.length === k) { combos.push(pick.slice()); return; }
       for (let c = start; c < n; c++) {
-        if (pick.length && c - pick[pick.length - 1] < 2) continue;
+        if (pick.length && c - pick.at(-1) < 2) continue;
         pick.push(c); build(c + 1, pick); pick.pop();
       }
     })(0, []);
@@ -38,7 +38,7 @@ const Generator = (() => {
   function makeRegions(n, k, star) {
     const N = n * n;
     const region = new Int8Array(N).fill(-1);
-    const list = shuffle([...Array(N).keys()].filter((j) => star[j]));
+    const list = shuffle([...new Array(N).keys()].filter((j) => star[j]));
     const dist = (a, b) => Math.abs(Math.floor(a / n) - Math.floor(b / n)) + Math.abs((a % n) - (b % n));
     let id = 0;
     while (list.length) {

@@ -19,11 +19,13 @@
     for (let k = 0; k < R * C; k++) {
       const v = clues[k];
       if (v < 0) continue;
-      cons.push({ cells: [k], min: 0, max: 0 });
-      cons.push({ cells: around(k, R, C), min: v, max: v, area: [k],
-        why: (x) => (x === YES ? `This ${v} needs a mine in every open cell around it.`
-          : v === 0 ? 'A 0 has no mines around it. All cells around it are safe.'
-            : `This ${v} already has ${v === 1 ? 'its mine' : `its ${v} mines`}. The other cells around it are safe.`) });
+      const mines = v === 1 ? 'its mine' : `its ${v} mines`;
+      const why = (x) => {
+        if (x === YES) return `This ${v} needs a mine in every open cell around it.`;
+        if (v === 0) return 'A 0 has no mines around it. All cells around it are safe.';
+        return `This ${v} already has ${mines}. The other cells around it are safe.`;
+      };
+      cons.push({ cells: [k], min: 0, max: 0 }, { cells: around(k, R, C), min: v, max: v, area: [k], why });
     }
     return { N: R * C, cons };
   }
@@ -50,7 +52,7 @@
     generate(n) { for (let i = 0; i < 50; i++) { const p = generate(n); if (p) return p; } return null; },
     encode: (p) => ({ r: p.R, c: p.C, g: Array.from(p.clues, (v) => (v < 0 ? '.' : v)).join('') }),
     decode(d) {
-      const R = d && d.r, C = d && d.c;
+      const R = d?.r, C = d?.c;
       if (![R, C].every((x) => Number.isInteger(x) && x >= 2 && x <= 30)) throw new Error('Invalid board size');
       if (typeof d.g !== 'string' || d.g.length !== R * C || !/^[.0-8]+$/.test(d.g)) throw new Error('Invalid clues');
       return { R, C, clues: Int8Array.from(d.g, (ch) => (ch === '.' ? -1 : Number(ch))) };

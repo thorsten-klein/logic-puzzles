@@ -24,11 +24,12 @@
     for (let k = 0; k < R * C; k++) {
       const v = black[k];
       if (v < 0) continue;
-      cons.push({ cells: [k], min: 0, max: 0 });
-      cons.push({ cells: seen(p, k), min: v, max: v, at: k,
-        why: (x) => (x === YES ? `This ${v} needs a star in every open cell it sees.`
-          : v === 0 ? 'This 0 sees no stars. Every cell it sees is empty.'
-            : `This ${v} already sees ${v} star${v === 1 ? '' : 's'}. The other cells it sees are empty.`) });
+      cons.push({ cells: [k], min: 0, max: 0 }, { cells: seen(p, k), min: v, max: v, at: k,
+        why: (x) => {
+          if (x === YES) return `This ${v} needs a star in every open cell it sees.`;
+          if (v === 0) return 'This 0 sees no stars. Every cell it sees is empty.';
+          return `This ${v} already sees ${PuzzleShell.plural(v, 'star')}. The other cells it sees are empty.`;
+        } });
     }
     return { N: R * C, cons };
   }
@@ -37,7 +38,7 @@
     const R = n, C = n, N = R * C;
     const black = new Int8Array(N).fill(-1);
     const count = Math.round(N * (0.24 + Math.random() * 0.06));
-    for (const k of PuzzleShell.shuffle([...Array(N).keys()]).slice(0, count)) black[k] = 0;
+    for (const k of PuzzleShell.shuffle([...new Array(N).keys()]).slice(0, count)) black[k] = 0;
     const p = { R, C, black };
     // Every white cell must be seen by some black cell.
     const lit = new Uint8Array(N);
@@ -66,10 +67,10 @@
     },
     encode: (p) => ({ r: p.R, c: p.C, g: Array.from(p.black, (v) => (v < 0 ? '.' : v.toString(36))).join('') }),
     decode(d) {
-      const R = d && d.r, C = d && d.c;
+      const R = d?.r, C = d?.c;
       if (![R, C].every((x) => Number.isInteger(x) && x >= 3 && x <= 20)) throw new Error('Invalid board size');
       if (typeof d.g !== 'string' || d.g.length !== R * C) throw new Error('Invalid grid');
-      return { R, C, black: Int8Array.from(d.g, (ch) => (ch === '.' ? -1 : parseInt(ch, 36))) };
+      return { R, C, black: Int8Array.from(d.g, (ch) => (ch === '.' ? -1 : Number.parseInt(ch, 36))) };
     },
     model,
     fixed: (p, k) => (p.black[k] >= 0 ? NO : 0),

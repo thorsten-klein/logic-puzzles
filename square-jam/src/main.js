@@ -44,7 +44,7 @@
         if (id[k] >= 0) continue;
         const r = Math.floor(k / C), c = k % C;
         let side = 1 + Math.floor(Math.random() * MAXS);
-        const fits = (s) => r + s <= R && c + s <= C && [...Array(s * s).keys()].every((i) => id[(r + Math.floor(i / s)) * C + c + (i % s)] < 0);
+        const fits = (s) => r + s <= R && c + s <= C && [...new Array(s * s).keys()].every((i) => id[(r + Math.floor(i / s)) * C + c + (i % s)] < 0);
         while (side > 1 && !fits(side)) side--;
         const cells = [];
         for (let i = 0; i < side; i++) for (let j = 0; j < side; j++) { id[(r + i) * C + c + j] = regions.length; cells.push((r + i) * C + c + j); }

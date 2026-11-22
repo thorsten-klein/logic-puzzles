@@ -54,16 +54,19 @@ const Rects = (() => {
 
   // One logic step: a clue with one rectangle left, or a cell that only
   // one clue can cover. Returns a move, null, or false (broken).
+  // step() result for a contradiction (no option left).
+  const FAIL = { fail: true };
+
   function step(p, st) {
     for (let i = 0; i < st.opts.length; i++) {
-      if (!st.opts[i].length) return false;
+      if (!st.opts[i].length) return FAIL;
       if (!st.chosen[i] && st.opts[i].length === 1) return { i, rect: st.opts[i][0], why: 'one' };
     }
     const N = p.R * p.C;
     const who = Array.from({ length: N }, () => new Set());
     st.opts.forEach((list, i) => list.forEach((rect) => { for (const j of cellsOf(rect, p.C)) who[j].add(i); }));
     for (let j = 0; j < N; j++) {
-      if (!who[j].size) return false;
+      if (!who[j].size) return FAIL;
       if (who[j].size !== 1) continue;
       const i = [...who[j]][0];
       if (st.chosen[i]) continue;
@@ -80,7 +83,7 @@ const Rects = (() => {
   function settle(p, st) {
     for (;;) {
       const m = step(p, st);
-      if (m === false) return false;
+      if (m === FAIL) return false;
       if (!m) return true;
       if (m.rect) choose(st, m.i, m.rect);
     }
@@ -132,7 +135,7 @@ const Rects = (() => {
       while (c + maxW < C && id[r * C + c + maxW] < 0 && maxW < maxSide) maxW++;
       let w = 1 + Math.floor(Math.random() * maxW);
       let maxH = 0;
-      while (r + maxH < R && maxH < maxSide && [...Array(w).keys()].every((i) => id[(r + maxH) * C + c + i] < 0)) maxH++;
+      while (r + maxH < R && maxH < maxSide && [...new Array(w).keys()].every((i) => id[(r + maxH) * C + c + i] < 0)) maxH++;
       let h = 1 + Math.floor(Math.random() * maxH);
       if (shape) [h, w] = shape(h, w, maxH, maxW);
       const rect = [r, c, r + h - 1, c + w - 1];
@@ -205,7 +208,7 @@ const Rects = (() => {
     let start = null, preview = [];
     const cellAt = (ev) => {
       const el = document.elementFromPoint(ev.clientX, ev.clientY);
-      return el && el.closest('.rc-board') === board && el.dataset.k !== undefined ? Number(el.dataset.k) : null;
+      return el?.closest('.rc-board') === board && el.dataset.k !== undefined ? Number(el.dataset.k) : null;
     };
     const rectOf = (a, b) => [Math.min(Math.floor(a / C), Math.floor(b / C)), Math.min(a % C, b % C),
       Math.max(Math.floor(a / C), Math.floor(b / C)), Math.max(a % C, b % C)];
@@ -257,7 +260,7 @@ const Rects = (() => {
       const rects = cfg.split(R, C);
       if (!rects) continue;
       const p = { R, C, clues: new Int8Array(R * C), maxArea: cfg.maxArea };
-      if (cfg.prepare && cfg.prepare(p, rects) === false) continue;
+      if (cfg.prepare?.(p, rects) === false) continue;
       if (cfg.final && !cfg.final(p, rects)) continue;
       let ok = true;
       for (const rect of rects) {
@@ -307,10 +310,10 @@ const Rects = (() => {
       generate: (n) => generate(cfg, n),
       encode: (p) => ({ r: p.R, c: p.C, g: Array.from(p.clues, (v) => v.toString(36)).join(''), x: cfg.encodeExtra ? cfg.encodeExtra(p) : undefined }),
       decode(d) {
-        const R = d && d.r, C = d && d.c;
+        const R = d?.r, C = d?.c;
         if (![R, C].every((x) => Number.isInteger(x) && x >= 2 && x <= 25)) throw new Error('Invalid board size');
         if (typeof d.g !== 'string' || d.g.length !== R * C) throw new Error('Invalid clues');
-        const p = { R, C, clues: Int8Array.from(d.g, (ch) => parseInt(ch, 36)), maxArea: cfg.maxArea };
+        const p = { R, C, clues: Int8Array.from(d.g, (ch) => Number.parseInt(ch, 36)), maxArea: cfg.maxArea };
         if (cfg.decodeExtra) cfg.decodeExtra(p, d.x);
         const res = count(cfg, p, 2, 50000);
         if (res.count !== 1) throw new Error('Puzzle has no unique solution');

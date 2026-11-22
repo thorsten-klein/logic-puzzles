@@ -11,8 +11,7 @@
   function lines(n) {
     const out = [];
     for (let i = 0; i < n; i++) {
-      out.push([...Array(n).keys()].map((j) => i * n + j));
-      out.push([...Array(n).keys()].map((j) => j * n + i));
+      out.push([...new Array(n).keys()].map((j) => i * n + j), [...new Array(n).keys()].map((j) => j * n + i));
     }
     return out;
   }
@@ -73,8 +72,8 @@
 
   // Random Latin square by shuffling rows, columns and symbols of a cyclic one.
   function latin(n) {
-    const rows = PuzzleShell.shuffle([...Array(n).keys()]), cols = PuzzleShell.shuffle([...Array(n).keys()]);
-    const sym = PuzzleShell.shuffle([...Array(n).keys()].map((i) => i + 1));
+    const rows = PuzzleShell.shuffle([...new Array(n).keys()]), cols = PuzzleShell.shuffle([...new Array(n).keys()]);
+    const sym = PuzzleShell.shuffle([...new Array(n).keys()].map((i) => i + 1));
     return Int8Array.from({ length: n * n }, (_, x) => sym[(rows[Math.floor(x / n)] + cols[x % n]) % n]);
   }
 
@@ -108,7 +107,7 @@
       }
       if (!unique()) continue;
       // Drop marks and numbers that are not needed.
-      for (const x of PuzzleShell.shuffle([...Array(N).keys()])) {
+      for (const x of PuzzleShell.shuffle([...new Array(N).keys()])) {
         if (given[x]) { const v = given[x]; given[x] = 0; if (!unique()) given[x] = v; }
         const m = p.mark[x];
         p.mark[x] = 0;
@@ -147,7 +146,8 @@
         if (given[x]) { el.classList.add('given'); el.append(String(given[x])); return; }
         if (result) {
           if (solution[x]) el.append(String(solution[x]));
-          const cls = s[x] === solution[x] ? (solution[x] ? 'ok' : '') : s[x] ? 'bad' : 'show';
+          // No mark on a cell that is rightly empty.
+          const cls = s[x] === solution[x] && !solution[x] ? '' : PuzzleShell.resultClass(s[x], solution[x]);
           if (cls) el.classList.add(cls);
         } else if (readonly) el.append(s[x] ? String(s[x]) : '');
         else if (mark[x] !== 2) {
@@ -170,7 +170,7 @@
     generate,
     encode: (p) => ({ n: p.n, k: p.k, m: Array.from(p.mark).join(''), v: Array.from(p.given).join('') }),
     decode(d) {
-      const n = d && d.n, k = d && d.k;
+      const n = d?.n, k = d?.k;
       if (!Number.isInteger(n) || n < 3 || n > 10 || !Number.isInteger(k) || k < 1 || k > n) throw new Error('Invalid board size');
       if (typeof d.m !== 'string' || d.m.length !== n * n || typeof d.v !== 'string' || d.v.length !== n * n) throw new Error('Invalid puzzle');
       const p = { n, k, lines: lines(n), mark: Uint8Array.from(d.m, Number), given: Int8Array.from(d.v, Number) };

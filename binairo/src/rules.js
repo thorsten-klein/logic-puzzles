@@ -7,13 +7,12 @@
 // `given[k]` is 0 (open), YES or NO.
 
 const Rules = (() => {
-  const { UNKNOWN, YES, NO } = Binary;
+  const { UNKNOWN, YES } = Binary;
 
   function linesOf(n) {
     const out = [];
     for (let i = 0; i < n; i++) {
-      out.push(Array.from({ length: n }, (_, j) => i * n + j));
-      out.push(Array.from({ length: n }, (_, j) => j * n + i));
+      out.push(Array.from({ length: n }, (_, j) => i * n + j), Array.from({ length: n }, (_, j) => j * n + i));
     }
     return out;
   }
@@ -24,8 +23,8 @@ const Rules = (() => {
     for (let i = 0; i < n; i++) {
       let row = '', col = '';
       for (let j = 0; j < n; j++) { row += s[i * n + j]; col += s[j * n + i]; }
-      if (!row.includes(UNKNOWN)) { if (seenR.has(row)) return false; seenR.add(row); }
-      if (!col.includes(UNKNOWN)) { if (seenC.has(col)) return false; seenC.add(col); }
+      if (!row.includes(UNKNOWN)) { if (seenR.has(row)) { return false; } seenR.add(row); }
+      if (!col.includes(UNKNOWN)) { if (seenC.has(col)) { return false; } seenC.add(col); }
     }
     return true;
   }

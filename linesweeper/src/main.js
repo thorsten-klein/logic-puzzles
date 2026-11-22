@@ -43,7 +43,7 @@
           const es = [...new Set(open.flatMap(edgesOf))].filter((e) => s[e] === UNKNOWN);
           if (es.length) {
             return push(es, CROSS, v === 0 ? 'A 0 means the loop avoids every cell around it.'
-              : `This ${v} already sees the loop in ${v} cell${v === 1 ? '' : 's'}. The loop avoids the other cells around it.`, k);
+              : `This ${v} already sees the loop in ${PuzzleShell.plural(v, 'cell')}. The loop avoids the other cells around it.`, k);
           }
         }
         if (yes.length + open.length === v) {
@@ -83,7 +83,7 @@
       const p = { R: n, C: n, clues };
       const solved = () => Loop.solvedBy(Loop.logicSolve(model(p)));
       if (!solved()) continue;
-      for (const k of PuzzleShell.shuffle([...Array(n * n).keys()])) {
+      for (const k of PuzzleShell.shuffle([...new Array(n * n).keys()])) {
         if (clues[k] < 0) continue;
         const keep = clues[k];
         clues[k] = -1;
@@ -105,7 +105,7 @@
     generate,
     encode: (p) => ({ r: p.R, c: p.C, g: Array.from(p.clues, (v) => (v < 0 ? '.' : v)).join('') }),
     decode(d) {
-      const R = d && d.r, C = d && d.c;
+      const R = d?.r, C = d?.c;
       if (![R, C].every((x) => Number.isInteger(x) && x >= 3 && x <= 20)) throw new Error('Invalid board size');
       if (typeof d.g !== 'string' || d.g.length !== R * C || !/^[.0-8]+$/.test(d.g)) throw new Error('Invalid clues');
       return { R, C, clues: Int8Array.from(d.g, (ch) => (ch === '.' ? -1 : Number(ch))) };

@@ -8,10 +8,14 @@ const Generator = (() => {
   function makeCages(n) {
     const cage = new Int32Array(n * n).fill(-1);
     let id = 0;
-    for (const start of shuffle([...Array(n * n).keys()])) {
+    for (const start of shuffle([...new Array(n * n).keys()])) {
       if (cage[start] >= 0) continue;
       const r = Math.random();
-      const size = r < 0.08 ? 1 : r < 0.5 ? 2 : r < 0.85 ? 3 : 4;
+      let size;
+      if (r < 0.08) size = 1;
+      else if (r < 0.5) size = 2;
+      else if (r < 0.85) size = 3;
+      else size = 4;
       const cells = [start];
       cage[start] = id;
       while (cells.length < size) {

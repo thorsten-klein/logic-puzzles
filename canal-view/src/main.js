@@ -31,8 +31,8 @@
     function propagate(s, log) {
       for (const [k, dirs] of rays) {
         const v = clues[k];
-        const black = dirs.map((cells) => { let i = 0; while (i < cells.length && s[cells[i]] === YES) i++; return i; });
-        const open = dirs.map((cells) => { let i = 0; while (i < cells.length && s[cells[i]] !== NO) i++; return i; });
+        const black = dirs.map((cells) => { let i = 0; while (i < cells.length && s[cells[i]] === YES) { i++; } return i; });
+        const open = dirs.map((cells) => { let i = 0; while (i < cells.length && s[cells[i]] !== NO) { i++; } return i; });
         const min = black.reduce((a, b) => a + b, 0), max = open.reduce((a, b) => a + b, 0);
         if (min > v || max < v) return false;
         for (let d = 0; d < 4; d++) {
@@ -67,7 +67,7 @@
       for (let k = 0; k < R * C; k++) {
         if (sol[k] === YES || Math.random() < 0.3) continue;
         let v = 0;
-        for (const d of DIRS) for (const j of ray(R, C, k, d)) { if (sol[j] !== YES) break; v++; }
+        for (const d of DIRS) for (const j of ray(R, C, k, d)) { if (sol[j] !== YES) { break; } v++; }
         p.clues[k] = v;
       }
       const s = Binary.logicSolve(model(p));
@@ -91,10 +91,10 @@
     generate,
     encode: (p) => ({ r: p.R, c: p.C, g: Array.from(p.clues, (v) => (v < 0 ? '.' : v.toString(36))).join('') }),
     decode(d) {
-      const R = d && d.r, C = d && d.c;
+      const R = d?.r, C = d?.c;
       if (![R, C].every((x) => Number.isInteger(x) && x >= 3 && x <= 20)) throw new Error('Invalid board size');
       if (typeof d.g !== 'string' || d.g.length !== R * C) throw new Error('Invalid clues');
-      return { R, C, clues: Int8Array.from(d.g, (ch) => (ch === '.' ? -1 : parseInt(ch, 36))) };
+      return { R, C, clues: Int8Array.from(d.g, (ch) => (ch === '.' ? -1 : Number.parseInt(ch, 36))) };
     },
     model,
     fixed: (p, k) => (p.clues[k] >= 0 ? NO : 0),

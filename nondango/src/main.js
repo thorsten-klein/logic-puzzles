@@ -8,7 +8,7 @@
 
   function groups(region) {
     const out = [];
-    region.forEach((g, k) => { (out[g] = out[g] || []).push(k); });
+    region.forEach((g, k) => { out[g] ??= []; out[g].push(k); });
     return out;
   }
 
@@ -38,7 +38,7 @@
     const deadline = Date.now() + 8000;
     while (Date.now() < deadline) {
       const R = n, C = n, N = R * C;
-      const seeds = PuzzleShell.shuffle([...Array(N).keys()]).slice(0, Math.round(N / 3.5));
+      const seeds = PuzzleShell.shuffle([...new Array(N).keys()]).slice(0, Math.round(N / 3.5));
       const region = PuzzleShell.growRegions(R, C, seeds.map((k) => [k]));
       const circle = Uint8Array.from({ length: N }, () => (Math.random() < 0.65 ? 1 : 0));
       if (groups(region).some((cells) => !cells.some((k) => circle[k]))) continue;
@@ -64,11 +64,11 @@
     generate,
     encode: (p) => ({ r: p.R, c: p.C, g: Array.from(p.region, (v) => v.toString(36).padStart(2, '0')).join(''), o: Array.from(p.circle).join('') }),
     decode(d) {
-      const R = d && d.r, C = d && d.c;
+      const R = d?.r, C = d?.c;
       if (![R, C].every((x) => Number.isInteger(x) && x >= 3 && x <= 20)) throw new Error('Invalid board size');
       if (typeof d.g !== 'string' || d.g.length !== 2 * R * C) throw new Error('Invalid regions');
       if (typeof d.o !== 'string' || d.o.length !== R * C || !/^[01]+$/.test(d.o)) throw new Error('Invalid circles');
-      return { R, C, region: Int32Array.from({ length: R * C }, (_, k) => parseInt(d.g.slice(2 * k, 2 * k + 2), 36)), circle: Uint8Array.from(d.o, Number) };
+      return { R, C, region: Int32Array.from({ length: R * C }, (_, k) => Number.parseInt(d.g.slice(2 * k, 2 * k + 2), 36)), circle: Uint8Array.from(d.o, Number) };
     },
     model,
     fixed: (p, k) => (p.circle[k] ? 0 : NO),

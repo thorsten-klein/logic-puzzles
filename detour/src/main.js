@@ -3,11 +3,11 @@
 // Built on the shared Loop engine. Menu size is half the board side.
 
 (() => {
-  const { UNKNOWN, LINE, CROSS } = Loop;
+  const { LINE, CROSS } = Loop;
 
   function groups(region) {
     const out = [];
-    region.forEach((g, k) => { (out[g] = out[g] || []).push(k); });
+    region.forEach((g, k) => { out[g] ??= []; out[g].push(k); });
     return out;
   }
 
@@ -36,7 +36,7 @@
           if (t === 1) turns++;
           else if (t === -1) open++;
         }
-        if (turns > v || turns + open < v) return false;
+        if (turns > v || turns + open < v) return -1;
       }
       return 0;
     }
@@ -48,7 +48,7 @@
     const deadline = Date.now() + 8000;
     while (Date.now() < deadline) {
       const sol = Loop.randomTour(n);
-      const seeds = PuzzleShell.shuffle([...Array(n * n).keys()]).slice(0, Math.round((n * n) / 5));
+      const seeds = PuzzleShell.shuffle([...new Array(n * n).keys()]).slice(0, Math.round((n * n) / 5));
       const region = PuzzleShell.growRegions(n, n, seeds.map((k) => [k]));
       const g = Loop.grid(n, n);
       const p = { R: n, C: n, region, clues: groups(region).map((cells) => cells.filter((k) => {
@@ -79,10 +79,10 @@
     generate,
     encode: (p) => ({ n: p.R, g: Array.from(p.region, (v) => v.toString(36).padStart(2, '0')).join(''), c: p.clues.join(',') }),
     decode(d) {
-      const n = d && d.n;
+      const n = d?.n;
       if (!Number.isInteger(n) || n < 2 || n > 16) throw new Error('Invalid board size');
       if (typeof d.g !== 'string' || d.g.length !== 2 * n * n) throw new Error('Invalid regions');
-      const region = Int32Array.from({ length: n * n }, (_, k) => parseInt(d.g.slice(2 * k, 2 * k + 2), 36));
+      const region = Int32Array.from({ length: n * n }, (_, k) => Number.parseInt(d.g.slice(2 * k, 2 * k + 2), 36));
       const clues = String(d.c).split(',').map(Number);
       return { R: n, C: n, region, clues };
     },

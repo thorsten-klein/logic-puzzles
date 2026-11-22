@@ -8,7 +8,7 @@ Google Chrome (no browser download).
     npm run test:logic             # logic only (fast, no browser)
     npm run test:ui                # browser only
     FULL=1 npm test                # more sizes and boards
-    npx playwright test tests/masyu   # one puzzle
+    GAMES=masyu npm test           # one puzzle
     GAMES=masyu,tapa npm test      # some puzzles
     npm run test:coverage          # code coverage (about 30–60 min)
     WORKERS=8 npm test             # more browsers at once (default 4)
@@ -17,15 +17,17 @@ Run one test command at a time: each browser is heavy.
 
 ## Layout
 
-- `tests/<slug>/<slug>.spec.js`: one folder per puzzle. It calls
-  `puzzleTests(slug, extra)` and holds the rules that only fit this puzzle
-  (`extra.answer`) and extra coverage steps (`extra.workout`).
+- `games.spec.js`: the tests of every playable puzzle. For each one it
+  calls `puzzleTests(slug, extra)` from `lib/suite.js`.
+- `<slug>/<slug>.checks.js`: only for puzzles that need more. It exports
+  `extra`: the rules that only fit this puzzle (`extra.answer`) and extra
+  coverage steps (`extra.workout`).
 - `hub/hub.spec.js`: the main page (search, tags, sort, views, random).
 - `lib/suite.js`: the tests every puzzle gets.
 - `lib/coverage.js`: the coverage workout per puzzle.
 - `coverage-report.js`: turns the coverage data into line coverage.
 - `lib/kinds.js`: checks per kind of puzzle (the shared engine in
-  `src/`), plus grid helpers for the spec files.
+  `src/`), plus grid helpers for the checks files.
 - `lib/games.js`: loads a game's code in Node and runs the board checks.
 
 ## What is tested
@@ -62,7 +64,7 @@ Logic (`@logic`, in Node, for the smallest and largest size):
   | words | paths touch by sides and spell the listed words |
 
 - The answer fits the puzzle's own rules, for the puzzles that have them
-  in their spec file (Calcudoku, Skyscrapers, Nurikabe, Hitori, ...).
+  in their checks file (Calcudoku, Skyscrapers, Nurikabe, Hitori, ...).
 
 Browser (`@ui`, in Chrome, for each puzzle):
 

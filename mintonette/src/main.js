@@ -30,10 +30,10 @@
         const v = p.circle[k] - 1;
         if (v < 0) continue;
         const w = walk(s, k);
-        if (w.turns > v) return false;
-        if (w.end !== k && label[w.end] >= 0 && w.turns !== v) return false;
+        if (w.turns > v) return -1;
+        if (w.end !== k && label[w.end] >= 0 && w.turns !== v) return -1;
         // The partner circle's number (if any) must match too.
-        if (w.end !== k && p.circle[w.end] > 0 && p.circle[w.end] !== p.circle[k]) return false;
+        if (w.end !== k && p.circle[w.end] > 0 && p.circle[w.end] !== p.circle[k]) return -1;
       }
       return 0;
     }
@@ -54,11 +54,11 @@
           if (a !== b) turns++;
         }
         circle[path[0]] = turns + 1;
-        circle[path[path.length - 1]] = turns + 1;
+        circle[path.at(-1)] = turns + 1;
       }
       const p = { R: n, C: n, circle };
       if (!Links.unique(model(p))) continue;
-      for (const k of PuzzleShell.shuffle([...Array(n * n).keys()])) {
+      for (const k of PuzzleShell.shuffle([...new Array(n * n).keys()])) {
         if (circle[k] <= 0) continue;
         const keep = circle[k];
         circle[k] = 0;
@@ -82,10 +82,10 @@
     generate,
     encode: (p) => ({ n: p.R, g: Array.from(p.circle, (v) => (v < 0 ? '.' : v.toString(36))).join('') }),
     decode(d) {
-      const n = d && d.n;
+      const n = d?.n;
       if (!Number.isInteger(n) || n < 2 || n > 16) throw new Error('Invalid board size');
       if (typeof d.g !== 'string' || d.g.length !== n * n) throw new Error('Invalid circles');
-      return { R: n, C: n, circle: Int8Array.from(d.g, (ch) => (ch === '.' ? -1 : parseInt(ch, 36))) };
+      return { R: n, C: n, circle: Int8Array.from(d.g, (ch) => (ch === '.' ? -1 : Number.parseInt(ch, 36))) };
     },
     model,
     drawCell: (p) => (svg, k, x, y, s) => {

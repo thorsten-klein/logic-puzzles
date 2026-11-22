@@ -12,7 +12,7 @@
     const C = g.C;
     const step = [-C, C, -1, 1];
     const deg = (k) => g.cellEdges[k].filter((e) => e >= 0 && s[e] === LINE).length;
-    const start = [...Array(g.R * C).keys()].find((k) => deg(k));
+    const start = [...new Array(g.R * C).keys()].find((k) => deg(k));
     if (start === undefined) return null;
     const out = [];
     let x = start, from = -1;
@@ -65,7 +65,7 @@
       // Loop length is three cells per circle.
       let cells = 0;
       for (let k = 0; k < R * C; k++) if (g.cellEdges[k].some((e) => e >= 0 && s[e] === LINE)) cells++;
-      if (cells > 3 * count) return false;
+      if (cells > 3 * count) return -1;
       // Straight runs between two known turns: k inner cells, plus each
       // turn cell may join this run's blocks. One circle per three cells.
       const lines = (k) => [0, 1, 2, 3].filter((d) => g.cellEdges[k][d] >= 0 && s[g.cellEdges[k][d]] === LINE);
@@ -89,12 +89,12 @@
             const len = k + a + b;
             if (len % 3 === 0 && len / 3 === inner + a * circle[x] + b * circle[end]) fits = true;
           }
-          if (!fits) return false;
+          if (!fits) return -1;
         }
       }
       if (s.includes(UNKNOWN)) return 0;
       const ring = order(g, s);
-      return ring && ring.length === cells && blocks(C, ring, circle) ? 0 : false;
+      return ring?.length === cells && blocks(C, ring, circle) ? 0 : -1;
     }
     return { g, must, rule };
   }
@@ -159,7 +159,7 @@
     generate,
     encode: (p) => ({ n: p.R, m: Array.from(p.circle).join('') }),
     decode(d) {
-      const n = d && d.n;
+      const n = d?.n;
       if (!Number.isInteger(n) || n < 3 || n > 16) throw new Error('Invalid board size');
       if (typeof d.m !== 'string' || d.m.length !== n * n || !/^[01]+$/.test(d.m)) throw new Error('Invalid circles');
       return { R: n, C: n, circle: Uint8Array.from(d.m, Number) };

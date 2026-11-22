@@ -6,7 +6,7 @@
 // p.arrow: -1 none, 0 up, 1 down, 2 left, 3 right; p.star: star cell.
 
 (() => {
-  const { UNKNOWN, YES, NO } = Binary;
+  const { UNKNOWN, NO } = Binary;
   const STEP = [[-1, 0], [1, 0], [0, -1], [0, 1]];
 
   function model(p) {
@@ -45,10 +45,10 @@
       const dist = new Int32Array(N).fill(-1);
       dist[star] = 0;
       const queue = [star];
-      for (let i = 0; i < queue.length; i++) {
+      for (const cur of queue) {
         for (let d = 0; d < 4; d++) {
-          const j = to(queue[i], d);
-          if (j >= 0 && s[j] === NO && dist[j] < 0) { dist[j] = dist[queue[i]] + 1; queue.push(j); }
+          const j = to(cur, d);
+          if (j >= 0 && s[j] === NO && dist[j] < 0) { dist[j] = dist[cur] + 1; queue.push(j); }
         }
       }
       for (let k = 0; k < N; k++) {
@@ -78,10 +78,10 @@
         const r = Math.floor(k / n) + STEP[d][0], c = (k % n) + STEP[d][1];
         return r >= 0 && c >= 0 && r < n && c < n ? r * n + c : -1;
       };
-      for (let i = 0; i < queue.length; i++) {
+      for (const cur of queue) {
         for (let d = 0; d < 4; d++) {
-          const j = to(queue[i], d);
-          if (j >= 0 && fill[j] === NO && dist[j] < 0) { dist[j] = dist[queue[i]] + 1; queue.push(j); }
+          const j = to(cur, d);
+          if (j >= 0 && fill[j] === NO && dist[j] < 0) { dist[j] = dist[cur] + 1; queue.push(j); }
         }
       }
       const arrow = new Int8Array(N).fill(-1);
@@ -111,7 +111,7 @@
     generate,
     encode: (p) => ({ r: p.R, c: p.C, s: p.star, a: Array.from(p.arrow, (v) => (v < 0 ? '.' : v)).join('') }),
     decode(d) {
-      const R = d && d.r, C = d && d.c;
+      const R = d?.r, C = d?.c;
       if (![R, C].every((x) => Number.isInteger(x) && x >= 3 && x <= 20)) throw new Error('Invalid board size');
       if (!Number.isInteger(d.s) || d.s < 0 || d.s >= R * C) throw new Error('Invalid star');
       if (typeof d.a !== 'string' || d.a.length !== R * C || !/^[.0-3]+$/.test(d.a)) throw new Error('Invalid arrows');

@@ -108,7 +108,7 @@
       if (k < 0) {
         const val = Int8Array.from(cand, (m, i) => (p.circle[i] ? 0 : low(m)));
         const cnt = counts(p, val);
-        if (cnt && cnt.every((v, i) => !p.circle[i] || v === p.num[i])) out.push(val);
+        if (cnt?.every((v, i) => !p.circle[i] || v === p.num[i])) out.push(val);
         return;
       }
       for (let v = 1; v <= 4; v++) {
@@ -119,7 +119,11 @@
     return { solutions: out, capped: nodes > maxNodes };
   }
 
-  const startCand = (p, given) => Int32Array.from({ length: p.R * p.C }, (_, k) => (p.circle[k] ? 0 : given[k] ? 1 << given[k] : ALL));
+  const startCand = (p, given) => Int32Array.from({ length: p.R * p.C }, (_, k) => {
+    if (p.circle[k]) return 0;
+    if (given[k]) return 1 << given[k];
+    return ALL;
+  });
 
   function generate(n) {
     const deadline = Date.now() + 8000;
@@ -127,11 +131,11 @@
       const R = n, C = n, N = R * C;
       const circle = new Uint8Array(N);
       const count = Math.max(2, Math.round(N / 7));
-      for (const k of PuzzleShell.shuffle([...Array(N).keys()]).slice(0, count)) circle[k] = 1;
+      for (const k of PuzzleShell.shuffle([...new Array(N).keys()]).slice(0, count)) circle[k] = 1;
       // Random arrow forest grown from the numbers; equal arrows apart.
       const arrow = new Int8Array(N);
       const done = Uint8Array.from(circle);
-      let front = [...Array(N).keys()].filter((k) => circle[k]);
+      let front = [...new Array(N).keys()].filter((k) => circle[k]);
       const clash = (k, v) => {
         const r = Math.floor(k / C), c = k % C;
         return [[r - 1, c], [r + 1, c], [r, c - 1], [r, c + 1]].some(([a, b]) => a >= 0 && b >= 0 && a < R && b < C && arrow[a * C + b] === v);
@@ -158,14 +162,14 @@
         const res = solve(p, startCand(p, p.given), 2, 8000);
         if (res.solutions.length === 1 && !res.capped) break;
         const other = res.solutions.find((x) => x.some((v, k) => !circle[k] && v !== arrow[k]));
-        const diff = [...Array(N).keys()].filter((k) => !circle[k] && !p.given[k] && (!other || other[k] !== arrow[k]));
+        const diff = [...new Array(N).keys()].filter((k) => !circle[k] && !p.given[k] && (other?.[k] !== arrow[k]));
         if (!diff.length) break;
         const k = diff[Math.floor(Math.random() * diff.length)];
         p.given[k] = arrow[k];
       }
       const unique = () => { const r = solve(p, startCand(p, p.given), 2, 8000); return r.solutions.length === 1 && !r.capped; };
       if (!unique()) continue;
-      for (const k of PuzzleShell.shuffle([...Array(N).keys()])) {
+      for (const k of PuzzleShell.shuffle([...new Array(N).keys()])) {
         if (!p.given[k]) continue;
         const keep = p.given[k];
         p.given[k] = 0;
@@ -204,7 +208,7 @@
         if (given[k]) { el.classList.add('given'); el.append(PuzzleShell.arrowIcon(TURN[given[k]])); return; }
         const v = result ? solution[k] : entries[k];
         if (v) el.append(PuzzleShell.arrowIcon(TURN[v]));
-        if (result) el.classList.add(entries[k] === solution[k] ? 'ok' : entries[k] ? 'bad' : 'show');
+        if (result) el.classList.add(PuzzleShell.resultClass(entries[k], solution[k]));
       },
       onCell(k, ev) {
         if (circle[k] || given[k]) return;
@@ -226,10 +230,10 @@
     generate,
     encode: (p) => ({ n: p.R, g: Array.from(p.num, (v) => (v < 0 ? '.' : v.toString(36))).join(''), v: Array.from(p.given).join('') }),
     decode(d) {
-      const n = d && d.n;
+      const n = d?.n;
       if (!Number.isInteger(n) || n < 3 || n > 15) throw new Error('Invalid board size');
       if (typeof d.g !== 'string' || d.g.length !== n * n) throw new Error('Invalid numbers');
-      const p = prepare({ R: n, C: n, num: Int8Array.from(d.g, (ch) => (ch === '.' ? -1 : parseInt(ch, 36))) });
+      const p = prepare({ R: n, C: n, num: Int8Array.from(d.g, (ch) => (ch === '.' ? -1 : Number.parseInt(ch, 36))) });
       p.given = typeof d.v === 'string' && d.v.length === n * n && /^[0-4]+$/.test(d.v) ? Int8Array.from(d.v, Number) : new Int8Array(n * n);
       const res = solve(p, startCand(p, p.given), 2, 50000);
       if (res.solutions.length !== 1) throw new Error('Puzzle has no unique solution');

@@ -18,7 +18,7 @@
       const ma = Math.min(...q.map((x) => x[0])), mb = Math.min(...q.map((x) => x[1]));
       keys.push(q.map(([a, b]) => `${a - ma},${b - mb}`).sort().join(' '));
     }
-    return keys.sort()[0];
+    return keys.reduce((min, k) => (k < min ? k : min), keys[0]);  // smallest key
   }
   const letters = (p, cells) => cells.filter((k) => p.clues[k]).map((k) => p.clues[k]).sort().join('');
 
@@ -40,7 +40,7 @@
     },
     final(p, id) {
       const regions = new Map();
-      id.forEach((g, k) => { if (g >= 0) { if (!regions.has(g)) regions.set(g, []); regions.get(g).push(k); } });
+      id.forEach((g, k) => { if (g >= 0) { if (!regions.has(g)) { regions.set(g, []); } regions.get(g).push(k); } });
       const pairOf = new Map();
       for (const cells of regions.values()) {
         const kind = kindOf(cells, p.C), l = letters(p, cells);

@@ -34,7 +34,7 @@
         const col = s[k];
         const cells = [k];
         seen[k] = 1;
-        for (let i = 0; i < cells.length; i++) for (const j of nb(cells[i])) if (!seen[j] && s[j] === col) { seen[j] = 1; cells.push(j); }
+        for (const cur of cells) for (const j of nb(cur)) if (!seen[j] && s[j] === col) { seen[j] = 1; cells.push(j); }
         const nums = cells.filter((x) => clues[x]);
         const closed = done || cells.every((x) => nb(x).every((j) => s[j] !== UNKNOWN));
         // A number that can not be its 3×3 count must be the region size.
@@ -78,8 +78,8 @@
         if (id[k] >= 0) continue;
         const cells = [k];
         id[k] = regions.length;
-        for (let i = 0; i < cells.length; i++) {
-          const x = cells[i], r = Math.floor(x / C), c = x % C;
+        for (const cur of cells) {
+          const x = cur, r = Math.floor(x / C), c = x % C;
           for (const [a, b] of [[r - 1, c], [r + 1, c], [r, c - 1], [r, c + 1]]) {
             const j = a * C + b;
             if (a >= 0 && b >= 0 && a < R && b < C && id[j] < 0 && sol[j] === sol[k]) { id[j] = regions.length; cells.push(j); }
@@ -110,7 +110,7 @@
       };
       if (!unique()) continue;
       const sizeClue = new Set(regions.map((cells) => cells.find((k) => clues[k] === cells.length)));
-      for (const k of PuzzleShell.shuffle([...Array(N).keys()])) {
+      for (const k of PuzzleShell.shuffle([...new Array(N).keys()])) {
         if (!clues[k] || sizeClue.has(k)) continue;
         const keep = clues[k];
         clues[k] = 0;
@@ -135,7 +135,7 @@
     generate,
     encode: (p) => ({ r: p.R, c: p.C, g: Array.from(p.clues).join(',') }),
     decode(d) {
-      const R = d && d.r, C = d && d.c;
+      const R = d?.r, C = d?.c;
       if (![R, C].every((x) => Number.isInteger(x) && x >= 3 && x <= 20)) throw new Error('Invalid board size');
       const clues = Int16Array.from(String(d.g).split(','), Number);
       if (clues.length !== R * C) throw new Error('Invalid clues');

@@ -13,6 +13,9 @@
 // Hint shape: { r, c, action: 'fill' | 'mark' | 'conflict', reason }.
 
 const Hint = (() => {
+  // 'head' or 'tail' for an end cell.
+  const endName = (p, r, c) => (r === p.head[0] && c === p.head[1] ? 'head' : 'tail');
+
   function isEndpoint(p, r, c) {
     return (r === p.head[0] && c === p.head[1])
         || (r === p.tail[0] && c === p.tail[1]);
@@ -89,10 +92,10 @@ const Hint = (() => {
       if (need < 0 || open === 0) return; // overfill is handled in findConflicts
 
       if (need === 0) {
-        const reason = `${axisLabel} already contains ${clue} filled cell${clue === 1 ? '' : 's'}, so no other cell in it can belong to the snake.`;
+        const reason = `${axisLabel} already contains ${PuzzleShell.plural(clue, 'filled cell')}, so no other cell in it can belong to the snake.`;
         for (const [r, c] of openCells) hints.push({ r, c, action: 'mark', reason });
       } else if (need === open) {
-        const reason = `${axisLabel} needs ${need} more filled cell${need === 1 ? '' : 's'}, and exactly ${open} cell${open === 1 ? '' : 's'} ${open === 1 ? 'is' : 'are'} still undecided — so every undecided cell in it must be filled.`;
+        const reason = `${axisLabel} needs ${PuzzleShell.plural(need, 'more filled cell')}, and exactly ${PuzzleShell.plural(open, 'cell')} ${open === 1 ? 'is' : 'are'} still undecided — so every undecided cell in it must be filled.`;
         for (const [r, c] of openCells) hints.push({ r, c, action: 'fill', reason });
       }
     }
@@ -143,10 +146,8 @@ const Hint = (() => {
         if (snake.has(ar * size + ac)) deg++;
       }
       if (deg >= maxDeg) {
-        const which = isEndpoint(puzzle, nr, nc)
-          ? (nr === puzzle.head[0] && nc === puzzle.head[1] ? 'The head' : 'The tail')
-          : 'The adjacent filled cell';
-        return `${which} already has its ${maxDeg} allowed connection${maxDeg === 1 ? '' : 's'} — filling this cell would over-connect it.`;
+        const which = isEndpoint(puzzle, nr, nc) ? `The ${endName(puzzle, nr, nc)}` : 'The adjacent filled cell';
+        return `${which} already has its ${PuzzleShell.plural(maxDeg, 'allowed connection')} — filling this cell would over-connect it.`;
       }
     }
 
@@ -218,7 +219,7 @@ const Hint = (() => {
       }
       const need = clue - filled;
       if (need <= open) return;
-      const reason = `${axisLabel} needs ${need} more filled cell${need === 1 ? '' : 's'} but only ${open} cell${open === 1 ? '' : 's'} ${open === 1 ? 'is' : 'are'} still undecided — you have marked too many cells in this line.`;
+      const reason = `${axisLabel} needs ${PuzzleShell.plural(need, 'more filled cell')} but only ${PuzzleShell.plural(open, 'cell')} ${open === 1 ? 'is' : 'are'} still undecided — you have marked too many cells in this line.`;
       for (const [r, c] of cells) {
         if (cellState(r, c) === 'mark') {
           hints.push({ r, c, action: 'conflict', reason });
@@ -253,7 +254,7 @@ const Hint = (() => {
         const ep = isEndpoint(puzzle, r, c);
         const max = ep ? 1 : 2;
         if (n > max) {
-          const which = ep ? (r === puzzle.head[0] && c === puzzle.head[1] ? 'head' : 'tail') : 'body';
+          const which = ep ? endName(puzzle, r, c) : 'body';
           const reason = ep
             ? `The ${which} can have at most 1 filled neighbour (it's an endpoint of the snake), but this cell has ${n}.`
             : `Each snake body cell can have at most 2 filled neighbours, but this cell has ${n}.`;
@@ -285,12 +286,14 @@ const Hint = (() => {
       // so the diagonal contact is illegal.
       for (let r = 0; r < size - 1; r++) {
         for (let c = 0; c < size - 1; c++) {
-          checkDiagPair(r, c, r + 1, c + 1, r, c + 1, r + 1, c);
-          checkDiagPair(r, c + 1, r + 1, c, r, c, r + 1, c + 1);
+          checkDiagPair([r, c], [r + 1, c + 1], [r, c + 1], [r + 1, c]);
+          checkDiagPair([r, c + 1], [r + 1, c], [r, c], [r + 1, c + 1]);
         }
       }
 
-      function checkDiagPair(r1, c1, r2, c2, sr1, sc1, sr2, sc2) {
+      // Two diagonal snake cells [r1, c1] and [r2, c2]; the two cells
+      // they share as side neighbours are [sr1, sc1] and [sr2, sc2].
+      function checkDiagPair([r1, c1], [r2, c2], [sr1, sc1], [sr2, sc2]) {
         const k1 = r1 * size + c1, k2 = r2 * size + c2;
         if (!snake.has(k1) || !snake.has(k2)) return;
         const s1 = snake.has(sr1 * size + sc1);
@@ -344,10 +347,8 @@ const Hint = (() => {
           candidates.push([nr, nc]);
         }
         if (candidates.length !== need) continue;
-        const which = ep
-          ? (r === puzzle.head[0] && c === puzzle.head[1] ? 'head' : 'tail')
-          : `the filled cell at row ${r + 1}, column ${c + 1}`;
-        const reason = `${ep ? 'The ' + which : which.charAt(0).toUpperCase() + which.slice(1)} needs ${need} more snake connection${need === 1 ? '' : 's'}, and only ${candidates.length} legal neighbour${candidates.length === 1 ? '' : 's'} remain${candidates.length === 1 ? 's' : ''} — so this cell must continue the snake.`;
+        const which = ep ? endName(puzzle, r, c) : `the filled cell at row ${r + 1}, column ${c + 1}`;
+        const reason = `${ep ? 'The ' + which : which.charAt(0).toUpperCase() + which.slice(1)} needs ${PuzzleShell.plural(need, 'more snake connection')}, and only ${candidates.length} legal neighbour${candidates.length === 1 ? '' : 's'} remain${candidates.length === 1 ? 's' : ''} — so this cell must continue the snake.`;
         for (const [nr, nc] of candidates) {
           hints.push({ r: nr, c: nc, action: 'fill', reason });
         }
@@ -599,10 +600,7 @@ const Hint = (() => {
       }
       if (parentProp.trace.length > headSteps.length) parts.push('… plus a few more;');
     }
-    parts.push(`Now look at cell (row ${br + 1}, col ${bc + 1}) — it's still undecided, but every choice breaks the rules:`);
-    parts.push(`• if you fill it, ${conflictPhrase(deep.branchFill.conflict)};`);
-    parts.push(`• if you mark it empty, ${conflictPhrase(deep.branchEmpty.conflict)}.`);
-    parts.push(`Both options for (${br + 1}, ${bc + 1}) fail — so the original assumption is wrong, and this cell must be ${ends}.`);
+    parts.push(`Now look at cell (row ${br + 1}, col ${bc + 1}) — it's still undecided, but every choice breaks the rules:`, `• if you fill it, ${conflictPhrase(deep.branchFill.conflict)};`, `• if you mark it empty, ${conflictPhrase(deep.branchEmpty.conflict)}.`, `Both options for (${br + 1}, ${bc + 1}) fail — so the original assumption is wrong, and this cell must be ${ends}.`);
     return parts.join(' ');
   }
 

@@ -9,8 +9,7 @@
   function lines() {
     const out = [];
     for (let i = 0; i < N; i++) {
-      out.push(Array.from({ length: N }, (_, j) => i * N + j));
-      out.push(Array.from({ length: N }, (_, j) => j * N + i));
+      out.push(Array.from({ length: N }, (_, j) => i * N + j), Array.from({ length: N }, (_, j) => j * N + i));
     }
     return out;
   }
@@ -77,7 +76,7 @@
     return { solutions, capped: nodes > maxNodes };
   }
 
-  const startCand = (given) => Int32Array.from({ length: N * N }, (_, k) => (given && given[k] ? 1 << given[k] : 0b1110));
+  const startCand = (given) => Int32Array.from({ length: N * N }, (_, k) => (given?.[k] ? 1 << given[k] : 0b1110));
 
   function generate() {
     for (let t = 0; t < 20; t++) {
@@ -95,7 +94,7 @@
         const cand = startCand(p.given);
         return propagate(p, cand) && cand.every((m) => Latin.bitCount(m) === 1);
       };
-      for (const k of PuzzleShell.shuffle([...Array(N * N).keys()])) {
+      for (const k of PuzzleShell.shuffle([...new Array(N * N).keys()])) {
         p.given[k] = 0;
         if (!unique()) p.given[k] = sol[k];
       }
@@ -136,7 +135,7 @@
         if (p.given[k]) { el.classList.add('given'); el.textContent = L[p.given[k]]; return; }
         const v = result ? p.solution[k] : entries[k];
         el.textContent = L[v];
-        if (result) el.classList.add(entries[k] === p.solution[k] ? 'ok' : entries[k] ? 'bad' : 'show');
+        if (result) el.classList.add(PuzzleShell.resultClass(entries[k], p.solution[k]));
       },
       onCell(k, ev) {
         if (p.given[k]) return;

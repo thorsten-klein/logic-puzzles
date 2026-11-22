@@ -55,7 +55,7 @@
     return { solutions: out, capped: nodes > maxNodes };
   }
 
-  const startCand = (p) => Int32Array.from({ length: p.n * p.n }, (_, i) => (p.given && p.given[i] ? 1 << p.given[i] : ALL));
+  const startCand = (p) => Int32Array.from({ length: p.n * p.n }, (_, i) => (p.given?.[i] ? 1 << p.given[i] : ALL));
 
   function generate(n) {
     const deadline = Date.now() + 8000;
@@ -75,19 +75,19 @@
       for (let guard = 0; guard < N && !solved(); guard++) {
         const c = startCand(p);
         propagate(p, c);
-        const open = [...Array(N).keys()].filter((i) => !one(c[i]) && sol[i] > 1);
+        const open = [...new Array(N).keys()].filter((i) => !one(c[i]) && sol[i] > 1);
         if (!open.length) break;
         const i = open[Math.floor(Math.random() * open.length)];
         p.given[i] = sol[i];
       }
       if (!solved()) continue;
-      for (const [side, i] of PuzzleShell.shuffle([...Array(n).keys()].flatMap((i) => [['left', i], ['top', i]]))) {
+      for (const [side, i] of PuzzleShell.shuffle([...new Array(n).keys()].flatMap((i) => [['left', i], ['top', i]]))) {
         const keep = p[side][i];
         p[side][i] = -1;
         prepare(p);
         if (!solved()) { p[side][i] = keep; prepare(p); }
       }
-      for (const i of PuzzleShell.shuffle([...Array(N).keys()])) {
+      for (const i of PuzzleShell.shuffle([...new Array(N).keys()])) {
         if (!p.given[i]) continue;
         const keep = p.given[i];
         p.given[i] = 0;
@@ -106,7 +106,11 @@
       const e = entries[i];
       if (e && !p.given[i] && e !== p.solution[i]) return [{ cells: [i], v: 0, reason: e === 1 ? 'This cell is not empty.' : 'This figure is wrong.' }];
     }
-    const cand = Int32Array.from(entries, (e, i) => (p.given[i] ? 1 << p.given[i] : e ? 1 << e : ALL));
+    const cand = Int32Array.from(entries, (e, i) => {
+      if (p.given[i]) return 1 << p.given[i];
+      if (e) return 1 << e;
+      return ALL;
+    });
     propagate(p, cand);
     for (let i = 0; i < cand.length; i++) {
       if (entries[i] || p.given[i] || !one(cand[i])) continue;
@@ -127,7 +131,10 @@
         const r = Math.floor(K / W) - 1, c = (K % W) - 1;
         if (r < 0 || c < 0) {
           el.className = 'clue';
-          const v = r < 0 && c >= 0 ? p.top[c] : c < 0 && r >= 0 ? p.left[r] : -1;
+          let v;
+          if (r < 0 && c >= 0) v = p.top[c];
+          else if (c < 0 && r >= 0) v = p.left[r];
+          else v = -1;
           if (v >= 0) el.textContent = v;
           return;
         }
@@ -156,7 +163,7 @@
   const enc = (a) => Array.from(a, (v) => (v < 0 ? '.' : v.toString(36))).join('');
   const dec = (s, n) => {
     if (typeof s !== 'string' || s.length !== n) throw new Error('Invalid clues');
-    return Int8Array.from(s, (ch) => (ch === '.' ? -1 : parseInt(ch, 36)));
+    return Int8Array.from(s, (ch) => (ch === '.' ? -1 : Number.parseInt(ch, 36)));
   };
 
   PuzzleShell.start({
@@ -171,7 +178,7 @@
     generate,
     encode: (p) => ({ n: p.n, k: p.k, t: enc(p.top), l: enc(p.left), g: Array.from(p.given).join('') }),
     decode(d) {
-      const n = d && d.n;
+      const n = d?.n;
       if (!Number.isInteger(n) || n < 3 || n > 12) throw new Error('Invalid board size');
       if (!Number.isInteger(d.k) || d.k < 0 || d.k > n - 2) throw new Error('Invalid circle count');
       const p = prepare({ n, k: d.k, top: dec(d.t, n), left: dec(d.l, n) });

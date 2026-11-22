@@ -51,15 +51,13 @@
     for (let k = 0; k < R * C; k++) {
       const v = clues[k];
       if (v < 0) continue;
-      cons.push({ cells: [k], min: 0, max: 0 });
-      cons.push({ cells: around(k), min: v, max: v, at: k,
-        why: (x) => (x === YES ? `This ${v} needs a ship part in every open cell around it.` : `This ${v} already has its ${v} ship part${v === 1 ? '' : 's'} around it. The other cells are water.`) });
+      cons.push({ cells: [k], min: 0, max: 0 }, { cells: around(k), min: v, max: v, at: k,
+        why: (x) => (x === YES ? `This ${v} needs a ship part in every open cell around it.` : `This ${v} already has its ${PuzzleShell.plural(v, 'ship part')} around it. The other cells are water.`) });
     }
     for (let r = 0; r < R - 1; r++) for (let c = 0; c < C - 1; c++) {
       const k = r * C + c;
       const why = () => 'Ships may not touch at a corner. This cell is water.';
-      cons.push({ cells: [k, k + C + 1], min: 0, max: 1, why });
-      cons.push({ cells: [k + 1, k + C], min: 0, max: 1, why });
+      cons.push({ cells: [k, k + C + 1], min: 0, max: 1, why }, { cells: [k + 1, k + C], min: 0, max: 1, why });
     }
     const maxLen = Math.max(...fleet);
     function check(s, done) {
@@ -111,7 +109,7 @@
       const R = n, C = n;
       const p = { R, C, fleet, clues: new Int8Array(n * n).fill(-1) };
       for (let k = 0; k < n * n; k++) {
-        if (ship[k] || !(Math.random() < 0.5)) continue;
+        if (ship[k] || Math.random() >= 0.5) continue;
         p.clues[k] = 0;
       }
       const tmp = model(p);
@@ -136,10 +134,10 @@
     generate,
     encode: (p) => ({ n: p.R, g: Array.from(p.clues, (v) => (v < 0 ? '.' : v.toString(36))).join('') }),
     decode(d) {
-      const n = d && d.n;
+      const n = d?.n;
       if (!Number.isInteger(n) || n < 4 || n > 15) throw new Error('Invalid board size');
       if (typeof d.g !== 'string' || d.g.length !== n * n) throw new Error('Invalid clues');
-      return { R: n, C: n, fleet: fleetFor(n), clues: Int8Array.from(d.g, (ch) => (ch === '.' ? -1 : parseInt(ch, 36))) };
+      return { R: n, C: n, fleet: fleetFor(n), clues: Int8Array.from(d.g, (ch) => (ch === '.' ? -1 : Number.parseInt(ch, 36))) };
     },
     model,
     fixed: (p, k) => (p.clues[k] >= 0 ? NO : 0),

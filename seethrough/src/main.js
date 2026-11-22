@@ -80,7 +80,7 @@
           Array.from({ length: c }, (_, i) => hEdge(C, r, c - 1 - i)),
           Array.from({ length: C - 1 - c }, (_, i) => hEdge(C, r, c + i)),
         ];
-        for (const ray of rays) for (const e of ray) { if (sol[e] === YES) break; clues[k]++; }
+        for (const ray of rays) for (const e of ray) { if (sol[e] === YES) { break; } clues[k]++; }
       }
       const p = { R, C, clues };
       const s = Binary.logicSolve(model(p));
@@ -167,10 +167,10 @@
     generate,
     encode: (p) => ({ n: p.R, g: Array.from(p.clues, (v) => (v < 0 ? '.' : v.toString(36))).join('') }),
     decode(d) {
-      const n = d && d.n;
+      const n = d?.n;
       if (!Number.isInteger(n) || n < 3 || n > 12) throw new Error('Invalid board size');
       if (typeof d.g !== 'string' || d.g.length !== n * n) throw new Error('Invalid numbers');
-      const p = { R: n, C: n, clues: Int8Array.from(d.g, (ch) => (ch === '.' ? -1 : parseInt(ch, 36))) };
+      const p = { R: n, C: n, clues: Int8Array.from(d.g, (ch) => (ch === '.' ? -1 : Number.parseInt(ch, 36))) };
       const m = model(p);
       const t = Binary.logicSolve(m);
       if (t && !t.includes(UNKNOWN)) { p.solution = t; return p; }

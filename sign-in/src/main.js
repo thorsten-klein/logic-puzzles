@@ -33,7 +33,11 @@
   function generate(n) {
     for (let t = 0; t < 30; t++) {
       const sol = Latin.randomSquare(n);
-      const sign = (a, b) => (sol[b] - sol[a] === 1 ? '+' : sol[a] - sol[b] === 1 ? '-' : '.');
+      const sign = (a, b) => {
+        if (sol[b] - sol[a] === 1) return '+';
+        if (sol[a] - sol[b] === 1) return '-';
+        return '.';
+      };
       const h = [], v = [];
       for (let r = 0; r < n; r++) for (let c = 0; c < n - 1; c++) h.push(sign(r * n + c, r * n + c + 1));
       for (let r = 0; r < n - 1; r++) for (let c = 0; c < n; c++) v.push(sign(r * n + c, (r + 1) * n + c));

@@ -33,7 +33,7 @@
         const cells = [r * C + c, r * C + c + 1, (r + 1) * C + c, (r + 1) * C + c + 1];
         const white = cells.filter((k) => s[k] === NO).length, black = cells.filter((k) => s[k] === YES).length;
         const open = cells.filter((k) => s[k] === UNKNOWN);
-        if (black === 4 || (white === 3 && black === 1)) return false;
+        if (black === 4 || (white === 3 && black === 1)) return -1;
         if (open.length !== 1) continue;
         let v = 0, why = '';
         if (white === 3) { v = NO; why = 'White areas are rectangles. Three white cells in a 2×2 block need the fourth.'; }
@@ -86,8 +86,8 @@
         if (sol[k] !== NO || seen[k]) continue;
         const cells = [k];
         seen[k] = 1;
-        for (let i = 0; i < cells.length; i++) {
-          const x = cells[i], r = Math.floor(x / C), c = x % C;
+        for (const cur of cells) {
+          const x = cur, r = Math.floor(x / C), c = x % C;
           for (const j of [r > 0 ? x - C : -1, r < R - 1 ? x + C : -1, c > 0 ? x - 1 : -1, c < C - 1 ? x + 1 : -1]) {
             if (j >= 0 && !seen[j] && sol[j] === NO) { seen[j] = 1; cells.push(j); }
           }
@@ -120,10 +120,10 @@
     generate,
     encode: (p) => ({ r: p.R, c: p.C, g: Array.from(p.clues, (v) => v.toString(36).padStart(2, '0')).join('') }),
     decode(d) {
-      const R = d && d.r, C = d && d.c;
+      const R = d?.r, C = d?.c;
       if (![R, C].every((x) => Number.isInteger(x) && x >= 3 && x <= 20)) throw new Error('Invalid board size');
       if (typeof d.g !== 'string' || d.g.length !== 2 * R * C) throw new Error('Invalid clues');
-      return { R, C, clues: Int16Array.from({ length: R * C }, (_, k) => parseInt(d.g.slice(2 * k, 2 * k + 2), 36)) };
+      return { R, C, clues: Int16Array.from({ length: R * C }, (_, k) => Number.parseInt(d.g.slice(2 * k, 2 * k + 2), 36)) };
     },
     model,
     fixed: (p, k) => (p.clues[k] > 0 ? NO : 0),

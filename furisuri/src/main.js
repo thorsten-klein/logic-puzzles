@@ -18,7 +18,7 @@
   }
   const blocksOf = (id) => {
     const m = new Map();
-    id.forEach((g, k) => { if (g >= 0) { if (!m.has(g)) m.set(g, []); m.get(g).push(k); } });
+    id.forEach((g, k) => { if (g >= 0) { if (!m.has(g)) { m.set(g, []); } m.get(g).push(k); } });
     return [...m.values()];
   };
 
@@ -55,10 +55,9 @@
       p.black = new Uint8Array(p.R * p.C);
       for (const cells of regions) p.clues[cells[Math.floor(Math.random() * 3)]] = 1;
       // Black cells among the empty ones, until the answer is unique; then drop extra ones.
-      const cfg = this;
-      const unique = () => { const r = Parts.solve(cfg, p, 2, 20000); return r.solutions.length === 1 && !r.capped; };
+      const unique = () => { const r = Parts.solve(this, p, 2, 20000); return r.solutions.length === 1 && !r.capped; };
       const singles = PuzzleShell.shuffle(regions.singles.slice());
-      for (const k of singles) { if (unique()) break; p.black[k] = 1; }
+      for (const k of singles) { if (unique()) { break; } p.black[k] = 1; }
       if (!unique()) return false;
       for (const k of singles) {
         if (!p.black[k]) continue;

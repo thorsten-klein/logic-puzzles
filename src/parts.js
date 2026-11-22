@@ -69,13 +69,13 @@ const Parts = (() => {
         if (!cfg.final || cfg.final(p, id)) out.push(Int32Array.from(id));
         return;
       }
-      if (cfg.blocked && cfg.blocked(p, k)) {
+      if (cfg.blocked?.(p, k)) {
         id[k] = -2;
         rec();
         id[k] = -1;
         return;
       }
-      if (cfg.skip && cfg.skip(p, k) && (!cfg.outside || cfg.outside(p, k, id))) {
+      if (cfg.skip?.(p, k) && (!cfg.outside || cfg.outside(p, k, id))) {
         id[k] = -2;
         rec();
         id[k] = -1;
@@ -85,7 +85,7 @@ const Parts = (() => {
       // A game may list whole regions with k as their first cell.
       if (cfg.candidates) {
         for (const cells of cfg.candidates(p, k, id)) {
-          if (cells.some((x) => id[x] !== -1 || (cfg.blocked && cfg.blocked(p, x)))) continue;
+          if (cells.some((x) => id[x] !== -1 || (cfg.blocked?.(p, x)))) continue;
           cells.forEach((x) => { id[x] = me; });
           if (cfg.region(p, cells, id)) rec();
           cells.forEach((x) => { id[x] = -1; });
@@ -107,7 +107,7 @@ const Parts = (() => {
         if (cfg.region(p, cells, id)) rec();
         if (cells.length >= max) return;
         const front = new Set();
-        for (const x of cells) for (const j of nbs(R, C, x)) if (id[j] === -1 && j > k && !(cfg.blocked && cfg.blocked(p, j))) front.add(j);
+        for (const x of cells) for (const j of nbs(R, C, x)) if (id[j] === -1 && j > k && !(cfg.blocked?.(p, j))) front.add(j);
         for (const j of front) {
           cells.push(j); id[j] = me;
           grow();
@@ -186,7 +186,7 @@ const Parts = (() => {
       if (cfg.thin !== false) {
         // Thin clues within a time budget; extra clues are fine.
         const stop = Date.now() + 1500;
-        for (const k of PuzzleShell.shuffle([...Array(R * C).keys()])) {
+        for (const k of PuzzleShell.shuffle([...new Array(R * C).keys()])) {
           if (!p.clues[k]) continue;
           const keep = p.clues[k];
           p.clues[k] = 0;
@@ -262,7 +262,7 @@ const Parts = (() => {
       generate: (n) => generate(cfg, cfg.boardSize ? cfg.boardSize(n) : n),
       encode: (p) => ({ r: p.R, c: p.C, g: Array.from(p.clues).join(','), x: cfg.encodeExtra ? cfg.encodeExtra(p) : undefined }),
       decode(d) {
-        const R = d && d.r, C = d && d.c;
+        const R = d?.r, C = d?.c;
         if (![R, C].every((x) => Number.isInteger(x) && x >= 2 && x <= 20)) throw new Error('Invalid board size');
         const clues = Int16Array.from(String(d.g).split(','), Number);
         if (clues.length !== R * C) throw new Error('Invalid clues');

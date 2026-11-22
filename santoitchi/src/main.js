@@ -26,7 +26,7 @@
       if (cells.length !== 3 || cells.filter((k) => p.clues[k]).length !== 1) return false;
       // Every placed region: shaded cells around it so far ≤ its number ≤ those plus open cells.
       const regs = new Map();
-      id.forEach((g, k) => { if (g >= 0) { if (!regs.has(g)) regs.set(g, []); regs.get(g).push(k); } });
+      id.forEach((g, k) => { if (g >= 0) { if (!regs.has(g)) { regs.set(g, []); } regs.get(g).push(k); } });
       for (const rc of regs.values()) {
         const want = p.clues[rc.find((x) => p.clues[x])] - 1;
         const sure = new Set(), open = new Set();
@@ -42,7 +42,7 @@
         if (id[k] === -2 && Parts.nbs(p.R, p.C, k).some((j) => id[j] === -2)) return false;
       }
       const regions = new Map();
-      id.forEach((g, k) => { if (g >= 0) { if (!regions.has(g)) regions.set(g, []); regions.get(g).push(k); } });
+      id.forEach((g, k) => { if (g >= 0) { if (!regions.has(g)) { regions.set(g, []); } regions.get(g).push(k); } });
       for (const cells of regions.values()) {
         const k = cells.find((x) => p.clues[x]);
         if (shadedAround(p, cells, id) !== p.clues[k] - 1) return false;

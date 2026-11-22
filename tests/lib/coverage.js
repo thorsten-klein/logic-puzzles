@@ -4,9 +4,10 @@
 // The raw data goes to coverage/raw/<slug>.json; tests/coverage-report.js
 // turns it into a table.
 
-const fs = require('fs');
-const path = require('path');
+const fs = require('node:fs');
+const path = require('node:path');
 const { root } = require('./games');
+const { inOrder, times } = require('./steps');
 
 const RAW = path.join(root, 'coverage', 'raw');
 const url = (slug, q = '') => 'file://' + path.join(root, slug, 'index.html') + q;
@@ -14,6 +15,10 @@ const visible = (sel) => `(() => { const e = document.querySelector('${sel}'); r
 
 async function clickIf(page, sel) {
   if (await page.evaluate(visible(sel))) await page.evaluate((s) => document.querySelector(s).click(), sel);
+}
+// Clicks every element that matches sel, one after the other.
+async function clickAll(page, sel) {
+  await inOrder(await page.locator(sel).all(), (b) => b.click().catch(() => {}));
 }
 async function closeModals(page) {
   await page.evaluate(() => { for (const m of document.querySelectorAll('.modal:not([hidden])')) m.hidden = true; });
@@ -29,66 +34,68 @@ async function fuzzBoard(page) {
   const box = await page.locator('#board-wrap > *').first().boundingBox();
   if (!box) return;
   const dims = await page.evaluate(() => {
-    const t = window.__puzzleTest, p = t && t.st.puzzle;
+    const t = window.__puzzleTest, p = t?.st.puzzle;
     const R = (p && (p.R || p.n)) || 6, C = (p && (p.C || p.n)) || R;
     return { R: Math.min(R, 12), C: Math.min(C, 12) };
   });
   const { R, C } = dims;
   const at = (i, j) => [box.x + (box.width * j) / (2 * C), box.y + (box.height * i) / (2 * R)];
-  for (const button of ['left', 'right', 'left']) {
-    for (let i = 0; i <= 2 * R; i++) for (let j = 0; j <= 2 * C; j++) {
-      const [x, y] = at(i, j);
-      await page.mouse.click(Math.min(x, box.x + box.width - 2), Math.min(y, box.y + box.height - 2), { button });
-    }
+  // Clicks on every cell, edge and corner: left, right, left again.
+  const spots = [];
+  for (let i = 0; i <= 2 * R; i++) for (let j = 0; j <= 2 * C; j++) spots.push(at(i, j));
+  await inOrder(['left', 'right', 'left'], async (button) => {
+    await inOrder(spots, ([x, y]) => page.mouse.click(Math.min(x, box.x + box.width - 2), Math.min(y, box.y + box.height - 2), { button }));
     await closeModals(page);
-  }
+  });
   // Drags: from each cell centre to the right and down.
+  const drags = [];
   for (let i = 1; i < 2 * R; i += 2) for (let j = 1; j < 2 * C; j += 2) {
-    for (const [di, dj] of [[0, 2], [2, 0], [2, 2]]) {
-      const [x, y] = at(i, j), [x2, y2] = at(Math.min(i + di, 2 * R - 1), Math.min(j + dj, 2 * C - 1));
-      await page.mouse.move(x, y);
-      await page.mouse.down();
-      await page.mouse.move(x2, y2, { steps: 3 });
-      await page.mouse.up();
-    }
+    for (const [di, dj] of [[0, 2], [2, 0], [2, 2]]) drags.push([at(i, j), at(Math.min(i + di, 2 * R - 1), Math.min(j + dj, 2 * C - 1))]);
   }
+  await inOrder(drags, async ([[x, y], [x2, y2]]) => {
+    await page.mouse.move(x, y);
+    await page.mouse.down();
+    await page.mouse.move(x2, y2, { steps: 3 });
+    await page.mouse.up();
+  });
   // A long drag through the whole board.
   await page.mouse.move(...at(1, 1));
   await page.mouse.down();
-  for (let i = 1; i < 2 * R; i += 2) await page.mouse.move(...at(i, i % 4 === 1 ? 2 * C - 1 : 1), { steps: 4 });
+  const longPath = [];
+  for (let i = 1; i < 2 * R; i += 2) longPath.push(at(i, i % 4 === 1 ? 2 * C - 1 : 1));
+  await inOrder(longPath, ([x, y]) => page.mouse.move(x, y, { steps: 4 }));
   await page.mouse.up();
   await closeModals(page);
   // Keys on a selected cell and in digit inputs.
   const keys = ['1', '2', '3', '5', '9', '0', 'a', 'x', ' ', 'Enter', 'Backspace', 'Delete', 'ArrowUp', 'ArrowDown', 'ArrowLeft', 'ArrowRight', 'Escape'];
-  for (const [i, j] of [[1, 1], [3, 3], [2 * R - 1, 2 * C - 1]]) {
+  await inOrder([[1, 1], [3, 3], [2 * R - 1, 2 * C - 1]], async ([i, j]) => {
     await page.mouse.click(...at(i, j));
-    for (const k of keys) await page.keyboard.press(k);
-    for (const k of ['Shift+ArrowUp', 'Control+ArrowRight']) await page.keyboard.press(k);
-  }
+    await inOrder([...keys, 'Shift+ArrowUp', 'Control+ArrowRight'], (k) => page.keyboard.press(k));
+  });
   // Keys on focusable cells (focus is lost when the board redraws, so
   // focus again before each key).
   const focusable = page.locator('#board-wrap [tabindex]');
   const nf = await focusable.count();
-  for (const i of [...new Set([0, 1, Math.floor(nf / 2), nf - 1])].filter((x) => x >= 0 && x < nf)) {
-    for (const k of keys) {
-      await focusable.nth(i).focus().catch(() => {});
-      await page.keyboard.press(k);
-    }
-  }
+  const picked = [...new Set([0, 1, Math.floor(nf / 2), nf - 1])].filter((x) => x >= 0 && x < nf);
+  const pressOn = async (i, k) => {
+    await focusable.nth(i).focus().catch(() => {});
+    await page.keyboard.press(k);
+  };
+  await inOrder(picked, (i) => inOrder(keys, (k) => pressOn(i, k)));
   const inputs = page.locator('#board-wrap input');
   const n = await inputs.count();
-  for (let i = 0; i < Math.min(n, 6); i++) {
-    for (const v of ['1', '12', '99', 'a', 'a1', 'B2', 'z9', '']) { await inputs.nth(i).fill(v); }
+  await times(Math.min(n, 6), async (i) => {
+    await inOrder(['1', '12', '99', 'a', 'a1', 'B2', 'z9', ''], (v) => inputs.nth(i).fill(v));
     await inputs.nth(i).press('ArrowRight');
     await inputs.nth(i).press('ArrowDown');
-  }
+  });
   await closeModals(page);
 }
 
 // All buttons and popups of the game screen.
 async function buttons(page) {
   await clickIf(page, '#btn-topbar-hint');
-  for (let i = 0; i < 3; i++) await clickIf(page, '#btn-hint-next');
+  await times(3, () => clickIf(page, '#btn-hint-next'));
   await clickIf(page, '#btn-hint-prev');
   await clickIf(page, '#btn-hint-apply');
   await closeModals(page);
@@ -103,11 +110,11 @@ async function buttons(page) {
   await page.waitForTimeout(50);
   await clickIf(page, '#btn-info-close');
   await clickIf(page, '#btn-topbar-share');
-  for (const b of await page.locator('.modal:not([hidden]) [data-copy]').all()) await b.click().catch(() => {});
+  await clickAll(page, '.modal:not([hidden]) [data-copy]');
   await clickIf(page, '#btn-share-close');
-  for (let i = 0; i < 14; i++) await clickIf(page, '#btn-zoom-in');
-  for (let i = 0; i < 14; i++) await clickIf(page, '#btn-zoom-out');
-  for (let i = 0; i < 5; i++) await clickIf(page, '#btn-zoom-in');
+  await times(14, () => clickIf(page, '#btn-zoom-in'));
+  await times(14, () => clickIf(page, '#btn-zoom-out'));
+  await times(5, () => clickIf(page, '#btn-zoom-in'));
   await clickIf(page, '#giveup-btn');
   await clickIf(page, '#solution-x');
   await clickIf(page, '#giveup-btn');
@@ -121,12 +128,16 @@ async function solveByHints(page) {
   await page.evaluate(async () => {
     const $ = (s) => document.querySelector(s);
     if (!$('#btn-hint-apply')) return;
-    for (let n = 0; n < 1500; n++) {
+    // Open the hint, apply it, again: until no hint is left.
+    const next = async (n) => {
+      if (n >= 1500) return;
       $('#btn-topbar-hint').click();
       await new Promise((r) => setTimeout(r, 0));
-      if ($('#btn-hint-apply').hidden) break;
+      if ($('#btn-hint-apply').hidden) return;
       $('#btn-hint-apply').click();
-    }
+      await next(n + 1);
+    };
+    await next(0);
     $('#btn-hint-close').click();
   });
   await clickIf(page, '#submit-btn');
@@ -138,6 +149,25 @@ async function solveByHints(page) {
 // share data, broken saved states, random boards for hints and check.
 async function fuzzCode(page) {
   await page.evaluate(() => {
+    // Shared engines by name: globals of the page, or null when the game
+    // does not load them.
+    const ENGINES = {
+      Binary: typeof Binary === 'undefined' ? null : Binary,
+      Latin: typeof Latin === 'undefined' ? null : Latin,
+      Loop: typeof Loop === 'undefined' ? null : Loop,
+      Links: typeof Links === 'undefined' ? null : Links,
+      Parts: typeof Parts === 'undefined' ? null : Parts,
+      Pieces: typeof Pieces === 'undefined' ? null : Pieces,
+      Rects: typeof Rects === 'undefined' ? null : Rects,
+      RegionNum: typeof RegionNum === 'undefined' ? null : RegionNum,
+      NumberPath: typeof NumberPath === 'undefined' ? null : NumberPath,
+      Fillo: typeof Fillo === 'undefined' ? null : Fillo,
+      Moves: typeof Moves === 'undefined' ? null : Moves,
+      LegLoop: typeof LegLoop === 'undefined' ? null : LegLoop,
+    };
+    const engine = (name) => ENGINES[name] || null;
+    // Blank mark of a share string: '.', '-', or else '0'.
+    const blankOf = (v) => ['.', '-'].find((ch) => v.includes(ch)) ?? '0';
     const t = window.__puzzleTest;
     if (!t) return;
     const { cfg } = t;
@@ -145,7 +175,8 @@ async function fuzzCode(page) {
     const tryIt = (f) => { try { return f(); } catch { return undefined; } };
     const p = t.st.puzzle || tryIt(() => cfg.generate(cfg.size.min));
     if (!p) return;
-    const clone = (x) => JSON.parse(JSON.stringify(x));
+    // A JSON round trip on purpose: share data travels as JSON.
+    const clone = (x) => JSON.parse(JSON.stringify(x)); // NOSONAR
     const d0 = clone(cfg.encode(p));
 
     // Broken share data: change one part at a time.
@@ -157,11 +188,13 @@ async function fuzzCode(page) {
       for (const k of keys) {
         const v = obj[k];
         // Thinned clues (every 2nd or 3rd clue gone) make solvers search.
-        const thin = (str, m, blank) => str.replace(/[^,]/g, (ch, i) => (i % m === 0 && /[1-9a-z]/i.test(ch) ? blank : ch));
-        const extra = typeof v === 'string' ? [v.slice(0, Math.floor(v.length / 2)), v + ',1', v.replace(/^./, '#'), v.replace(/\d/, '9'),
-          thin(v, 2, '0'), thin(v, 3, '0'), thin(v, 2, '.'), thin(v, 3, '.'), thin(v, 2, '-')]
-          : Array.isArray(v) ? [v.slice(1), v.concat(v), v.map(() => -1), v.map((x, i) => (i % 2 ? 0 : x)), v.filter((_, i) => i % 2)]
-            : typeof v === 'number' ? [v + 1, -v, v * 100] : [];
+        const thin = (str, m, blank) => str.replaceAll(/[^,]/g, (ch, i) => (i % m === 0 && /[1-9a-z]/i.test(ch) ? blank : ch));
+        let extra;
+        if (typeof v === 'string') extra = [v.slice(0, Math.floor(v.length / 2)), v + ',1', v.replace(/^./, '#'), v.replace(/\d/, '9'),
+          thin(v, 2, '0'), thin(v, 3, '0'), thin(v, 2, '.'), thin(v, 3, '.'), thin(v, 2, '-')];
+        else if (Array.isArray(v)) extra = [v.slice(1), v.concat(v), v.map(() => -1), v.map((x, i) => (i % 2 ? 0 : x)), v.filter((_, i) => i % 2)];
+        else if (typeof v === 'number') extra = [v + 1, -v, v * 100];
+        else extra = [];
         for (const w of odd.concat(extra)) variants.push(set(k, w));
         walk(v, (k2, w) => set(k, (() => { const c = clone(v); c[k2] = w; return c; })()), depth + 1);
       }
@@ -184,11 +217,11 @@ async function fuzzCode(page) {
         continue;
       }
       // All clues blank, too.
-      early.push({ ...d0, [key]: v.replace(/[1-9a-z]/gi, v.includes('.') ? '.' : v.includes('-') ? '-' : '0') });
+      early.push({ ...d0, [key]: v.replaceAll(/[1-9a-z]/gi, blankOf(v)) });
       let made = 0;
       for (let i = 0; i < v.length && made < 40; i++) {
         if (!/[1-9a-z]/i.test(v[i])) continue;
-        for (const blank of v.includes('.') ? ['.'] : v.includes('-') ? ['-'] : ['0']) {
+        for (const blank of [blankOf(v)]) {
           early.push({ ...d0, [key]: v.slice(0, i) + blank + v.slice(i + 1) });
           made++;
         }
@@ -202,7 +235,7 @@ async function fuzzCode(page) {
     // Decoders try logic first and search when it stalls: with the engines'
     // logicSolve "stuck", the search must find the answer on its own.
     for (const name of ['Binary', 'Loop', 'Links', 'Latin']) {
-      const eng = tryIt(() => new Function(`return typeof ${name} === 'undefined' ? null : ${name}`)());
+      const eng = engine(name);
       if (!eng || typeof eng.logicSolve !== 'function') continue;
       const real = eng.logicSolve;
       eng.logicSolve = () => null;
@@ -223,7 +256,7 @@ async function fuzzCode(page) {
       // answers): the generator must give up cleanly ("give up" paths).
       const FAILS = [() => null, () => false, () => ({ solutions: [], capped: false, all: [] }), () => ({ solutions: [[], []], capped: true, all: [[], []] })];
       for (const name of ['Binary', 'Latin', 'Loop', 'Links', 'Parts', 'Pieces', 'Rects', 'RegionNum', 'NumberPath', 'Fillo', 'Moves', 'LegLoop']) {
-        const eng = tryIt(() => new Function(`return typeof ${name} === 'undefined' ? null : ${name}`)());
+        const eng = engine(name);
         if (!eng) continue;
         // All helpers fail, or only the solvers (so random boards still come).
         for (const only of [null, /solve|count|unique/i]) {
@@ -241,7 +274,6 @@ async function fuzzCode(page) {
     } finally { Date.now = realNow; }
 
     // Engine edge cases: safety limits and "no loop possible".
-    const engine = (name) => tryIt(() => new Function(`return typeof ${name} === 'undefined' ? null : ${name}`)());
     const LoopE = engine('Loop'), LinksE = engine('Links');
     if (LoopE) {
       const g = LoopE.grid(2, 2);
@@ -258,18 +290,17 @@ async function fuzzCode(page) {
       let x = cfg.newState(q);
       for (let i = 0; i < 2000 && !cfg.check(q, x) && Date.now() < more + 3000; i++) {
         const hs = tryIt(() => cfg.hints(q, x));
-        if (!hs || !hs.length) break;
+        if (!hs?.length) break;
         cfg.applyHint(q, x, hs[0]);
       }
     }
 
     // States along the hint walk; then broken and random states.
     let s = cfg.newState(p);
-    const snaps = [];
     for (let i = 0; i < 2000 && !cfg.check(p, s) && Date.now() < stop; i++) {
       const hs = tryIt(() => cfg.hints(p, s));
-      if (!hs || !hs.length) break;
-      snaps.push(clone(cfg.saveState(s)));
+      if (!hs?.length) break;
+      tryIt(() => cfg.saveState(s)); // run the save code on every step
       hs.slice(0, 3).forEach((h) => tryIt(() => cfg.render(p, s, { readonly: true, hint: h })));
       cfg.applyHint(p, s, hs[0]);
     }
@@ -287,7 +318,11 @@ async function fuzzCode(page) {
     for (let i = 0; i < 25; i++) states.push(Array.from(end, () => pick(vals))); // random
     for (let i = 0; i < 25; i++) states.push(Array.from(end, (v) => (Math.random() < 0.5 ? v : 0))); // part solved
     for (let i = 0; i < 25; i++) states.push(Array.from(end, (v) => (Math.random() < 0.15 ? pick(vals) : v))); // a few wrong
-    for (let i = 0; i < 25; i++) states.push(Array.from(end, (v) => (Math.random() < 0.6 ? 0 : Math.random() < 0.2 ? pick(vals) : v)));
+    for (let i = 0; i < 25; i++) states.push(Array.from(end, (v) => {
+      if (Math.random() < 0.6) return 0;
+      if (Math.random() < 0.2) return pick(vals);
+      return v;
+    }));
     for (const raw of states) {
       if (Date.now() > stop + 6000) break;
       const st = tryIt(() => { const x = cfg.newState(p); raw.forEach((v, i) => { x[i] = v; }); return x; });
@@ -312,15 +347,16 @@ async function playSize(page, n) {
   await clickIf(page, '#size-dec');
   await clickIf(page, '#size-inc');
   if (n !== null) await page.evaluate((n) => { window.__puzzleTest.st.size = n; }, n);
-  for (let t = 0; t < 3; t++) {
+  const tryPlay = async (t) => {
+    if (t >= 3) return false;
     await clickIf(page, '#play-btn');
     const ok = await page.waitForFunction(() => {
       if (!document.getElementById('game-screen').hidden && document.querySelector('#board-wrap > *')) return 'board';
       return /Could not/.test(document.getElementById('menu-status').textContent) && 'failed';
     }, null, { timeout: 90000 }).then((h) => h.jsonValue()).catch(() => 'timeout');
-    if (ok === 'board') return true;
-  }
-  return false;
+    return ok === 'board' || tryPlay(t + 1);
+  };
+  return tryPlay(0);
 }
 
 async function workout(page, slug, more) {
@@ -333,8 +369,8 @@ async function workout(page, slug, more) {
   await page.goto(url(slug, '?game-id=broken'));
   await page.goto(url(slug));
   await page.waitForSelector('#menu-example figure', { timeout: 60000 });
-  for (let i = 0; i < 30; i++) await clickIf(page, '#size-dec');
-  for (let i = 0; i < 30; i++) await clickIf(page, '#size-inc');
+  await times(30, () => clickIf(page, '#size-dec'));
+  await times(30, () => clickIf(page, '#size-inc'));
   await clickIf(page, '#btn-topbar-info');
   await page.waitForTimeout(100);
   await clickIf(page, '#btn-info-close');
@@ -356,8 +392,8 @@ async function workout(page, slug, more) {
     return all.length <= 5 ? all : [...new Set([min, min + 1, t.cfg.size.def, max - 1, max])].sort((a, b) => a - b);
   });
   let fuzzed = false;
-  for (const [i, n] of sizes.entries()) {
-    if (!(await playSize(page, n))) continue;
+  await inOrder(sizes, async (n, i) => {
+    if (!(await playSize(page, n))) return;
     if (!fuzzed) {
       fuzzed = true;
       await fuzzBoard(page);
@@ -374,7 +410,7 @@ async function workout(page, slug, more) {
       await clickIf(page, '#btn-topbar-back');
       await clickIf(page, '#btn-back-confirm');
     }
-  }
+  });
 
   // Paste a real game ID (as a link) and a broken one.
   const ids = await page.evaluate(() => {
@@ -385,32 +421,32 @@ async function workout(page, slug, more) {
     return { link: location.href.split('?')[0] + '?game-id=' + good, broken: good.slice(0, -6) + 'AAAAAA' };
   });
   if (ids) {
-    for (const text of [ids.broken, ids.link]) {
+    await inOrder([ids.broken, ids.link], async (text) => {
       await clickIf(page, '#play-shared-btn');
       await page.fill('#paste-input', text);
       await clickIf(page, '#btn-paste-start');
-    }
+    });
     await waitBoard(page).catch(() => {});
     // Copy with a clipboard API that works, then with one that fails.
-    for (const ok of [true, false]) {
+    await inOrder([true, false], async (ok) => {
       await page.evaluate((ok) => { Object.defineProperty(navigator, 'clipboard', { value: { writeText: () => (ok ? Promise.resolve() : Promise.reject(new Error('no'))) }, configurable: true }); }, ok);
       await clickIf(page, '#btn-topbar-share');
-      for (const b of await page.locator('.modal:not([hidden]) [data-copy], .modal:not([hidden]) .copy-btn').all()) await b.click().catch(() => {});
+      await clickAll(page, '.modal:not([hidden]) [data-copy], .modal:not([hidden]) .copy-btn');
       await page.waitForTimeout(50);
       await closeModals(page);
-    }
+    });
     // Copy without the clipboard API: the page falls back to a hidden text box.
     await page.evaluate(() => { try { Object.defineProperty(navigator, 'clipboard', { value: undefined, configurable: true }); } catch {} });
     await clickIf(page, '#btn-topbar-share');
-    for (const b of await page.locator('.modal:not([hidden]) [data-copy]').all()) await b.click().catch(() => {});
+    await clickAll(page, '.modal:not([hidden]) [data-copy]');
     await page.evaluate(() => { document.execCommand = () => { throw new Error('no copy'); }; });
-    for (const b of await page.locator('.modal:not([hidden]) [data-copy]').all()) await b.click().catch(() => {});
+    await clickAll(page, '.modal:not([hidden]) [data-copy]');
     await closeModals(page);
     await clickIf(page, '#btn-topbar-back');
     await clickIf(page, '#btn-back-confirm');
   }
   // Fullscreen button (site.js), twice.
-  for (let i = 0; i < 2; i++) await page.locator('#topbar-actions button[title*="ullscreen"]').first().click({ timeout: 2000 }).catch(() => {});
+  await times(2, () => page.locator('#topbar-actions button[title*="ullscreen"]').first().click({ timeout: 2000 }).catch(() => {}));
 
   // Play when no board can be made in time: the page says so.
   await page.evaluate(() => {
@@ -434,7 +470,7 @@ async function workout(page, slug, more) {
   await page.waitForTimeout(300);
   const link = await page.evaluate(() => {
     const t = window.__puzzleTest;
-    return t && t.st.puzzle ? location.href.split('?')[0] + '?game-id=' + t.encodeId(t.st.puzzle, t.st.state) : null;
+    return t?.st.puzzle ? location.href.split('?')[0] + '?game-id=' + t.encodeId(t.st.puzzle, t.st.state) : null;
   });
   if (link) await page.goto(link);
   await page.waitForTimeout(100);
@@ -464,11 +500,11 @@ async function startNew(page, slug) {
     Date.now = () => (fake += 60000);
     setTimeout(() => { Date.now = realNow; }, 3000);
   });
-  for (const q of ['?start=new', '?start=new&fakeclock=1']) {
+  await inOrder(['?start=new', '?start=new&fakeclock=1'], async (q) => {
     await page.evaluate(() => { try { localStorage.clear(); } catch {} });
     await page.goto(url(slug, q));
     await page.waitForTimeout(3200);
-  }
+  });
 }
 
 async function finish(page, slug, errors, more) {

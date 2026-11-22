@@ -14,7 +14,7 @@ PuzzleShell.start({
     s: Array.from(p.solution).join(''),
   }),
   decode(d) {
-    const R = d && d.r, C = d && d.c;
+    const R = d?.r, C = d?.c;
     if (![R, C].every((x) => Number.isInteger(x) && x >= 2 && x <= 20)) throw new Error('Invalid board size');
     if (typeof d.g !== 'string' || d.g.length !== R * C || !/^[.0-4]+$/.test(d.g)) throw new Error('Invalid clues');
     if (typeof d.s !== 'string' || d.s.length !== Rules.edgeCount(R, C) || !/^[01]+$/.test(d.s)) throw new Error('Invalid solution');

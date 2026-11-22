@@ -36,7 +36,8 @@ const Solver = (() => {
       return !(tl === br && tr === bl && tl !== tr);
     }
 
-    // Checks parts after row r is complete.
+    // Checks parts after row r is complete: 'bad', 'closed' (the inside
+    // is one closed part) or 'ok'.
     function rowCheck(r, last) {
       const seen = new Uint8Array(N);
       let insideParts = 0, closedInside = false;
@@ -58,19 +59,18 @@ const Solver = (() => {
             if (!seen[nk] && color[nk] === col) { seen[nk] = 1; stack.push(nk); }
           }
         }
-        if (col === 0 && !open) return false;
+        if (col === 0 && !open) return 'bad';
         if (col === 1) {
           insideParts++;
           if (!open) closedInside = true;
         }
       }
       if (closedInside) {
-        if (insideParts > 1) return false;
+        if (insideParts > 1) return 'bad';
         // No inside cells may appear later; caller enforces via flag.
         return 'closed';
       }
-      if (last && insideParts !== 1) return false;
-      return true;
+      return !last || insideParts === 1 ? 'ok' : 'bad';
     }
 
     function rec(k, closed) {
@@ -87,7 +87,7 @@ const Solver = (() => {
           let ok = true;
           if (c === C - 1) {
             const res = rowCheck(r, r === R - 1);
-            if (res === false) ok = false;
+            if (res === 'bad') ok = false;
             else if (res === 'closed') nextClosed = true;
           }
           if (ok) rec(k + 1, nextClosed);

@@ -7,6 +7,12 @@
 // Player entries: 0 blank, 1 marked empty, 2 star, 3 cloud.
 
 (() => {
+  // Candidate bit of slot i in a line where a and b are the two marks.
+  const slotBit = (i, a, b) => {
+    if (i === a) return 4;
+    return i === b ? 8 : 2;
+  };
+
   const one = (m) => m && !(m & (m - 1));
   const low = (m) => 31 - Math.clz32(m & -m);
   const ALL = 0b1110;
@@ -51,7 +57,7 @@
         const opts = layouts(p, L, cand);
         if (!opts.length) return false;
         const keep = new Int32Array(L.cells.length);
-        for (const [a, b] of opts) L.cells.forEach((_, i) => { keep[i] |= i === a ? 4 : i === b ? 8 : 2; });
+        for (const [a, b] of opts) L.cells.forEach((_, i) => { keep[i] |= slotBit(i, a, b); });
         L.cells.forEach((k, i) => { if (p.lit[k] < 0) cand[k] &= keep[i]; });
       }
       if (cand.some((m, k) => p.lit[k] < 0 && !m)) return false;
@@ -100,7 +106,7 @@
     while (Date.now() < deadline) {
       const N = n * n;
       const lit = new Int8Array(N).fill(-1);
-      for (const k of PuzzleShell.shuffle([...Array(N).keys()]).slice(0, Math.round(N * 0.18))) lit[k] = 0;
+      for (const k of PuzzleShell.shuffle([...new Array(N).keys()]).slice(0, Math.round(N * 0.18))) lit[k] = 0;
       const free = prepare({ n, lit: Int8Array.from(lit, (v) => (v >= 0 ? 15 : -1)) });
       // Fill ignoring light, then set the light bits from the answer.
       free.lines.forEach((L) => { L.planets = []; });
@@ -111,14 +117,14 @@
       const solved = () => { const c = startCand(p); return propagate(p, c) && c.every((m, k) => p.lit[k] >= 0 || one(m)); };
       if (!solved()) continue;
       // Drop planets while logic still solves it.
-      for (const k of PuzzleShell.shuffle([...Array(N).keys()])) {
+      for (const k of PuzzleShell.shuffle([...new Array(N).keys()])) {
         if (p.lit[k] < 0) continue;
         const keep = Int8Array.from(p.lit);
         const test = Int8Array.from(p.lit, (v) => v);
         test[k] = -1;
         // Without the planet the cell is empty in the answer.
         const sol2 = Int8Array.from(sol, (v, j) => (j === k ? 1 : v));
-        if ([...Array(n).keys()].some((r) => ![...Array(n).keys()].some((c) => sol2[r * n + c] === 2))) continue;
+        if ([...new Array(n).keys()].some((r) => ![...new Array(n).keys()].some((c) => sol2[r * n + c] === 2))) continue;
         p.lit = lightOf(n, test, sol2);
         prepare(p);
         if (solved()) sol.set(sol2); else { p.lit = keep; prepare(p); }
@@ -136,7 +142,11 @@
       const e = entries[k];
       if (e && p.lit[k] < 0 && e !== p.solution[k]) return [{ cells: [k], v: 0, reason: e === 1 ? 'This cell is not empty.' : 'This is wrong here.' }];
     }
-    const cand = Int32Array.from(entries, (e, k) => (p.lit[k] >= 0 ? 0 : e ? 1 << e : ALL));
+    const cand = Int32Array.from(entries, (e, k) => {
+      if (p.lit[k] >= 0) return 0;
+      if (e) return 1 << e;
+      return ALL;
+    });
     propagate(p, cand);
     for (let k = 0; k < cand.length; k++) {
       if (entries[k] || p.lit[k] >= 0 || !one(cand[k])) continue;
@@ -205,10 +215,10 @@
     generate,
     encode: (p) => ({ n: p.n, g: Array.from(p.lit, (v) => (v < 0 ? '.' : v.toString(16))).join('') }),
     decode(d) {
-      const n = d && d.n;
+      const n = d?.n;
       if (!Number.isInteger(n) || n < 3 || n > 12) throw new Error('Invalid board size');
       if (typeof d.g !== 'string' || d.g.length !== n * n || !/^[.0-9a-f]+$/.test(d.g)) throw new Error('Invalid planets');
-      const p = prepare({ n, lit: Int8Array.from(d.g, (ch) => (ch === '.' ? -1 : parseInt(ch, 16))) });
+      const p = prepare({ n, lit: Int8Array.from(d.g, (ch) => (ch === '.' ? -1 : Number.parseInt(ch, 16))) });
       const res = solve(p, startCand(p), 2, 50000);
       if (res.solutions.length !== 1) throw new Error('Puzzle has no unique solution');
       p.solution = res.solutions[0];

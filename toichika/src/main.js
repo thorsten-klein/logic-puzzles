@@ -9,7 +9,7 @@
 
   function groups(region) {
     const out = [];
-    region.forEach((g, k) => { (out[g] = out[g] || []).push(k); });
+    region.forEach((g, k) => { out[g] ??= []; out[g].push(k); });
     return out;
   }
 
@@ -116,14 +116,16 @@
     const deadline = Date.now() + 8000;
     while (Date.now() < deadline) {
       const R = n, C = n, N = R * C;
-      const seeds = PuzzleShell.shuffle([...Array(N).keys()]).slice(0, 2 * Math.round(N / 10));
+      const seeds = PuzzleShell.shuffle([...new Array(N).keys()]).slice(0, 2 * Math.round(N / 10));
       const region = PuzzleShell.growRegions(R, C, seeds.map((k) => [k]));
       const p = prepare({ R, C, region, given: [] });
       const fill = solve(p, 1, true);
       if (!fill.solutions.length) continue;
       const truth = arrowsOf(p, fill.solutions[0]);
       // Give arrows where another answer differs, until unique.
-      for (let guard = 0; guard < p.list.length; guard++) {
+      // At most one round per entry.
+      const rounds = p.list.length;
+      for (let guard = 0; guard < rounds; guard++) {
         const res = solve(p, 2);
         if (res.solutions.length === 1 && !res.capped) break;
         const other = res.solutions.map((x) => arrowsOf(p, x)).find((m) => [...truth].some(([k, d]) => m.get(k) !== d));
@@ -207,12 +209,12 @@
     generate,
     encode: (p) => ({ n: p.R, g: Array.from(p.region, (v) => v.toString(36).padStart(2, '0')).join(''), v: p.given.map((x) => x.k + x.d).join(',') }),
     decode(d) {
-      const n = d && d.n;
+      const n = d?.n;
       if (!Number.isInteger(n) || n < 3 || n > 15) throw new Error('Invalid board size');
       if (typeof d.g !== 'string' || d.g.length !== 2 * n * n) throw new Error('Invalid regions');
       const given = String(d.v || '').split(',').filter(Boolean).map((t) => ({ k: parseInt(t, 10), d: t.slice(-1) }));
       if (given.some((x) => !(x.k >= 0 && x.k < n * n) || !GLYPH[x.d])) throw new Error('Invalid arrows');
-      const p = prepare({ R: n, C: n, region: Int32Array.from({ length: n * n }, (_, k) => parseInt(d.g.slice(2 * k, 2 * k + 2), 36)), given });
+      const p = prepare({ R: n, C: n, region: Int32Array.from({ length: n * n }, (_, k) => Number.parseInt(d.g.slice(2 * k, 2 * k + 2), 36)), given });
       const res = solve(p, 2);
       if (res.solutions.length !== 1) throw new Error('Puzzle has no unique solution');
       p.solution = res.solutions[0];

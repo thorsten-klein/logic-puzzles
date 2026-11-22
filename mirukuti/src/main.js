@@ -38,7 +38,7 @@
     }
     p.by = new Map();
     p.opts.forEach((o, i) => {
-      for (const x of [o.black, ...o.whites]) { if (!p.by.has(x)) p.by.set(x, []); p.by.get(x).push(i); }
+      for (const x of [o.black, ...o.whites]) { if (!p.by.has(x)) { p.by.set(x, []); } p.by.get(x).push(i); }
     });
     return p;
   }
@@ -48,7 +48,7 @@
   function settle(p, st, log) {
     for (let changed = true; changed;) {
       changed = false;
-      for (const [x, list] of p.by) {
+      for (const [, list] of p.by) {
         const used = list.filter((i) => st[i] === 1), open = list.filter((i) => st[i] === 0);
         if (used.length > 1 || (!used.length && !open.length)) return false;
         if (!used.length && open.length === 1) {
@@ -105,7 +105,7 @@
         all.forEach(([a, b]) => { used[a * C + b] = 1; });
         col[bar[0][0] * C + bar[0][1]] = 1;
         col[bar[len][0] * C + bar[len][1]] = 1;
-        const tip = stem[stem.length - 1];
+        const tip = stem.at(-1);
         col[tip[0] * C + tip[1]] = 2;
       }
       const p = prepare({ R, C, col });
@@ -194,7 +194,7 @@
     generate,
     encode: (p) => ({ r: p.R, c: p.C, g: Array.from(p.col).join('') }),
     decode(d) {
-      const R = d && d.r, C = d && d.c;
+      const R = d?.r, C = d?.c;
       if (![R, C].every((x) => Number.isInteger(x) && x >= 3 && x <= 20)) throw new Error('Invalid board size');
       if (typeof d.g !== 'string' || d.g.length !== R * C || !/^[012]+$/.test(d.g)) throw new Error('Invalid circles');
       const p = prepare({ R, C, col: Int8Array.from(d.g, Number) });

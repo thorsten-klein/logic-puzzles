@@ -32,7 +32,7 @@
       const dir = new Int8Array(N);
       let ok = true;
       for (let k = 0; k < N && ok; k++) {
-        const opts = [...Array(8).keys()].filter((d) => ray(R, C, k, d).filter((j) => shade[j]).length === 1);
+        const opts = [...new Array(8).keys()].filter((d) => ray(R, C, k, d).filter((j) => shade[j]).length === 1);
         if (!opts.length) ok = false;
         else dir[k] = opts[Math.floor(Math.random() * opts.length)];
       }
@@ -57,7 +57,7 @@
     generate,
     encode: (p) => ({ r: p.R, c: p.C, d: Array.from(p.dir).join('') }),
     decode(d) {
-      const R = d && d.r, C = d && d.c;
+      const R = d?.r, C = d?.c;
       if (![R, C].every((x) => Number.isInteger(x) && x >= 2 && x <= 20)) throw new Error('Invalid board size');
       if (typeof d.d !== 'string' || d.d.length !== R * C || !/^[0-7]+$/.test(d.d)) throw new Error('Invalid arrows');
       return { R, C, dir: Int8Array.from(d.d, Number) };

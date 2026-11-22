@@ -24,7 +24,7 @@ const Generator = (() => {
       const res = solutions(p);
       if (res.solutions.length === 1 && !res.capped) break;
       const other = res.solutions.find((x) => x.some((val, k) => val !== sol[k]));
-      const diff = [...Array(n * n).keys()].filter((k) => !p.given[k] && (!other || other[k] !== sol[k]));
+      const diff = [...new Array(n * n).keys()].filter((k) => !p.given[k] && (other?.[k] !== sol[k]));
       const k = diff[Math.floor(Math.random() * diff.length)];
       p.given[k] = sol[k];
     }

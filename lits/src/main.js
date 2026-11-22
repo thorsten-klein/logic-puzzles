@@ -23,7 +23,7 @@
       const r0 = Math.min(...q.map((x) => x[0])), c0 = Math.min(...q.map((x) => x[1]));
       keys.push(q.map(([a, b]) => `${a - r0},${b - c0}`).sort().join(' '));
     }
-    const key = keys.sort()[0];
+    const key = keys.reduce((min, k) => (k < min ? k : min), keys[0]);  // smallest key
     return { '0,0 0,1 0,2 0,3': 'I', '0,0 0,1 0,2 1,0': 'L', '0,0 0,1 0,2 1,1': 'T', '0,0 0,1 1,1 1,2': 'S' }[key] || null;
   }
 
@@ -31,7 +31,7 @@
     const { R, C, room } = p;
     const N = R * C;
     const rooms = [];
-    room.forEach((g, k) => { (rooms[g] = rooms[g] || []).push(k); });
+    room.forEach((g, k) => { rooms[g] ??= []; rooms[g].push(k); });
     const cons = rooms.map((cells) => ({ cells, min: 4, max: 4, at: cells[0], why: (v) => (v === YES ? 'Each room needs four shaded cells.' : 'This room already has its four shaded cells.') }));
     for (let r = 0; r < R - 1; r++) for (let c = 0; c < C - 1; c++) {
       cons.push({ cells: [r * C + c, r * C + c + 1, (r + 1) * C + c, (r + 1) * C + c + 1], min: 0, max: 3, why: () => 'No 2×2 block may be all shaded.' });
@@ -48,7 +48,7 @@
         out.push(ks);
       }
       const seen = new Set();
-      return out.filter((ks) => { const key = ks.join(','); if (seen.has(key)) return false; seen.add(key); return true; });
+      return out.filter((ks) => { const key = ks.join(','); if (seen.has(key)) { return false; } seen.add(key); return true; });
     });
     // A room's cells: shaded if in every fitting placement, white if in none.
     function propagate(s, log) {
@@ -56,9 +56,13 @@
       for (let g = 0; g < rooms.length; g++) {
         const fit = place[g].filter((ks) => {
           const on = new Set(ks);
-          return rooms[g].every((k) => (s[k] === YES ? on.has(k) : s[k] === NO ? !on.has(k) : true));
+          return rooms[g].every((k) => {
+            if (s[k] === YES) return on.has(k);
+            if (s[k] === NO) return !on.has(k);
+            return true;
+          });
         });
-        if (!fit.length) return false;
+        if (!fit.length) return -1;
         for (const k of rooms[g]) {
           if (s[k] !== UNKNOWN) continue;
           const inAll = fit.every((ks) => ks.includes(k)), inNone = fit.every((ks) => !ks.includes(k));
@@ -170,14 +174,14 @@
         if (r.capped || !r.solutions.length) break;
         const other = r.solutions.find((x) => x.some((v, k) => v !== sol[k]));
         if (!other) { unique = true; break; }
-        const cand = PuzzleShell.shuffle([...Array(N).keys()].filter((k) => other[k] === YES && sol[k] === NO));
+        const cand = PuzzleShell.shuffle([...new Array(N).keys()].filter((k) => other[k] === YES && sol[k] === NO));
         let moved = false;
         for (const x of cand) {
           const g = room[x];
           const to = [x - C, x + C, x % C ? x - 1 : -1, (x + 1) % C ? x + 1 : -1].filter((j) => j >= 0 && j < N && room[j] !== g);
           if (!to.length) continue;
           // Room g must stay connected without x.
-          const rest = [...Array(N).keys()].filter((k) => room[k] === g && k !== x);
+          const rest = [...new Array(N).keys()].filter((k) => room[k] === g && k !== x);
           const set = new Set(rest), seen = new Set([rest[0]]), st = [rest[0]];
           while (st.length) { const k = st.pop(); for (const j of [k - C, k + C, k % C ? k - 1 : -1, (k + 1) % C ? k + 1 : -1]) if (set.has(j) && !seen.has(j)) { seen.add(j); st.push(j); } }
           if (seen.size !== rest.length) continue;
@@ -244,10 +248,10 @@
     generate,
     encode: (p) => ({ r: p.R, c: p.C, g: Array.from(p.room, (v) => v.toString(36).padStart(2, '0')).join('') }),
     decode(d) {
-      const R = d && d.r, C = d && d.c;
+      const R = d?.r, C = d?.c;
       if (![R, C].every((x) => Number.isInteger(x) && x >= 3 && x <= 20)) throw new Error('Invalid board size');
       if (typeof d.g !== 'string' || d.g.length !== 2 * R * C) throw new Error('Invalid rooms');
-      return { R, C, room: Int32Array.from({ length: R * C }, (_, k) => parseInt(d.g.slice(2 * k, 2 * k + 2), 36)) };
+      return { R, C, room: Int32Array.from({ length: R * C }, (_, k) => Number.parseInt(d.g.slice(2 * k, 2 * k + 2), 36)) };
     },
     model,
     draw(p, k, el, v, shown) {

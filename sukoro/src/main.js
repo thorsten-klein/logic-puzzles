@@ -24,10 +24,9 @@
     for (let k = 0; k < R * C; k++) {
       const v = clues[k];
       if (v < 0) continue;
-      cons.push({ cells: [k], min: 1, max: 1, why: () => 'A given number is part of the picture.' });
-      cons.push({ cells: nb[k], min: v, max: v, area: [k],
+      cons.push({ cells: [k], min: 1, max: 1, why: () => 'A given number is part of the picture.' }, { cells: nb[k], min: v, max: v, area: [k],
         why: (x) => (x === YES ? `This ${v} needs a number in every open cell next to it.`
-          : `This ${v} already has ${v} numbered neighbour${v === 1 ? '' : 's'}. The other neighbours stay empty.`) });
+          : `This ${v} already has ${PuzzleShell.plural(v, 'numbered neighbour')}. The other neighbours stay empty.`) });
     }
     // A number may not equal a neighbouring number. Once a cell and all
     // its neighbours are known, its value is fixed.
@@ -115,7 +114,7 @@
     generate,
     encode: (p) => ({ r: p.R, c: p.C, g: Array.from(p.clues, (v) => (v < 0 ? '.' : v)).join('') }),
     decode(d) {
-      const R = d && d.r, C = d && d.c;
+      const R = d?.r, C = d?.c;
       if (![R, C].every((x) => Number.isInteger(x) && x >= 3 && x <= 15)) throw new Error('Invalid board size');
       if (typeof d.g !== 'string' || d.g.length !== R * C || !/^[.0-4]+$/.test(d.g)) throw new Error('Invalid clues');
       return { R, C, clues: Int8Array.from(d.g, (ch) => (ch === '.' ? -1 : Number(ch))) };

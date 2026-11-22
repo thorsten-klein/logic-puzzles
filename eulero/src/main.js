@@ -66,8 +66,8 @@
       A = Array.from({ length: n }, (_, r) => Array.from({ length: n }, (_, c) => (r + c) % n));
       B = Array.from({ length: n }, (_, r) => Array.from({ length: n }, (_, c) => (2 * r + c) % n));
     }
-    const rows = PuzzleShell.shuffle([...Array(n).keys()]), cols = PuzzleShell.shuffle([...Array(n).keys()]);
-    const la = PuzzleShell.shuffle([...Array(n).keys()]), lb = PuzzleShell.shuffle([...Array(n).keys()]);
+    const rows = PuzzleShell.shuffle([...new Array(n).keys()]), cols = PuzzleShell.shuffle([...new Array(n).keys()]);
+    const la = PuzzleShell.shuffle([...new Array(n).keys()]), lb = PuzzleShell.shuffle([...new Array(n).keys()]);
     return Int8Array.from({ length: n * n }, (_, k) => {
       const r = rows[Math.floor(k / n)], c = cols[k % n];
       return la[A[r][c]] * n + lb[B[r][c]];
@@ -78,7 +78,7 @@
     const sol = randomSquare(n);
     const given = Int8Array.from(sol);
     const solved = () => { const c = startCand(n, given); return propagate(n, c) && c.every(one); };
-    for (const k of PuzzleShell.shuffle([...Array(n * n).keys()])) {
+    for (const k of PuzzleShell.shuffle([...new Array(n * n).keys()])) {
       const v = given[k];
       given[k] = -1;
       if (!solved()) given[k] = v;
@@ -118,7 +118,7 @@
         if (given[k] >= 0) { el.classList.add('given'); el.textContent = text(n, given[k]); return; }
         if (result) {
           el.textContent = text(n, solution[k]);
-          el.classList.add(entries[k] === solution[k] ? 'ok' : entries[k] >= 0 ? 'bad' : 'show');
+          el.classList.add(PuzzleShell.resultClass(entries[k], solution[k], entries[k] >= 0));
           return;
         }
         if (readonly) { el.textContent = text(n, entries[k]); return; }
@@ -147,10 +147,10 @@
     generate,
     encode: (p) => ({ n: p.n, g: Array.from(p.given, (v) => (v < 0 ? '.' : v.toString(36))).join('') }),
     decode(d) {
-      const n = d && d.n;
+      const n = d?.n;
       if (n !== 4 && n !== 5) throw new Error('Invalid board size');
       if (typeof d.g !== 'string' || d.g.length !== n * n) throw new Error('Invalid givens');
-      const given = Int8Array.from(d.g, (ch) => (ch === '.' ? -1 : parseInt(ch, 36)));
+      const given = Int8Array.from(d.g, (ch) => (ch === '.' ? -1 : Number.parseInt(ch, 36)));
       const res = solve(n, startCand(n, given), 2, 50000);
       if (res.solutions.length !== 1) throw new Error('Puzzle has no unique solution');
       return { n, given, solution: res.solutions[0] };

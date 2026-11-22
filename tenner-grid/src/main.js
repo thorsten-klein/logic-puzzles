@@ -81,7 +81,7 @@
       if (k === R * C) return true;
       if (++nodes > 20000) return false;
       const r = Math.floor(k / C), c = k % C;
-      for (const d of PuzzleShell.shuffle([...Array(10).keys()])) {
+      for (const d of PuzzleShell.shuffle([...new Array(10).keys()])) {
         let ok = true;
         for (let j = r * C; j < k && ok; j++) if (g[j] === d + 1) ok = false;
         for (let dc = -1; dc <= 1 && ok; dc++) {
@@ -114,7 +114,7 @@
         const res = run();
         if (res.solutions.length === 1 && !res.capped) break;
         const other = res.solutions.find((x) => x.some((v, k) => v !== sol[k]));
-        const diff = [...sol.keys()].filter((k) => !p.given[k] && (!other || other[k] !== sol[k]));
+        const diff = [...sol.keys()].filter((k) => !p.given[k] && (other?.[k] !== sol[k]));
         const k = diff[Math.floor(Math.random() * diff.length)];
         p.given[k] = sol[k];
       }
@@ -164,11 +164,11 @@
         if (given[k]) { el.classList.add('given'); el.textContent = given[k] - 1; return; }
         const v = result ? solution[k] : entries[k];
         el.textContent = v ? v - 1 : '';
-        if (result) el.classList.add(entries[k] === solution[k] ? 'ok' : entries[k] ? 'bad' : 'show');
+        if (result) el.classList.add(PuzzleShell.resultClass(entries[k], solution[k]));
         if (!readonly) {
           el.tabIndex = 0;
           el.addEventListener('keydown', (ev) => {
-            if (/^[0-9]$/.test(ev.key)) { entries[k] = Number(ev.key) + 1; onChange(); }
+            if (/^\d$/.test(ev.key)) { entries[k] = Number(ev.key) + 1; onChange(); }
             else if (ev.key === 'Backspace' || ev.key === 'Delete' || ev.key === ' ') { entries[k] = 0; onChange(); }
             else return;
             ev.preventDefault();
@@ -199,7 +199,7 @@
     generate,
     encode: (p) => ({ r: p.R, s: p.sums.join(','), g: Array.from(p.given, (v) => (v ? v - 1 : '.')).join('') }),
     decode(d) {
-      const R = d && d.r;
+      const R = d?.r;
       if (!Number.isInteger(R) || R < 2 || R > 10) throw new Error('Invalid board size');
       const sums = String(d.s).split(',').map(Number);
       if (sums.length !== C || typeof d.g !== 'string' || d.g.length !== R * C) throw new Error('Invalid puzzle');

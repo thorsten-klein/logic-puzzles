@@ -90,7 +90,7 @@
       // Cells off the loop: some shaded (never side by side), the rest numbered.
       const black = new Uint8Array(N);
       const nb = (k) => { const r = Math.floor(k / n), c = k % n; return [[r - 1, c], [r + 1, c], [r, c - 1], [r, c + 1]].filter(([a, b]) => a >= 0 && b >= 0 && a < n && b < n).map(([a, b]) => a * n + b); };
-      for (const k of PuzzleShell.shuffle([...Array(N).keys()])) if (!on(k) && nb(k).every((j) => !black[j]) && Math.random() < 0.6) black[k] = 1;
+      for (const k of PuzzleShell.shuffle([...new Array(N).keys()])) if (!on(k) && nb(k).every((j) => !black[j]) && Math.random() < 0.6) black[k] = 1;
       const clues = new Int8Array(N).fill(-1);
       for (let k = 0; k < N; k++) if (!on(k) && !black[k]) clues[k] = nb(k).filter((j) => black[j]).length;
       const p = { R: n, C: n, clues };
@@ -116,7 +116,7 @@
     generate,
     encode: (p) => ({ r: p.R, c: p.C, g: Array.from(p.clues, (v) => (v < 0 ? '.' : v)).join('') }),
     decode(d) {
-      const R = d && d.r, C = d && d.c;
+      const R = d?.r, C = d?.c;
       if (![R, C].every((x) => Number.isInteger(x) && x >= 3 && x <= 20)) throw new Error('Invalid board size');
       if (typeof d.g !== 'string' || d.g.length !== R * C || !/^[.0-4]+$/.test(d.g)) throw new Error('Invalid clues');
       return { R, C, clues: Int8Array.from(d.g, (ch) => (ch === '.' ? -1 : Number(ch))) };

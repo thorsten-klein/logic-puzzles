@@ -7,16 +7,18 @@
 
   function groups(region) {
     const out = [];
-    region.forEach((g, k) => { (out[g] = out[g] || []).push(k); });
+    region.forEach((g, k) => { out[g] ??= []; out[g].push(k); });
     return out;
   }
 
   function model(p) {
     const { R, C, rows, cols, region } = p;
     const cons = [];
-    const lineWhy = (name, n) => (v) => (v === YES
-      ? `${name} needs ${n} water cell${n === 1 ? '' : 's'}. The open cells must all be filled.`
-      : n === 0 ? `${name} has no water.` : `${name} already has its ${n} water cell${n === 1 ? '' : 's'}. The rest stay dry.`);
+    const lineWhy = (name, n) => (v) => {
+      if (v === YES) return `${name} needs ${PuzzleShell.plural(n, 'water cell')}. The open cells must all be filled.`;
+      if (n === 0) return `${name} has no water.`;
+      return `${name} already has its ${PuzzleShell.plural(n, 'water cell')}. The rest stay dry.`;
+    };
     for (let r = 0; r < R; r++) {
       const cells = Array.from({ length: C }, (_, c) => r * C + c);
       cons.push({ cells, min: rows[r], max: rows[r], area: cells, why: lineWhy(`Row ${r + 1}`, rows[r]) });
@@ -55,7 +57,7 @@
 
   function tryOnce(n) {
     const R = n, C = n, N = R * C;
-    const seeds = PuzzleShell.shuffle([...Array(N).keys()]).slice(0, Math.round(N / 4));
+    const seeds = PuzzleShell.shuffle([...new Array(N).keys()]).slice(0, Math.round(N / 4));
     const region = PuzzleShell.growRegions(R, C, seeds.map((k) => [k]));
     const sol = new Uint8Array(N).fill(NO);
     for (const cells of groups(region)) {
@@ -94,13 +96,13 @@
     },
     encode: (p) => ({ n: p.R, r: p.rows.join(','), c: p.cols.join(','), g: Array.from(p.region, (v) => v.toString(36).padStart(2, '0')).join('') }),
     decode(d) {
-      const n = d && d.n;
+      const n = d?.n;
       if (!Number.isInteger(n) || n < 3 || n > 15) throw new Error('Invalid board size');
       const nums = (x) => String(x).split(',').map(Number);
       const rows = nums(d.r), cols = nums(d.c);
       if (rows.length !== n || cols.length !== n) throw new Error('Invalid counts');
       if (typeof d.g !== 'string' || d.g.length !== 2 * n * n) throw new Error('Invalid tanks');
-      const region = Int32Array.from({ length: n * n }, (_, k) => parseInt(d.g.slice(2 * k, 2 * k + 2), 36));
+      const region = Int32Array.from({ length: n * n }, (_, k) => Number.parseInt(d.g.slice(2 * k, 2 * k + 2), 36));
       return { R: n, C: n, rows, cols, region };
     },
     model,

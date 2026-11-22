@@ -20,8 +20,11 @@
       const v = clues[r * (C + 1) + c];
       if (v < 0) continue;
       cons.push({ cells: cornerCells(p, r, c), min: v, max: v, at: r * (C + 1) + c,
-        why: (x) => (x === YES ? `This ${v} needs every open cell around it shaded.`
-          : v === 0 ? 'A 0 means no shaded cells around this corner.' : `This ${v} already has ${v} shaded cell${v === 1 ? '' : 's'} around it.`) });
+        why: (x) => {
+          if (x === YES) return `This ${v} needs every open cell around it shaded.`;
+          if (v === 0) return 'A 0 means no shaded cells around this corner.';
+          return `This ${v} already has ${PuzzleShell.plural(v, 'shaded cell')} around it.`;
+        } });
     }
     return { N: R * C, cons, check: (s) => Binary.canConnect(R, C, s, NO) };
   }
@@ -82,7 +85,7 @@
     for (let r = 0; r <= R; r++) for (let c = 0; c <= C; c++) {
       const v = clues[r * (C + 1) + c];
       if (v < 0) continue;
-      el('circle', { cx: c * s, cy: r * s, r: s * 0.22, class: 'ck-clue' + (hint && hint.at === r * (C + 1) + c ? ' hint' : '') }, g);
+      el('circle', { cx: c * s, cy: r * s, r: s * 0.22, class: 'ck-clue' + (hint?.at === r * (C + 1) + c ? ' hint' : '') }, g);
       const t = el('text', { x: c * s, y: r * s, 'font-size': s * 0.3, class: 'ck-num' }, g);
       t.textContent = v;
     }
@@ -100,7 +103,7 @@
     generate,
     encode: (p) => ({ r: p.R, c: p.C, g: Array.from(p.clues, (v) => (v < 0 ? '.' : v)).join('') }),
     decode(d) {
-      const R = d && d.r, C = d && d.c;
+      const R = d?.r, C = d?.c;
       if (![R, C].every((x) => Number.isInteger(x) && x >= 2 && x <= 20)) throw new Error('Invalid board size');
       if (typeof d.g !== 'string' || d.g.length !== (R + 1) * (C + 1) || !/^[.0-4]+$/.test(d.g)) throw new Error('Invalid clues');
       const p = { R, C, clues: Int8Array.from(d.g, (ch) => (ch === '.' ? -1 : Number(ch))) };

@@ -16,7 +16,7 @@
       for (let k = 0; k < R * C; k++) {
         if (num[k] !== 1) continue;
         const own = g.cellEdges[k].filter((e) => e >= 0 && s[e] !== CROSS);
-        if (own.some((e) => s[e] === LINE)) return false;
+        if (own.some((e) => s[e] === LINE)) return -1;
         if (own.length) {
           own.forEach((e) => { s[e] = CROSS; });
           if (log) log.push({ edges: own, v: CROSS, reason: 'A 1 is a path on its own; no line touches it.' });
@@ -35,8 +35,8 @@
           from = d ^ 1;
           len++;
         }
-        if (len > v) return false;
-        if (x !== k && num[x] > 1 && len !== v) return false;
+        if (len > v) return -1;
+        if (x !== k && num[x] > 1 && len !== v) return -1;
       }
       return 0;
     }
@@ -60,7 +60,7 @@
         const path = [k];
         used[k] = 1;
         for (let s = 1; s < want; s++) {
-          const x = path[path.length - 1], r = Math.floor(x / n), c = x % n;
+          const x = path.at(-1), r = Math.floor(x / n), c = x % n;
           const opts = [[r - 1, c], [r + 1, c], [r, c - 1], [r, c + 1]].filter(([a, b]) => a >= 0 && b >= 0 && a < n && b < n && !used[a * n + b]);
           if (!opts.length) break;
           const [a, b] = opts[Math.floor(Math.random() * opts.length)];
@@ -68,7 +68,7 @@
           path.push(a * n + b);
         }
         num[path[0]] = path.length;
-        num[path[path.length - 1]] = path.length;
+        num[path.at(-1)] = path.length;
         for (let i = 0; i + 1 < path.length; i++) state[edgeOf(path[i], path[i + 1])] = LINE;
       }
       const p = { R: n, C: n, num };
@@ -90,10 +90,10 @@
     generate,
     encode: (p) => ({ n: p.R, g: Array.from(p.num, (v) => (v ? v.toString(36) : '.')).join('') }),
     decode(d) {
-      const n = d && d.n;
+      const n = d?.n;
       if (!Number.isInteger(n) || n < 2 || n > 16) throw new Error('Invalid board size');
       if (typeof d.g !== 'string' || d.g.length !== n * n) throw new Error('Invalid numbers');
-      return { R: n, C: n, num: Int8Array.from(d.g, (ch) => (ch === '.' ? 0 : parseInt(ch, 36))) };
+      return { R: n, C: n, num: Int8Array.from(d.g, (ch) => (ch === '.' ? 0 : Number.parseInt(ch, 36))) };
     },
     model,
     drawCell: (p) => (svg, k, x, y, s) => {

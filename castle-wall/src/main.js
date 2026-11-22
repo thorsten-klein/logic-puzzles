@@ -51,7 +51,7 @@
           if (open.length && yes === v) return push(open, CROSS, `This ${v} already has all its loop segments in the arrow's direction.`, k);
           if (open.length && yes + open.length === v) return push(open, LINE, `This ${v} needs every open segment in the arrow's direction.`, k);
         }
-        if (rays[k] && rays[k].every((e) => s[e] !== UNKNOWN)) {
+        if (rays[k]?.every((e) => s[e] !== UNKNOWN)) {
           const inside = rays[k].filter((e) => s[e] === LINE).length % 2 === 1;
           if (inside !== (wall[k] === 'w')) return false;
         }
@@ -70,7 +70,7 @@
       const N = n * n;
       const onLoop = (k) => g.cellEdges[k].some((e) => e >= 0 && loop[e] === LINE);
       const wall = new Array(N).fill(''), num = new Int8Array(N).fill(-1), dir = new Int8Array(N);
-      const free = [...Array(N).keys()].filter((k) => !onLoop(k));
+      const free = [...new Array(N).keys()].filter((k) => !onLoop(k));
       for (const k of PuzzleShell.shuffle(free).slice(0, Math.ceil(free.length * 0.6))) {
         const inside = rayEdges(n, n, k).filter((e) => loop[e] === LINE).length % 2 === 1;
         wall[k] = inside ? 'w' : 'b';
@@ -80,7 +80,7 @@
       const p = { R: n, C: n, wall, num, dir };
       const solved = () => Loop.solvedBy(Loop.logicSolve(model(p)));
       if (!solved()) continue;
-      for (const k of PuzzleShell.shuffle([...Array(N).keys()])) {
+      for (const k of PuzzleShell.shuffle([...new Array(N).keys()])) {
         if (!wall[k]) continue;
         if (num[k] >= 0) {
           const keep = num[k];
@@ -116,7 +116,7 @@
     encode: (p) => ({ r: p.R, c: p.C, w: p.wall.map((x) => x || '.').join(''),
       n: Array.from(p.num, (v, k) => (v < 0 ? '.' : v.toString(36) + p.dir[k])).join(',') }),
     decode(d) {
-      const R = d && d.r, C = d && d.c;
+      const R = d?.r, C = d?.c;
       if (![R, C].every((x) => Number.isInteger(x) && x >= 3 && x <= 20)) throw new Error('Invalid board size');
       if (typeof d.w !== 'string' || d.w.length !== R * C || !/^[.bwg]+$/.test(d.w)) throw new Error('Invalid walls');
       const parts = String(d.n).split(',');
@@ -124,9 +124,9 @@
       const num = new Int8Array(R * C).fill(-1), dir = new Int8Array(R * C);
       parts.forEach((t, k) => {
         if (t === '.') return;
-        num[k] = parseInt(t.slice(0, -1), 36);
+        num[k] = Number.parseInt(t.slice(0, -1), 36);
         dir[k] = Number(t.slice(-1)) % 4;
-        if (!(num[k] >= 0)) throw new Error('Invalid numbers');
+        if (!Number.isInteger(num[k]) || num[k] < 0) throw new Error('Invalid numbers');
       });
       return { R, C, wall: Array.from(d.w, (ch) => (ch === '.' ? '' : ch)), num, dir };
     },

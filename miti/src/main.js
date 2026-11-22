@@ -39,16 +39,19 @@
         if (dot[k]) {
           // Three walls: the road crosses pieces - 3 borders here.
           const need = pieces - 3;
-          if (lines > need || lines + open.length < need) return false;
+          if (lines > need || lines + open.length < need) return -1;
           if (!open.length) continue;
-          const v = lines === need ? CROSS : lines + open.length === need ? LINE : 0;
+          let v;
+          if (lines === need) v = CROSS;
+          else if (lines + open.length === need) v = LINE;
+          else v = 0;
           if (!v) continue;
           for (const e of open) s[e] = v;
           if (log) { log.push({ edges: open, v, reason: v === CROSS ? 'Three walls meet at this dot, so the road crosses no more borders here.' : 'Three walls meet at this dot, so the road must cross the open borders here.' }); return 1; }
           changed++;
         } else {
           const need = pieces - 2;
-          if (lines + open.length < need) return false;
+          if (lines + open.length < need) return -1;
           if (open.length && lines + open.length === need) {
             for (const e of open) s[e] = LINE;
             if (log) { log.push({ edges: open, v: LINE, reason: 'At most two walls meet at a point without a dot, so the road must cross the open borders here.' }); return 1; }
@@ -69,7 +72,7 @@
     const oneLoop = () => {
       let x = 0, prev = -1, len = 0;
       do {
-        const e = g.cellEdges[x].find((f) => f >= 0 && s[f] === LINE && g.ends[f].indexOf(prev) < 0);
+        const e = g.cellEdges[x].find((f) => f >= 0 && s[f] === LINE && !g.ends[f].includes(prev));
         const [a, b] = g.ends[e];
         prev = x;
         x = a === x ? b : a;
@@ -133,7 +136,7 @@
     generate,
     encode: (p) => ({ n: p.R, d: Array.from(p.dot).join('') }),
     decode(d) {
-      const n = d && d.n;
+      const n = d?.n;
       if (!Number.isInteger(n) || n < 2 || n > 16 || n % 2) throw new Error('Invalid board size');
       if (typeof d.d !== 'string' || d.d.length !== (n + 1) * (n + 1) || !/^[01]+$/.test(d.d)) throw new Error('Invalid dots');
       return { R: n, C: n, dot: Uint8Array.from(d.d, Number) };

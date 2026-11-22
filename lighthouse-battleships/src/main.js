@@ -6,7 +6,7 @@
 // p.light: 0 none, v + 1 lighthouse with number v.
 
 (() => {
-  const { UNKNOWN, YES, NO } = Binary;
+  const { YES, NO } = Binary;
 
   function fleetFor(n) {
     if (n <= 6) return [3, 2, 1, 1];
@@ -62,8 +62,7 @@
     for (let r = 0; r < R - 1; r++) for (let c = 0; c < C - 1; c++) {
       const k = r * C + c;
       const why = () => 'Ships may not touch at a corner. This cell is water.';
-      cons.push({ cells: [k, k + C + 1], min: 0, max: 1, why });
-      cons.push({ cells: [k + 1, k + C], min: 0, max: 1, why });
+      cons.push({ cells: [k, k + C + 1], min: 0, max: 1, why }, { cells: [k + 1, k + C], min: 0, max: 1, why });
     }
     const maxLen = Math.max(...fleet);
     function check(s, done) {
@@ -114,12 +113,12 @@
     const sol = Uint8Array.from(ship, (x) => (x ? YES : NO));
     // Lighthouses on water cells away from all ships.
     const light = new Uint8Array(n * n);
-    const nearShip = (k) => { const r = Math.floor(k / n), c = k % n; for (let dr = -1; dr <= 1; dr++) for (let dc = -1; dc <= 1; dc++) { const a = r + dr, b = c + dc; if (a >= 0 && b >= 0 && a < n && b < n && ship[a * n + b]) return true; } return false; };
-    const spots = PuzzleShell.shuffle([...Array(n * n).keys()].filter((k) => !nearShip(k)));
+    const nearShip = (k) => { const r = Math.floor(k / n), c = k % n; for (let dr = -1; dr <= 1; dr++) { for (let dc = -1; dc <= 1; dc++) { const a = r + dr, b = c + dc; if (a >= 0 && b >= 0 && a < n && b < n && ship[a * n + b]) { return true; } } } return false; };
+    const spots = PuzzleShell.shuffle([...new Array(n * n).keys()].filter((k) => !nearShip(k)));
     for (const k of spots.slice(0, Math.round(n * n / 4))) {
       const r = Math.floor(k / n), c = k % n;
       let v = 0;
-      for (let i = 0; i < n; i++) { if (i !== c) v += ship[r * n + i]; if (i !== r) v += ship[i * n + c]; }
+      for (let i = 0; i < n; i++) { if (i !== c) { v += ship[r * n + i]; } if (i !== r) { v += ship[i * n + c]; } }
       light[k] = v + 1;
     }
     if (light.filter(Boolean).length < 3) return generate(n);
@@ -129,7 +128,7 @@
       const res = Binary.solve(model(p), 2, 20000);
       if (res.solutions.length === 1 && !res.capped) break;
       const other = res.solutions.find((x) => x.some((v, k) => v !== sol[k]));
-      const diff = [...sol.keys()].filter((k) => !p.given[k] && !light[k] && (!other || other[k] !== sol[k]));
+      const diff = [...sol.keys()].filter((k) => !p.given[k] && !light[k] && (other?.[k] !== sol[k]));
       const k = diff[Math.floor(Math.random() * diff.length)];
       p.given[k] = sol[k];
     }
@@ -157,7 +156,7 @@
     generate,
     encode: (p) => ({ n: p.R, l: Array.from(p.light).join(','), g: Array.from(p.given).join('') }),
     decode(d) {
-      const n = d && d.n;
+      const n = d?.n;
       if (!Number.isInteger(n) || n < 4 || n > 15) throw new Error('Invalid board size');
       const light = Uint8Array.from(String(d.l).split(','), Number);
       if (light.length !== n * n) throw new Error('Invalid lighthouses');

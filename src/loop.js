@@ -9,6 +9,8 @@
 
 const Loop = (() => {
   const UNKNOWN = 0, LINE = 1, CROSS = 2;
+  // A step result that means "contradiction": -1 (or false, the old form).
+  const failed = (r) => r === false || r < 0;
 
   // Precomputed grid data: edge ends and the edges of each cell
   // (as [up, down, left, right], -1 at the border).
@@ -39,14 +41,14 @@ const Loop = (() => {
       const es = g.cellEdges[k].filter((e) => e >= 0);
       const lines = es.filter((e) => s[e] === LINE).length;
       const open = es.filter((e) => s[e] === UNKNOWN);
-      if (lines > 2) return false;
-      if (lines + open.length < (must && must[k] ? 2 : lines ? 2 : 0)) return false;
+      if (lines > 2) return -1;
+      if (lines + open.length < (must?.[k] || lines ? 2 : 0)) return -1;
       if (!open.length) continue;
       let v = 0, why = '';
       if (lines === 2) { v = CROSS; why = 'This cell already has two lines. No more lines can touch it.'; }
       else if (lines === 1 && open.length === 1) { v = LINE; why = 'The line must go on, and this is its only way out.'; }
       else if (lines === 0 && open.length === 1) { v = CROSS; why = 'The loop can not pass through this cell: it has only one open side.'; }
-      else if (must && must[k] && lines + open.length === 2) { v = LINE; why = 'The loop must pass through this cell, and only these sides are open.'; }
+      else if (must?.[k] && lines + open.length === 2) { v = LINE; why = 'The loop must pass through this cell, and only these sides are open.'; }
       if (!v) continue;
       for (const e of open) s[e] = v;
       set += open.length;
@@ -88,12 +90,12 @@ const Loop = (() => {
   // path is crossed, unless that would finish the whole puzzle.
   function loopStep(g, s, must, log) {
     const info = paths(g, s);
-    if (info.loops > 1) return false;
+    if (info.loops > 1) return -1;
     if (info.loops === 1) {
       // A closed loop must be everything.
-      if (info.open.length) return false;
+      if (info.open.length) return -1;
       if (must) for (let k = 0; k < must.length; k++) {
-        if (must[k] && g.cellEdges[k].every((e) => e < 0 || s[e] !== LINE)) return false;
+        if (must[k] && g.cellEdges[k].every((e) => e < 0 || s[e] !== LINE)) return -1;
       }
       return 0;
     }
@@ -116,16 +118,16 @@ const Loop = (() => {
   function settle(m, s, log) {
     for (let guard = 0; guard < 10000; guard++) {
       let r = cellStep(m.g, s, m.must, log);
-      if (r === false) return false;
-      if (r) { if (log) return true; continue; }
+      if (failed(r)) return false;
+      if (r) { if (log) { return true; } continue; }
       if (m.rule) {
         r = m.rule(s, log);
-        if (r === false) return false;
-        if (r) { if (log) return true; continue; }
+        if (failed(r)) return false;
+        if (r) { if (log) { return true; } continue; }
       }
       r = loopStep(m.g, s, m.must, log);
-      if (r === false) return false;
-      if (r) { if (log) return true; continue; }
+      if (failed(r)) return false;
+      if (r) { if (log) { return true; } continue; }
       return true;
     }
     return true; // safety limit reached
@@ -274,7 +276,7 @@ const Loop = (() => {
     const stack = [Math.floor(Math.random() * h * h)];
     seen[stack[0]] = 1;
     while (stack.length) {
-      const k = stack[stack.length - 1];
+      const k = stack.at(-1);
       const i = Math.floor(k / h), j = k % h;
       const opts = [[i - 1, j], [i + 1, j], [i, j - 1], [i, j + 1]]
         .filter(([a, b]) => a >= 0 && b >= 0 && a < h && b < h && !seen[a * h + b]);
@@ -386,7 +388,7 @@ const Loop = (() => {
   //   fixed(p) -> optional list of edges given as lines.
   function startGame(cfg) {
     const fixed = (p) => (cfg.fixed ? cfg.fixed(p) : []);
-    const withFixed = (p, s) => { for (const e of fixed(p)) s[e] = LINE; return s; };
+    const withFixed = (p, s) => { for (const e of fixed(p)) { s[e] = LINE; } return s; };
     PuzzleShell.start({
       id: cfg.id, name: cfg.name, rules: cfg.rules, size: cfg.size, solvedText: cfg.solvedText,
       controls: 'Click between two cells to draw a line, click again for a cross, again to clear. Right click cycles the other way.',
@@ -420,7 +422,7 @@ const Loop = (() => {
         return complete(m, t) && settle(m, t);
       },
       hints: (p, s) => hints(cfg.model(p), s, p.solution),
-      applyHint(p, s, h) { for (const e of h.edges) s[e] = h.v; withFixed(p, s); },
+      applyHint(p, s, h) { for (const e of h.edges) { s[e] = h.v; } withFixed(p, s); },
     });
   }
 

@@ -48,10 +48,10 @@
         const group = [k];
         seen[k] = 1;
         let closed = true;
-        for (let i = 0; i < group.length; i++) for (const e of at[group[i]]) {
+        for (const cur of group) for (const e of at[cur]) {
           if (s[e] === UNKNOWN) { closed = false; continue; }
           if (s[e] !== YES) continue;
-          const o = cands[e].a === group[i] ? cands[e].b : cands[e].a;
+          const o = cands[e].a === cur ? cands[e].b : cands[e].a;
           if (!seen[o]) { seen[o] = 1; group.push(o); }
         }
         const cnt = [0, 0, 0, 0];
@@ -75,7 +75,7 @@
       let ok = true;
       for (let g = 0; g < groups && ok; g++) {
         // A grey circle on a free cell.
-        const free = [...Array(N).keys()].filter((k) => !col[k] && !used[k]);
+        const free = [...new Array(N).keys()].filter((k) => !col[k] && !used[k]);
         if (!free.length) { ok = false; break; }
         const grey = free[Math.floor(Math.random() * free.length)];
         col[grey] = 3;
@@ -187,7 +187,7 @@
     const log = [];
     Binary.settle(model(p), s, log);
     const step = log.find((x) => x.cells.some((i) => state[i] === UNKNOWN));
-    if (step) return [{ cells: step.cells, v: step.v, reason: step.con && step.con.why ? step.con.why(step.v) : 'This follows from the rules.' }];
+    if (step) return [{ cells: step.cells, v: step.v, reason: step.con?.why ? step.con.why(step.v) : 'This follows from the rules.' }];
     const i = p.solution.findIndex((v, j) => state[j] === UNKNOWN && v === YES);
     return i < 0 ? [] : [{ cells: [i], v: YES, reason: 'No one-step deduction is left; this needs a longer chain. A line goes here.' }];
   }
@@ -204,7 +204,7 @@
     generate,
     encode: (p) => ({ n: p.n, g: Array.from(p.col).join('') }),
     decode(d) {
-      const n = d && d.n;
+      const n = d?.n;
       if (!Number.isInteger(n) || n < 3 || n > 12) throw new Error('Invalid board size');
       if (typeof d.g !== 'string' || d.g.length !== n * n || !/^[0-3]+$/.test(d.g)) throw new Error('Invalid circles');
       const p = prepare({ n, col: Uint8Array.from(d.g, Number) });

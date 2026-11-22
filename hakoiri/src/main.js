@@ -12,7 +12,7 @@
   function prepare(p) {
     const { R, C, room } = p;
     p.rooms = [];
-    room.forEach((g, k) => { (p.rooms[g] = p.rooms[g] || []).push(k); });
+    room.forEach((g, k) => { p.rooms[g] ??= []; p.rooms[g].push(k); });
     p.near = Array.from({ length: R * C }, (_, k) => {
       const r = Math.floor(k / C), c = k % C, out = [];
       for (let dr = -1; dr <= 1; dr++) for (let dc = -1; dc <= 1; dc++) {
@@ -29,7 +29,7 @@
     const { R, C } = p, N = R * C;
     const sure = (k) => !(cand[k] & 1);
     const maybe = (k) => cand[k] & 0b1110;
-    const start = [...Array(N).keys()].find(sure);
+    const start = [...new Array(N).keys()].find(sure);
     if (start === undefined) return true;
     const seen = new Uint8Array(N);
     const stack = [start];
@@ -41,7 +41,7 @@
         if (a >= 0 && b >= 0 && a < R && b < C && !seen[j] && maybe(j)) { seen[j] = 1; stack.push(j); }
       }
     }
-    return [...Array(N).keys()].every((k) => !sure(k) || seen[k]);
+    return [...new Array(N).keys()].every((k) => !sure(k) || seen[k]);
   }
 
   function propagate(p, cand) {
@@ -95,7 +95,7 @@
     const deadline = Date.now() + 8000;
     while (Date.now() < deadline) {
       const R = n, C = n, N = R * C;
-      const seeds = PuzzleShell.shuffle([...Array(N).keys()]).slice(0, Math.round(N / 6));
+      const seeds = PuzzleShell.shuffle([...new Array(N).keys()]).slice(0, Math.round(N / 6));
       const room = PuzzleShell.growRegions(R, C, seeds.map((k) => [k]));
       const p = prepare({ R, C, room });
       if (p.rooms.some((cells) => !cells || cells.length < 3)) continue;
@@ -106,7 +106,7 @@
       const given = Int8Array.from(sol);
       const solved = () => { const c = startCand(p, given); return propagate(p, c) && c.every(one); };
       if (!solved()) continue;
-      for (const k of PuzzleShell.shuffle([...Array(N).keys()])) {
+      for (const k of PuzzleShell.shuffle([...new Array(N).keys()])) {
         if (!given[k]) continue;
         const v = given[k];
         given[k] = 0;
@@ -177,11 +177,11 @@
     generate,
     encode: (p) => ({ n: p.R, g: Array.from(p.room, (v) => v.toString(36).padStart(2, '0')).join(''), v: Array.from(p.given).join('') }),
     decode(d) {
-      const n = d && d.n;
+      const n = d?.n;
       if (!Number.isInteger(n) || n < 3 || n > 15) throw new Error('Invalid board size');
       if (typeof d.g !== 'string' || d.g.length !== 2 * n * n) throw new Error('Invalid rooms');
       if (typeof d.v !== 'string' || d.v.length !== n * n || !/^[0-3]+$/.test(d.v)) throw new Error('Invalid givens');
-      const p = prepare({ R: n, C: n, room: Int32Array.from({ length: n * n }, (_, k) => parseInt(d.g.slice(2 * k, 2 * k + 2), 36)) });
+      const p = prepare({ R: n, C: n, room: Int32Array.from({ length: n * n }, (_, k) => Number.parseInt(d.g.slice(2 * k, 2 * k + 2), 36)) });
       if (p.rooms.some((cells) => !cells)) throw new Error('Invalid rooms');
       p.given = Int8Array.from(d.v, Number);
       const res = solve(p, startCand(p, p.given), 2, 50000);

@@ -21,7 +21,7 @@
     }
     // No loops: a path has one edge less than its cells.
     let edges = 0;
-    for (const k of cells) { if (set.has(k + 1) && (k + 1) % C) edges++; if (set.has(k + C)) edges++; }
+    for (const k of cells) { if (set.has(k + 1) && (k + 1) % C) { edges++; } if (set.has(k + C)) { edges++; } }
     return edges === cells.length - 1;
   }
   const ends = (C, cells) => {
@@ -69,15 +69,15 @@
       const snakes = [];
       const nb = (k) => { const r = Math.floor(k / C), c = k % C; return [[r - 1, c], [r + 1, c], [r, c - 1], [r, c + 1]].filter(([a, b]) => a >= 0 && b >= 0 && a < R && b < C).map(([a, b]) => a * C + b); };
       for (;;) {
-        const free = [...Array(N).keys()].filter((k) => used[k] < 0);
+        const free = [...new Array(N).keys()].filter((k) => used[k] < 0);
         if (!free.length) break;
         const deg = (k) => nb(k).filter((j) => used[j] < 0).length;
-        const start = free.reduce((a, b) => (deg(b) < deg(a) || (deg(b) === deg(a) && Math.random() < 0.3) ? b : a));
+        const start = free.reduce((a, b) => (deg(b) < deg(a) || (deg(b) === deg(a) && Math.random() < 0.3) ? b : a), free[0]);
         const path = [start];
         used[start] = snakes.length;
         const want = 2 + Math.floor(Math.random() * 5);
         while (path.length < want) {
-          const x = path[path.length - 1];
+          const x = path.at(-1);
           const opts = PuzzleShell.shuffle(nb(x).filter((j) => used[j] < 0 && snakeLike(C, path.concat([j]))));
           if (!opts.length) break;
           const j = opts.reduce((a, b) => (deg(b) < deg(a) ? b : a));
@@ -100,7 +100,11 @@
         p.clues[k] = 10 + cells.length;
       }
     },
-    cellText: (p, k) => (p.clues[k] >= 10 ? String(p.clues[k] - 10) : p.clues[k] === 2 ? '×' : ''),
+    cellText: (p, k) => {
+      if (p.clues[k] >= 10) return String(p.clues[k] - 10);
+      if (p.clues[k] === 2) return '×';
+      return '';
+    },
     decorate(p, k, g, x, y, s) {
       if (p.clues[k] !== 1) return;
       const o = document.createElementNS('http://www.w3.org/2000/svg', 'circle');
