@@ -26,6 +26,21 @@
     return id;
   }
 
+  function findWhiteBorders(lines, room) {
+    const borders = [];
+    for (const line of lines) {
+      const parts = [];
+      for (const k of line) {
+        if (parts.length && room[parts.at(-1)[0]] === room[k]) parts.at(-1).push(k);
+        else parts.push([k]);
+      }
+      for (let i = 1; i + 1 < parts.length; i++) {
+        borders.push([parts[i - 1][parts[i - 1].length - 1], ...parts[i], parts[i + 1][0]]);
+      }
+    }
+    return borders;
+  }
+
   function model(p) {
     const { R, C, room, clues } = p;
     const cons = [];
@@ -55,17 +70,9 @@
     const lines = [];
     for (let r = 0; r < R; r++) lines.push(Array.from({ length: C }, (_, c) => r * C + c));
     for (let c = 0; c < C; c++) lines.push(Array.from({ length: R }, (_, r) => r * C + c));
-    for (const line of lines) {
-      const parts = [];
-      for (const k of line) {
-        if (parts.length && room[parts.at(-1)[0]] === room[k]) parts.at(-1).push(k);
-        else parts.push([k]);
-      }
-      for (let i = 1; i + 1 < parts.length; i++) {
-        const cells = [parts[i - 1][parts[i - 1].length - 1], ...parts[i], parts[i + 1][0]];
-        cons.push({ cells, min: 1, max: cells.length,
-          why: () => 'A straight white line may not cross two room borders. This cell must be shaded to break it.' });
-      }
+    for (const cells of findWhiteBorders(lines, room)) {
+      cons.push({ cells, min: 1, max: cells.length,
+        why: () => 'A straight white line may not cross two room borders. This cell must be shaded to break it.' });
     }
     return { N: R * C, cons, check: (s) => Binary.openConnected(R, C, s) };
   }

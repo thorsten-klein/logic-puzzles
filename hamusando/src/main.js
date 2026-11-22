@@ -57,6 +57,21 @@
 
   const startCand = (p) => Int32Array.from({ length: p.n * p.n }, (_, i) => (p.given?.[i] ? 1 << p.given[i] : ALL));
 
+  function thinGivensAndClues(p, N, n, solved) {
+    for (const [side, i] of PuzzleShell.shuffle([...new Array(n).keys()].flatMap((i) => [['left', i], ['top', i]]))) {
+      const keep = p[side][i];
+      p[side][i] = -1;
+      prepare(p);
+      if (!solved()) { p[side][i] = keep; prepare(p); }
+    }
+    for (const i of PuzzleShell.shuffle([...new Array(N).keys()])) {
+      if (!p.given[i]) continue;
+      const keep = p.given[i];
+      p.given[i] = 0;
+      if (!solved()) p.given[i] = keep;
+    }
+  }
+
   function generate(n) {
     const deadline = Date.now() + 8000;
     while (Date.now() < deadline) {
@@ -81,18 +96,7 @@
         p.given[i] = sol[i];
       }
       if (!solved()) continue;
-      for (const [side, i] of PuzzleShell.shuffle([...new Array(n).keys()].flatMap((i) => [['left', i], ['top', i]]))) {
-        const keep = p[side][i];
-        p[side][i] = -1;
-        prepare(p);
-        if (!solved()) { p[side][i] = keep; prepare(p); }
-      }
-      for (const i of PuzzleShell.shuffle([...new Array(N).keys()])) {
-        if (!p.given[i]) continue;
-        const keep = p.given[i];
-        p.given[i] = 0;
-        if (!solved()) p.given[i] = keep;
-      }
+      thinGivensAndClues(p, N, n, solved);
       p.solution = sol;
       return p;
     }

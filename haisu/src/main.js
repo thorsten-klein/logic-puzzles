@@ -28,12 +28,15 @@
         from = d ^ 1;
       }
       const finished = x === goal;
-      for (let i = 0; i < count.length; i++) {
-        if (count[i] < 0) continue;
-        if (visits[i] > count[i]) return -1;
-        if (finished && visits[i] !== count[i]) return -1;
-      }
-      return 0;
+      const countOk = () => {
+        for (let i = 0; i < count.length; i++) {
+          if (count[i] < 0) continue;
+          if (visits[i] > count[i]) return false;
+          if (finished && visits[i] !== count[i]) return false;
+        }
+        return true;
+      };
+      return countOk() ? 0 : -1;
     }
     return { g, label, fill: true, rule };
   }
@@ -75,24 +78,29 @@
       }
       const p = { R: n, C: n, room, count, entry, start, goal };
       if (!Links.unique(model(p), 8000)) continue;
-      // Thin: drop room counts and entry numbers while it stays unique.
-      for (const i of PuzzleShell.shuffle([...count.keys()])) {
-        const keep = count[i];
-        count[i] = -1;
-        if (!Links.unique(model(p), 8000)) count[i] = keep;
-        if (Date.now() > deadline + 3000) break;
-      }
-      for (const k of PuzzleShell.shuffle([...new Array(N).keys()])) {
-        if (!entry[k]) continue;
-        const keep = entry[k];
-        entry[k] = 0;
-        if (!Links.unique(model(p), 8000)) entry[k] = keep;
-        if (Date.now() > deadline + 4000) break;
-      }
+      thin(p, deadline);
       p.solution = state;
       return p;
     }
     return null;
+  }
+
+  // Thin: drop room counts and entry numbers while it stays unique.
+  function thin(p, deadline) {
+    for (const i of PuzzleShell.shuffle([...p.count.keys()])) {
+      const keep = p.count[i];
+      p.count[i] = -1;
+      if (!Links.unique(model(p), 8000)) p.count[i] = keep;
+      if (Date.now() > deadline + 3000) break;
+    }
+    const N = p.R * p.C;
+    for (const k of PuzzleShell.shuffle([...new Array(N).keys()])) {
+      if (!p.entry[k]) continue;
+      const keep = p.entry[k];
+      p.entry[k] = 0;
+      if (!Links.unique(model(p), 8000)) p.entry[k] = keep;
+      if (Date.now() > deadline + 4000) break;
+    }
   }
 
   Links.startGame({
