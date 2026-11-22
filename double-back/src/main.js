@@ -3,7 +3,6 @@
 // times). Built on the shared Loop engine.
 
 (() => {
-  const { UNKNOWN, LINE, CROSS } = Loop;
 
   function model(p) {
     const g = Loop.grid(p.R, p.C);
