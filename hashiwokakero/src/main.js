@@ -42,11 +42,9 @@
   }
 
   function settle(p, lo, hi) {
-    for (;;) {
-      const r = step(p, lo, hi);
-      if (r < 0) return false;
-      if (r === 0) return true;
-    }
+    let r = 1;
+    while (r > 0) r = step(p, lo, hi);
+    return r === 0;
   }
 
   const solve = (p, stopAt = 2, maxNodes = 20000) => PuzzleShell.solveIslandGraph(p, settle, 2, stopAt, maxNodes);
@@ -130,24 +128,12 @@
 
   // --- hints ---
   function hints(p, state) {
-    const out = [];
+    const wrong = [];
     state.forEach((v, j) => {
-      if (v && v > p.solution[j]) out.push({ pairs: [j], v: p.solution[j], reason: 'Too many bridges here.' });
+      if (v && v > p.solution[j]) wrong.push({ pairs: [j], v: p.solution[j], reason: 'Too many bridges here.' });
     });
-    if (out.length) return out;
-    const lo = Int8Array.from(state), hi = new Int8Array(state.length).fill(2);
-    const log = [];
-    for (let i = 0; i < 50 && !log.some((x) => x.pairs.some((j) => lo[j] > state[j])); i++) {
-      if (step(p, lo, hi, log) <= 0) break; // nothing more, or a contradiction
-    }
-    const firstUseful = log.find((x) => x.pairs.some((j) => lo[j] > state[j]));
-    if (firstUseful) {
-      return [{ pairs: firstUseful.pairs.filter((j) => lo[j] > state[j]), island: firstUseful.island,
-        set: firstUseful.pairs.map((j) => [j, Math.max(lo[j], state[j])]), reason: firstUseful.reason }];
-    }
-    const j = state.findIndex((v, i) => v < p.solution[i]);
-    if (j >= 0) return [{ pairs: [j], set: [[j, p.solution[j]]], reason: 'No simple step is left. These islands are joined here.' }];
-    return [];
+    if (wrong.length) return wrong;
+    return PuzzleShell.findIslandHint(p, state, (lo, hi, log) => step(p, lo, hi, log), 2, 'No simple step is left. These islands are joined here.');
   }
 
   PuzzleShell.start({
@@ -174,11 +160,7 @@
     },
     newState: (p) => new Int8Array(p.pairs.length),
     saveState: (s) => Array.from(s).join(''),
-    loadState(p, v) {
-      const s = new Int8Array(p.pairs.length);
-      if (typeof v === 'string' && v.length === s.length) for (let j = 0; j < s.length; j++) s[j] = Number(v[j]) % 3;
-      return s;
-    },
+    loadState: (p, v) => (typeof v === 'string' && v.length === p.pairs.length ? Int8Array.from(v, (ch) => Number(ch) % 3) : new Int8Array(p.pairs.length)),
     render,
     check: (p, s) => s.every((v, j) => v === p.solution[j]),
     hints,

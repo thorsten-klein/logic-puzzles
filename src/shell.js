@@ -1223,20 +1223,34 @@ const PuzzleShell = (() => {
 
   function shapeKey(C, cells) {
     const pts = cells.map((k) => [Math.floor(k / C), k % C]);
-    const keys = [];
-    for (let t = 0; t < 8; t++) {
-      const q = pts.map(([r, c]) => {
-        let a = r, b = c;
-        if (t & 1) [a, b] = [b, -a];
-        if (t & 2) [a, b] = [-a, -b];
-        if (t & 4) b = -b;
-        return [a, b];
-      });
-      const r0 = Math.min(...q.map((x) => x[0])), c0 = Math.min(...q.map((x) => x[1]));
-      keys.push(q.map(([a, b]) => `${a - r0},${b - c0}`).sort().join(' '));
-    }
-    return keys.slice().sort()[0];
+    const trans = [[1, 0, 0, 1], [0, -1, 1, 0], [-1, 0, 0, -1], [0, 1, -1, 0], [-1, 0, 0, 1], [0, 1, 1, 0], [1, 0, 0, -1], [0, -1, -1, 0]];
+    const forms = trans.map(([a, b, c, d]) => {
+      const q = pts.map(([r, col]) => [a * r + b * col, c * r + d * col]);
+      const minR = Math.min(...q.map((p) => p[0])), minC = Math.min(...q.map((p) => p[1]));
+      return q.map(([r, col]) => `${r - minR},${col - minC}`).sort().join(' ');
+    });
+    return forms.sort((x, y) => x.localeCompare(y))[0];
   }
 
-  return { start, prepare, plural, resultClass, shuffle, gridBoard, colName, cellName, fitCell, digitInput, regionBorders, growRegions, addGivens, dropGivens, TINTS, arrowIcon, figure, shapeFigures, graphConnected, islandDegreeStep, solveIslandGraph, growIslandNetwork, buildIslandPairs, checkCrossingPairs, shapeKey };
+  function findIslandHint(p, state, stepFn, maxCap = 2, defaultReason = 'No simple step is left.') {
+    const lo = Int8Array.from(state), hi = new Int8Array(state.length).fill(maxCap);
+    const log = [];
+    for (let i = 0; i < 50 && !log.some((x) => x.pairs.some((j) => lo[j] > state[j])); i++) {
+      if (stepFn(lo, hi, log) <= 0) break;
+    }
+    const firstUseful = log.find((x) => x.pairs.some((j) => lo[j] > state[j]));
+    if (firstUseful) {
+      return [{
+        pairs: firstUseful.pairs.filter((j) => lo[j] > state[j]),
+        island: firstUseful.island,
+        set: firstUseful.pairs.map((j) => [j, Math.max(lo[j], state[j])]),
+        reason: firstUseful.reason,
+      }];
+    }
+    const j = state.findIndex((v, i) => v < p.solution[i]);
+    if (j >= 0) return [{ pairs: [j], set: [[j, p.solution[j]]], reason: defaultReason }];
+    return [];
+  }
+
+  return { start, prepare, plural, resultClass, shuffle, gridBoard, colName, cellName, fitCell, digitInput, regionBorders, growRegions, addGivens, dropGivens, TINTS, arrowIcon, figure, shapeFigures, graphConnected, islandDegreeStep, solveIslandGraph, growIslandNetwork, buildIslandPairs, checkCrossingPairs, shapeKey, findIslandHint };
 })();
