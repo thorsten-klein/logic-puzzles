@@ -17,7 +17,8 @@
     return out;
   }
 
-  function stepKnown(s, k, v, orth, diag, fit, BROKEN, log) {
+  function stepKnown(ctx, k, v, orth, diag) {
+    const { s, fit, BROKEN, log } = ctx;
     const f = fit(s, s[k] === NO ? orth : diag, v);
     if (f === BROKEN) return -1;
     if (f) {
@@ -31,7 +32,8 @@
     return 0;
   }
 
-  function stepUnknown(s, k, v, orth, diag, fit, BROKEN, log) {
+  function stepUnknown(ctx, k, v, orth, diag) {
+    const { s, fit, BROKEN, log } = ctx;
     const asWhite = fit(s, orth, v), asBlack = fit(s, diag, v);
     if (asWhite === BROKEN && asBlack === BROKEN) return -1;
     if (asWhite === BROKEN || asBlack === BROKEN) {
@@ -67,11 +69,12 @@
       return null;
     };
     function propagate(s, log) {
+      const ctx = { s, fit, BROKEN, log };
       for (const [k, orth, diag] of numbered) {
         const v = clues[k];
         const res = (s[k] === NO || s[k] === YES)
-          ? stepKnown(s, k, v, orth, diag, fit, BROKEN, log)
-          : stepUnknown(s, k, v, orth, diag, fit, BROKEN, log);
+          ? stepKnown(ctx, k, v, orth, diag)
+          : stepUnknown(ctx, k, v, orth, diag);
         if (res !== 0) return res;
       }
       return 0;

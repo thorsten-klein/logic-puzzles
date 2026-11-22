@@ -12,21 +12,27 @@
     return out;
   }
 
+  function checkOneBorder(borderEdges, s, log) {
+    const lines = borderEdges.filter((e) => s[e] === LINE).length;
+    const open = borderEdges.filter((e) => s[e] === UNKNOWN);
+    if (lines > 2 || lines + open.length < 2) return -1;
+    if (open.length && lines === 2) {
+      for (const e of open) s[e] = CROSS;
+      if (log) log.push({ edges: open, v: CROSS, reason: 'The loop already enters and leaves this region. It crosses no more of its border.' });
+      return open.length;
+    }
+    if (open.length && lines + open.length === 2) {
+      for (const e of open) s[e] = LINE;
+      if (log) log.push({ edges: open, v: LINE, reason: 'The loop must visit this region, and only these border crossings are left.' });
+      return open.length;
+    }
+    return 0;
+  }
+
   function checkRegionCrossing(s, border, list, clues, visited, skipped, log) {
     for (let i = 0; i < list.length; i++) {
-      const lines = border[i].filter((e) => s[e] === LINE).length;
-      const open = border[i].filter((e) => s[e] === UNKNOWN);
-      if (lines > 2 || lines + open.length < 2) return -1;
-      if (open.length && lines === 2) {
-        for (const e of open) s[e] = CROSS;
-        if (log) log.push({ edges: open, v: CROSS, reason: 'The loop already enters and leaves this region. It crosses no more of its border.' });
-        return open.length;
-      }
-      if (open.length && lines + open.length === 2) {
-        for (const e of open) s[e] = LINE;
-        if (log) log.push({ edges: open, v: LINE, reason: 'The loop must visit this region, and only these border crossings are left.' });
-        return open.length;
-      }
+      const res = checkOneBorder(border[i], s, log);
+      if (res !== 0) return res;
       const v = clues[i];
       if (v >= 0) {
         const yes = list[i].filter((k) => visited(s, k)).length;
@@ -37,17 +43,24 @@
     return 0;
   }
 
+  function forceCrossVisited(y, s, edges, log) {
+    const es = edges(y), lines = es.filter((e) => s[e] === LINE).length, open = es.filter((e) => s[e] === UNKNOWN);
+    if (lines + open.length < 2) return -1;
+    if (lines + open.length === 2) {
+      for (const e of open) s[e] = LINE;
+      if (log) log.push({ edges: open, v: LINE, reason: 'Skipped cells may not touch across a region border, so the loop visits this cell.' });
+      return open.length;
+    }
+    return 0;
+  }
+
   function checkCrossPairs(s, crossPairs, skipped, visited, edges, log) {
     for (const [a, b] of crossPairs) {
       if (skipped(s, a) && skipped(s, b)) return -1;
       for (const [x, y] of [[a, b], [b, a]]) {
-        if (!skipped(s, x) || visited(s, y)) continue;
-        const es = edges(y), lines = es.filter((e) => s[e] === LINE).length, open = es.filter((e) => s[e] === UNKNOWN);
-        if (lines + open.length < 2) return -1;
-        if (lines + open.length === 2) {
-          for (const e of open) s[e] = LINE;
-          if (log) log.push({ edges: open, v: LINE, reason: 'Skipped cells may not touch across a region border, so the loop visits this cell.' });
-          return open.length;
+        if (skipped(s, x) && !visited(s, y)) {
+          const res = forceCrossVisited(y, s, edges, log);
+          if (res !== 0) return res;
         }
       }
     }

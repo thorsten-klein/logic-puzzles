@@ -6,18 +6,23 @@
 (() => {
   const { UNKNOWN, YES, NO } = Binary;
 
+  function stepDiffNeighbour(k, j, clues, s, log) {
+    if (clues[j] < 0 || clues[j] === clues[k]) return 0;
+    if (s[j] === s[k]) return -1;
+    if (s[j] !== UNKNOWN) return 0;
+    s[j] = s[k] === YES ? NO : YES;
+    if (log) log.push({ cells: [j], v: s[j], reason: `Next-door numbers ${clues[k]} and ${clues[j]} differ, so these cells are in different areas and have different colours.` });
+    return 1;
+  }
+
   // Next-door cells with different numbers lie in different areas,
   // so they have different colours.
   function stepDiffNumbers(N, clues, nb, s, log) {
     for (let k = 0; k < N; k++) {
       if (clues[k] < 0 || s[k] === UNKNOWN) continue;
       for (const j of nb(k)) {
-        if (clues[j] < 0 || clues[j] === clues[k]) continue;
-        if (s[j] === s[k]) return -1;
-        if (s[j] !== UNKNOWN) continue;
-        s[j] = s[k] === YES ? NO : YES;
-        if (log) log.push({ cells: [j], v: s[j], reason: `Next-door numbers ${clues[k]} and ${clues[j]} differ, so these cells are in different areas and have different colours.` });
-        return 1;
+        const res = stepDiffNeighbour(k, j, clues, s, log);
+        if (res !== 0) return res;
       }
     }
     return 0;
@@ -38,16 +43,23 @@
     return 0;
   }
 
-  // Checks one area (cells): rectangle rule and number bounds.
-  function checkArea(cells, v, s, done, reach, clues, nb, C) {
-    const closed = done || cells.every((k) => nb(k).every((j) => s[j] !== UNKNOWN));
+  // Checks rectangle rule for one area.
+  function areaRectOk(cells, v, s, closed, C) {
     const rows = cells.map((k) => Math.floor(k / C)), cols = cells.map((k) => k % C);
     const r1 = Math.min(...rows), r2 = Math.max(...rows), c1 = Math.min(...cols), c2 = Math.max(...cols);
     const rect = cells.length === (r2 - r1 + 1) * (c2 - c1 + 1);
     if (v === YES) {
       for (let r = r1; r <= r2; r++) for (let c = c1; c <= c2; c++) if (s[r * C + c] === NO) return false;
-      if (closed && !rect) return false;
-    } else if (closed && rect) return false;
+      return !closed || rect;
+    }
+    return !closed || !rect;
+  }
+
+  // Checks one area (cells): rectangle rule and number bounds.
+  function checkArea(cells, v, reach, ctx) {
+    const { s, done, clues, nb, C } = ctx;
+    const closed = done || cells.every((k) => nb(k).every((j) => s[j] !== UNKNOWN));
+    if (!areaRectOk(cells, v, s, closed, C)) return false;
     const high = reach.list[reach.id[cells[0]]].length;
     for (const k of cells) {
       const n = clues[k];
@@ -76,10 +88,11 @@
       return { id, list };
     };
     function check(s, done) {
+      const ctx = { s, done, clues, nb, C };
       for (const v of [YES, NO]) {
         const a = areas(s, (k) => s[k] === v);
         const reach = areas(s, (k) => s[k] !== (v === YES ? NO : YES));
-        if (!a.list.every((cells) => checkArea(cells, v, s, done, reach, clues, nb, C))) return false;
+        if (!a.list.every((cells) => checkArea(cells, v, reach, ctx))) return false;
       }
       return true;
     }

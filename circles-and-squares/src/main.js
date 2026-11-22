@@ -80,17 +80,20 @@
     }
   }
 
+  function breakOneBlock(block, white, n, near) {
+    if (block.some((k) => white[k])) return;
+    for (const k of PuzzleShell.shuffle(block)) {
+      if (near(k)) continue;
+      white[k] = 1;
+      if (Binary.canConnect(n, n, Uint8Array.from(white, (x) => (x ? NO : YES)), YES)) break;
+      white[k] = 0;
+    }
+  }
+
   // Break up all-shaded 2×2 blocks with single white cells.
   function breakAllShadedBlocks(white, n, near) {
     for (let r = 0; r < n - 1; r++) for (let c = 0; c < n - 1; c++) {
-      const block = [r * n + c, r * n + c + 1, (r + 1) * n + c, (r + 1) * n + c + 1];
-      if (block.some((k) => white[k])) continue;
-      for (const k of PuzzleShell.shuffle(block)) {
-        if (near(k)) continue;
-        white[k] = 1;
-        if (Binary.canConnect(n, n, Uint8Array.from(white, (x) => (x ? NO : YES)), YES)) break;
-        white[k] = 0;
-      }
+      breakOneBlock([r * n + c, r * n + c + 1, (r + 1) * n + c, (r + 1) * n + c + 1], white, n, near);
     }
   }
 

@@ -79,7 +79,7 @@
       if (!done) return true;
       // Every region has one number, each number one region.
       const nums = seen.map((r) => [...r.nums][0]);
-      return nums.every((v) => v) && new Set(nums).size === nums.length;
+      return nums.every(Boolean) && new Set(nums).size === nums.length;
     }
     return { N: edges.length, cons, check };
   }
