@@ -12,6 +12,48 @@
     return out;
   }
 
+  function checkRegionCrossing(s, border, list, clues, visited, skipped, log) {
+    for (let i = 0; i < list.length; i++) {
+      const lines = border[i].filter((e) => s[e] === LINE).length;
+      const open = border[i].filter((e) => s[e] === UNKNOWN);
+      if (lines > 2 || lines + open.length < 2) return -1;
+      if (open.length && lines === 2) {
+        for (const e of open) s[e] = CROSS;
+        if (log) log.push({ edges: open, v: CROSS, reason: 'The loop already enters and leaves this region. It crosses no more of its border.' });
+        return open.length;
+      }
+      if (open.length && lines + open.length === 2) {
+        for (const e of open) s[e] = LINE;
+        if (log) log.push({ edges: open, v: LINE, reason: 'The loop must visit this region, and only these border crossings are left.' });
+        return open.length;
+      }
+      const v = clues[i];
+      if (v >= 0) {
+        const yes = list[i].filter((k) => visited(s, k)).length;
+        const no = list[i].filter((k) => skipped(s, k)).length;
+        if (yes > v || list[i].length - no < v) return -1;
+      }
+    }
+    return 0;
+  }
+
+  function checkCrossPairs(s, crossPairs, skipped, visited, edges, log) {
+    for (const [a, b] of crossPairs) {
+      if (skipped(s, a) && skipped(s, b)) return -1;
+      for (const [x, y] of [[a, b], [b, a]]) {
+        if (!skipped(s, x) || visited(s, y)) continue;
+        const es = edges(y), lines = es.filter((e) => s[e] === LINE).length, open = es.filter((e) => s[e] === UNKNOWN);
+        if (lines + open.length < 2) return -1;
+        if (lines + open.length === 2) {
+          for (const e of open) s[e] = LINE;
+          if (log) log.push({ edges: open, v: LINE, reason: 'Skipped cells may not touch across a region border, so the loop visits this cell.' });
+          return open.length;
+        }
+      }
+    }
+    return 0;
+  }
+
   function model(p) {
     const { R, C, region, clues } = p;
     const g = Loop.grid(R, C);
@@ -29,43 +71,42 @@
       crossPairs.push([a, b]);
     }
     function rule(s, log) {
-      for (let i = 0; i < list.length; i++) {
-        const lines = border[i].filter((e) => s[e] === LINE).length;
-        const open = border[i].filter((e) => s[e] === UNKNOWN);
-        if (lines > 2 || lines + open.length < 2) return -1;
-        if (open.length && lines === 2) {
-          for (const e of open) s[e] = CROSS;
-          if (log) log.push({ edges: open, v: CROSS, reason: 'The loop already enters and leaves this region. It crosses no more of its border.' });
-          return open.length;
-        }
-        if (open.length && lines + open.length === 2) {
-          for (const e of open) s[e] = LINE;
-          if (log) log.push({ edges: open, v: LINE, reason: 'The loop must visit this region, and only these border crossings are left.' });
-          return open.length;
-        }
-        const v = clues[i];
-        if (v < 0) continue;
-        const yes = list[i].filter((k) => visited(s, k)).length;
-        const no = list[i].filter((k) => skipped(s, k)).length;
-        if (yes > v || list[i].length - no < v) return -1;
-      }
-      // Skipped cells may not touch across a border.
-      for (const [a, b] of crossPairs) {
-        if (skipped(s, a) && skipped(s, b)) return -1;
-        for (const [x, y] of [[a, b], [b, a]]) {
-          if (!skipped(s, x) || visited(s, y)) continue;
-          const es = edges(y), lines = es.filter((e) => s[e] === LINE).length, open = es.filter((e) => s[e] === UNKNOWN);
-          if (lines + open.length < 2) return -1;
-          if (lines + open.length === 2) {
-            for (const e of open) s[e] = LINE;
-            if (log) log.push({ edges: open, v: LINE, reason: 'Skipped cells may not touch across a region border, so the loop visits this cell.' });
-            return open.length;
-          }
-        }
-      }
-      return 0;
+      const r = checkRegionCrossing(s, border, list, clues, visited, skipped, log);
+      return r !== 0 ? r : checkCrossPairs(s, crossPairs, skipped, visited, edges, log);
     }
     return { g, must: null, rule };
+  }
+
+  function findLoopOrder(next) {
+    const start = next.findIndex((x) => x.length);
+    const order = [start];
+    for (let prev = -1, cur = start; ;) {
+      const nx = next[cur].find((x) => x !== prev);
+      if (nx === start) break;
+      prev = cur; cur = nx;
+      order.push(cur);
+    }
+    return order;
+  }
+
+  function patchSkippedCells(region, n) {
+    const nbs = (k) => {
+      const r = Math.floor(k / n), c = k % n, out = [];
+      if (r > 0) out.push(k - n);
+      if (r < n - 1) out.push(k + n);
+      if (c > 0) out.push(k - 1);
+      if (c < n - 1) out.push(k + 1);
+      return out;
+    };
+    for (let k = 0; k < n * n; k++) {
+      if (region[k] >= 0) continue;
+      const patch = [k];
+      const seen = new Set([k]);
+      for (const cur of patch) for (const j of nbs(cur)) if (!seen.has(j) && region[j] < 0) { seen.add(j); patch.push(j); }
+      const opts = [...new Set(patch.flatMap(nbs).filter((j) => region[j] >= 0).map((j) => region[j]))];
+      const to = opts[Math.floor(Math.random() * opts.length)];
+      for (const x of patch) region[x] = to;
+    }
   }
 
   function generate(n) {
@@ -76,14 +117,7 @@
       const g = Loop.grid(n, n);
       const next = Array.from({ length: n * n }, () => []);
       for (let e = 0; e < g.E; e++) if (loop[e] === LINE) { const [a, b] = g.ends[e]; next[a].push(b); next[b].push(a); }
-      const start = next.findIndex((x) => x.length);
-      const order = [start];
-      for (let prev = -1, cur = start; ;) {
-        const nx = next[cur].find((x) => x !== prev);
-        if (nx === start) break;
-        prev = cur; cur = nx;
-        order.push(cur);
-      }
+      const order = findLoopOrder(next);
       const shift = Math.floor(Math.random() * order.length);
       const rot = order.slice(shift).concat(order.slice(0, shift));
       const region = new Int32Array(n * n).fill(-1);
@@ -94,24 +128,7 @@
         i += len;
         id++;
       }
-      // Each patch of skipped cells joins one neighbouring region.
-      const nbs = (k) => {
-        const r = Math.floor(k / n), c = k % n, out = [];
-        if (r > 0) out.push(k - n);
-        if (r < n - 1) out.push(k + n);
-        if (c > 0) out.push(k - 1);
-        if (c < n - 1) out.push(k + 1);
-        return out;
-      };
-      for (let k = 0; k < n * n; k++) {
-        if (region[k] >= 0) continue;
-        const patch = [k];
-        const seen = new Set([k]);
-        for (const cur of patch) for (const j of nbs(cur)) if (!seen.has(j) && region[j] < 0) { seen.add(j); patch.push(j); }
-        const opts = [...new Set(patch.flatMap(nbs).filter((j) => region[j] >= 0).map((j) => region[j]))];
-        const to = opts[Math.floor(Math.random() * opts.length)];
-        for (const x of patch) region[x] = to;
-      }
+      patchSkippedCells(region, n);
       const list = groups(region);
       const on = (k) => next[k].length > 0;
       const p = { R: n, C: n, region, clues: list.map((cells) => cells.filter(on).length) };

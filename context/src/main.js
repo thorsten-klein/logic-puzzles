@@ -17,6 +17,33 @@
     return out;
   }
 
+  function stepKnown(s, k, v, orth, diag, fit, BROKEN, log) {
+    const f = fit(s, s[k] === NO ? orth : diag, v);
+    if (f === BROKEN) return -1;
+    if (f) {
+      const { cells, v: val } = f;
+      for (const j of cells) s[j] = val;
+      if (log) log.push({ cells, v: val, at: k, reason: s[k] === NO
+        ? `This white ${v} needs exactly ${PuzzleShell.plural(v, 'shaded side neighbour')}.`
+        : `This shaded ${v} needs exactly ${PuzzleShell.plural(v, 'shaded corner neighbour')}.` });
+      return cells.length;
+    }
+    return 0;
+  }
+
+  function stepUnknown(s, k, v, orth, diag, fit, BROKEN, log) {
+    const asWhite = fit(s, orth, v), asBlack = fit(s, diag, v);
+    if (asWhite === BROKEN && asBlack === BROKEN) return -1;
+    if (asWhite === BROKEN || asBlack === BROKEN) {
+      s[k] = asWhite === BROKEN ? YES : NO;
+      if (log) log.push({ cells: [k], v: s[k], at: k, reason: asWhite === BROKEN
+        ? `As a white cell this ${v} could not be right, so it is shaded.`
+        : `As a shaded cell this ${v} could not be right, so it is white.` });
+      return 1;
+    }
+    return 0;
+  }
+
   function model(p) {
     const { R, C, clues } = p;
     const cons = [];
@@ -42,29 +69,10 @@
     function propagate(s, log) {
       for (const [k, orth, diag] of numbered) {
         const v = clues[k];
-        if (s[k] === NO || s[k] === YES) {
-          const f = fit(s, s[k] === NO ? orth : diag, v);
-          if (f === BROKEN) return -1;
-          if (f) {
-            const { cells, v: val } = f;
-            for (const j of cells) s[j] = val;
-            if (log) log.push({ cells, v: val, at: k, reason: s[k] === NO
-              ? `This white ${v} needs exactly ${PuzzleShell.plural(v, 'shaded side neighbour')}.`
-              : `This shaded ${v} needs exactly ${PuzzleShell.plural(v, 'shaded corner neighbour')}.` });
-            return cells.length;
-          }
-        } else {
-          // Colour unknown: if one reading is impossible, it is the other.
-          const asWhite = fit(s, orth, v), asBlack = fit(s, diag, v);
-          if (asWhite === BROKEN && asBlack === BROKEN) return -1;
-          if (asWhite === BROKEN || asBlack === BROKEN) {
-            s[k] = asWhite === BROKEN ? YES : NO;
-            if (log) log.push({ cells: [k], v: s[k], at: k, reason: asWhite === BROKEN
-              ? `As a white cell this ${v} could not be right, so it is shaded.`
-              : `As a shaded cell this ${v} could not be right, so it is white.` });
-            return 1;
-          }
-        }
+        const res = (s[k] === NO || s[k] === YES)
+          ? stepKnown(s, k, v, orth, diag, fit, BROKEN, log)
+          : stepUnknown(s, k, v, orth, diag, fit, BROKEN, log);
+        if (res !== 0) return res;
       }
       return 0;
     }

@@ -56,31 +56,43 @@
     return { N, cons, check };
   }
 
+  // A random inside area: grow a blob, then fill holes.
+  function growInsideArea(N, R, C) {
+    const inside = new Uint8Array(N);
+    inside[Math.floor(Math.random() * N)] = 1;
+    const target = Math.round(N * (0.45 + Math.random() * 0.2));
+    for (let t = 0; t < N * 20 && inside.reduce((a, b) => a + b, 0) < target; t++) {
+      const k = Math.floor(Math.random() * N);
+      if (inside[k]) continue;
+      const r = Math.floor(k / C), c = k % C;
+      if (DIRS.some(([dr, dc]) => { const a = r + dr, b = c + dc; return a >= 0 && b >= 0 && a < R && b < C && inside[a * C + b]; })) inside[k] = 1;
+    }
+    return inside;
+  }
+
+  // Numbers on all inside cells.
+  function countViews(inside, N, R, C) {
+    const clues = new Int8Array(N);
+    for (let k = 0; k < N; k++) {
+      if (!inside[k]) continue;
+      let seen = 1;
+      for (const [dr, dc] of DIRS) {
+        for (let r = Math.floor(k / C) + dr, c = (k % C) + dc; r >= 0 && c >= 0 && r < R && c < C && inside[r * C + c]; r += dr, c += dc) seen++;
+      }
+      clues[k] = seen;
+    }
+    return clues;
+  }
+
   function generate(n) {
     const deadline = Date.now() + 8000;
     while (Date.now() < deadline) {
       const R = n, C = n, N = R * C;
-      // A random inside area: grow a blob, then fill holes.
-      const inside = new Uint8Array(N);
-      inside[Math.floor(Math.random() * N)] = 1;
-      const target = Math.round(N * (0.45 + Math.random() * 0.2));
-      for (let t = 0; t < N * 20 && inside.reduce((a, b) => a + b, 0) < target; t++) {
-        const k = Math.floor(Math.random() * N);
-        if (inside[k]) continue;
-        const r = Math.floor(k / C), c = k % C;
-        if (DIRS.some(([dr, dc]) => { const a = r + dr, b = c + dc; return a >= 0 && b >= 0 && a < R && b < C && inside[a * C + b]; })) inside[k] = 1;
-      }
+      const inside = growInsideArea(N, R, C);
       const sol = Uint8Array.from(inside, (v) => (v ? YES : NO));
       const base = model({ R, C, clues: new Int8Array(N) });
       if (!base.check(sol)) continue;
-      // Numbers on all inside cells, then thin.
-      const clues = new Int8Array(N);
-      for (let k = 0; k < N; k++) {
-        if (!inside[k]) continue;
-        let seen = 1;
-        for (const [dr, dc] of DIRS) for (let r = Math.floor(k / C) + dr, c = (k % C) + dc; r >= 0 && c >= 0 && r < R && c < C && inside[r * C + c]; r += dr, c += dc) seen++;
-        clues[k] = seen;
-      }
+      const clues = countViews(inside, N, R, C);
       const p = { R, C, clues };
       const s = Binary.logicSolve(model(p));
       if (!s || s.includes(UNKNOWN)) continue;

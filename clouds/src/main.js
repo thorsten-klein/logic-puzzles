@@ -5,6 +5,50 @@
 (() => {
   const { UNKNOWN, YES, NO } = Binary;
 
+  // 2x2 blocks: never 3 clouds, never only a diagonal pair.
+  function stepBlock2x2(R, C, s, log) {
+    for (let r = 0; r < R - 1; r++) for (let c = 0; c < C - 1; c++) {
+      const cells = [r * C + c, r * C + c + 1, (r + 1) * C + c, (r + 1) * C + c + 1];
+      const v = cells.map((k) => s[k]);
+      const yes = v.filter((x) => x === YES).length, no = v.filter((x) => x === NO).length;
+      if ((v[0] === YES && v[3] === YES && (v[1] === NO || v[2] === NO)) ||
+          (v[1] === YES && v[2] === YES && (v[0] === NO || v[3] === NO))) return -1;
+      if (yes === 3 && no === 1) return -1;
+      const open = cells.filter((k) => s[k] === UNKNOWN);
+      if (yes === 3 && open.length === 1) {
+        s[open[0]] = YES;
+        if (log) log.push({ cells: open, v: YES, reason: 'Clouds are rectangles. Three cloud cells in a 2×2 block need the fourth too.' });
+        return 1;
+      }
+      if (yes === 2 && no === 1 && open.length === 1) {
+        s[open[0]] = NO;
+        if (log) log.push({ cells: open, v: NO, reason: 'Clouds are rectangles. This cell would make an L shape, so it is sky.' });
+        return 1;
+      }
+    }
+    return 0;
+  }
+
+  // Each cloud cell needs a cloud neighbour across and up/down (2x2 at least).
+  function stepCloudExpansion(R, C, s, at, log) {
+    for (let k = 0; k < R * C; k++) {
+      if (s[k] !== YES) continue;
+      const r = Math.floor(k / C), c = k % C;
+      for (const pair of [[[r, c - 1], [r, c + 1]], [[r - 1, c], [r + 1, c]]]) {
+        const vals = pair.map(([a, b]) => at(s, a, b));
+        if (vals.includes(YES)) continue;
+        const open = pair.filter(([a, b], i) => vals[i] === UNKNOWN).map(([a, b]) => a * C + b);
+        if (!open.length) return -1;
+        if (open.length === 1) {
+          s[open[0]] = YES;
+          if (log) log.push({ cells: open, v: YES, reason: 'A cloud is at least two cells wide and high. This cloud can only grow here.' });
+          return 1;
+        }
+      }
+    }
+    return 0;
+  }
+
   function model(p) {
     const { R, C, rows, cols } = p;
     const cons = [];
@@ -24,43 +68,8 @@
     const at = (s, r, c) => (r < 0 || c < 0 || r >= R || c >= C ? NO : s[r * C + c]);
 
     function propagate(s, log) {
-      // 2x2 blocks: never 3 clouds, never only a diagonal pair.
-      for (let r = 0; r < R - 1; r++) for (let c = 0; c < C - 1; c++) {
-        const cells = [r * C + c, r * C + c + 1, (r + 1) * C + c, (r + 1) * C + c + 1];
-        const v = cells.map((k) => s[k]);
-        const yes = v.filter((x) => x === YES).length, no = v.filter((x) => x === NO).length;
-        if ((v[0] === YES && v[3] === YES && (v[1] === NO || v[2] === NO)) ||
-            (v[1] === YES && v[2] === YES && (v[0] === NO || v[3] === NO))) return -1;
-        if (yes === 3 && no === 1) return -1;
-        const open = cells.filter((k) => s[k] === UNKNOWN);
-        if (yes === 3 && open.length === 1) {
-          s[open[0]] = YES;
-          if (log) log.push({ cells: open, v: YES, reason: 'Clouds are rectangles. Three cloud cells in a 2×2 block need the fourth too.' });
-          return 1;
-        }
-        if (yes === 2 && no === 1 && open.length === 1) {
-          s[open[0]] = NO;
-          if (log) log.push({ cells: open, v: NO, reason: 'Clouds are rectangles. This cell would make an L shape, so it is sky.' });
-          return 1;
-        }
-      }
-      // Each cloud cell needs a cloud neighbour across and up/down (2x2 at least).
-      for (let k = 0; k < R * C; k++) {
-        if (s[k] !== YES) continue;
-        const r = Math.floor(k / C), c = k % C;
-        for (const pair of [[[r, c - 1], [r, c + 1]], [[r - 1, c], [r + 1, c]]]) {
-          const vals = pair.map(([a, b]) => at(s, a, b));
-          if (vals.includes(YES)) continue;
-          const open = pair.filter(([a, b], i) => vals[i] === UNKNOWN).map(([a, b]) => a * C + b);
-          if (!open.length) return -1;
-          if (open.length === 1) {
-            s[open[0]] = YES;
-            if (log) log.push({ cells: open, v: YES, reason: 'A cloud is at least two cells wide and high. This cloud can only grow here.' });
-            return 1;
-          }
-        }
-      }
-      return 0;
+      const b = stepBlock2x2(R, C, s, log);
+      return b !== 0 ? b : stepCloudExpansion(R, C, s, at, log);
     }
     return { N: R * C, cons, propagate };
   }

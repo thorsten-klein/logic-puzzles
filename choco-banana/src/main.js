@@ -6,43 +6,63 @@
 (() => {
   const { UNKNOWN, YES, NO } = Binary;
 
+  // Next-door cells with different numbers lie in different areas,
+  // so they have different colours.
+  function stepDiffNumbers(N, clues, nb, s, log) {
+    for (let k = 0; k < N; k++) {
+      if (clues[k] < 0 || s[k] === UNKNOWN) continue;
+      for (const j of nb(k)) {
+        if (clues[j] < 0 || clues[j] === clues[k]) continue;
+        if (s[j] === s[k]) return -1;
+        if (s[j] !== UNKNOWN) continue;
+        s[j] = s[k] === YES ? NO : YES;
+        if (log) log.push({ cells: [j], v: s[j], reason: `Next-door numbers ${clues[k]} and ${clues[j]} differ, so these cells are in different areas and have different colours.` });
+        return 1;
+      }
+    }
+    return 0;
+  }
+
+  // Three shaded cells of a 2×2 block need the fourth (rectangles).
+  function stepRect2x2(R, C, s, log) {
+    for (let r = 0; r < R - 1; r++) for (let c = 0; c < C - 1; c++) {
+      const cells = [r * C + c, r * C + c + 1, (r + 1) * C + c, (r + 1) * C + c + 1];
+      const yes = cells.filter((k) => s[k] === YES).length;
+      const open = cells.filter((k) => s[k] === UNKNOWN);
+      if (yes === 3 && open.length === 1) {
+        s[open[0]] = YES;
+        if (log) log.push({ cells: open, v: YES, reason: 'Shaded areas are rectangles. Three shaded cells in a 2×2 block need the fourth.' });
+        return 1;
+      }
+    }
+    return 0;
+  }
+
+  // Checks one area (cells): rectangle rule and number bounds.
+  function checkArea(cells, v, s, done, reach, clues, nb, C) {
+    const closed = done || cells.every((k) => nb(k).every((j) => s[j] !== UNKNOWN));
+    const rows = cells.map((k) => Math.floor(k / C)), cols = cells.map((k) => k % C);
+    const r1 = Math.min(...rows), r2 = Math.max(...rows), c1 = Math.min(...cols), c2 = Math.max(...cols);
+    const rect = cells.length === (r2 - r1 + 1) * (c2 - c1 + 1);
+    if (v === YES) {
+      for (let r = r1; r <= r2; r++) for (let c = c1; c <= c2; c++) if (s[r * C + c] === NO) return false;
+      if (closed && !rect) return false;
+    } else if (closed && rect) return false;
+    const high = reach.list[reach.id[cells[0]]].length;
+    for (const k of cells) {
+      const n = clues[k];
+      if (n >= 0 && (cells.length > n || high < n || (closed && cells.length !== n))) return false;
+    }
+    return true;
+  }
+
   function model(p) {
     const { R, C, clues } = p;
     const N = R * C;
-    const nb = (k) => {
-      const r = Math.floor(k / C), c = k % C, out = [];
-      if (r > 0) out.push(k - C);
-      if (r < R - 1) out.push(k + C);
-      if (c > 0) out.push(k - 1);
-      if (c < C - 1) out.push(k + 1);
-      return out;
-    };
+    const nb = (k) => Binary.sideNeighbours(R, C, k);
     function propagate(s, log) {
-      // Next-door cells with different numbers lie in different areas,
-      // so they have different colours.
-      for (let k = 0; k < N; k++) {
-        if (clues[k] < 0 || s[k] === UNKNOWN) continue;
-        for (const j of nb(k)) {
-          if (clues[j] < 0 || clues[j] === clues[k]) continue;
-          if (s[j] === s[k]) return -1;
-          if (s[j] !== UNKNOWN) continue;
-          s[j] = s[k] === YES ? NO : YES;
-          if (log) log.push({ cells: [j], v: s[j], reason: `Next-door numbers ${clues[k]} and ${clues[j]} differ, so these cells are in different areas and have different colours.` });
-          return 1;
-        }
-      }
-      // Three shaded cells of a 2×2 block need the fourth (rectangles).
-      for (let r = 0; r < R - 1; r++) for (let c = 0; c < C - 1; c++) {
-        const cells = [r * C + c, r * C + c + 1, (r + 1) * C + c, (r + 1) * C + c + 1];
-        const yes = cells.filter((k) => s[k] === YES).length;
-        const open = cells.filter((k) => s[k] === UNKNOWN);
-        if (yes === 3 && open.length === 1) {
-          s[open[0]] = YES;
-          if (log) log.push({ cells: open, v: YES, reason: 'Shaded areas are rectangles. Three shaded cells in a 2×2 block need the fourth.' });
-          return 1;
-        }
-      }
-      return 0;
+      const d = stepDiffNumbers(N, clues, nb, s, log);
+      return d !== 0 ? d : stepRect2x2(R, C, s, log);
     }
     const areas = (s, ok) => {
       const id = new Int32Array(N).fill(-1), list = [];
@@ -55,31 +75,11 @@
       }
       return { id, list };
     };
-    const box = (cells) => {
-      const rows = cells.map((k) => Math.floor(k / C)), cols = cells.map((k) => k % C);
-      return [Math.min(...rows), Math.min(...cols), Math.max(...rows), Math.max(...cols)];
-    };
     function check(s, done) {
       for (const v of [YES, NO]) {
         const a = areas(s, (k) => s[k] === v);
         const reach = areas(s, (k) => s[k] !== (v === YES ? NO : YES));
-        for (const cells of a.list) {
-          const closed = done || cells.every((k) => nb(k).every((j) => s[j] !== UNKNOWN));
-          const [r1, c1, r2, c2] = box(cells);
-          const rect = cells.length === (r2 - r1 + 1) * (c2 - c1 + 1);
-          if (v === YES) {
-            // A shaded area must fill its bounding box.
-            for (let r = r1; r <= r2; r++) for (let c = c1; c <= c2; c++) if (s[r * C + c] === NO) return false;
-            if (closed && !rect) return false;
-          } else if (closed && rect) return false;
-          // Number bounds inside this area.
-          const high = reach.list[reach.id[cells[0]]].length;
-          for (const k of cells) {
-            const n = clues[k];
-            if (n < 0) continue;
-            if (cells.length > n || high < n || (closed && cells.length !== n)) return false;
-          }
-        }
+        if (!a.list.every((cells) => checkArea(cells, v, s, done, reach, clues, nb, C))) return false;
       }
       return true;
     }
@@ -106,6 +106,24 @@
     return shade;
   }
 
+  // Area size at each cell of a solution.
+  function countAreaSizes(shade, n) {
+    const N = n * n;
+    const size = new Int8Array(N), seen = new Uint8Array(N);
+    for (let k = 0; k < N; k++) {
+      if (seen[k]) continue;
+      const cells = [k];
+      seen[k] = 1;
+      for (const cur of cells) {
+        for (const j of Binary.sideNeighbours(n, n, cur)) {
+          if (!seen[j] && shade[j] === shade[cur]) { seen[j] = 1; cells.push(j); }
+        }
+      }
+      for (const x of cells) size[x] = Math.min(cells.length, 35);
+    }
+    return size;
+  }
+
   function generate(n) {
     const deadline = Date.now() + 8000;
     while (Date.now() < deadline) {
@@ -114,23 +132,8 @@
       const sol = Uint8Array.from(shade, (x) => (x ? YES : NO));
       const probe = { R: n, C: n, clues: new Int8Array(N).fill(-1) };
       if (!model(probe).check(sol, true)) continue;
-      // Area size at each cell.
-      const size = new Int8Array(N);
-      const seen = new Uint8Array(N);
-      for (let k = 0; k < N; k++) {
-        if (seen[k]) continue;
-        const cells = [k];
-        seen[k] = 1;
-        for (const cur of cells) {
-          const x = cur, r = Math.floor(x / n), c = x % n;
-          for (const [a, b] of [[r - 1, c], [r + 1, c], [r, c - 1], [r, c + 1]]) {
-            const j = a * n + b;
-            if (a >= 0 && b >= 0 && a < n && b < n && !seen[j] && shade[j] === shade[x]) { seen[j] = 1; cells.push(j); }
-          }
-        }
-        for (const x of cells) size[x] = Math.min(cells.length, 35);
-      }
-      const p = { R: n, C: n, clues: Int8Array.from(size) };
+      const clues = countAreaSizes(shade, n);
+      const p = { R: n, C: n, clues };
       const s = Binary.logicSolve(model(p));
       if (!s || s.includes(UNKNOWN)) continue;
       Binary.thinClues(p.clues, -1, () => model(p));

@@ -7,17 +7,31 @@
 (() => {
   const { UNKNOWN, YES, NO } = Binary;
 
+  // Checks that one white area is a square without shaded cells inside.
+  function squareOk(cells, s, done, R, C) {
+    const rows = cells.map((x) => Math.floor(x / C)), cols = cells.map((x) => x % C);
+    const r1 = Math.min(...rows), r2 = Math.max(...rows), c1 = Math.min(...cols), c2 = Math.max(...cols);
+    for (let r = r1; r <= r2; r++) for (let c = c1; c <= c2; c++) if (s[r * C + c] === YES) return false;
+    const closed = done || cells.every((x) => Binary.sideNeighbours(R, C, x).every((j) => s[j] !== UNKNOWN));
+    return !closed || (r2 - r1 === c2 - c1 && cells.length === (r2 - r1 + 1) * (c2 - c1 + 1));
+  }
+
+  function whiteAreas(R, C, s) {
+    const N = R * C;
+    const id = new Int32Array(N).fill(-1), list = [];
+    for (let k = 0; k < N; k++) {
+      if (id[k] >= 0 || s[k] !== NO) continue;
+      const cells = [k];
+      id[k] = k;
+      for (const cur of cells) for (const j of Binary.sideNeighbours(R, C, cur)) if (id[j] < 0 && s[j] === NO) { id[j] = k; cells.push(j); }
+      list.push(cells);
+    }
+    return list;
+  }
+
   function model(p) {
     const { R, C, clues } = p;
     const N = R * C;
-    const nb = (k) => {
-      const r = Math.floor(k / C), c = k % C, out = [];
-      if (r > 0) out.push(k - C);
-      if (r < R - 1) out.push(k + C);
-      if (c > 0) out.push(k - 1);
-      if (c < C - 1) out.push(k + 1);
-      return out;
-    };
     const cons = [];
     for (let r = 0; r < R - 1; r++) for (let c = 0; c < C - 1; c++) {
       cons.push({ cells: [r * C + c, r * C + c + 1, (r + 1) * C + c, (r + 1) * C + c + 1], min: 0, max: 3, why: () => 'No 2×2 block may be all shaded.' });
@@ -41,36 +55,21 @@
       return 0;
     }
     function check(s, done) {
-      const id = new Int32Array(N).fill(-1);
-      for (let k = 0; k < N; k++) {
-        if (id[k] >= 0 || s[k] !== NO) continue;
-        const cells = [k];
-        id[k] = k;
-        for (const cur of cells) for (const j of nb(cur)) if (id[j] < 0 && s[j] === NO) { id[j] = k; cells.push(j); }
-        const rows = cells.map((x) => Math.floor(x / C)), cols = cells.map((x) => x % C);
-        const r1 = Math.min(...rows), r2 = Math.max(...rows), c1 = Math.min(...cols), c2 = Math.max(...cols);
-        for (let r = r1; r <= r2; r++) for (let c = c1; c <= c2; c++) if (s[r * C + c] === YES) return false;
-        const closed = done || cells.every((x) => nb(x).every((j) => s[j] !== UNKNOWN));
-        if (closed && (r2 - r1 !== c2 - c1 || cells.length !== (r2 - r1 + 1) * (c2 - c1 + 1))) return false;
-      }
+      if (!whiteAreas(R, C, s).every((cells) => squareOk(cells, s, done, R, C))) return false;
       return Binary.canConnect(R, C, s, YES);
     }
     return { N, cons, propagate, check };
   }
 
-  // Answer: white squares that never touch by a side; the rest shaded.
-  function makeAnswer(n) {
-    const N = n * n;
-    const white = new Uint8Array(N);
-    const near = (k) => {
-      const r = Math.floor(k / n), c = k % n;
-      return [[r - 1, c], [r + 1, c], [r, c - 1], [r, c + 1]].some(([a, b]) => a >= 0 && b >= 0 && a < n && b < n && white[a * n + b]);
-    };
+  function pickSquareSize() {
+    const r = Math.random();
+    if (r < 0.45) return 1;
+    return r < 0.7 ? 2 : 3;
+  }
+
+  function placeWhiteSquares(white, n, near) {
     for (let t = 0; t < n * 8; t++) {
-      let size;
-      if (Math.random() < 0.45) size = 1;
-      else if (Math.random() < 0.7) size = 2;
-      else size = 3;
+      const size = pickSquareSize();
       const r = Math.floor(Math.random() * (n - size + 1)), c = Math.floor(Math.random() * (n - size + 1));
       const cells = [];
       for (let i = 0; i < size; i++) for (let j = 0; j < size; j++) cells.push((r + i) * n + c + j);
@@ -79,7 +78,10 @@
       const s = Uint8Array.from(white, (x) => (x ? NO : YES));
       if (!Binary.canConnect(n, n, s, YES)) cells.forEach((k) => { white[k] = 0; });
     }
-    // Break up all-shaded 2×2 blocks with single white cells.
+  }
+
+  // Break up all-shaded 2×2 blocks with single white cells.
+  function breakAllShadedBlocks(white, n, near) {
     for (let r = 0; r < n - 1; r++) for (let c = 0; c < n - 1; c++) {
       const block = [r * n + c, r * n + c + 1, (r + 1) * n + c, (r + 1) * n + c + 1];
       if (block.some((k) => white[k])) continue;
@@ -90,6 +92,15 @@
         white[k] = 0;
       }
     }
+  }
+
+  // Answer: white squares that never touch by a side; the rest shaded.
+  function makeAnswer(n) {
+    const N = n * n;
+    const white = new Uint8Array(N);
+    const near = (k) => Binary.sideNeighbours(n, n, k).some((j) => white[j]);
+    placeWhiteSquares(white, n, near);
+    breakAllShadedBlocks(white, n, near);
     return Uint8Array.from(white, (x) => (x ? NO : YES));
   }
 

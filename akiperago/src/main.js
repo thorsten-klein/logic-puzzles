@@ -11,32 +11,10 @@
   function model(p) {
     const { R, C, clues } = p;
     const N = R * C;
-    const nb = (k) => {
-      const r = Math.floor(k / C), c = k % C, out = [];
-      if (r > 0) out.push(k - C);
-      if (r < R - 1) out.push(k + C);
-      if (c > 0) out.push(k - 1);
-      if (c < C - 1) out.push(k + 1);
-      return out;
-    };
-    const diag = (k) => {
-      const r = Math.floor(k / C), c = k % C, out = [];
-      for (const [a, b] of [[r - 1, c - 1], [r - 1, c + 1], [r + 1, c - 1], [r + 1, c + 1]]) if (a >= 0 && b >= 0 && a < R && b < C) out.push(a * C + b);
-      return out;
-    };
+    const nb = (k) => Binary.sideNeighbours(R, C, k);
     const cons = [];
     for (let k = 0; k < N; k++) if (clues[k] >= 0) cons.push({ cells: [k], min: 1, max: 1, why: () => 'Clue cells are shaded.' });
-    const blocks = (s) => {
-      const id = new Int32Array(N).fill(-1), list = [];
-      for (let k = 0; k < N; k++) {
-        if (id[k] >= 0 || s[k] !== YES) continue;
-        const cells = [k];
-        id[k] = list.length;
-        for (const cur of cells) for (const j of nb(cur)) if (id[j] < 0 && s[j] === YES) { id[j] = list.length; cells.push(j); }
-        list.push(cells);
-      }
-      return { id, list };
-    };
+    const blocks = (s) => Binary.areas(R, C, s);
     // Numbers of the islands in a list of island ids.
     const numsOf = (ids, list) => [...new Set(ids.flatMap((b) => list[b].filter((x) => clues[x] > 0).map((x) => clues[x])))];
     // Why cell k can not be shaded, or ''.
@@ -71,30 +49,16 @@
       const closed = done || cells.every((k) => nb(k).every((j) => s[j] !== UNKNOWN));
       return cells.length <= nums[0] && !(closed && cells.length !== nums[0]);
     }
-    // Islands joined at corners to island a (marks them in `seen`).
-    function archipelago(s, a, id, list, seen) {
-      const group = [a];
-      seen[a] = 1;
-      for (const cur of group) {
-        for (const j of list[cur].flatMap(diag)) {
-          if (s[j] === YES && !seen[id[j]]) { seen[id[j]] = 1; group.push(id[j]); }
-        }
-      }
-      return group;
-    }
     function check(s, done) {
-      const { id, list } = blocks(s);
+      const all = blocks(s);
+      const { list } = all;
       if (!list.every((cells, b) => islandOk(s, cells, b, list, done))) return false;
       if (!done) return true;
       // Archipelagos: at least two islands; sizes 1..N, each once.
-      const seen = new Uint8Array(list.length);
-      for (let a = 0; a < list.length; a++) {
-        if (seen[a]) continue;
-        const group = archipelago(s, a, id, list, seen);
+      return Binary.cornerGroups(R, C, s, all).every((group) => {
         const sizes = group.map((g) => list[g].length).sort((x, y) => x - y);
-        if (group.length < 2 || sizes.some((v, i) => v !== i + 1)) return false;
-      }
-      return true;
+        return group.length >= 2 && sizes.every((v, i) => v === i + 1);
+      });
     }
     return { N, cons, propagate, check };
   }
@@ -103,45 +67,21 @@
   // sizes 1..N, joined at corners. Islands never touch by a side, and
   // different archipelagos do not touch at all.
   function makeAnswer(n) {
-    const N = n * n;
-    const id = new Int32Array(N).fill(-1), groupOf = new Int32Array(N).fill(-1);
-    const islands = [];
-    const around = (k, diagToo) => {
-      const r = Math.floor(k / n), c = k % n, out = [];
-      for (let dr = -1; dr <= 1; dr++) for (let dc = -1; dc <= 1; dc++) {
-        if ((!dr && !dc) || (!diagToo && dr && dc)) continue;
-        const a = r + dr, b = c + dc;
-        if (a >= 0 && b >= 0 && a < n && b < n) out.push(a * n + b);
-      }
-      return out;
-    };
-    const canUse = (k, b, g) => id[k] < 0 &&
-      around(k, false).every((j) => id[j] < 0 || id[j] === b) &&
-      around(k, true).every((j) => groupOf[j] < 0 || groupOf[j] === g);
-    const grow = (seed, g, want) => {
-      const b = islands.length, cells = [seed];
-      id[seed] = b; groupOf[seed] = g;
-      for (let t = 0; t < 30 && cells.length < want; t++) {
-        const x = cells[Math.floor(Math.random() * cells.length)];
-        const opts = around(x, false).filter((j) => canUse(j, b, g));
-        if (!opts.length) continue;
-        const j = opts[Math.floor(Math.random() * opts.length)];
-        id[j] = b; groupOf[j] = g;
-        cells.push(j);
-      }
-      if (cells.length !== want) { cells.forEach((k) => { id[k] = -1; groupOf[k] = -1; }); return false; }
-      islands.push(cells);
+    const b = Binary.cornerBuilder(n);
+    // An island of exactly `want` cells from seed, or false.
+    const island = (seed, g, want) => {
+      const cells = b.grow(seed, g, want);
+      if (cells.length !== want) { b.remove(cells); return false; }
+      b.keep(cells);
       return true;
     };
-    const pick = (a) => a[Math.floor(Math.random() * a.length)];
     // One more island of size `want` at a corner of archipelago g
     // (its islands start at index `first`).
     const addIsland = (g, first, want) => {
       for (let t = 0; t < 20; t++) {
-        const mine = islands.slice(first).flat();
-        const seeds = [...new Set(mine.flatMap((k) => around(k, true)))].filter((k) => canUse(k, islands.length, g));
+        const seeds = b.seeds(first, g);
         if (!seeds.length) return false;
-        if (grow(pick(seeds), g, want)) return true;
+        if (island(b.pick(seeds), g, want)) return true;
       }
       return false;
     };
@@ -149,19 +89,19 @@
     const addArchipelago = (g, start) => {
       const size = 2 + Math.floor(Math.random() * 3);
       const order = PuzzleShell.shuffle(Array.from({ length: size }, (_, i) => i + 1));
-      const first = islands.length;
-      if (grow(start, g, order[0]) && order.slice(1).every((want) => addIsland(g, first, want))) return true;
-      for (const cells of islands.splice(first)) cells.forEach((k) => { id[k] = -1; groupOf[k] = -1; });
+      const first = b.blocks.length;
+      if (island(start, g, order[0]) && order.slice(1).every((want) => addIsland(g, first, want))) return true;
+      b.undo(first);
       return false;
     };
     let fails = 0;
     for (let g = 0; fails < 30;) {
-      const starts = [...new Array(N).keys()].filter((k) => id[k] < 0 && around(k, true).every((j) => id[j] < 0));
+      const starts = b.starts();
       if (!starts.length) break;
-      if (addArchipelago(g, pick(starts))) g++;
+      if (addArchipelago(g, b.pick(starts))) g++;
       else fails++;
     }
-    return { id, blocks: islands };
+    return { id: b.id, blocks: b.blocks };
   }
 
   // Drops numbers (to a plain given cell), then given cells, while the

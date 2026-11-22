@@ -41,9 +41,9 @@ const Binary = (() => {
       else if (s[k] === UNKNOWN) open.push(k);
     }
     if (yes > con.max || yes + open.length < con.min) return -1;
+    if (!open.length) return 0;
     let v = 0;
-    if (!open.length) v = 0;
-    else if (yes === con.max) v = NO;
+    if (yes === con.max) v = NO;
     else if (yes + open.length === con.min) v = YES;
     if (!v) return 0;
     for (const k of open) s[k] = v;
@@ -470,6 +470,90 @@ const Binary = (() => {
     return seen;
   }
 
+  // Cells at the four corners of k.
+  function cornerNeighbours(R, C, k) {
+    const r = Math.floor(k / C), c = k % C, out = [];
+    for (const [a, b] of [[r - 1, c - 1], [r - 1, c + 1], [r + 1, c - 1], [r + 1, c + 1]]) {
+      if (a >= 0 && b >= 0 && a < R && b < C) out.push(a * C + b);
+    }
+    return out;
+  }
+
+  // Shaded areas: YES cells joined by sides. id[k] = area of cell k (-1
+  // if not shaded); list = cells of each area.
+  function areas(R, C, s) {
+    const nb = neighbourLists(R, C);
+    const id = new Int32Array(R * C).fill(-1), list = [];
+    for (let k = 0; k < R * C; k++) {
+      if (id[k] >= 0 || s[k] !== YES) continue;
+      const cells = [k];
+      id[k] = list.length;
+      for (const cur of cells) for (const j of nb[cur]) if (id[j] < 0 && s[j] === YES) { id[j] = list.length; cells.push(j); }
+      list.push(cells);
+    }
+    return { id, list };
+  }
+
+  // Areas that touch at corners, joined into groups (lists of area ids).
+  function cornerGroups(R, C, s, { id, list }) {
+    const seen = new Uint8Array(list.length), out = [];
+    for (let a = 0; a < list.length; a++) {
+      if (seen[a]) continue;
+      const group = [a];
+      seen[a] = 1;
+      for (const cur of group) {
+        for (const j of list[cur].flatMap((k) => cornerNeighbours(R, C, k))) {
+          if (s[j] === YES && !seen[id[j]]) { seen[id[j]] = 1; group.push(id[j]); }
+        }
+      }
+      out.push(group);
+    }
+    return out;
+  }
+
+  // Generator helper for answers made of blocks on an n x n grid. Blocks
+  // never touch by a side. Blocks of one group may touch at corners;
+  // blocks of different groups never touch at all.
+  function cornerBuilder(n) {
+    const N = n * n;
+    const id = new Int32Array(N).fill(-1), groupOf = new Int32Array(N).fill(-1);
+    const blocks = [];
+    const around = (k, corners) => {
+      const side = sideNeighbours(n, n, k);
+      return corners ? side.concat(cornerNeighbours(n, n, k)) : side;
+    };
+    const pick = (a) => a[Math.floor(Math.random() * a.length)];
+    const canUse = (k, b, g) => id[k] < 0 &&
+      around(k, false).every((j) => id[j] < 0 || id[j] === b) &&
+      around(k, true).every((j) => groupOf[j] < 0 || groupOf[j] === g);
+    const remove = (cells) => cells.forEach((k) => { id[k] = -1; groupOf[k] = -1; });
+    return {
+      id, blocks, pick,
+      // Grows block number `blocks.length` of group g from seed, up to
+      // `want` cells. Returns its cells; `keep` adds it to the blocks.
+      grow(seed, g, want) {
+        const b = blocks.length, cells = [seed];
+        id[seed] = b; groupOf[seed] = g;
+        for (let t = 0; t < 30 && cells.length < want; t++) {
+          const opts = around(pick(cells), false).filter((j) => canUse(j, b, g));
+          if (!opts.length) continue;
+          const j = pick(opts);
+          id[j] = b; groupOf[j] = g;
+          cells.push(j);
+        }
+        return cells;
+      },
+      keep: (cells) => blocks.push(cells),
+      remove,
+      // Drops the blocks from index `first` on.
+      undo: (first) => blocks.splice(first).forEach(remove),
+      // Free cells with nothing around them: starts for a new group.
+      starts: () => [...new Array(N).keys()].filter((k) => id[k] < 0 && around(k, true).every((j) => id[j] < 0)),
+      // Cells at a corner of group g (blocks from `first` on) where a new block can start.
+      seeds: (first, g) => [...new Set(blocks.slice(first).flat().flatMap((k) => around(k, true)))].filter((k) => canUse(k, blocks.length, g)),
+    };
+  }
+
   // True if all non-YES cells of an R x C grid are connected.
   function openConnected(R, C, s) {
     const start = s.findIndex((x) => x !== YES);
@@ -550,5 +634,5 @@ const Binary = (() => {
     return solve(model, 2, maxNodes, t || undefined);
   }
 
-  return { UNKNOWN, YES, NO, step, settle, lookahead, solve, solveFull, logicSolve, isUnique, hints, startGame, thinClues, randomFill, openConnected, canConnect };
+  return { UNKNOWN, YES, NO, step, settle, lookahead, solve, solveFull, logicSolve, isUnique, hints, startGame, thinClues, randomFill, openConnected, canConnect, sideNeighbours, cornerNeighbours, areas, cornerGroups, cornerBuilder };
 })();

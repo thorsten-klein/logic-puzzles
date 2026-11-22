@@ -7,6 +7,14 @@
 (() => {
   const { YES, NO } = Binary;
 
+  // Checks that the box of shaded cells contains no white cell.
+  function boxShaded(cells, s, C) {
+    const rs = cells.map((x) => Math.floor(x / C)), cs = cells.map((x) => x % C);
+    const r0 = Math.min(...rs), r1 = Math.max(...rs), c0 = Math.min(...cs), c1 = Math.max(...cs);
+    for (let r = r0; r <= r1; r++) for (let c = c0; c <= c1; c++) if (s[r * C + c] === NO) return false;
+    return true;
+  }
+
   function model(p) {
     const { R, C, room, clues } = p;
     const N = R * C;
@@ -16,49 +24,40 @@
     rooms.forEach((cells, g) => {
       if (clues[g] >= 0) cons.push({ cells, min: clues[g], max: clues[g], at: cells[0], why: (v) => (v === YES ? `This room needs ${clues[g]} shaded cells.` : `This room already has its ${clues[g]} shaded cells.`) });
     });
-    const nb = (k) => {
-      const r = Math.floor(k / C), c = k % C, out = [];
-      if (r > 0) out.push(k - C);
-      if (r < R - 1) out.push(k + C);
-      if (c > 0) out.push(k - 1);
-      if (c < C - 1) out.push(k + 1);
-      return out;
-    };
     function check(s) {
-      const seen = new Uint8Array(N);
-      for (let k = 0; k < N; k++) {
-        if (seen[k] || s[k] !== YES) continue;
-        const cells = [k];
-        seen[k] = 1;
-        for (const cur of cells) for (const j of nb(cur)) if (!seen[j] && s[j] === YES) { seen[j] = 1; cells.push(j); }
-        const rs = cells.map((x) => Math.floor(x / C)), cs = cells.map((x) => x % C);
-        const r0 = Math.min(...rs), r1 = Math.max(...rs), c0 = Math.min(...cs), c1 = Math.max(...cs);
-        // The final rectangle covers this box, so no white cell may sit inside it.
-        for (let r = r0; r <= r1; r++) for (let c = c0; c <= c1; c++) if (s[r * C + c] === NO) return false;
-      }
-      return true;
+      return Binary.areas(R, C, s).list.every((cells) => boxShaded(cells, s, C));
     }
     return { N, cons, check };
+  }
+
+  // True if a rectangle of size w x h at (r0, c0) can be placed without
+  // sharing a side with any existing rectangle.
+  function canPlaceRect(sol, R, C, r0, c0, h, w) {
+    for (let r = r0 - 1; r <= r0 + h; r++) for (let c = c0 - 1; c <= c0 + w; c++) {
+      if (r < 0 || c < 0 || r >= R || c >= C) continue;
+      const corner = (r === r0 - 1 || r === r0 + h) && (c === c0 - 1 || c === c0 + w);
+      if (!corner && sol[r * C + c] === YES) return false;
+    }
+    return true;
+  }
+
+  // Places random rectangles that never share a side.
+  function placeRectangles(R, C) {
+    const sol = new Uint8Array(R * C).fill(NO);
+    for (let t = 0; t < 40; t++) {
+      const h = 1 + Math.floor(Math.random() * 3), w = 1 + Math.floor(Math.random() * 3);
+      const r0 = Math.floor(Math.random() * (R - h + 1)), c0 = Math.floor(Math.random() * (C - w + 1));
+      if (!canPlaceRect(sol, R, C, r0, c0, h, w)) continue;
+      for (let r = r0; r < r0 + h; r++) for (let c = c0; c < c0 + w; c++) sol[r * C + c] = YES;
+    }
+    return sol;
   }
 
   function generate(n) {
     const deadline = Date.now() + 8000;
     while (Date.now() < deadline) {
       const R = n, C = n, N = R * C;
-      const sol = new Uint8Array(N).fill(NO);
-      // Random rectangles that never share a side.
-      for (let t = 0; t < 40; t++) {
-        const h = 1 + Math.floor(Math.random() * 3), w = 1 + Math.floor(Math.random() * 3);
-        const r0 = Math.floor(Math.random() * (R - h + 1)), c0 = Math.floor(Math.random() * (C - w + 1));
-        let ok = true;
-        for (let r = r0 - 1; r <= r0 + h && ok; r++) for (let c = c0 - 1; c <= c0 + w && ok; c++) {
-          if (r < 0 || c < 0 || r >= R || c >= C) continue;
-          const corner = (r === r0 - 1 || r === r0 + h) && (c === c0 - 1 || c === c0 + w);
-          if (!corner && sol[r * C + c] === YES) ok = false;
-        }
-        if (!ok) continue;
-        for (let r = r0; r < r0 + h; r++) for (let c = c0; c < c0 + w; c++) sol[r * C + c] = YES;
-      }
+      const sol = placeRectangles(R, C);
       const seeds = PuzzleShell.shuffle([...new Array(N).keys()]).slice(0, Math.round(N / 5));
       const room = PuzzleShell.growRegions(R, C, seeds.map((k) => [k]));
       const count = Math.max(...room) + 1;
