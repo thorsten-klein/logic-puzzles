@@ -22,6 +22,35 @@
     return s;
   }
 
+  function createLineValidator(want, B) {
+    const ok = (vals) => {
+      let used = 0, blacks = 0;
+      for (const v of vals) {
+        if (v === B) blacks++;
+        else {
+          if (used & (1 << v)) return false;
+          used |= 1 << v;
+        }
+      }
+      return blacks === 2 && (want < 0 || between(vals, B) === want);
+    };
+    ok.partial = (vals, j) => {
+      let used = 0, blacks = 0, sum = 0;
+      for (let x = 0; x <= j; x++) {
+        const v = vals[x];
+        if (v === B) blacks++;
+        else {
+          if (used & (1 << v)) return false;
+          used |= 1 << v;
+          if (blacks === 1) sum += v;
+        }
+      }
+      if (blacks > 2) return false;
+      return want < 0 || blacks !== 1 || sum <= want;
+    };
+    return ok;
+  }
+
   function propagate(p, cand) {
     const { n, clues } = p;
     const B = n - 1;
@@ -29,29 +58,7 @@
     for (let guard = 0; guard < 100; guard++) {
       const before = cand.join(',');
       for (const [i, cells] of all) {
-        const want = clues[i];
-        const ok = (vals) => {
-          let used = 0, blacks = 0;
-          for (const v of vals) {
-            if (v === B) blacks++;
-            else { if (used & (1 << v)) { return false; } used |= 1 << v; }
-          }
-          return blacks === 2 && (want < 0 || between(vals, B) === want);
-        };
-        ok.partial = (vals, j) => {
-          let used = 0, blacks = 0, sum = 0;
-          for (let x = 0; x <= j; x++) {
-            const v = vals[x];
-            if (v === B) blacks++;
-            else {
-              if (used & (1 << v)) return false;
-              used |= 1 << v;
-              if (blacks === 1) sum += v;
-            }
-          }
-          if (blacks > 2) return false;
-          return want < 0 || blacks !== 1 || sum <= want;
-        };
+        const ok = createLineValidator(clues[i], B);
         if (!Latin.filterGroup(cells, cand, ok, false)) return false;
       }
       if (cand.some((x) => !x)) return false;

@@ -29,14 +29,7 @@
   // forced() result for a contradiction.
   const FAIL = { fail: true };
 
-  function forced(p, st) {
-    for (let k = 0; k < p.R * p.C; k++) {
-      const es = p.cellEdges[k];
-      if (es.some((e) => st[e] === 1)) continue;
-      const open = es.filter((e) => st[e] === 0);
-      if (!open.length) return FAIL;
-      if (open.length === 1) return { e: open[0], why: 'cell', k };
-    }
+  function forcedByType(p, st) {
     const byType = new Map();
     p.edges.forEach((_, e) => {
       if (st[e] === 2) return;
@@ -51,6 +44,17 @@
       if (list.length === 1 && st[list[0]] === 0) return { e: list[0], why: 'type', a, b };
     }
     return null;
+  }
+
+  function forced(p, st) {
+    for (let k = 0; k < p.R * p.C; k++) {
+      const es = p.cellEdges[k];
+      if (es.some((e) => st[e] === 1)) continue;
+      const open = es.filter((e) => st[e] === 0);
+      if (!open.length) return FAIL;
+      if (open.length === 1) return { e: open[0], why: 'cell', k };
+    }
+    return forcedByType(p, st);
   }
 
   // Choosing edge e rules out its neighbours and its twins.

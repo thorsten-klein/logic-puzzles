@@ -43,6 +43,20 @@
     return seen.size === cells.length;
   };
 
+  function checkRegion(ctx, cells, g) {
+    const { n, grey, num, at, id, s, done } = ctx;
+    const white = cells.filter((x) => !grey[x]), dark = cells.filter((x) => grey[x]);
+    // A region with number m holds m white and m grey cells.
+    for (const x of cells) if (num[x] && (dark.length > num[x] || white.length > num[x])) return false;
+    const closed = done || cells.every((x) => at[x].every(([e, o]) => id[o] === g || s[e] === YES));
+    if (closed) {
+      if (white.length !== dark.length || !connected(n, white) || !connected(n, dark)) return false;
+      if (shapeKey(n, white) !== shapeKey(n, dark)) return false;
+      if (cells.some((x) => num[x] && num[x] !== white.length)) return false;
+    }
+    return true;
+  }
+
   function model(p) {
     const { n, num, grey, edges } = p;
     const cons = [];
@@ -54,21 +68,14 @@
     edges.forEach(([a, b], i) => { at[a].push([i, b]); at[b].push([i, a]); });
     function check(s, done) {
       const id = new Int32Array(n * n).fill(-1);
+      const ctx = { n, grey, num, at, id, s, done };
       let g = 0;
       for (let k = 0; k < n * n; k++) {
         if (id[k] >= 0) continue;
         const cells = [k];
         id[k] = g;
         for (const cur of cells) for (const [e, o] of at[cur]) if (id[o] < 0 && s[e] === NO) { id[o] = g; cells.push(o); }
-        const white = cells.filter((x) => !grey[x]), dark = cells.filter((x) => grey[x]);
-        // A region with number m holds m white and m grey cells.
-        for (const x of cells) if (num[x] && (dark.length > num[x] || white.length > num[x])) return false;
-        const closed = done || cells.every((x) => at[x].every(([e, o]) => id[o] === g || s[e] === YES));
-        if (closed) {
-          if (white.length !== dark.length || !connected(n, white) || !connected(n, dark)) return false;
-          if (shapeKey(n, white) !== shapeKey(n, dark)) return false;
-          if (cells.some((x) => num[x] && num[x] !== white.length)) return false;
-        }
+        if (!checkRegion(ctx, cells, g)) return false;
         g++;
       }
       for (let i = 0; i < edges.length; i++) if (s[i] === YES && id[edges[i][0]] === id[edges[i][1]]) return false;
@@ -93,6 +100,33 @@
       if (t & 4) b = -b;
       return [a, b];
     });
+
+    const tryOrientation = (q, r0, c0, Ak, rec) => {
+      for (const [qa, qb] of q) {
+        const B = q.map(([a, b]) => [r0 + a - qa, c0 + b - qb]);
+        if (B.some(([a, b]) => a < 0 || b < 0 || a >= n || b >= n || reg[a * n + b] >= 0)) continue;
+        const Bk = B.map(([a, b]) => a * n + b);
+        if (Bk.some((x) => Ak.includes(x))) continue;
+        const g = Math.random() < 0.5;
+        Ak.forEach((x) => { reg[x] = count; grey[x] = g ? 1 : 0; });
+        Bk.forEach((x) => { reg[x] = count; grey[x] = g ? 0 : 1; });
+        count++;
+        if (rec()) return true;
+        count--;
+        Ak.concat(Bk).forEach((x) => { reg[x] = -1; grey[x] = 0; });
+      }
+      return false;
+    };
+
+    const placePair = (sh, A, Ak, rec) => {
+      const tries = [];
+      for (let t = 0; t < 8; t++) for (const [ar, ac] of A) for (const [dr, dc] of [[0, 1], [1, 0], [0, -1], [-1, 0]]) tries.push([t, ar + dr, ac + dc]);
+      for (const [t, r0, c0] of PuzzleShell.shuffle(tries).slice(0, 24)) {
+        if (tryOrientation(tf(sh, t), r0, c0, Ak, rec)) return true;
+      }
+      return false;
+    };
+
     const rec = () => {
       if (Date.now() > deadline) return false;
       const k = reg.indexOf(-1);
@@ -102,29 +136,62 @@
         const A = sh.map(([a, b]) => [r + a, c + b]);
         if (A.some(([a, b]) => a < 0 || b < 0 || a >= n || b >= n || reg[a * n + b] >= 0)) continue;
         const Ak = A.map(([a, b]) => a * n + b);
-        // Place a copy touching A.
-        const tries = [];
-        for (let t = 0; t < 8; t++) for (const [ar, ac] of A) for (const [dr, dc] of [[0, 1], [1, 0], [0, -1], [-1, 0]]) tries.push([t, ar + dr, ac + dc]);
-        for (const [t, r0, c0] of PuzzleShell.shuffle(tries).slice(0, 24)) {
-          const q = tf(sh, t);
-          for (const [qa, qb] of q) {
-            const B = q.map(([a, b]) => [r0 + a - qa, c0 + b - qb]);
-            if (B.some(([a, b]) => a < 0 || b < 0 || a >= n || b >= n || reg[a * n + b] >= 0)) continue;
-            const Bk = B.map(([a, b]) => a * n + b);
-            if (Bk.some((x) => Ak.includes(x))) continue;
-            const g = Math.random() < 0.5;
-            Ak.forEach((x) => { reg[x] = count; grey[x] = g ? 1 : 0; });
-            Bk.forEach((x) => { reg[x] = count; grey[x] = g ? 0 : 1; });
-            count++;
-            if (rec()) return true;
-            count--;
-            Ak.concat(Bk).forEach((x) => { reg[x] = -1; grey[x] = 0; });
-          }
-        }
+        if (placePair(sh, A, Ak, rec)) return true;
       }
       return false;
     };
     return rec() ? { reg, grey } : null;
+  }
+
+  function componentSizes(N, edges, walls) {
+    const id = new Int32Array(N).fill(-1), size = [];
+    for (let k = 0; k < N; k++) {
+      if (id[k] >= 0) continue;
+      const st = [k];
+      id[k] = size.length;
+      let cnt = 0;
+      while (st.length) {
+        const x = st.pop();
+        cnt++;
+        edges.forEach(([a, b], e) => {
+          if (walls[e] !== YES && (a === x || b === x)) {
+            const o = a === x ? b : a;
+            if (id[o] < 0) { id[o] = size.length; st.push(o); }
+          }
+        });
+      }
+      size.push(cnt);
+    }
+    return Int32Array.from(id, (g) => size[g]);
+  }
+
+  function repairGivens(p, sol, deadline, unique) {
+    const N = p.n * p.n;
+    const mine = componentSizes(N, p.edges, sol);
+    for (let fix = 0; fix < 30 && Date.now() < deadline; fix++) {
+      if (unique()) return true;
+      const r = Binary.solve(model(p), 2, 4000);
+      if (r.capped) break;
+      const other = r.solutions.find((x) => x.some((v, e) => v !== sol[e]));
+      if (!other) break;
+      const theirs = componentSizes(N, p.edges, other);
+      const spots = [...new Array(N).keys()].filter((k) => !p.num[k] && theirs[k] !== mine[k]);
+      if (!spots.length) break;
+      const k = spots[Math.floor(Math.random() * spots.length)];
+      p.num[k] = mine[k] / 2;
+    }
+    return false;
+  }
+
+  function thinGivens(p, stop, unique) {
+    const N = p.n * p.n;
+    for (const k of PuzzleShell.shuffle([...new Array(N).keys()])) {
+      if (!p.num[k]) continue;
+      const keep = p.num[k];
+      p.num[k] = 0;
+      if (!unique()) p.num[k] = keep;
+      if (Date.now() > stop) break;
+    }
   }
 
   function generate(half) {
@@ -149,41 +216,8 @@
         const r = Binary.solve(m, 2, 4000, t);
         return r.solutions.length === 1 && !r.capped;
       };
-      // Repair: while another answer exists, add a number where that
-      // answer's region has a different size (rooms may hold several numbers).
-      const sizeIn = (walls) => {
-        const id = new Int32Array(N).fill(-1), size = [];
-        for (let k = 0; k < N; k++) {
-          if (id[k] >= 0) continue;
-          const st = [k]; id[k] = size.length; let cnt = 0;
-          while (st.length) { const x = st.pop(); cnt++; p.edges.forEach(([a, b], e) => { if (walls[e] !== YES && (a === x || b === x)) { const o = a === x ? b : a; if (id[o] < 0) { id[o] = size.length; st.push(o); } } }); }
-          size.push(cnt);
-        }
-        return Int32Array.from(id, (g) => size[g]);
-      };
-      const mine = sizeIn(sol);
-      let ok = false;
-      for (let fix = 0; fix < 30 && Date.now() < deadline; fix++) {
-        if (unique()) { ok = true; break; }
-        const r = Binary.solve(model(p), 2, 4000);
-        if (r.capped) break;
-        const other = r.solutions.find((x) => x.some((v, e) => v !== sol[e]));
-        if (!other) break;
-        const theirs = sizeIn(other);
-        const spots = [...new Array(N).keys()].filter((k) => !p.num[k] && theirs[k] !== mine[k]);
-        if (!spots.length) break;
-        const k = spots[Math.floor(Math.random() * spots.length)];
-        p.num[k] = mine[k] / 2;
-      }
-      if (!ok) continue;
-      const stop = Date.now() + 1500;
-      for (const k of PuzzleShell.shuffle([...new Array(N).keys()])) {
-        if (!p.num[k]) continue;
-        const keep = p.num[k];
-        p.num[k] = 0;
-        if (!unique()) p.num[k] = keep;
-        if (Date.now() > stop) break;
-      }
+      if (!repairGivens(p, sol, deadline, unique)) continue;
+      thinGivens(p, Date.now() + 1500, unique);
       p.solution = sol;
       return p;
     }
