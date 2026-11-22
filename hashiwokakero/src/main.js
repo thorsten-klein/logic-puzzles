@@ -4,45 +4,7 @@
 
 (() => {
   // --- puzzle model ---
-  // p = { R, C, isl: [{ k, n }] }. Pairs are islands that see each
-  // other along a row or column: { a, b, cells } (cells between them).
-  function prepare(p) {
-    const { R, C, isl } = p;
-    const at = new Map(isl.map((x, i) => [x.k, i]));
-    p.pairs = [];
-    isl.forEach((x, i) => {
-      const r = Math.floor(x.k / C), c = x.k % C;
-      for (const [dr, dc] of [[0, 1], [1, 0]]) {
-        const cells = [];
-        let nr = r + dr, nc = c + dc;
-        while (nr < R && nc < C && !at.has(nr * C + nc)) { cells.push(nr * C + nc); nr += dr; nc += dc; }
-        if (nr < R && nc < C) p.pairs.push({ a: i, b: at.get(nr * C + nc), cells, horiz: dr === 0 });
-      }
-    });
-    p.of = isl.map(() => []);
-    p.pairs.forEach((q, j) => { p.of[q.a].push(j); p.of[q.b].push(j); });
-    // Pairs that would cross.
-    p.cross = p.pairs.map(() => []);
-    p.pairs.forEach((q, i) => p.pairs.forEach((o, j) => {
-      if (i < j && q.horiz !== o.horiz && q.cells.some((k) => o.cells.includes(k))) { p.cross[i].push(j); p.cross[j].push(i); }
-    }));
-    return p;
-  }
-
-  function checkCrossingBridges(p, lo, hi, log) {
-    for (const [j, crossings] of p.cross.entries()) {
-      if (!lo[j]) continue;
-      for (const o of crossings) {
-        if (lo[o]) return -1;
-        if (hi[o]) {
-          hi[o] = 0;
-          if (log) log.push({ pairs: [o], reason: 'Bridges may not cross. A bridge already runs across here.' });
-          return 1;
-        }
-      }
-    }
-    return 0;
-  }
+  const prepare = (p) => PuzzleShell.buildIslandPairs(p);
 
   function checkClosedPairs(p, lo, hi, log) {
     if (p.isl.length <= 2) return 0;
@@ -59,7 +21,7 @@
   }
 
   function checkCrossings(p, lo, hi, log) {
-    const res = checkCrossingBridges(p, lo, hi, log);
+    const res = PuzzleShell.checkCrossingPairs(p, lo, hi, log, 'Bridges');
     return res !== 0 ? res : checkClosedPairs(p, lo, hi, log);
   }
 
@@ -113,7 +75,19 @@
     return e;
   }
 
-  function renderBridge(svg, q, j, state, solution, xy, isl, s, opts, hintSet) {
+  function drawBridgeLines(svg, pts, q, s, v, cls) {
+    const [x1, y1, x2, y2] = pts;
+    const off = s * 0.09;
+    const [ox, oy] = q.horiz ? [0, off] : [off, 0];
+    if (v === 1) el('line', { x1, y1, x2, y2, class: 'hs-bridge' + cls }, svg);
+    if (v === 2) {
+      el('line', { x1: x1 - ox, y1: y1 - oy, x2: x2 - ox, y2: y2 - oy, class: 'hs-bridge' + cls }, svg);
+      el('line', { x1: x1 + ox, y1: y1 + oy, x2: x2 + ox, y2: y2 + oy, class: 'hs-bridge' + cls }, svg);
+    }
+  }
+
+  function renderBridge(svg, q, j, ctx, opts, hintSet) {
+    const { state, solution, xy, isl, s } = ctx;
     const { readonly, result, onChange } = opts;
     const [x1, y1] = xy(isl[q.a].k), [x2, y2] = xy(isl[q.b].k);
     const wrong = result && state[j] && state[j] !== solution[j];
@@ -122,13 +96,7 @@
     if (result && state[j]) cls = state[j] === solution[j] ? ' ok' : ' bad';
     else if (result && solution[j]) cls = ' miss';
     if (hintSet.has(j)) cls += ' hint';
-    const off = s * 0.09;
-    const [ox, oy] = q.horiz ? [0, off] : [off, 0];
-    if (v === 1) el('line', { x1, y1, x2, y2, class: 'hs-bridge' + cls }, svg);
-    if (v === 2) {
-      el('line', { x1: x1 - ox, y1: y1 - oy, x2: x2 - ox, y2: y2 - oy, class: 'hs-bridge' + cls }, svg);
-      el('line', { x1: x1 + ox, y1: y1 + oy, x2: x2 + ox, y2: y2 + oy, class: 'hs-bridge' + cls }, svg);
-    }
+    drawBridgeLines(svg, [x1, y1, x2, y2], q, s, v, cls);
     if (!v && hintSet.has(j)) el('line', { x1, y1, x2, y2, class: 'hs-ghost' }, svg);
     if (!readonly) {
       const hit = el('line', { x1, y1, x2, y2, class: 'hs-hit', 'stroke-width': s * 0.5 }, svg);
@@ -141,12 +109,13 @@
   function render(p, state, opts = {}) {
     const { R, C, isl, pairs, solution } = p;
     const { readonly, result, hint } = opts;
-    const s = Math.max(26, Math.min(44, Math.floor((Math.min(window.innerWidth, 900) - 40) / C)));
+    const s = PuzzleShell.fitCell(C, 44, 26);
     const svg = el('svg', { width: C * s, height: R * s, class: 'hs-board' + (readonly ? ' readonly' : '') });
     el('rect', { x: 0, y: 0, width: C * s, height: R * s, rx: 6, class: 'hs-bg' }, svg);
     const xy = (k) => [(k % C) * s + s / 2, Math.floor(k / C) * s + s / 2];
     const hintSet = new Set(hint ? hint.pairs : []);
-    pairs.forEach((q, j) => renderBridge(svg, q, j, state, solution, xy, isl, s, opts, hintSet));
+    const ctx = { state, solution, xy, isl, s };
+    pairs.forEach((q, j) => renderBridge(svg, q, j, ctx, opts, hintSet));
     isl.forEach((x, i) => {
       const [cx, cy] = xy(x.k);
       const have = p.of[i].reduce((a, j) => a + state[j], 0);

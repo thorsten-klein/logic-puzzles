@@ -7,46 +7,7 @@
 
 (() => {
   // --- puzzle model ---
-  // p = { R, C, isl: [{ k, n }] }. Pairs are islands that see each
-  // other along a row or column: { a, b, cells } (cells between them).
-  function prepare(p) {
-    const { R, C, isl } = p;
-    const at = new Map(isl.map((x, i) => [x.k, i]));
-    const black = new Set(p.black || []);
-    p.pairs = [];
-    isl.forEach((x, i) => {
-      const r = Math.floor(x.k / C), c = x.k % C;
-      for (const [dr, dc] of [[0, 1], [1, 0]]) {
-        const cells = [];
-        let nr = r + dr, nc = c + dc;
-        while (nr < R && nc < C && !at.has(nr * C + nc) && !black.has(nr * C + nc)) { cells.push(nr * C + nc); nr += dr; nc += dc; }
-        if (nr < R && nc < C && at.has(nr * C + nc)) p.pairs.push({ a: i, b: at.get(nr * C + nc), cells, horiz: dr === 0 });
-      }
-    });
-    p.of = isl.map(() => []);
-    p.pairs.forEach((q, j) => { p.of[q.a].push(j); p.of[q.b].push(j); });
-    // Pairs that would cross.
-    p.cross = p.pairs.map(() => []);
-    p.pairs.forEach((q, i) => p.pairs.forEach((o, j) => {
-      if (i < j && q.horiz !== o.horiz && q.cells.some((k) => o.cells.includes(k))) { p.cross[i].push(j); p.cross[j].push(i); }
-    }));
-    return p;
-  }
-
-  function checkCrossingLines(p, lo, hi, log) {
-    for (let j = 0; j < p.pairs.length; j++) {
-      if (!lo[j]) continue;
-      for (const o of p.cross[j]) {
-        if (lo[o]) return -1;
-        if (hi[o]) {
-          hi[o] = 0;
-          if (log) log.push({ pairs: [o], reason: 'Lines may not cross. A line already runs across here.' });
-          return 1;
-        }
-      }
-    }
-    return 0;
-  }
+  const prepare = (p) => PuzzleShell.buildIslandPairs(p, new Set(p.black || []));
 
   function checkClosedPairs(p, lo, hi, log) {
     if (p.isl.length <= 2) return 0;
@@ -64,7 +25,7 @@
   }
 
   function checkCrossings(p, lo, hi, log) {
-    const res = checkCrossingLines(p, lo, hi, log);
+    const res = PuzzleShell.checkCrossingPairs(p, lo, hi, log, 'Lines');
     return res !== 0 ? res : checkClosedPairs(p, lo, hi, log);
   }
 
@@ -138,7 +99,7 @@
   function render(p, state, opts = {}) {
     const { R, C, isl, pairs, solution } = p;
     const { readonly, result, hint, onChange } = opts;
-    const s = Math.max(26, Math.min(44, Math.floor((Math.min(window.innerWidth, 900) - 40) / C)));
+    const s = PuzzleShell.fitCell(C, 44, 26);
     const svg = el('svg', { width: C * s, height: R * s, class: 'hs-board' + (readonly ? ' readonly' : '') });
     el('rect', { x: 0, y: 0, width: C * s, height: R * s, rx: 6, class: 'hs-bg' }, svg);
     const xy = (k) => [(k % C) * s + s / 2, Math.floor(k / C) * s + s / 2];

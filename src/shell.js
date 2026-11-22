@@ -1070,7 +1070,7 @@ const PuzzleShell = (() => {
 
   // Graph connectivity: test if all nodes in graph p are connected
   function graphConnected(p, active) {
-    if (!p.isl || !p.isl.length) return true;
+    if (!p.isl?.length) return true;
     const seen = new Uint8Array(p.isl.length);
     const stack = [0];
     seen[0] = 1;
@@ -1086,24 +1086,31 @@ const PuzzleShell = (() => {
   }
 
   // Island degree propagation step (used by Hashiwokakero, Korekutokonekuto, Ichimaga)
+  function updateIslandEdges(p, i, least, most, lo, hi) {
+    const js = p.of[i];
+    const sumLo = js.reduce((a, j) => a + lo[j], 0), sumHi = js.reduce((a, j) => a + hi[j], 0);
+    if (sumLo > most || sumHi < least) return null;
+    const changed = [];
+    for (const j of js) {
+      const minJ = Math.max(lo[j], least - (sumHi - hi[j]));
+      const maxJ = Math.min(hi[j], most - (sumLo - lo[j]));
+      if (minJ > maxJ) return null;
+      if (minJ !== lo[j] || maxJ !== hi[j]) { lo[j] = minJ; hi[j] = maxJ; changed.push(j); }
+    }
+    return { changed, sumLo, sumHi };
+  }
+
   function islandDegreeStep(p, lo, hi, log, formatReason) {
     for (let i = 0; i < p.isl.length; i++) {
-      const n = p.isl[i].n, js = p.of[i];
+      const n = p.isl[i].n;
       const least = n < 0 ? 1 : n, most = n < 0 ? 99 : n;
-      const sumLo = js.reduce((a, j) => a + lo[j], 0), sumHi = js.reduce((a, j) => a + hi[j], 0);
-      if (sumLo > most || sumHi < least) return -1;
-      const changed = [];
-      for (const j of js) {
-        const minJ = Math.max(lo[j], least - (sumHi - hi[j]));
-        const maxJ = Math.min(hi[j], most - (sumLo - lo[j]));
-        if (minJ > maxJ) return -1;
-        if (minJ !== lo[j] || maxJ !== hi[j]) { lo[j] = minJ; hi[j] = maxJ; changed.push(j); }
-      }
-      if (changed.length) {
+      const res = updateIslandEdges(p, i, least, most, lo, hi);
+      if (!res) return -1;
+      if (res.changed.length) {
         if (log && formatReason) {
-          log.push({ pairs: changed, island: i, reason: formatReason(n, sumLo, sumHi) });
+          log.push({ pairs: res.changed, island: i, reason: formatReason(n, res.sumLo, res.sumHi) });
         }
-        return changed.length;
+        return res.changed.length;
       }
     }
     return 0;
@@ -1175,5 +1182,44 @@ const PuzzleShell = (() => {
     return { isl, grid, bridges };
   }
 
-  return { start, prepare, plural, resultClass, shuffle, gridBoard, colName, cellName, fitCell, digitInput, regionBorders, growRegions, addGivens, dropGivens, TINTS, arrowIcon, figure, shapeFigures, graphConnected, islandDegreeStep, solveIslandGraph, growIslandNetwork };
+  function buildIslandPairs(p, blockedSet) {
+    const { R, C, isl } = p;
+    const at = new Map(isl.map((x, i) => [x.k, i]));
+    p.pairs = [];
+    isl.forEach((x, i) => {
+      const r = Math.floor(x.k / C), c = x.k % C;
+      for (const [dr, dc] of [[0, 1], [1, 0]]) {
+        const cells = [];
+        let nr = r + dr, nc = c + dc;
+        while (nr < R && nc < C && !at.has(nr * C + nc) && !blockedSet?.has(nr * C + nc)) {
+          cells.push(nr * C + nc); nr += dr; nc += dc;
+        }
+        if (nr < R && nc < C && at.has(nr * C + nc)) p.pairs.push({ a: i, b: at.get(nr * C + nc), cells, horiz: dr === 0 });
+      }
+    });
+    p.of = isl.map(() => []);
+    p.pairs.forEach((q, j) => { p.of[q.a].push(j); p.of[q.b].push(j); });
+    p.cross = p.pairs.map(() => []);
+    p.pairs.forEach((q, i) => p.pairs.forEach((o, j) => {
+      if (i < j && q.horiz !== o.horiz && q.cells.some((k) => o.cells.includes(k))) { p.cross[i].push(j); p.cross[j].push(i); }
+    }));
+    return p;
+  }
+
+  function checkCrossingPairs(p, lo, hi, log, noun = 'Bridges') {
+    for (let j = 0; j < p.pairs.length; j++) {
+      if (!lo[j]) continue;
+      for (const o of p.cross[j]) {
+        if (lo[o]) return -1;
+        if (hi[o]) {
+          hi[o] = 0;
+          if (log) log.push({ pairs: [o], reason: `${noun} may not cross. Another already runs across here.` });
+          return 1;
+        }
+      }
+    }
+    return 0;
+  }
+
+  return { start, prepare, plural, resultClass, shuffle, gridBoard, colName, cellName, fitCell, digitInput, regionBorders, growRegions, addGivens, dropGivens, TINTS, arrowIcon, figure, shapeFigures, graphConnected, islandDegreeStep, solveIslandGraph, growIslandNetwork, buildIslandPairs, checkCrossingPairs };
 })();

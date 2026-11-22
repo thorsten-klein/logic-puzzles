@@ -129,17 +129,22 @@ const Hint = (() => {
     return hints;
   }
 
+  function countNeighborDegrees(r, c, size, snake) {
+    let deg = 0;
+    for (const [dr, dc] of Rules.ORTHO) {
+      const ar = r + dr, ac = c + dc;
+      if (Rules.inBounds(ar, ac, size) && snake.has(ar * size + ac)) deg++;
+    }
+    return deg;
+  }
+
   function checkOverConnection(puzzle, snake, r, c) {
     const { size } = puzzle;
     for (const [dr, dc] of Rules.ORTHO) {
       const nr = r + dr, nc = c + dc;
       if (!Rules.inBounds(nr, nc, size) || !snake.has(nr * size + nc)) continue;
       const maxDeg = isEndpoint(puzzle, nr, nc) ? 1 : 2;
-      let deg = 0;
-      for (const [dr2, dc2] of Rules.ORTHO) {
-        const ar = nr + dr2, ac = nc + dc2;
-        if (Rules.inBounds(ar, ac, size) && snake.has(ar * size + ac)) deg++;
-      }
+      const deg = countNeighborDegrees(nr, nc, size, snake);
       if (deg >= maxDeg) {
         const which = isEndpoint(puzzle, nr, nc) ? `The ${endName(puzzle, nr, nc)}` : 'The adjacent filled cell';
         return `${which} already has its ${PuzzleShell.plural(maxDeg, 'allowed connection')} — filling this cell would over-connect it.`;
@@ -234,13 +239,9 @@ const Hint = (() => {
     for (let r = 0; r < size; r++) {
       for (let c = 0; c < size; c++) {
         if (!snake.has(r * size + c)) continue;
-        let n = 0;
-        for (const [dr, dc] of Rules.ORTHO) {
-          const nr = r + dr, nc = c + dc;
-          if (Rules.inBounds(nr, nc, size) && snake.has(nr * size + nc)) n++;
-        }
         const ep = isEndpoint(puzzle, r, c);
         const max = ep ? 1 : 2;
+        const n = countNeighborDegrees(r, c, size, snake);
         if (n > max) {
           const which = ep ? endName(puzzle, r, c) : 'body';
           const reason = ep
@@ -270,7 +271,8 @@ const Hint = (() => {
     return hints;
   }
 
-  function checkDiagPair(puzzle, snake, userMarked, hints, [r1, c1], [r2, c2], [sr1, sc1], [sr2, sc2]) {
+  function checkDiagPair(ctx, [r1, c1], [r2, c2], [sr1, sc1], [sr2, sc2]) {
+    const { puzzle, snake, userMarked, hints } = ctx;
     const { size } = puzzle;
     const k1 = r1 * size + c1, k2 = r2 * size + c2;
     if (!snake.has(k1) || !snake.has(k2)) return;
@@ -284,10 +286,11 @@ const Hint = (() => {
   function findDiagConflicts(puzzle, snake, userMarked) {
     const { size } = puzzle;
     const hints = [];
+    const ctx = { puzzle, snake, userMarked, hints };
     for (let r = 0; r < size - 1; r++) {
       for (let c = 0; c < size - 1; c++) {
-        checkDiagPair(puzzle, snake, userMarked, hints, [r, c], [r + 1, c + 1], [r, c + 1], [r + 1, c]);
-        checkDiagPair(puzzle, snake, userMarked, hints, [r, c + 1], [r + 1, c], [r, c], [r + 1, c + 1]);
+        checkDiagPair(ctx, [r, c], [r + 1, c + 1], [r, c + 1], [r + 1, c]);
+        checkDiagPair(ctx, [r, c + 1], [r + 1, c], [r, c], [r + 1, c + 1]);
       }
     }
     return hints;
@@ -299,8 +302,7 @@ const Hint = (() => {
       ...findDegreeConflicts(puzzle, snake),
     ];
     if (puzzle.noTouch !== false) {
-      hints.push(...findBlockConflicts(puzzle, snake));
-      hints.push(...findDiagConflicts(puzzle, snake, userMarked));
+      hints.push(...findBlockConflicts(puzzle, snake), ...findDiagConflicts(puzzle, snake, userMarked));
     }
     return hints;
   }
@@ -313,11 +315,7 @@ const Hint = (() => {
     const { size } = puzzle;
     const ep = isEndpoint(puzzle, r, c);
     const maxDeg = ep ? 1 : 2;
-    let deg = 0;
-    for (const [dr, dc] of Rules.ORTHO) {
-      const nr = r + dr, nc = c + dc;
-      if (Rules.inBounds(nr, nc, size) && snake.has(nr * size + nc)) deg++;
-    }
+    const deg = countNeighborDegrees(r, c, size, snake);
     const need = maxDeg - deg;
     if (need <= 0) return [];
 
@@ -412,33 +410,42 @@ const Hint = (() => {
     return null;
   }
 
+  function addCellNeighbors(puzzle, prop, r, c, seen, out) {
+    const { size } = puzzle;
+    for (const [dr, dc] of Rules.ORTHO) {
+      const nr = r + dr, nc = c + dc;
+      if (!Rules.inBounds(nr, nc, size)) continue;
+      const nk = nr * size + nc;
+      if (prop.snake.has(nk) || prop.marked.has(nk) || isEndpoint(puzzle, nr, nc) || seen.has(nk)) continue;
+      seen.add(nk);
+      out.push([nr, nc]);
+    }
+  }
+
   function collectAdjacentBranchCells(puzzle, prop, seen, out) {
     const { size } = puzzle;
     for (let r = 0; r < size; r++) {
       for (let c = 0; c < size; c++) {
-        if (!prop.snake.has(r * size + c)) continue;
-        for (const [dr, dc] of Rules.ORTHO) {
-          const nr = r + dr, nc = c + dc;
-          if (!Rules.inBounds(nr, nc, size)) continue;
-          const nk = nr * size + nc;
-          if (prop.snake.has(nk) || prop.marked.has(nk) || isEndpoint(puzzle, nr, nc) || seen.has(nk)) continue;
-          seen.add(nk);
-          out.push([nr, nc]);
-        }
+        if (prop.snake.has(r * size + c)) addCellNeighbors(puzzle, prop, r, c, seen, out);
       }
     }
+  }
+
+  function countLineCells(prop, isRow, idx, size) {
+    let filled = 0, open = 0;
+    for (let i = 0; i < size; i++) {
+      const k = isRow ? idx * size + i : i * size + idx;
+      if (prop.snake.has(k)) filled++;
+      else if (!prop.marked.has(k)) open++;
+    }
+    return { filled, open };
   }
 
   function collectTightLineBranchCells(puzzle, prop, isRow, seen, out) {
     const { size, rowClues, colClues } = puzzle;
     const clues = isRow ? rowClues : colClues;
     for (let idx = 0; idx < size; idx++) {
-      let filled = 0, open = 0;
-      for (let i = 0; i < size; i++) {
-        const k = isRow ? idx * size + i : i * size + idx;
-        if (prop.snake.has(k)) filled++;
-        else if (!prop.marked.has(k)) open++;
-      }
+      const { filled, open } = countLineCells(prop, isRow, idx, size);
       if (open === 0) continue;
       const need = clues[idx] - filled;
       if (need <= 0 || open - need > 2) continue;

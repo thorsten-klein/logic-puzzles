@@ -27,29 +27,6 @@
     return { '0,0 0,1 0,2 0,3': 'I', '0,0 0,1 0,2 1,0': 'L', '0,0 0,1 0,2 1,1': 'T', '0,0 0,1 1,1 1,2': 'S' }[key] || null;
   }
 
-  function model(p) {
-    const { R, C, room } = p;
-    const N = R * C;
-    const rooms = [];
-    room.forEach((g, k) => { rooms[g] ??= []; rooms[g].push(k); });
-    const cons = rooms.map((cells) => ({ cells, min: 4, max: 4, at: cells[0], why: (v) => (v === YES ? 'Each room needs four shaded cells.' : 'This room already has its four shaded cells.') }));
-    for (let r = 0; r < R - 1; r++) for (let c = 0; c < C - 1; c++) {
-      cons.push({ cells: [r * C + c, r * C + c + 1, (r + 1) * C + c, (r + 1) * C + c + 1], min: 0, max: 3, why: () => 'No 2×2 block may be all shaded.' });
-    }
-    // Every way to put an L, I, T or S into each room.
-    const place = rooms.map((cells) => {
-      const set = new Set(cells), out = [];
-      for (const k of cells) for (const sh of SHAPES) {
-        const r0 = Math.floor(k / C), c0 = k % C;
-        const pc = sh.map(([a, b]) => [r0 + a, c0 + b]);
-        if (pc.some(([a, b]) => a < 0 || b < 0 || a >= R || b >= C || !set.has(a * C + b))) continue;
-        const ks = pc.map(([a, b]) => a * C + b).sort((x, y) => x - y);
-        // No 2×2 square inside a tetromino (only O has one, and it is not listed).
-        out.push(ks);
-      }
-      const seen = new Set();
-      return out.filter((ks) => { const key = ks.join(','); if (seen.has(key)) { return false; } seen.add(key); return true; });
-    });
   function findFittingPlacements(roomCells, placements, s) {
     return placements.filter((ks) => {
       const on = new Set(ks);
@@ -104,13 +81,18 @@
     return seen.size === 4 ? k : null;
   }
 
+  function touchesSameKindNeighbor(k, N, C, s, room, type) {
+    for (const j of [k % C < C - 1 ? k + 1 : -1, k + C < N ? k + C : -1]) {
+      if (j >= 0 && s[j] === YES && room[j] !== room[k] && type[room[k]] && type[room[k]] === type[room[j]]) {
+        return true;
+      }
+    }
+    return false;
+  }
+
   function hasAdjacentSameKind(N, C, s, room, type) {
     for (let k = 0; k < N; k++) {
-      if (s[k] !== YES) continue;
-      for (const j of [k % C < C - 1 ? k + 1 : -1, k + C < N ? k + C : -1]) {
-        if (j < 0 || s[j] !== YES || room[j] === room[k]) continue;
-        if (type[room[k]] && type[room[k]] === type[room[j]]) return true;
-      }
+      if (s[k] === YES && touchesSameKindNeighbor(k, N, C, s, room, type)) return true;
     }
     return false;
   }
@@ -128,6 +110,30 @@
     }
     return set;
   }
+
+  function model(p) {
+    const { R, C, room } = p;
+    const N = R * C;
+    const rooms = [];
+    room.forEach((g, k) => { rooms[g] ??= []; rooms[g].push(k); });
+    const cons = rooms.map((cells) => ({ cells, min: 4, max: 4, at: cells[0], why: (v) => (v === YES ? 'Each room needs four shaded cells.' : 'This room already has its four shaded cells.') }));
+    for (let r = 0; r < R - 1; r++) for (let c = 0; c < C - 1; c++) {
+      cons.push({ cells: [r * C + c, r * C + c + 1, (r + 1) * C + c, (r + 1) * C + c + 1], min: 0, max: 3, why: () => 'No 2×2 block may be all shaded.' });
+    }
+    // Every way to put an L, I, T or S into each room.
+    const place = rooms.map((cells) => {
+      const set = new Set(cells), out = [];
+      for (const k of cells) for (const sh of SHAPES) {
+        const r0 = Math.floor(k / C), c0 = k % C;
+        const pc = sh.map(([a, b]) => [r0 + a, c0 + b]);
+        if (pc.some(([a, b]) => a < 0 || b < 0 || a >= R || b >= C || !set.has(a * C + b))) continue;
+        const ks = pc.map(([a, b]) => a * C + b).sort((x, y) => x - y);
+        // No 2×2 square inside a tetromino (only O has one, and it is not listed).
+        out.push(ks);
+      }
+      const seen = new Set();
+      return out.filter((ks) => { const key = ks.join(','); if (seen.has(key)) { return false; } seen.add(key); return true; });
+    });
     function check(s, done) {
       const type = new Array(rooms.length).fill(null);
       for (let g = 0; g < rooms.length; g++) {
@@ -227,12 +233,19 @@
     return unique;
   }
 
+  function findPieceEdge(ctx, N, C) {
+    const edge = [];
+    for (let k = 0; k < N; k++) {
+      if (ctx.black[k]) continue;
+      const touchesBlack = [k - C, k + C, k % C ? k - 1 : -1, (k + 1) % C ? k + 1 : -1].some((j) => j >= 0 && j < N && ctx.black[j]);
+      if (touchesBlack) edge.push(k);
+    }
+    return edge;
+  }
+
   function growPiecesGrid(ctx, N, C) {
     for (let t = 0; t < 600 && ctx.pieces.length * 4 < N * 0.6; t++) {
-      const edge = [];
-      for (let k = 0; k < N; k++) {
-        if (!ctx.black[k] && [k - C, k + C, k % C ? k - 1 : -1, (k + 1) % C ? k + 1 : -1].some((j) => j >= 0 && j < N && ctx.black[j])) edge.push(k);
-      }
+      const edge = findPieceEdge(ctx, N, C);
       if (!edge.length) break;
       tryAddPiece(ctx, edge[Math.floor(Math.random() * edge.length)]);
     }

@@ -373,26 +373,26 @@ const Latin = (() => {
     });
   }
 
+  function prepareStretch(p) {
+    const { R, C, black } = p;
+    p.runs = [];
+    const scan = (cells) => {
+      let cur = [];
+      for (const k of [...cells, -1]) {
+        if (k >= 0 && !black[k]) { cur.push(k); continue; }
+        if (cur.length >= 1) p.runs.push(cur);
+        cur = [];
+      }
+    };
+    for (let r = 0; r < R; r++) scan(Array.from({ length: C }, (_, c) => r * C + c));
+    for (let c = 0; c < C; c++) scan(Array.from({ length: R }, (_, r) => r * C + c));
+    return p;
+  }
+
   // For Str8ts and Sutoreto: white cells in stretches split by black cells.
   function startStretchGame(cfg) {
     const one = (m) => m && !(m & (m - 1));
     const low = (m) => 31 - Math.clz32(m & -m);
-
-    function prepare(p) {
-      const { R, C, black } = p;
-      p.runs = [];
-      const scan = (cells) => {
-        let cur = [];
-        for (const k of [...cells, -1]) {
-          if (k >= 0 && !black[k]) { cur.push(k); continue; }
-          if (cur.length >= 1) p.runs.push(cur);
-          cur = [];
-        }
-      };
-      for (let r = 0; r < R; r++) scan(Array.from({ length: C }, (_, c) => r * C + c));
-      for (let c = 0; c < C; c++) scan(Array.from({ length: R }, (_, r) => r * C + c));
-      return p;
-    }
 
     function eliminateLineDuplicates(R, C, black, cand) {
       for (let k = 0; k < R * C; k++) {
@@ -455,7 +455,7 @@ const Latin = (() => {
       while (Date.now() < deadline) {
         const R = n, C = n, N = R * C;
         const black = Uint8Array.from({ length: N }, () => (Math.random() < 0.2 ? 1 : 0));
-        const p = prepare({ R, C, black });
+        const p = prepareStretch({ R, C, black });
         const fill = solve(p, startCand(p, new Int8Array(N)), 1, 3000, true);
         if (!fill.solutions.length) continue;
         const sol = fill.solutions[0];
@@ -516,7 +516,7 @@ const Latin = (() => {
         const n = d?.n;
         if (!Number.isInteger(n) || n < 3 || n > 15) throw new Error('Invalid size');
         if (typeof d.b !== 'string' || d.b.length !== n * n || typeof d.v !== 'string' || d.v.length !== n * n) throw new Error('Invalid grid');
-        const p = prepare({ R: n, C: n, black: Uint8Array.from(d.b, Number) });
+        const p = prepareStretch({ R: n, C: n, black: Uint8Array.from(d.b, Number) });
         p.given = Int8Array.from(d.v, Number);
         const res = solve(p, startCand(p, p.given), 2, 50000);
         if (res.solutions.length !== 1) throw new Error('Puzzle has no unique solution');

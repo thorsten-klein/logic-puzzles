@@ -102,7 +102,8 @@
     return { N, cons, check };
   }
 
-  function tryFindMatchingCopy(start, a, pts, inRoom, blocked, key, C, R) {
+  function tryFindMatchingCopy(ctx, start, a, pts, key) {
+    const { inRoom, blocked, C, R } = ctx;
     for (let tr = 0; tr < 8; tr++) {
       const b = pts.map(([r, c]) => {
         let x = r, y = c;
@@ -131,8 +132,9 @@
       const key = shapeKey(C, a);
       const blocked = new Set(a.concat(a.flatMap(nbs)));
       const pts = a.map((k) => [Math.floor(k / C) - Math.floor(a[0] / C), (k % C) - (a[0] % C)]);
+      const ctx = { inRoom, blocked, C, R };
       for (const start of PuzzleShell.shuffle(cells.filter((k) => !blocked.has(k)))) {
-        const pair = tryFindMatchingCopy(start, a, pts, inRoom, blocked, key, C, R);
+        const pair = tryFindMatchingCopy(ctx, start, a, pts, key);
         if (pair) return pair;
       }
     }
@@ -150,13 +152,20 @@
     return pairs;
   }
 
-  function placeClueArrows(pairs, C, N, sol, clues) {
-    for (const area of pairs) {
-      const opts = [];
-      for (const x of area) for (let d = 0; d < 4; d++) {
+  function findArrowOpts(area, C, N, sol, clues) {
+    const opts = [];
+    for (const x of area) {
+      for (let d = 0; d < 4; d++) {
         const from = [x + C, x - C, (x + 1) % C ? x + 1 : -1, x % C ? x - 1 : -1][d];
         if (from >= 0 && from < N && sol[from] === NO && !clues[from]) opts.push(from * 10 + d);
       }
+    }
+    return opts;
+  }
+
+  function placeClueArrows(pairs, C, N, sol, clues) {
+    for (const area of pairs) {
+      const opts = findArrowOpts(area, C, N, sol, clues);
       if (!opts.length) continue;
       const pick = opts[Math.floor(Math.random() * opts.length)];
       clues[Math.floor(pick / 10)] = 10 * area.length + (pick % 10) + 1;
