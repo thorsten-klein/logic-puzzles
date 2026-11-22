@@ -4,8 +4,6 @@
 // borders. Built on the shared Binary game page.
 
 (() => {
-  const { YES, splitRooms } = Binary;
-
   function model(p) {
     const { R, C, room, clues } = p;
     const cons = Binary.roomClueConstraints(Binary.buildRoomsMap(R, C, room), clues);

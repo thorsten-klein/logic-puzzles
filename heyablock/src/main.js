@@ -5,7 +5,7 @@
 // white line crosses two room borders. Built on the shared Binary page.
 
 (() => {
-  const { YES, NO, splitRooms } = Binary;
+  const { YES, NO } = Binary;
 
   function model(p) {
     const { R, C, room, clues } = p;

@@ -429,8 +429,9 @@ const Latin = (() => {
         if (k < 0) { out.push(Int8Array.from(cand, (m, i) => (p.black[i] ? 0 : low(m)))); continue; }
         const vals = [];
         for (let v = 1; v < 31; v++) if (cand[k] & (1 << v)) vals.push(v);
-        const order = random ? PuzzleShell.shuffle(vals) : vals.reverse();
-        for (const v of order) { const t = Int32Array.from(cand); t[k] = 1 << v; stack.push(t); }
+        if (random) PuzzleShell.shuffle(vals);
+        else vals.reverse();
+        for (const v of vals) { const t = Int32Array.from(cand); t[k] = 1 << v; stack.push(t); }
       }
       return { solutions: out, capped: nodes > maxNodes };
     }
