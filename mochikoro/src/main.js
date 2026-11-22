@@ -6,6 +6,13 @@
 (() => {
   const { UNKNOWN, YES, NO } = Binary;
 
+  function flood(starts, ok, nbf) {
+    const seen = new Set(starts);
+    const stack = [...starts];
+    while (stack.length) { const k = stack.pop(); for (const j of nbf(k)) if (!seen.has(j) && ok(j)) { seen.add(j); stack.push(j); } }
+    return seen;
+  }
+
   function model(p) {
     const { R, C, clues } = p;
     const N = R * C;
@@ -45,12 +52,6 @@
         return 1;
       }
       return 0;
-    }
-    function flood(starts, ok, nbf) {
-      const seen = new Set(starts);
-      const stack = [...starts];
-      while (stack.length) { const k = stack.pop(); for (const j of nbf(k)) if (!seen.has(j) && ok(j)) { seen.add(j); stack.push(j); } }
-      return seen;
     }
     function check(s) {
       // All white cells joinable through corners.

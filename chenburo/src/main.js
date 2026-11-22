@@ -23,7 +23,11 @@
       const ma = Math.min(...q.map((x) => x[0])), mb = Math.min(...q.map((x) => x[1]));
       keys.push(q.map(([a, b]) => `${a - ma},${b - mb}`).sort().join(' '));
     }
-    return keys.sort()[0];  // smallest key
+    let minKey = keys[0];
+    for (const k of keys) {
+      if (k < minKey) minKey = k;
+    }
+    return minKey;
   }
 
   function model(p) {
