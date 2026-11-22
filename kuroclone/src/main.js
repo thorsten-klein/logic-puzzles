@@ -31,6 +31,16 @@
     return true;
   }
 
+  function isAreaClosed(cells, nb, s, done) {
+    if (done) return true;
+    for (const x of cells) {
+      for (const j of nb(x)) {
+        if (s[j] === UNKNOWN) return false;
+      }
+    }
+    return true;
+  }
+
   function model(p) {
     const { R, C, room, clues } = p;
     const N = R * C;
@@ -56,10 +66,7 @@
     };
     function collectAreas(s, done) {
       const { id, list } = Binary.areas(R, C, s);
-      const areas = list.map((cells) => ({
-        cells,
-        closed: done || cells.every((x) => nb(x).every((j) => s[j] !== UNKNOWN)),
-      }));
+      const areas = list.map((cells) => ({ cells, closed: isAreaClosed(cells, nb, s, done) }));
       return { area: id, areas };
     }
     function checkArrows(area, areas) {

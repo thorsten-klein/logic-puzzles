@@ -1235,7 +1235,7 @@ const PuzzleShell = (() => {
       const r0 = Math.min(...q.map((x) => x[0])), c0 = Math.min(...q.map((x) => x[1]));
       keys.push(q.map(([a, b]) => `${a - r0},${b - c0}`).sort().join(' '));
     }
-    return keys.reduce((min, k) => (k < min ? k : min), keys[0]);
+    return keys.slice().sort()[0];
   }
 
   return { start, prepare, plural, resultClass, shuffle, gridBoard, colName, cellName, fitCell, digitInput, regionBorders, growRegions, addGivens, dropGivens, TINTS, arrowIcon, figure, shapeFigures, graphConnected, islandDegreeStep, solveIslandGraph, growIslandNetwork, buildIslandPairs, checkCrossingPairs, shapeKey };
