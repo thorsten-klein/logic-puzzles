@@ -97,6 +97,15 @@ function checkBoard(cfg, n, expect) {
   expect(cfg.check(q, fresh), 'empty board counts as solved').toBeFalsy();
 
   // Hint walk with a watched answer.
+  const walk = watchedHintWalk(cfg, q, expect);
+  expect(cfg.check(q, walk.s), `hints solve the board within ${walk.limit} steps`).toBeTruthy();
+  const peeks = peeksOf(walk.seen, walk.s);
+  return { ms, steps: walk.steps, reveals: walk.reveals, peeks, warnings, q, end: walk.s };
+}
+
+// Applies hints until solved (or a step limit). Notes which answer cells
+// each hint read (`seen`), except for honest reveals.
+function watchedHintWalk(cfg, q, expect) {
   let s = cfg.newState(q);
   const limit = 4 * (ser(s).length + 20);
   let steps = 0, reveals = 0;
@@ -116,10 +125,13 @@ function checkBoard(cfg, n, expect) {
     // Keep the board in its saved form, as the page does.
     s = cfg.loadState(q, clone(cfg.saveState(s)));
   }
-  expect(cfg.check(q, s), `hints solve the board within ${limit} steps`).toBeTruthy();
-  // A peek: the hint read the answer at a cell that was still open but
-  // that the player has to fill in the end. (Given cells stay empty in the
-  // player's state, so reading them is fine.)
+  return { s, limit, steps, reveals, seen };
+}
+
+// A peek: the hint read the answer at a cell that was still open but
+// that the player has to fill in the end. (Given cells stay empty in the
+// player's state, so reading them is fine.)
+function peeksOf(seen, s) {
   const end = Array.isArray(s) || ArrayBuffer.isView(s) ? Array.from(s) : null;
   const peeks = new Set();
   for (const { reads, flat, reason } of seen) {
@@ -127,7 +139,7 @@ function checkBoard(cfg, n, expect) {
     const bad = flat && end ? [...reads].filter((i) => i < flat.length && isEmpty(flat[i]) && !isEmpty(end[i])) : [];
     if (bad.length) peeks.add(reason.replaceAll(/\d+/g, '#').slice(0, 90));
   }
-  return { ms, steps, reveals, peeks: [...peeks], warnings, q, end: s };
+  return [...peeks];
 }
 
 module.exports = { root, playableGames, loadGame, sizesOf, checkBoard, HONEST, OWN_PAGE, isEmpty, ser, clone };

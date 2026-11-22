@@ -177,105 +177,132 @@ async function fuzzCode(page) {
     if (!p) return;
     // A JSON round trip on purpose: share data travels as JSON.
     const clone = (x) => JSON.parse(JSON.stringify(x)); // NOSONAR
-    const d0 = clone(cfg.encode(p));
+    const ctx = { t, cfg, p, stop, tryIt, clone, engine, blankOf, d0: clone(cfg.encode(p)) };
+    tryDecoders(ctx);
+    outOfTime(ctx);
+    engineEdges(ctx);
+    moreHintWalks(ctx);
+    fuzzStates(ctx);
 
-    // Broken share data: change one part at a time.
-    const odd = [undefined, null, '', 'x', 'a,b', -1, 0, 1, 2.5, 99, 1e9, true, [], {}, [1, 2], '0'.repeat(400), 'z'.repeat(9)];
-    const variants = [null, 'x', 7, [], {}, true];
-    const walk = (obj, set, depth) => {
+    // Broken share data (one part changed at a time), stuck logic, bad IDs.
+    function tryDecoders({ t, cfg, d0, stop, tryIt, clone, engine }) {
+      for (const v of brokenData(ctx)) {
+        if (Date.now() > stop) break;
+        tryIt(() => cfg.decode(v));
+      }
+      // Decoders try logic first and search when it stalls: with the engines'
+      // logicSolve "stuck", the search must find the answer on its own.
+      for (const name of ['Binary', 'Loop', 'Links', 'Latin']) {
+        const eng = engine(name);
+        if (!eng || typeof eng.logicSolve !== 'function') continue;
+        const real = eng.logicSolve;
+        eng.logicSolve = () => null;
+        try { tryIt(() => cfg.decode(clone(d0))); } finally { eng.logicSolve = real; }
+      }
+      for (const id of ['', 'x', '!!!', btoa('{}'), btoa('{"v":1}'), btoa('{"v":1,"g":"' + cfg.id + '"}'), btoa('{"v":2,"g":"other","d":1}'), btoa('[]'), btoa('null')]) {
+        tryIt(() => t.decodeId(id));
+      }
+    }
+
+    // Share data variants: fewer clues first, then odd values everywhere.
+    function brokenData({ d0, clone }) {
+      const variants = [null, 'x', 7, [], {}, true];
+      const setter = (base) => (k, w) => {
+        const c = clone(base);
+        if (w === undefined) delete c[k]; else c[k] = w;
+        return c;
+      };
+      if (d0 && typeof d0 === 'object') walkData(d0, setter(d0), 0, variants);
+      return [...fewerClues(ctx), ...variants];
+    }
+
+    // Every field (two levels deep) set to odd values.
+    function walkData(obj, set, depth, variants) {
       if (!obj || typeof obj !== 'object' || depth > 2) return;
+      const odd = [undefined, null, '', 'x', 'a,b', -1, 0, 1, 2.5, 99, 1e9, true, [], {}, [1, 2], '0'.repeat(400), 'z'.repeat(9)];
       const keys = Array.isArray(obj) ? [...new Set([0, 1, obj.length - 1].filter((i) => i >= 0 && i < obj.length))] : Object.keys(obj);
       for (const k of keys) {
         const v = obj[k];
-        // Thinned clues (every 2nd or 3rd clue gone) make solvers search.
-        const thin = (str, m, blank) => str.replaceAll(/[^,]/g, (ch, i) => (i % m === 0 && /[1-9a-z]/i.test(ch) ? blank : ch));
-        let extra;
-        if (typeof v === 'string') extra = [v.slice(0, Math.floor(v.length / 2)), v + ',1', v.replace(/^./, '#'), v.replace(/\d/, '9'),
-          thin(v, 2, '0'), thin(v, 3, '0'), thin(v, 2, '.'), thin(v, 3, '.'), thin(v, 2, '-')];
-        else if (Array.isArray(v)) extra = [v.slice(1), v.concat(v), v.map(() => -1), v.map((x, i) => (i % 2 ? 0 : x)), v.filter((_, i) => i % 2)];
-        else if (typeof v === 'number') extra = [v + 1, -v, v * 100];
-        else extra = [];
-        for (const w of odd.concat(extra)) variants.push(set(k, w));
-        walk(v, (k2, w) => set(k, (() => { const c = clone(v); c[k2] = w; return c; })()), depth + 1);
+        for (const w of odd.concat(oddFor(v))) variants.push(set(k, w));
+        walkData(v, (k2, w) => set(k, (() => { const c = clone(v); c[k2] = w; return c; })()), depth + 1, variants);
       }
       if (!Array.isArray(obj)) variants.push(set('__extra', 1));
-    };
-    const setter = (base) => (k, w) => {
-      const c = clone(base);
-      if (w === undefined) delete c[k]; else c[k] = w;
-      return c;
-    };
-    if (d0 && typeof d0 === 'object') walk(d0, setter(d0), 0);
-    const early = [];
+    }
+
+    // Odd values that fit the type of v.
+    function oddFor(v) {
+      // Thinned clues (every 2nd or 3rd clue gone) make solvers search.
+      const thin = (str, m, blank) => str.replaceAll(/[^,]/g, (ch, i) => (i % m === 0 && /[1-9a-z]/i.test(ch) ? blank : ch));
+      if (typeof v === 'string') {
+        return [v.slice(0, Math.floor(v.length / 2)), v + ',1', v.replace(/^./, '#'), v.replace(/\d/, '9'),
+          thin(v, 2, '0'), thin(v, 3, '0'), thin(v, 2, '.'), thin(v, 3, '.'), thin(v, 2, '-')];
+      }
+      if (Array.isArray(v)) return [v.slice(1), v.concat(v), v.map(() => -1), v.map((x, i) => (i % 2 ? 0 : x)), v.filter((_, i) => i % 2)];
+      if (typeof v === 'number') return [v + 1, -v, v * 100];
+      return [];
+    }
+
     // One clue less at a time (string fields): often still one answer, but
     // logic alone stalls, so the decoders' search paths run.
-    for (const [key, v] of Object.entries(d0 && typeof d0 === 'object' ? d0 : {})) {
-      if (typeof v !== 'string') continue;
-      if (v.includes(',')) { // a list of numbers: one item becomes "none" (-1)
-        const parts = v.split(',');
-        parts.slice(0, 20).forEach((_, i) => { const q = parts.slice(); q[i] = '-1'; early.push({ ...d0, [key]: q.join(',') }); });
-        continue;
-      }
-      // All clues blank, too.
-      early.push({ ...d0, [key]: v.replaceAll(/[1-9a-z]/gi, blankOf(v)) });
-      let made = 0;
-      for (let i = 0; i < v.length && made < 40; i++) {
-        if (!/[1-9a-z]/i.test(v[i])) continue;
-        for (const blank of [blankOf(v)]) {
+    function fewerClues({ d0, blankOf }) {
+      const early = [];
+      for (const [key, v] of Object.entries(d0 && typeof d0 === 'object' ? d0 : {})) {
+        if (typeof v !== 'string') continue;
+        if (v.includes(',')) { // a list of numbers: one item becomes "none" (-1)
+          const parts = v.split(',');
+          parts.slice(0, 20).forEach((_, i) => { const q = parts.slice(); q[i] = '-1'; early.push({ ...d0, [key]: q.join(',') }); });
+          continue;
+        }
+        // All clues blank, too.
+        const blank = blankOf(v);
+        early.push({ ...d0, [key]: v.replaceAll(/[1-9a-z]/gi, blank) });
+        let made = 0;
+        for (let i = 0; i < v.length && made < 40; i++) {
+          if (!/[1-9a-z]/i.test(v[i])) continue;
           early.push({ ...d0, [key]: v.slice(0, i) + blank + v.slice(i + 1) });
           made++;
         }
       }
-    }
-    variants.unshift(...early);
-    for (const v of variants) {
-      if (Date.now() > stop) break;
-      tryIt(() => cfg.decode(v));
-    }
-    // Decoders try logic first and search when it stalls: with the engines'
-    // logicSolve "stuck", the search must find the answer on its own.
-    for (const name of ['Binary', 'Loop', 'Links', 'Latin']) {
-      const eng = engine(name);
-      if (!eng || typeof eng.logicSolve !== 'function') continue;
-      const real = eng.logicSolve;
-      eng.logicSolve = () => null;
-      try { tryIt(() => cfg.decode(clone(d0))); } finally { eng.logicSolve = real; }
-    }
-    for (const id of ['', 'x', '!!!', btoa('{}'), btoa('{"v":1}'), btoa('{"v":1,"g":"' + cfg.id + '"}'), btoa('{"v":2,"g":"other","d":1}'), btoa('[]'), btoa('null')]) {
-      tryIt(() => t.decodeId(id));
+      return early;
     }
 
     // Out of time: the clock jumps ahead, so generators give up (null)
     // and solvers stop at their time limits.
-    const realNow = Date.now;
-    let fake = realNow();
-    Date.now = () => (fake += 60000);
-    try {
-      for (let n = cfg.size.min; n <= Math.min(cfg.size.max, cfg.size.min + 1); n++) tryIt(() => cfg.generate(n));
-      // Shared engine helpers that fail (no answer, no givens, two
-      // answers): the generator must give up cleanly ("give up" paths).
+    function outOfTime({ cfg, tryIt, engine }) {
+      const realNow = Date.now;
+      let fake = realNow();
+      Date.now = () => (fake += 60000);
+      try {
+        for (let n = cfg.size.min; n <= Math.min(cfg.size.max, cfg.size.min + 1); n++) tryIt(() => cfg.generate(n));
+        for (const name of ['Binary', 'Latin', 'Loop', 'Links', 'Parts', 'Pieces', 'Rects', 'RegionNum', 'NumberPath', 'Fillo', 'Moves', 'LegLoop']) {
+          const eng = engine(name);
+          if (eng) failingHelpers(eng);
+        }
+      } finally { Date.now = realNow; }
+    }
+
+    // Shared engine helpers that fail (no answer, no givens, two
+    // answers): the generator must give up cleanly ("give up" paths).
+    // All helpers fail, or only the solvers (so random boards still come).
+    function failingHelpers(eng) {
       const FAILS = [() => null, () => false, () => ({ solutions: [], capped: false, all: [] }), () => ({ solutions: [[], []], capped: true, all: [[], []] })];
-      for (const name of ['Binary', 'Latin', 'Loop', 'Links', 'Parts', 'Pieces', 'Rects', 'RegionNum', 'NumberPath', 'Fillo', 'Moves', 'LegLoop']) {
-        const eng = engine(name);
-        if (!eng) continue;
-        // All helpers fail, or only the solvers (so random boards still come).
-        for (const only of [null, /solve|count|unique/i]) {
-          for (const f of FAILS) {
-            const saved = {};
-            for (const k of Object.keys(eng)) {
-              if (typeof eng[k] !== 'function' || k === 'startGame' || (only && !only.test(k))) continue;
-              saved[k] = eng[k];
-              eng[k] = f;
-            }
-            try { tryIt(() => cfg.generate(cfg.size.min)); } finally { Object.assign(eng, saved); }
+      for (const only of [null, /solve|count|unique/i]) {
+        for (const f of FAILS) {
+          const saved = {};
+          for (const k of Object.keys(eng)) {
+            if (typeof eng[k] !== 'function' || k === 'startGame' || (only && !only.test(k))) continue;
+            saved[k] = eng[k];
+            eng[k] = f;
           }
+          try { tryIt(() => cfg.generate(cfg.size.min)); } finally { Object.assign(eng, saved); }
         }
       }
-    } finally { Date.now = realNow; }
+    }
 
     // Engine edge cases: safety limits and "no loop possible".
-    const LoopE = engine('Loop'), LinksE = engine('Links');
-    if (LoopE) {
+    function engineEdges({ tryIt, engine }) {
+      const LoopE = engine('Loop'), LinksE = engine('Links');
+      if (!LoopE) return;
       const g = LoopE.grid(2, 2);
       tryIt(() => LoopE.settle({ g, must: new Uint8Array(4), rule: () => 1 }, new Uint8Array(g.E)));
       tryIt(() => LoopE.randomLoop(1, 4));
@@ -283,50 +310,63 @@ async function fuzzCode(page) {
     }
 
     // Hint walks on more fresh boards, for rare deductions.
-    const more = Date.now() + 5000;
-    for (let b = 0; b < 30 && Date.now() < more; b++) {
-      const q = tryIt(() => cfg.generate(cfg.size.min + (b % 2 && cfg.size.def > cfg.size.min ? 1 : 0)));
-      if (!q) continue;
-      let x = cfg.newState(q);
-      for (let i = 0; i < 2000 && !cfg.check(q, x) && Date.now() < more + 3000; i++) {
-        const hs = tryIt(() => cfg.hints(q, x));
-        if (!hs?.length) break;
-        cfg.applyHint(q, x, hs[0]);
+    function moreHintWalks({ cfg, tryIt }) {
+      const more = Date.now() + 5000;
+      for (let b = 0; b < 30 && Date.now() < more; b++) {
+        const q = tryIt(() => cfg.generate(cfg.size.min + (b % 2 && cfg.size.def > cfg.size.min ? 1 : 0)));
+        if (q) hintWalk(q, cfg.newState(q), more + 3000);
       }
     }
 
+    // Applies hints until solved, no hint, or the time `until`.
+    function hintWalk(q, x, until, each = null) {
+      for (let i = 0; i < 2000 && !cfg.check(q, x) && Date.now() < until; i++) {
+        const hs = tryIt(() => cfg.hints(q, x));
+        if (!hs?.length) break;
+        if (each) each(hs);
+        cfg.applyHint(q, x, hs[0]);
+      }
+      return x;
+    }
+
     // States along the hint walk; then broken and random states.
-    let s = cfg.newState(p);
-    for (let i = 0; i < 2000 && !cfg.check(p, s) && Date.now() < stop; i++) {
-      const hs = tryIt(() => cfg.hints(p, s));
-      if (!hs?.length) break;
-      tryIt(() => cfg.saveState(s)); // run the save code on every step
-      hs.slice(0, 3).forEach((h) => tryIt(() => cfg.render(p, s, { readonly: true, hint: h })));
-      cfg.applyHint(p, s, hs[0]);
+    function fuzzStates({ cfg, p, stop, tryIt, clone }) {
+      const end = cfg.newState(p); // the walk changes it in place
+      hintWalk(p, end, stop, (hs) => {
+        tryIt(() => cfg.saveState(end)); // run the save code on every step
+        for (const h of hs.slice(0, 3)) tryIt(() => cfg.render(p, end, { readonly: true, hint: h }));
+      });
+      for (const v of [null, 'x', 5, [], {}, [1, 2, 3], 'zzz'.repeat(50), clone(cfg.saveState(end)).toString().slice(1)]) {
+        tryIt(() => cfg.render(p, cfg.loadState(p, v), {}));
+      }
+      tryIt(() => cfg.render(p, end, { result: true }));
+      tryIt(() => cfg.render(p, cfg.newState(p), { result: true }));
+      if (!Array.isArray(end) && !ArrayBuffer.isView(end)) return;
+      for (const raw of randomStates(end)) {
+        if (Date.now() > stop + 6000) break;
+        const st = tryIt(() => { const x = cfg.newState(p); raw.forEach((v, i) => { x[i] = v; }); return x; });
+        if (st) tryState(st);
+      }
     }
-    const end = s;
-    for (const v of [null, 'x', 5, [], {}, [1, 2, 3], 'zzz'.repeat(50), clone(cfg.saveState(end)).toString().slice(1)]) {
-      tryIt(() => cfg.render(p, cfg.loadState(p, v), {}));
+
+    // Random, part solved, a few wrong, and mostly empty states.
+    function randomStates(end) {
+      const vals = [...new Set([0, ...Array.from(end).filter((v) => typeof v === 'number')])];
+      const pick = (a) => a[Math.floor(Math.random() * a.length)];
+      const states = [];
+      for (let i = 0; i < 25; i++) states.push(Array.from(end, () => pick(vals))); // random
+      for (let i = 0; i < 25; i++) states.push(Array.from(end, (v) => (Math.random() < 0.5 ? v : 0))); // part solved
+      for (let i = 0; i < 25; i++) states.push(Array.from(end, (v) => (Math.random() < 0.15 ? pick(vals) : v))); // a few wrong
+      for (let i = 0; i < 25; i++) states.push(Array.from(end, (v) => {
+        if (Math.random() < 0.6) return 0;
+        if (Math.random() < 0.2) return pick(vals);
+        return v;
+      }));
+      return states;
     }
-    tryIt(() => cfg.render(p, end, { result: true }));
-    tryIt(() => cfg.render(p, cfg.newState(p), { result: true }));
-    const flat = Array.isArray(end) || ArrayBuffer.isView(end);
-    if (!flat) return;
-    const vals = [...new Set([0, ...Array.from(end).filter((v) => typeof v === 'number')])];
-    const pick = (a) => a[Math.floor(Math.random() * a.length)];
-    const states = [];
-    for (let i = 0; i < 25; i++) states.push(Array.from(end, () => pick(vals))); // random
-    for (let i = 0; i < 25; i++) states.push(Array.from(end, (v) => (Math.random() < 0.5 ? v : 0))); // part solved
-    for (let i = 0; i < 25; i++) states.push(Array.from(end, (v) => (Math.random() < 0.15 ? pick(vals) : v))); // a few wrong
-    for (let i = 0; i < 25; i++) states.push(Array.from(end, (v) => {
-      if (Math.random() < 0.6) return 0;
-      if (Math.random() < 0.2) return pick(vals);
-      return v;
-    }));
-    for (const raw of states) {
-      if (Date.now() > stop + 6000) break;
-      const st = tryIt(() => { const x = cfg.newState(p); raw.forEach((v, i) => { x[i] = v; }); return x; });
-      if (!st) continue;
+
+    // Check, hint, render and save one state.
+    function tryState(st) {
       tryIt(() => cfg.check(p, st));
       const hs = tryIt(() => cfg.hints(p, st)) || [];
       tryIt(() => cfg.render(p, st, {}));

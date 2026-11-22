@@ -36,28 +36,40 @@ function paint(entry) {
 // Code lines and whether each ran.
 function lines(f) {
   const out = [];
-  let pos = 0, inComment = false;
+  let pos = 0;
+  const state = { inComment: false };
   for (const [i, text] of f.source.split('\n').entries()) {
     const start = pos;
     pos += text.length + 1;
-    let code = text;
-    if (inComment) {
-      const e = code.indexOf('*/');
-      if (e < 0) continue;
-      inComment = false;
-      code = ' '.repeat(e + 2) + code.slice(e + 2);
-    }
-    const b = code.indexOf('/*');
-    if (b >= 0 && !code.includes('*/', b)) { inComment = true; code = code.slice(0, b); }
-    // Drop a line comment at the end (not when quotes follow: it may be in a string).
-    const lc = code.indexOf('//');
-    if (lc >= 0 && !code.includes('\n', lc) && !/['"`]/.test(code.slice(lc))) code = code.slice(0, lc);
-    if (!/[A-Za-z0-9_$'"`]/.test(code)) continue; // blank, comment or brackets only
-    let ran = false;
-    for (let c = 0; c < code.length && !ran; c++) if (code[c].trim() && f.ran[start + c]) ran = true;
-    out.push({ line: i + 1, ran, text: text.trim() });
+    const code = stripComments(text, state);
+    if (code === null || !/[A-Za-z0-9_$'"`]/.test(code)) continue; // blank, comment or brackets only
+    out.push({ line: i + 1, ran: lineRan(f, start, code), text: text.trim() });
   }
   return out;
+}
+
+// The code part of a line (comments blanked), or null inside a block
+// comment. `state.inComment` carries a block comment to the next line.
+function stripComments(text, state) {
+  let code = text;
+  if (state.inComment) {
+    const e = code.indexOf('*/');
+    if (e < 0) return null;
+    state.inComment = false;
+    code = ' '.repeat(e + 2) + code.slice(e + 2);
+  }
+  const b = code.indexOf('/*');
+  if (b >= 0 && !code.includes('*/', b)) { state.inComment = true; code = code.slice(0, b); }
+  // Drop a line comment at the end (not when quotes follow: it may be in a string).
+  const lc = code.indexOf('//');
+  if (lc >= 0 && !code.includes('\n', lc) && !/['"`]/.test(code.slice(lc))) code = code.slice(0, lc);
+  return code;
+}
+
+// True if any non-blank character of the line ran.
+function lineRan(f, start, code) {
+  for (let c = 0; c < code.length; c++) if (code[c].trim() && f.ran[start + c]) return true;
+  return false;
 }
 
 function main() {
